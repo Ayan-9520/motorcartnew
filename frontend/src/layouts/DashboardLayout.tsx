@@ -13,18 +13,24 @@ export function DashboardLayout() {
   const isCustomer = role === "customer";
 
   return (
-    <div className={isCustomer ? "cos-layout flex min-h-screen flex-col" : "flex min-h-screen flex-col"}>
+    <div
+      className={
+        isCustomer
+          ? "cos-layout workspace-shell flex flex-col"
+          : "workspace-shell flex flex-col"
+      }
+    >
       <Navbar />
-      <div className="dashboard-shell-bar border-b border-border/50 px-4 py-2 lg:hidden">
+      <div className="dashboard-shell-bar shrink-0 border-b border-border/50 px-4 py-2 lg:hidden">
         {isCustomer ? <CustomerMobileNav /> : <DashboardMobileNav />}
       </div>
-      <div className="flex flex-1">
+      <div className="workspace-shell__body">
         {isCustomer ? <CustomerSidebar /> : <RoleSidebar />}
         <main
           className={
             isCustomer
-              ? "cos-main cos-main--with-bottom-nav flex-1 overflow-auto pb-20 lg:pb-0"
-              : "flex-1 overflow-auto bg-background p-4 sm:p-6"
+              ? "cos-main cos-main--with-bottom-nav workspace-shell__main pb-20 lg:pb-0"
+              : "workspace-shell__main bg-background p-4 sm:p-6"
           }
         >
           <RouteSuspense>

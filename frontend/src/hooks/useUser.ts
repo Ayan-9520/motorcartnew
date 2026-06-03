@@ -17,7 +17,14 @@ export function useUser() {
   }, [user?.id, setUser]);
 
   const updateProfile = useCallback(
-    async (data: { full_name?: string; phone?: string; city?: string; state?: string; company_name?: string }) => {
+    async (data: {
+      full_name?: string;
+      phone?: string;
+      city?: string;
+      state?: string;
+      company_name?: string;
+      avatar_url?: string;
+    }) => {
       if (!user?.id) return;
       setLoading(true);
       const { data: updated, error } = await updateUserProfile(user.id, data);

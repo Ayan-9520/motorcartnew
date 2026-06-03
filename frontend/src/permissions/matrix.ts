@@ -135,4 +135,20 @@ export const ROLE_CAPABILITIES: Record<
     partsConsole: false,
     serviceConsole: false,
   },
+  service_partner: {
+    manageUsers: false,
+    manageMarketplace: false,
+    financeConsole: false,
+    dealerConsole: false,
+    partsConsole: false,
+    serviceConsole: true,
+  },
+  preowned_dealer: {
+    manageUsers: false,
+    manageMarketplace: true,
+    financeConsole: false,
+    dealerConsole: true,
+    partsConsole: false,
+    serviceConsole: false,
+  },
 };

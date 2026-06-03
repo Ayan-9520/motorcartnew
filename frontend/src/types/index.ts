@@ -14,6 +14,7 @@ export interface User {
   /** From signup metadata — e.g. `new_car_showroom`. */
   businessCategory?: string;
   accountStatus: UserStatus;
+  approvalStatus?: string;
   kycStatus: KycStatus;
   isVerified: boolean;
   city?: string;

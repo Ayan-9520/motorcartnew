@@ -4,30 +4,43 @@ import { NEW_CAR_DEALER_NAV } from "../config/ncd-nav";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/uiStore";
 import { Button } from "@/components/ui/button";
+import { RoleSidebarUserFooter } from "@/dashboards/components/RoleSidebarUserFooter";
 
 export function NewCarDealerSidebar() {
   const { sidebarOpen, toggleSidebar } = useUIStore();
 
   return (
-    <aside className={cn("ncd-sidebar hidden shrink-0 flex-col lg:flex", sidebarOpen ? "w-64" : "w-[72px]")}>
-      <div className="ncd-sidebar__brand">
-        {sidebarOpen ? (
-          <div className="min-w-0">
-            <p className="ncd-sidebar__title">New Car OS</p>
-            <p className="ncd-sidebar__sub">Showroom command</p>
-          </div>
-        ) : null}
-        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white" onClick={toggleSidebar}>
-          <ChevronLeft className={cn("h-4 w-4", !sidebarOpen && "rotate-180")} />
-        </Button>
+    <aside
+      className={cn(
+        "ncd-sidebar dashboard-sidebar hidden shrink-0 flex-col lg:flex",
+        sidebarOpen ? "w-[17rem]" : "w-[4.5rem]"
+      )}
+    >
+      <div className="dashboard-sidebar__head">
+        <div className="ncd-sidebar__brand shrink-0">
+          {sidebarOpen ? (
+            <div className="min-w-0">
+              <p className="ncd-sidebar__title">New Car OS</p>
+              <p className="ncd-sidebar__sub">Showroom command</p>
+            </div>
+          ) : (
+            <span className="ncd-sidebar__logo mx-auto" title="New Car OS">
+              <Car className="h-4 w-4" />
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={toggleSidebar}
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
+          </Button>
+        </div>
       </div>
-      <div className="ncd-sidebar__logo-row">
-        <span className="ncd-sidebar__logo">
-          <Car className="h-5 w-5" />
-        </span>
-        {sidebarOpen ? <span className="text-xs font-medium text-slate-400">Motorcart Dealer</span> : null}
-      </div>
-      <nav className="ncd-sidebar__nav flex-1 overflow-y-auto">
+
+      <nav className="ncd-sidebar__nav dashboard-sidebar__nav min-h-0 flex-1">
         {NEW_CAR_DEALER_NAV.map((group) => (
           <div key={group.label} className="ncd-sidebar__group">
             {sidebarOpen ? <p className="ncd-sidebar__group-label">{group.label}</p> : null}
@@ -46,6 +59,8 @@ export function NewCarDealerSidebar() {
           </div>
         ))}
       </nav>
+
+      <RoleSidebarUserFooter />
     </aside>
   );
 }

@@ -4,10 +4,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Mail, Upload } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AuthPageChrome } from "@/components/auth/AuthPageChrome";
+import { AuthFormField } from "@/components/auth/AuthFormField";
+import { AuthPageLinks } from "@/components/auth/AuthPageLinks";
+import { AuthRoleSwitch } from "@/components/auth/AuthRoleSwitch";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthStatusAlert } from "@/components/auth/AuthStatusAlert";
 import { fetchUserProfile, normalizeAuthEmail } from "@/services/auth.service";
@@ -15,8 +18,8 @@ import { mapDbUserToAppUser } from "@/services/mapUser";
 import type { AuthErrorUI } from "@/lib/auth-errors";
 import type { AppRole } from "@/types/database";
 import { useAuthStore } from "@/store/authStore";
-import { resolvePostLoginPath } from "@/auth/resolve-post-login";
 import { PENDING_APPROVAL_PATH } from "@/auth/ecosystem-roles";
+import { resolveLoginRedirect, waitForHydratedUser } from "@/auth/login-redirect";
 import { resolveBusinessSignupRole } from "@/auth/resolve-business-signup-role";
 import { enrichUserWithDealerContext } from "@/auth/enrich-user-dealer";
 import {
@@ -151,11 +154,9 @@ export function BusinessSignupPage() {
       }
 
       if (authData?.session) {
-        const u = useAuthStore.getState().user;
-        navigate(
-          u ? resolvePostLoginPath(u.role, null, u) : PENDING_APPROVAL_PATH,
-          { replace: true }
-        );
+        const hydrated = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
+        const dest = hydrated ? resolveLoginRedirect(hydrated, {}) : PENDING_APPROVAL_PATH;
+        navigate(dest, { replace: true });
         return;
       }
 
@@ -172,66 +173,70 @@ export function BusinessSignupPage() {
 
   if (verifyEmail) {
     return (
-      <Card className="border-0 shadow-none sm:border sm:shadow-card">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+      <AuthPageChrome
+        eyebrow="Application received"
+        title="Verify your business email"
+        description={
+          <>
+            We sent a link to <strong className="text-foreground">{verifyEmail}</strong>. After verification, sign
+            in — your application enters the admin approval queue (typically 24–48 business hours).
+          </>
+        }
+      >
+        <div className="flex justify-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Mail className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle>Verify your business email</CardTitle>
-          <CardDescription className="text-pretty">
-            We sent a link to <strong>{verifyEmail}</strong>. After verification, sign in — your application will
-            enter the admin approval queue.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            disabled={resending}
-            onClick={async () => {
-              setResending(true);
-              await resendEmailConfirmation(verifyEmail);
-              setResending(false);
-            }}
-          >
-            {resending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending…
-              </>
-            ) : (
-              "Resend verification email"
-            )}
-          </Button>
-          <Button type="button" variant="default" className="w-full" asChild>
-            <Link to="/login">Go to sign in</Link>
-          </Button>
-        </CardContent>
-      </Card>
+          </span>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-4 h-11 w-full rounded-xl"
+          disabled={resending}
+          onClick={async () => {
+            setResending(true);
+            await resendEmailConfirmation(verifyEmail);
+            setResending(false);
+          }}
+        >
+          {resending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending…
+            </>
+          ) : (
+            "Resend verification email"
+          )}
+        </Button>
+        <Button type="button" className="auth-cta mt-2 w-full" asChild>
+          <Link to="/login">Go to sign in</Link>
+        </Button>
+      </AuthPageChrome>
     );
   }
 
   return (
-    <Card className="border-0 shadow-none sm:border sm:shadow-card">
-      <CardHeader>
-        <CardTitle>Business registration</CardTitle>
-        <CardDescription>
-          Dealers, DSA, parts sellers & service partners — GST verification and admin approval required before CRM
-          access.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {signupError && <AuthStatusAlert error={signupError} className="mb-4" />}
+    <AuthPageChrome
+      variant="compact"
+      eyebrow="Business · KYC"
+      title="Business registration"
+      description="GST verification & admin approval before CRM access."
+      className="auth-page--wide"
+      footer={<AuthPageLinks prompt="Already registered?" linkLabel="Sign in" linkTo="/login" />}
+    >
+      <AuthRoleSwitch mode="signup" />
+        {signupError && <AuthStatusAlert error={signupError} className="mb-3" />}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <div>
-            <Label htmlFor="biz-role">Business type</Label>
+          <div className="auth-field">
+            <Label htmlFor="biz-role" className="auth-field__label">
+              Partner role
+            </Label>
             <select
               id="biz-role"
               disabled={loading}
               {...register("role")}
-              className="mt-1 flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+              className="auth-select mt-1.5"
             >
               {SIGNUP_ROLE_OPTIONS.map(({ value, label }) => (
                 <option key={value} value={value}>
@@ -240,38 +245,46 @@ export function BusinessSignupPage() {
               ))}
             </select>
           </div>
-          <div>
-            <Label htmlFor="biz-owner">Owner name</Label>
-            <Input id="biz-owner" className="mt-1" disabled={loading} {...register("ownerName")} />
-            {errors.ownerName && (
-              <p className="mt-1 text-xs text-destructive">{errors.ownerName.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="biz-company">Company / showroom name</Label>
-            <Input id="biz-company" className="mt-1" disabled={loading} {...register("companyName")} />
-            {errors.companyName && (
-              <p className="mt-1 text-xs text-destructive">{errors.companyName.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="biz-gst">GSTIN</Label>
-            <Input id="biz-gst" className="mt-1 uppercase" placeholder="22AAAAA0000A1Z5" disabled={loading} {...register("gst")} />
-            {errors.gst && <p className="mt-1 text-xs text-destructive">{errors.gst.message}</p>}
-          </div>
+          <AuthFormField
+            id="biz-owner"
+            label="Owner / authorized signatory"
+            disabled={loading}
+            error={errors.ownerName?.message}
+            {...register("ownerName")}
+          />
+          <AuthFormField
+            id="biz-company"
+            label="Company / showroom name"
+            disabled={loading}
+            error={errors.companyName?.message}
+            {...register("companyName")}
+          />
+          <AuthFormField
+            id="biz-gst"
+            label="GSTIN"
+            placeholder="22AAAAA0000A1Z5"
+            className="uppercase"
+            disabled={loading}
+            error={errors.gst?.message}
+            {...register("gst")}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="biz-city">City</Label>
-              <Input id="biz-city" className="mt-1" disabled={loading} {...register("city")} />
-              {errors.city && <p className="mt-1 text-xs text-destructive">{errors.city.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="biz-state">State</Label>
+            <AuthFormField
+              id="biz-city"
+              label="City"
+              disabled={loading}
+              error={errors.city?.message}
+              {...register("city")}
+            />
+            <div className="auth-field">
+              <Label htmlFor="biz-state" className="auth-field__label">
+                State
+              </Label>
               <select
                 id="biz-state"
                 disabled={loading}
                 {...register("state")}
-                className="mt-1 flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                className="auth-select mt-1.5"
               >
                 <option value="">Select state</option>
                 {INDIAN_STATES.map((s) => (
@@ -283,13 +296,15 @@ export function BusinessSignupPage() {
               {errors.state && <p className="mt-1 text-xs text-destructive">{errors.state.message}</p>}
             </div>
           </div>
-          <div>
-            <Label htmlFor="biz-category">Business category</Label>
+          <div className="auth-field">
+            <Label htmlFor="biz-category" className="auth-field__label">
+              Business category
+            </Label>
             <select
               id="biz-category"
               disabled={loading}
               {...register("businessCategory")}
-              className="mt-1 flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+              className="auth-select mt-1.5"
             >
               <option value="multi_brand">Multi-brand dealership</option>
               <option value="single_brand">Single-brand franchise</option>
@@ -301,36 +316,41 @@ export function BusinessSignupPage() {
               <option value="other">Other</option>
             </select>
           </div>
-          <div>
-            <Label htmlFor="biz-type">Business type (label)</Label>
-            <Input
-              id="biz-type"
-              className="mt-1"
-              placeholder="e.g. Authorized Maruti dealer"
-              disabled={loading}
-              {...register("businessType")}
-            />
-            {errors.businessType && (
-              <p className="mt-1 text-xs text-destructive">{errors.businessType.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="biz-email">Work email</Label>
-            <Input id="biz-email" type="email" autoComplete="email" className="mt-1" disabled={loading} {...register("email")} />
-            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="biz-mobile">Mobile</Label>
-            <Input id="biz-mobile" className="mt-1" placeholder="9876543210" inputMode="tel" disabled={loading} {...register("mobile")} />
-            {errors.mobile && <p className="mt-1 text-xs text-destructive">{errors.mobile.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="biz-password">Password</Label>
-            <Input id="biz-password" type="password" autoComplete="new-password" className="mt-1" disabled={loading} {...register("password")} />
-            {errors.password && (
-              <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
-            )}
-          </div>
+          <AuthFormField
+            id="biz-type"
+            label="Business description"
+            placeholder="e.g. Authorized Maruti dealer"
+            disabled={loading}
+            error={errors.businessType?.message}
+            {...register("businessType")}
+          />
+          <AuthFormField
+            id="biz-email"
+            label="Work email"
+            type="email"
+            autoComplete="email"
+            disabled={loading}
+            error={errors.email?.message}
+            {...register("email")}
+          />
+          <AuthFormField
+            id="biz-mobile"
+            label="Mobile"
+            placeholder="9876543210"
+            inputMode="tel"
+            disabled={loading}
+            error={errors.mobile?.message}
+            {...register("mobile")}
+          />
+          <AuthFormField
+            id="biz-password"
+            label="Password"
+            type="password"
+            autoComplete="new-password"
+            disabled={loading}
+            error={errors.password?.message}
+            {...register("password")}
+          />
           <div>
             <Label htmlFor="biz-docs">Upload documents (GST, PAN, trade license)</Label>
             <div className="mt-1 flex items-center gap-2 rounded-lg border border-dashed border-border/80 bg-muted/30 px-3 py-3">
@@ -349,7 +369,7 @@ export function BusinessSignupPage() {
               <p className="mt-1 text-xs text-muted-foreground">{docNames.join(", ")} — upload to storage after approval.</p>
             )}
           </div>
-          <Button type="submit" variant="default" className="w-full" disabled={loading}>
+          <Button type="submit" className="auth-cta w-full" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -360,17 +380,6 @@ export function BusinessSignupPage() {
             )}
           </Button>
         </form>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Buying for personal use?{" "}
-          <Link to="/signup/customer" className="font-medium text-primary hover:underline">
-            Customer signup
-          </Link>
-        </p>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          Legacy form? <Link to="/signup" className="text-primary hover:underline">Original signup</Link>
-        </p>
-      </CardContent>
-    </Card>
+    </AuthPageChrome>
   );
 }

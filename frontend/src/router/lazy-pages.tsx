@@ -50,6 +50,22 @@ export const AIControlCenterPage = lazyNamed(() => import("@/ai/pages/AIControlC
 // Super admin
 export const SuperAdminOverviewPage = lazyNamed(() => import("@/features/platform-admin/pages/SuperAdminOverviewPage"), "SuperAdminOverviewPage");
 export const UsersManagementPage = lazyNamed(() => import("@/features/platform-admin/pages/UsersManagementPage"), "UsersManagementPage");
+export const BusinessApprovalsPage = lazyNamed(
+  () => import("@/features/platform-admin/pages/BusinessApprovalsPage"),
+  "BusinessApprovalsPage"
+);
+export const RoleDirectoryPage = lazyNamed(
+  () => import("@/features/platform-admin/pages/RoleDirectoryPage"),
+  "RoleDirectoryPage"
+);
+export const FinanceApprovalsPage = lazyNamed(
+  () => import("@/features/platform-admin/pages/FinanceApprovalsPage"),
+  "FinanceApprovalsPage"
+);
+export const AdminOperationsPage = lazyNamed(
+  () => import("@/features/platform-admin/pages/AdminOperationsPage"),
+  "AdminOperationsPage"
+);
 export const DealerApprovalsPage = lazyNamed(() => import("@/features/platform-admin/pages/DealerApprovalsPage"), "DealerApprovalsPage");
 export const KycVerificationPage = lazyNamed(() => import("@/features/platform-admin/pages/KycVerificationPage"), "KycVerificationPage");
 export const PlatformAnalyticsPage = lazyNamed(() => import("@/features/platform-admin/pages/PlatformAnalyticsPage"), "PlatformAnalyticsPage");

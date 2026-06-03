@@ -4,6 +4,7 @@ import { createVehicle } from "@/services/vehicle.service";
 import { createInventoryUploadRecord, completeInventoryUpload, fetchDealerVehiclesByDealerId } from "../services/dealer.service";
 import type { BulkUploadState, ParsedInventoryRow, UploadRowResult } from "../types";
 import type { DealerProfile } from "../types";
+import toast from "react-hot-toast";
 
 const initial: BulkUploadState = {
   status: "idle",
@@ -47,7 +48,10 @@ export function useBulkUpload(dealer: DealerProfile | null, sellerId: string | u
 
   const uploadRows = useCallback(
     async (rowsToUpload?: ParsedInventoryRow[]) => {
-      if (!dealer || !sellerId) return;
+      if (!dealer || !sellerId) {
+        toast.error("Sign in with an approved dealer account to upload inventory");
+        return;
+      }
       const rows = rowsToUpload ?? parsedRows;
       if (!rows.length) return;
 

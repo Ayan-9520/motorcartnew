@@ -1,13 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewCarDealerShell } from "../components/NewCarDealerShell";
 import { NcdInventoryGrid } from "../components/NcdInventoryGrid";
+import { NewCarAddInventoryDialog } from "../components/NewCarAddInventoryDialog";
 import { useNewCarDealerOS } from "../hooks/useNewCarDealerOS";
 import { setPageMeta } from "@/utils/seo";
 
 export function NewCarInventoryPage() {
-  const { data, loading } = useNewCarDealerOS();
+  const { data, loading, refresh, dealer } = useNewCarDealerOS();
+  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     setPageMeta({ title: "New car inventory" });
@@ -18,7 +20,7 @@ export function NewCarInventoryPage() {
       title="Showroom inventory"
       description="Variants, pricing, stock health, offers & delivery timelines."
       actions={
-        <Button className="rounded-xl">
+        <Button className="rounded-xl" disabled={!dealer?.id} onClick={() => setAddOpen(true)}>
           <Plus className="mr-1 h-4 w-4" /> Add new car
         </Button>
       }
@@ -32,6 +34,14 @@ export function NewCarInventoryPage() {
       ) : (
         <NcdInventoryGrid items={data?.inventory ?? []} />
       )}
+      {dealer?.id ? (
+        <NewCarAddInventoryDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          dealerId={dealer.id}
+          onSaved={() => void refresh()}
+        />
+      ) : null}
     </NewCarDealerShell>
   );
 }

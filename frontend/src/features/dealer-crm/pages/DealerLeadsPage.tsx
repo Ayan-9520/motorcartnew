@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "../components/StatCard";
 import { LeadTable } from "../components/LeadTable";
@@ -7,6 +7,7 @@ import { LeadPipelineBoard } from "../components/LeadPipelineBoard";
 import { LeadDetailPanel } from "../components/LeadDetailPanel";
 import { DealerConsoleShell } from "../components/DealerConsoleShell";
 import { CRMDataToolbar } from "../components/CRMDataToolbar";
+import { DealerAddLeadDialog } from "../components/DealerAddLeadDialog";
 import { useDealerCRM } from "../hooks/useDealerCRM";
 import { useDealer } from "../hooks/useDealer";
 import { usePaginatedFilter } from "../hooks/usePaginatedFilter";
@@ -35,6 +36,7 @@ export function DealerLeadsPage() {
   const [selected, setSelected] = useState<LeadWithMeta | null>(null);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [stageFilter, setStageFilter] = useState<StageFilter>("all");
+  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     setPageMeta({ title: "Lead CRM" });
@@ -92,13 +94,18 @@ export function DealerLeadsPage() {
       description="New · follow-up · closed · lost — WhatsApp, calls and notes on every lead."
       crumbs={[{ label: "Leads" }]}
       actions={
-        <div className="flex gap-1 rounded-lg border border-border p-0.5">
-          <Button size="sm" variant={view === "pipeline" ? "default" : "ghost"} onClick={() => setView("pipeline")}>
-            <LayoutGrid className="h-4 w-4" />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" className="rounded-lg" disabled={!dealer?.id} onClick={() => setAddOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Add lead
           </Button>
-          <Button size="sm" variant={view === "table" ? "default" : "ghost"} onClick={() => setView("table")}>
-            <List className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1 rounded-lg border border-border p-0.5">
+            <Button size="sm" variant={view === "pipeline" ? "default" : "ghost"} onClick={() => setView("pipeline")}>
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant={view === "table" ? "default" : "ghost"} onClick={() => setView("table")}>
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       }
     >
@@ -146,6 +153,14 @@ export function DealerLeadsPage() {
       ) : (
         <LeadTable leads={pageItems} onStatusChange={(id, s) => void onStatusChange(id, s)} />
       )}
+      {dealer?.id ? (
+        <DealerAddLeadDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          dealerId={dealer.id}
+          onSaved={() => refetch()}
+        />
+      ) : null}
     </DealerConsoleShell>
   );
 }

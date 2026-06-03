@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Phone, Loader2 } from "lucide-react";
+import { Mail, Phone, Loader2, Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +12,11 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchAuthProviderSettings, normalizeAuthEmail } from "@/services/auth.service";
 import { AuthStatusAlert } from "@/components/auth/AuthStatusAlert";
+import { AuthFormField } from "@/components/auth/AuthFormField";
 import type { AuthErrorUI } from "@/lib/auth-errors";
 import { useAuthStore } from "@/store/authStore";
-import { resolvePostLoginPath } from "@/auth/resolve-post-login";
-import type { AppRole } from "@/types/database";
+import { resolveLoginRedirect, waitForHydratedUser } from "@/auth/login-redirect";
+import { getWorkspaceHomePath } from "@/auth/workspace-redirect";
 
 const emailSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email address"),
@@ -26,23 +28,21 @@ type EmailForm = z.infer<typeof emailSchema>;
 interface AuthFormProps {
   onSuccess?: () => void;
   defaultTab?: "email" | "phone";
+  /** Hide signup links when used on dedicated /login page */
+  showSignupLinks?: boolean;
+  compact?: boolean;
 }
 
-export function AuthForm({ onSuccess, defaultTab = "email" }: AuthFormProps) {
+export function AuthForm({
+  onSuccess,
+  defaultTab = "email",
+  showSignupLinks = true,
+  compact = false,
+}: AuthFormProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
   const redirectParam = new URLSearchParams(location.search).get("redirect");
-  const redirectTo =
-    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-      ? redirectParam
-      : null;
-
-  const user = useAuthStore((s) => s.user);
-
-  const postLoginDest = (role?: AppRole) =>
-    redirectTo ??
-    (role ? resolvePostLoginPath(role, from, user ?? undefined) : "/dashboard/customer");
 
   const {
     loginEmail,
@@ -101,6 +101,13 @@ export function AuthForm({ onSuccess, defaultTab = "email" }: AuthFormProps) {
 
   const clearLoginError = () => setLoginError(null);
 
+  const goToWorkspace = async () => {
+    const u = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
+    if (!u) return;
+    const dest = resolveLoginRedirect(u, { from, redirectParam });
+    navigate(dest, { replace: true, state: undefined });
+  };
+
   const onEmailSubmit = async (data: EmailForm) => {
     setSubmitting(true);
     setLoginError(null);
@@ -122,11 +129,7 @@ export function AuthForm({ onSuccess, defaultTab = "email" }: AuthFormProps) {
     }
 
     onSuccess?.();
-    const u = useAuthStore.getState().user;
-    navigate(
-      u ? resolvePostLoginPath(u.role as AppRole, from, u) : redirectTo ?? "/dashboard/customer",
-      { replace: true }
-    );
+    await goToWorkspace();
   };
 
   const onResendVerification = async () => {
@@ -161,194 +164,166 @@ export function AuthForm({ onSuccess, defaultTab = "email" }: AuthFormProps) {
     setSubmitting(false);
     if (!error) {
       onSuccess?.();
-      const u = useAuthStore.getState().user;
-      navigate(
-        u ? resolvePostLoginPath(u.role as AppRole, from, u) : redirectTo ?? "/dashboard/customer",
-        { replace: true }
-      );
+      await goToWorkspace();
     }
   };
 
   const busy = submitting || isLoading;
   const signedInUser = useAuthStore((s) => s.user);
-  const dashboardHref = signedInUser
-    ? resolvePostLoginPath(signedInUser.role as AppRole, from, signedInUser)
-    : redirectTo ?? "/dashboard/customer";
+  const dashboardHref = signedInUser ? getWorkspaceHomePath(signedInUser) : "/dashboard/customer";
 
   return (
-    <Tabs defaultValue={defaultTab} className="w-full">
+    <Tabs defaultValue={defaultTab} className={cn("auth-form w-full", compact && "auth-form--compact")}>
       {settingsLoading ? (
-        <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground" aria-busy="true">
+        <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground" aria-busy="true">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Loading sign-in options…
         </div>
       ) : (
         providers?.needsEmailConfirm && (
-          <p className="mb-3 rounded-lg border border-border/80 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <p className="auth-form__notice mb-3 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
             Email verification is required before you can sign in. Check spam if you don&apos;t see our email.
           </p>
         )
       )}
 
-      <TabsList className={providers?.phone ? "grid w-full grid-cols-2" : "grid w-full grid-cols-1"}>
-        <TabsTrigger value="email" className="gap-1" disabled={busy}>
-          <Mail className="h-4 w-4" /> Email
-        </TabsTrigger>
-        {providers?.phone === true && (
-          <TabsTrigger value="phone" className="gap-1" disabled={busy}>
-            <Phone className="h-4 w-4" /> Phone OTP
+      {providers?.phone === true && (
+        <TabsList className="auth-form__tabs mb-4 grid h-10 w-full grid-cols-2 rounded-xl bg-muted/50 p-1">
+          <TabsTrigger value="email" className="rounded-lg text-xs font-semibold">
+            Email
           </TabsTrigger>
-        )}
-      </TabsList>
+          <TabsTrigger value="phone" className="rounded-lg text-xs font-semibold">
+            Phone OTP
+          </TabsTrigger>
+        </TabsList>
+      )}
 
-      <TabsContent value="email" className="mt-4 space-y-4">
+      <TabsContent value="email" className="mt-0 space-y-4">
         {loginError && (
           <AuthStatusAlert
             error={loginError}
             email={attemptedEmail}
-            onResendVerification={
-              loginError.showResendVerification ? onResendVerification : undefined
-            }
+            onResendVerification={onResendVerification}
             resending={resending}
           />
         )}
 
-        <form onSubmit={handleSubmit(onEmailSubmit)} className="space-y-4" noValidate>
-          <div>
-            <Label htmlFor="auth-email">Email</Label>
-            <Input
-              id="auth-email"
-              type="email"
-              autoComplete="email"
-              className="mt-1"
-              disabled={busy}
-              {...register("email", { onChange: clearLoginError })}
-            />
-            {errors.email && (
-              <p className="mt-1 text-xs text-destructive" role="alert">
-                {errors.email.message}
-              </p>
-            )}
+        {isAuthenticated && signedInUser && (
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 text-sm">
+            <p className="font-medium text-foreground">You&apos;re already signed in</p>
+            <Button type="button" size="sm" className="auth-cta mt-2 w-full" asChild>
+              <Link to={dashboardHref}>Open my workspace</Link>
+            </Button>
           </div>
-          <div>
-            <Label htmlFor="auth-password">Password</Label>
-            <Input
-              id="auth-password"
-              type="password"
-              autoComplete="current-password"
-              className="mt-1"
-              disabled={busy}
-              {...register("password", { onChange: clearLoginError })}
-            />
-            {errors.password && (
-              <p className="mt-1 text-xs text-destructive" role="alert">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
+        )}
+
+        <form onSubmit={handleSubmit(onEmailSubmit)} className="auth-form__fields space-y-3" noValidate>
+          <AuthFormField
+            id="login-email"
+            label="Email address"
+            type="email"
+            autoComplete="email"
+            disabled={busy}
+            icon={<Mail className="h-4 w-4" />}
+            error={errors.email?.message}
+            {...register("email", { onChange: clearLoginError })}
+          />
+          <AuthFormField
+            id="login-password"
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            disabled={busy}
+            icon={<Lock className="h-4 w-4" />}
+            error={errors.password?.message}
+            {...register("password", { onChange: clearLoginError })}
+          />
+          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground">
             <input
-              id="remember-me"
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-border accent-primary"
             />
-            <Label htmlFor="remember-me" className="cursor-pointer text-sm font-normal text-muted-foreground">
-              Keep me signed in on this device
-            </Label>
-          </div>
-          <Button type="submit" variant="default" className="w-full" disabled={busy}>
-            {submitting ? (
+            Remember me on this device
+          </label>
+          <Button type="submit" className="auth-cta w-full" disabled={busy}>
+            {busy ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Signing in…
               </>
             ) : (
-              "Sign In"
+              "Sign in"
             )}
           </Button>
         </form>
 
         <p className="text-center text-sm">
-          <Link to="/forgot-password" className="text-primary hover:underline">
+          <Link to="/forgot-password" className="font-medium text-primary hover:underline">
             Forgot password?
           </Link>
         </p>
       </TabsContent>
 
       {providers?.phone === true && (
-        <TabsContent value="phone" className="mt-4 space-y-4">
+        <TabsContent value="phone" className="mt-0 space-y-4">
           {!otpSent ? (
             <>
-              <div>
-                <Label htmlFor="auth-phone">Mobile number</Label>
-                <Input
-                  id="auth-phone"
-                  className="mt-1"
-                  placeholder="9876543210"
-                  inputMode="tel"
-                  disabled={busy}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+              <div className="auth-field">
+                <Label htmlFor="login-phone" className="auth-field__label">
+                  Mobile number
+                </Label>
+                <div className="auth-field__control mt-1.5">
+                  <span className="auth-field__icon">
+                    <Phone className="h-4 w-4" />
+                  </span>
+                  <Input
+                    id="login-phone"
+                    className="auth-field__input"
+                    placeholder="9876543210"
+                    inputMode="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={busy}
+                  />
+                </div>
               </div>
               <Button
                 type="button"
-                variant="default"
-                className="w-full"
-                onClick={onSendOtp}
+                className="auth-cta w-full"
                 disabled={busy || phone.replace(/\D/g, "").length < 10}
+                onClick={onSendOtp}
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending OTP…
-                  </>
-                ) : (
-                  "Send OTP"
-                )}
+                {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+                Send OTP
               </Button>
             </>
           ) : (
             <>
-              <div>
-                <Label htmlFor="auth-otp">Enter OTP</Label>
+              <p className="text-sm text-muted-foreground">
+                OTP sent to <strong className="text-foreground">{formattedPhone}</strong>
+              </p>
+              <div className="auth-field">
+                <Label htmlFor="login-otp" className="auth-field__label">
+                  Enter OTP
+                </Label>
                 <Input
-                  id="auth-otp"
-                  className="mt-1"
-                  placeholder="6-digit code"
+                  id="login-otp"
+                  className="mt-1.5 h-11 rounded-xl"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
                   inputMode="numeric"
                   disabled={busy}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  maxLength={6}
                 />
               </div>
               <Button
                 type="button"
-                variant="default"
-                className="w-full"
-                onClick={onVerifyOtp}
+                className="auth-cta w-full"
                 disabled={busy || otp.length < 4}
+                onClick={onVerifyOtp}
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying…
-                  </>
-                ) : (
-                  "Verify & Sign In"
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-sm"
-                disabled={busy}
-                onClick={() => setOtpSent(false)}
-              >
-                Change number
+                Verify & sign in
               </Button>
             </>
           )}
@@ -357,18 +332,18 @@ export function AuthForm({ onSuccess, defaultTab = "email" }: AuthFormProps) {
 
       {providers?.google === true && (
         <>
-          <div className="relative my-6">
+          <div className="auth-form__divider relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-border/70" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or</span>
+            <div className="relative flex justify-center text-xs uppercase tracking-wider">
+              <span className="bg-card px-3 text-muted-foreground">Or continue with</span>
             </div>
           </div>
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="h-11 w-full rounded-xl border-border/80"
             onClick={() => loginGoogle()}
             disabled={busy}
           >
@@ -377,25 +352,13 @@ export function AuthForm({ onSuccess, defaultTab = "email" }: AuthFormProps) {
         </>
       )}
 
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        No account?{" "}
-        <Link to="/signup/customer" className="font-medium text-primary hover:underline" onClick={onSuccess}>
-          Customer
-        </Link>
-        {" · "}
-        <Link to="/signup/business" className="font-medium text-primary hover:underline" onClick={onSuccess}>
-          Business
-        </Link>
-      </p>
-
-      {isAuthenticated && (
-        <p className="mt-2 text-center text-xs text-primary">
-          You are already signed in.{" "}
-          <Link to={dashboardHref} className="underline">
-            Go to dashboard
+      {showSignupLinks ? (
+        <div className="auth-form__signup-hint mt-6 border-t border-border/60 pt-4 text-center text-sm text-muted-foreground">
+          <Link to="/signup" className="font-semibold text-primary hover:underline">
+            Create an account
           </Link>
-        </p>
-      )}
+        </div>
+      ) : null}
     </Tabs>
   );
 }

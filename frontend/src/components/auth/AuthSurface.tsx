@@ -1,18 +1,32 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Premium auth card shell — subtle depth, no loud gradients. */
-export function AuthSurface({ children, className }: { children: ReactNode; className?: string }) {
+/** Premium glass auth card — depth, border glow, no harsh gradients. */
+export function AuthSurface({
+  children,
+  className,
+  compact = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  compact?: boolean;
+}) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-border/70 bg-card/90 p-1 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)] backdrop-blur-sm",
-        "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl before:p-px before:content-['']",
-        "before:bg-gradient-to-br before:from-primary/25 before:via-transparent before:to-primary/5",
+        "auth-surface relative overflow-hidden rounded-2xl border border-border/60",
+        "bg-card shadow-[0_24px_48px_-24px_rgba(0,0,0,0.35),0_0_0_1px_hsl(var(--primary)/0.05)]",
+        "backdrop-blur-xl",
+        compact && "auth-surface--compact",
         className
       )}
     >
-      <div className="relative rounded-[14px] bg-card/95 px-4 py-6 sm:px-6 sm:py-8">{children}</div>
+      <div className="auth-surface__accent pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary" aria-hidden />
+      <div
+        className={cn("relative", compact ? "auth-surface__inner--compact" : "px-5 py-6 sm:px-6 sm:py-7")}
+      >
+        {children}
+      </div>
     </div>
   );
 }

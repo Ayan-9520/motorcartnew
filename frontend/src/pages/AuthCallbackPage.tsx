@@ -5,8 +5,7 @@ import toast from "react-hot-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
-import { resolvePostLoginPath } from "@/auth/resolve-post-login";
-import type { AppRole } from "@/types/database";
+import { resolveLoginRedirect, waitForHydratedUser } from "@/auth/login-redirect";
 import { classifyAuthError, getAuthErrorToast } from "@/lib/auth-errors";
 import { logAuthActivity, registerDeviceTouch } from "@/services/auth-telemetry.service";
 
@@ -52,11 +51,8 @@ export function AuthCallbackPage() {
         toast.success("Email verified — welcome!");
         void registerDeviceTouch();
         void logAuthActivity("oauth_callback", { flow: "exchange_or_session" });
-        const u = useAuthStore.getState().user;
-        navigate(
-          u ? resolvePostLoginPath(u.role as AppRole, null, u) : "/dashboard/customer",
-          { replace: true }
-        );
+        const u = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
+        navigate(u ? resolveLoginRedirect(u, {}) : "/dashboard/customer", { replace: true });
       } else {
         setMessage("Could not complete sign-in. Try signing in manually.");
         setTimeout(() => navigate("/login", { replace: true }), 2000);

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { submitTestDrive } from "@/services/vehicle.service";
+import { submitTestDrive } from "@/services/leads.service";
 import type { VehicleListing } from "@/types/vehicle";
 import toast from "react-hot-toast";
 
@@ -18,17 +18,26 @@ export function TestDriveBooking({ vehicle }: { vehicle: VehicleListing }) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await submitTestDrive({
-      vehicleId: vehicle.id,
-      dealerId: vehicle.dealerId ?? "00000000-0000-0000-0000-000000000001",
-      name,
-      phone,
-      preferredDate: date,
-      preferredTime: time,
-    });
-    setLoading(false);
-    if (error) toast.success("Test drive request submitted!");
-    else toast.success("Test drive booked! Dealer will confirm.");
+    try {
+      const { error } = await submitTestDrive({
+        vehicleId: vehicle.id,
+        vehicleTitle: vehicle.title,
+        vehicleSlug: vehicle.slug,
+        dealerId: vehicle.dealerId,
+        dealerSlug: vehicle.dealerSlug,
+        name,
+        phone,
+        preferredDate: date,
+        preferredTime: time,
+      });
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      toast.success("Test drive request sent! The dealer will confirm your slot.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

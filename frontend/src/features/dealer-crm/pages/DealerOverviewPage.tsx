@@ -76,7 +76,7 @@ export function DealerOverviewPage() {
     })();
   }, [dealer, leads, listingPerformance]);
 
-  if (loading) {
+  if (loading && !crmDealer) {
     return <p className="text-muted-foreground">Loading dealer OS…</p>;
   }
 

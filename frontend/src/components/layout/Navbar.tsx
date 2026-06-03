@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Menu, X, Search, User, Users, Car, ShoppingCart, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LoginModal } from "@/components/auth/LoginModal";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 import { isVehicleHubNavPath, NAV_LINKS, VEHICLE_HUB_NAV } from "@/lib/constants";
 import { useUIStore } from "@/store/uiStore";
@@ -38,8 +37,7 @@ export function Navbar() {
     pathname.startsWith("/community/") ||
     pathname.startsWith("/dashboard");
   const [scrolled, setScrolled] = useState(false);
-  const { mobileMenuOpen, setMobileMenuOpen, loginModalOpen, setLoginModalOpen, setSearchOpen } =
-    useUIStore();
+  const { mobileMenuOpen, setMobileMenuOpen, setSearchOpen } = useUIStore();
   const { isAuthenticated } = useAuth();
   const user = useAuthStore((s) => s.user);
   const workspaceHref = user ? getRoleDashboardPath(user) : "/";
@@ -138,9 +136,9 @@ export function Navbar() {
           variant="ghost"
           size="sm"
           className="nav-login hidden h-8 rounded-lg px-2.5 text-xs font-semibold sm:inline-flex"
-          onClick={() => setLoginModalOpen(true)}
+          asChild
         >
-          Login
+          <Link to="/login">Sign in</Link>
         </Button>
       )}
 
@@ -162,7 +160,7 @@ export function Navbar() {
         {/* Row 1: logo + small vehicle icons + search & utilities */}
         <div className="nav-top-bar">
           <div className="container nav-top-bar-inner">
-            <Link to={workspaceHref} className="nav-brand shrink-0">
+            <Link to="/" className="nav-brand shrink-0" aria-label="Motorcart home — marketplace">
               <span className="nav-brand-mark">
                 <Car className="h-5 w-5" />
               </span>
@@ -274,6 +272,9 @@ export function Navbar() {
               </div>
               {isAuthenticated ? (
                 <div className="flex flex-col gap-2">
+                  <Button variant="outline" className="w-full rounded-xl" asChild onClick={closeMobile}>
+                    <Link to="/">Marketplace home</Link>
+                  </Button>
                   <Button variant="default" className="w-full rounded-xl" asChild onClick={closeMobile}>
                     <Link to={workspaceHref}>Workspace</Link>
                   </Button>
@@ -285,23 +286,20 @@ export function Navbar() {
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  className="w-full rounded-xl"
-                  onClick={() => {
-                    closeMobile();
-                    setLoginModalOpen(true);
-                  }}
-                >
-                  Login
-                </Button>
+                <div className="flex w-full flex-col gap-2">
+                  <Button variant="outline" className="w-full rounded-xl" asChild onClick={closeMobile}>
+                    <Link to="/login">Sign in</Link>
+                  </Button>
+                  <Button variant="default" className="w-full rounded-xl" asChild onClick={closeMobile}>
+                    <Link to="/signup">Create account</Link>
+                  </Button>
+                </div>
               )}
             </div>
           </div>
         )}
       </header>
 
-      <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
     </>
   );
 }

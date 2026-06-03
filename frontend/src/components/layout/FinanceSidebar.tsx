@@ -52,13 +52,13 @@ export function FinanceSidebar({ variant }: FinanceSidebarProps) {
         sidebarOpen ? "w-64" : "w-[72px]"
       )}
     >
-      <div className="flex h-16 items-center justify-between border-b px-4">
+      <div className="dashboard-sidebar__head flex h-16 shrink-0 items-center justify-between border-b px-4">
         {sidebarOpen && <span className="font-semibold text-sm">{title}</span>}
         <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle sidebar">
           <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
         </Button>
       </div>
-      <nav className="dashboard-sidebar__nav flex-1 space-y-1 overflow-y-auto p-3">
+      <nav className="dashboard-sidebar__nav min-h-0 flex-1 space-y-1 p-3">
         {links.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}

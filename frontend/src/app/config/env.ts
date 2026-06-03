@@ -34,7 +34,8 @@ export function parsePublicEnv(): PublicEnv {
 
 export function hasApiConfig(env: PublicEnv = parsePublicEnv()): boolean {
   const url = env.VITE_API_URL ?? "";
-  return Boolean(url && !url.includes("placeholder"));
+  if (url && !url.includes("placeholder")) return true;
+  return import.meta.env.DEV;
 }
 
 /** @deprecated Use hasApiConfig */

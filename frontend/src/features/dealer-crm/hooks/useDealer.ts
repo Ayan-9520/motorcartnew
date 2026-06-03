@@ -15,18 +15,24 @@ export function useDealer() {
       return;
     }
     setLoading(true);
-    let profile = await fetchDealerByOwner(user.id);
-    if (!profile) {
-      profile = await ensureDealerForUser(user.id, {
-        fullName: user.fullName,
-        email: user.email,
-        city: user.city,
-        state: user.state,
-        role: user.role,
-      });
+    try {
+      let profile = await fetchDealerByOwner(user.id);
+      if (!profile) {
+        profile = await ensureDealerForUser(user.id, {
+          fullName: user.fullName,
+          email: user.email,
+          city: user.city,
+          state: user.state,
+          role: user.role,
+        });
+      }
+      setDealer(profile);
+    } catch (e) {
+      console.warn("[useDealer] load failed", e);
+      setDealer(null);
+    } finally {
+      setLoading(false);
     }
-    setDealer(profile);
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {

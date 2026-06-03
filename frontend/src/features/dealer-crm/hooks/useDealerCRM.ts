@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDealer } from "./useDealer";
-import { fetchDealerLeads, fetchDealerVehiclesByDealerId } from "../services/dealer.service";
+import { fetchDealerLeads, fetchDealerVehiclesByDealerId, fetchLeadsForDealerOwner } from "../services/dealer.service";
 import { MOCK_CALLS } from "../services/crm-mock";
 import { buildListingPerformance } from "../lib/dealer-analytics";
 import { fetchLeadCalls, subscribeDealerLeads } from "../services/crm.service";
@@ -15,57 +15,72 @@ function leadType(lead: DbLead): LeadWithMeta["type"] {
 }
 
 export function useDealerCRM() {
-  const { dealer, loading: dealerLoading } = useDealer();
+  const { dealer, user, loading: dealerLoading } = useDealer();
   const [leads, setLeads] = useState<DbLead[]>([]);
   const [vehicles, setVehicles] = useState<{ id: string; title: string; status: string; price: number; is_featured?: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [calls, setCalls] = useState(MOCK_CALLS);
+  const loadSeq = useRef(0);
 
   const load = useCallback(async () => {
     if (!dealer) {
       setLoading(false);
       return;
     }
+
+    const seq = ++loadSeq.current;
     setLoading(true);
-    const [leadRows, vehicleRows, callRows] = await Promise.all([
-      fetchDealerLeads(dealer.id),
-      fetchDealerVehiclesByDealerId(dealer.id),
-      fetchLeadCalls(dealer.id),
-    ]);
-    setLeads(leadRows as DbLead[]);
-    if (callRows.length) {
-      const leadMap = new Map((leadRows as DbLead[]).map((l) => [l.id, l]));
-      setCalls(
-        callRows.map((c) => {
-          const lead = leadMap.get(c.lead_id);
-          return {
-            id: c.id,
-            leadName: lead?.name ?? "Lead",
-            phone: lead?.phone ?? "",
-            outcome: (c.outcome ?? "answered") as "answered" | "missed" | "voicemail",
-            duration: c.duration_seconds ?? 0,
-            createdAt: c.created_at,
-          };
-        })
+
+    try {
+      const [leadRows, vehicleRows, callRows] = await Promise.all([
+        user?.id ? fetchLeadsForDealerOwner(user.id) : fetchDealerLeads(dealer.id),
+        fetchDealerVehiclesByDealerId(dealer.id),
+        fetchLeadCalls(dealer.id),
+      ]);
+
+      if (seq !== loadSeq.current) return;
+
+      setLeads(leadRows as DbLead[]);
+      if (callRows.length) {
+        const leadMap = new Map((leadRows as DbLead[]).map((l) => [l.id, l]));
+        setCalls(
+          callRows.map((c) => {
+            const lead = leadMap.get(c.lead_id);
+            return {
+              id: c.id,
+              leadName: lead?.name ?? "Lead",
+              phone: lead?.phone ?? "",
+              outcome: (c.outcome ?? "answered") as "answered" | "missed" | "voicemail",
+              duration: c.duration_seconds ?? 0,
+              createdAt: c.created_at,
+            };
+          })
+        );
+      } else {
+        setCalls(MOCK_CALLS);
+      }
+      setVehicles(
+        vehicleRows.map((v) => ({
+          id: v.id,
+          title: v.title,
+          status: v.status,
+          price: Number(v.price),
+          is_featured: v.is_featured,
+        }))
       );
-    } else {
-      setCalls(MOCK_CALLS);
+    } catch (e) {
+      console.warn("[useDealerCRM] load failed", e);
+    } finally {
+      if (seq === loadSeq.current) {
+        setLoading(false);
+      }
     }
-    setVehicles(
-      vehicleRows.map((v) => ({
-        id: v.id,
-        title: v.title,
-        status: v.status,
-        price: Number(v.price),
-        is_featured: v.is_featured,
-      }))
-    );
-    setLoading(false);
-  }, [dealer]);
+  }, [dealer, user?.id]);
 
   useEffect(() => {
-    load();
+    void load();
     if (!dealer?.id) return;
+
     const unsub = subscribeDealerLeads(dealer.id, () => {
       void load();
     });
@@ -84,7 +99,10 @@ export function useDealerCRM() {
         source: l.source,
         status: l.status,
         aiScore: l.ai_score,
-        vehicleInterest: l.vehicle_interest,
+        vehicleInterest:
+          l.vehicle_interest ??
+          (l.metadata as { vehicle_title?: string })?.vehicle_title ??
+          undefined,
         notes: l.notes,
         createdAt: l.created_at,
         type: leadType(l),
@@ -143,7 +161,7 @@ export function useDealerCRM() {
   return {
     dealer,
     dealerLoading,
-    loading,
+    loading: dealerLoading || loading,
     stats: statsWithMetrics,
     leads: leadsWithMeta,
     vehicles,

@@ -1,47 +1,21 @@
 import type { DbNotification } from "@/types/database";
+import { getCurrentMarketScopeKey } from "@/lib/market-scope";
+import { useAuthStore } from "@/store/authStore";
 
-const STORAGE_KEY = "motorcart_guest_notifications_v1";
+function storageKey(): string {
+  return `motorcart_guest_notifications:${getCurrentMarketScopeKey()}`;
+}
 
 const SEED: Omit<DbNotification, "user_id">[] = [
   {
     id: "gn1",
     title: "Welcome to Motorcart",
-    message: "Search 2.4L+ vehicles, parts, loans & live auctions — all in one place.",
+    message: "Search vehicles, parts, loans & auctions — all in one place.",
     type: "system",
     is_read: false,
     link: "/buy",
     metadata: {},
     created_at: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: "gn2",
-    title: "Wishlist tip",
-    message: "Tap the heart on any listing to save vehicles here.",
-    type: "wishlist",
-    is_read: false,
-    link: "/wishlist",
-    metadata: {},
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: "gn3",
-    title: "Auction ending soon",
-    message: "12 live lots end in the next 2 hours — place your bid now.",
-    type: "auction",
-    is_read: false,
-    link: "/auctions",
-    metadata: {},
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: "gn4",
-    title: "Pre-approved loan offer",
-    message: "You may qualify for car loan EMI from ₹4,500/mo. Check eligibility.",
-    type: "finance",
-    is_read: true,
-    link: "/finance",
-    metadata: {},
-    created_at: new Date(Date.now() - 172800000).toISOString(),
   },
 ];
 
@@ -50,8 +24,10 @@ function withUserId(rows: Omit<DbNotification, "user_id">[]): DbNotification[] {
 }
 
 export function loadGuestNotifications(): DbNotification[] {
+  if (useAuthStore.getState().user?.id) return [];
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey());
     if (raw) return JSON.parse(raw) as DbNotification[];
   } catch {
     /* ignore */
@@ -62,7 +38,7 @@ export function loadGuestNotifications(): DbNotification[] {
 }
 
 export function saveGuestNotifications(items: DbNotification[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 50)));
+  localStorage.setItem(storageKey(), JSON.stringify(items.slice(0, 50)));
 }
 
 export function markGuestNotificationRead(id: string) {
@@ -75,13 +51,15 @@ export function markAllGuestNotificationsRead() {
 }
 
 export function syncGuestWishlistNotification(count: number) {
+  if (useAuthStore.getState().user?.id) return;
+
   const items = loadGuestNotifications();
   if (count === 0) return;
   const updated: DbNotification = {
     id: "gn-wishlist-count",
     user_id: "guest",
     title: `${count} vehicle${count === 1 ? "" : "s"} in wishlist`,
-    message: "View your saved listings anytime from the heart menu.",
+    message: "View your saved listings from the heart icon.",
     type: "wishlist",
     is_read: false,
     link: "/wishlist",
@@ -93,6 +71,8 @@ export function syncGuestWishlistNotification(count: number) {
 }
 
 export function pushGuestNotification(partial: Pick<DbNotification, "title" | "message" | "type" | "link">) {
+  if (useAuthStore.getState().user?.id) return;
+
   const item: DbNotification = {
     id: `gn-${Date.now()}`,
     user_id: "guest",
@@ -105,4 +85,9 @@ export function pushGuestNotification(partial: Pick<DbNotification, "title" | "m
     created_at: new Date().toISOString(),
   };
   saveGuestNotifications([item, ...loadGuestNotifications()]);
+}
+
+/** Call when guest scope changes (login/logout) so bell count refreshes. */
+export function reloadGuestNotificationsForScope(): DbNotification[] {
+  return loadGuestNotifications();
 }

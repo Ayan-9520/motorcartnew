@@ -76,7 +76,7 @@ export function ResetPasswordPage() {
   return (
     <Card className="border-0 bg-transparent shadow-none">
         <CardHeader className="space-y-1 pb-2 text-center sm:text-left">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 sm:mx-0">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 sm:mx-0">
             <ShieldCheck className="h-6 w-6 text-primary" aria-hidden />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Set a new password</CardTitle>

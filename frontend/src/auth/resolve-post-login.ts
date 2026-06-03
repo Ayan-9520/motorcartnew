@@ -1,34 +1,17 @@
-import { getPostLoginDashboardPath } from "@/auth/post-login-path";
-import {
-  isAccountPendingApproval,
-  PENDING_APPROVAL_PATH,
-} from "@/auth/ecosystem-roles";
 import type { AppRole } from "@/types/database";
 import type { User } from "@/types";
+import { getPostLoginDashboardPath } from "@/auth/post-login-path";
+import { resolveLoginRedirect } from "@/auth/login-redirect";
 
-const AUTH_PATHS = new Set([
-  "/login",
-  "/signup",
-  "/signup/customer",
-  "/signup/business",
-  "/forgot-password",
-  "/reset-password",
-  "/auth/callback",
-]);
-
-/** Prefer deep link from ProtectedRoute; otherwise role dashboard. */
+/** Land on the user's real workspace dashboard (not another role's CRM). */
 export function resolvePostLoginPath(
   role: AppRole,
   from?: { pathname?: string; search?: string } | null,
-  user?: Pick<User, "accountStatus" | "role"> | null
+  user?: Pick<User, "role" | "dealerType" | "businessCategory" | "accountStatus" | "approvalStatus"> | null,
+  redirectParam?: string | null
 ): string {
-  if (user && isAccountPendingApproval(user)) {
-    return PENDING_APPROVAL_PATH;
+  if (user) {
+    return resolveLoginRedirect(user as User, { from, redirectParam });
   }
-
-  const pathname = from?.pathname;
-  if (pathname && !AUTH_PATHS.has(pathname) && !pathname.startsWith("/auth")) {
-    return `${pathname}${from?.search ?? ""}`;
-  }
-  return getPostLoginDashboardPath(role, user ?? undefined);
+  return getPostLoginDashboardPath(role, null);
 }

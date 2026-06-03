@@ -5,7 +5,26 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Motorcart.in - India's AI-Powered Automobile Ecosystem. Buy, sell, finance, auction vehicles, parts & services." />
-    <meta name="theme-color" content="#0b141a" />
+    <meta name="theme-color" content="#f0f2f5" />
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("motorcart-theme");
+          var parsed = raw ? JSON.parse(raw) : null;
+          var mode = (parsed && parsed.state && parsed.state.mode) || "system";
+          var dark =
+            mode === "dark" ||
+            (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", dark ? "#0b141a" : "#f0f2f5");
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Motorcart.in" />
     <meta property="og:title" content="Motorcart.in | India's AI Automobile Ecosystem" />

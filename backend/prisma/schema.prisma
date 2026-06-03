@@ -1,0 +1,1346 @@
+// Motorcart.in — MySQL schema (migrated from Supabase/Postgres)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppRole {
+  customer
+  dealer
+  used_car_dealer
+  preowned_dealer
+  new_car_dealer
+  bike_dealer
+  truck_dealer
+  dsa_agent
+  bank_nbfc
+  finance_manager
+  service_center
+  service_partner
+  service_technician
+  parts_seller
+  admin
+  super_admin
+  auction_partner
+  employee
+  finance_partner
+}
+
+enum UserStatus {
+  active
+  suspended
+  pending_verification
+  closed
+}
+
+enum KycStatus {
+  pending
+  submitted
+  verified
+  rejected
+}
+
+enum VehicleStatus {
+  draft
+  available
+  reserved
+  sold
+}
+
+enum AuctionStatus {
+  upcoming
+  live
+  ended
+  cancelled
+}
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  converted
+  lost
+}
+
+enum FinanceStatus {
+  draft
+  submitted
+  processing
+  approved
+  rejected
+  disbursed
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  in_progress
+  completed
+  cancelled
+}
+
+model User {
+  id                String     @id @default(uuid())
+  email             String?    @unique
+  phone             String?    @unique
+  passwordHash      String?    @map("password_hash")
+  fullName          String     @default("") @map("full_name")
+  avatarUrl         String?    @map("avatar_url")
+  role              AppRole    @default(customer)
+  status            UserStatus @default(active)
+  kycStatus         KycStatus  @default(pending) @map("kyc_status")
+  kycData           Json       @default("{}") @map("kyc_data")
+  companyName       String?    @map("company_name")
+  city              String?
+  state             String?
+  isVerified        Boolean    @default(false) @map("is_verified")
+  emailVerified     Boolean    @default(false) @map("email_verified")
+  emailVerifiedAt   DateTime?  @map("email_verified_at")
+  metadata          Json       @default("{}")
+  onboardingStatus  String?    @map("onboarding_status")
+  approvalStatus    String?    @map("approval_status")
+  profileCompletion Int        @default(0) @map("profile_completion")
+  deletedAt         DateTime?  @map("deleted_at")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  dealers           Dealer[]
+  vehicles          Vehicle[]  @relation("SellerVehicles")
+  refreshTokens     RefreshToken[]
+  activityLogs      ActivityLog[]
+  deviceSessions    DeviceSession[]
+  wishlists         Wishlist[]
+  financeApps       FinanceApplication[]
+  insuranceApps     InsuranceApplication[]
+  serviceBookings   ServiceBooking[]
+  bookings          Booking[]
+  auctionBids       AuctionBid[]
+  notifications     Notification[]
+  communityPosts    CommunityPost[]
+  customerVehicles  CustomerVehicle[]
+
+  @@index([role])
+  @@index([email])
+  @@index([phone])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([phone])
+  @@map("otp_codes")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("password_resets")
+}
+
+model Dealer {
+  id                   String    @id @default(uuid())
+  ownerId              String    @map("owner_id")
+  name                 String
+  slug                 String    @unique
+  logoUrl              String?   @map("logo_url")
+  description          String?   @db.Text
+  dealerType           AppRole   @default(dealer) @map("dealer_type")
+  rating               Decimal   @default(0) @db.Decimal(3, 2)
+  reviewCount          Int       @default(0) @map("review_count")
+  address              String?   @db.Text
+  city                 String
+  state                String
+  pincode              String?
+  phone                String?
+  email                String?
+  website              String?
+  gstNumber            String?   @map("gst_number")
+  panNumber            String?   @map("pan_number")
+  isVerified           Boolean   @default(false) @map("is_verified")
+  specialties          Json      @default("[]")
+  subscriptionTier     String    @default("basic") @map("subscription_tier")
+  totalListingsCap     Int       @default(25) @map("total_listings_cap")
+  verificationStatus   String?   @map("verification_status")
+  deletedAt            DateTime? @map("deleted_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  owner                User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  vehicles             Vehicle[]
+  leads                Lead[]
+  members              DealerMember[]
+  storefront           DealerStorefront?
+  documents            DealerDocument[]
+  auctionEntries       DealerAuctionEntry[]
+  leadCalls            LeadCall[]
+
+  @@index([ownerId])
+  @@index([city])
+  @@map("dealers")
+}
+
+model LeadCall {
+  id              String   @id @default(uuid())
+  leadId          String   @map("lead_id")
+  dealerId        String   @map("dealer_id")
+  calledBy        String?  @map("called_by")
+  direction       String   @default("outbound")
+  durationSeconds Int?     @map("duration_seconds")
+  outcome         String?
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  dealer          Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([dealerId])
+  @@map("lead_calls")
+}
+
+model DealerMember {
+  id          String    @id @default(uuid())
+  dealerId    String    @map("dealer_id")
+  userId      String?   @map("user_id")
+  email       String
+  fullName    String    @map("full_name")
+  phone       String?
+  role        String    @default("sales")
+  permissions Json      @default("{}")
+  isActive    Boolean   @default(true) @map("is_active")
+  invitedAt   DateTime  @default(now()) @map("invited_at")
+  joinedAt    DateTime? @map("joined_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  dealer      Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+
+  @@unique([dealerId, email])
+  @@index([dealerId])
+  @@map("dealer_members")
+}
+
+model DealerStorefront {
+  dealerId          String   @id @map("dealer_id")
+  seoTitle          String?  @map("seo_title")
+  seoDescription    String?  @map("seo_description") @db.Text
+  coverUrl          String?  @map("cover_url")
+  heroTagline       String?  @map("hero_tagline")
+  showcaseTags      Json     @default("[]") @map("showcase_tags")
+  showFinanceOffers Boolean  @default(true) @map("show_finance_offers")
+  showReviews       Boolean  @default(true) @map("show_reviews")
+  showInventory     Boolean  @default(true) @map("show_inventory")
+  contactWhatsapp   String?  @map("contact_whatsapp")
+  contactPhone      String?  @map("contact_phone")
+  businessHours     Json     @default("{}") @map("business_hours")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  dealer            Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+
+  @@map("dealer_storefronts")
+}
+
+model DealerDocument {
+  id              String    @id @default(uuid())
+  dealerId        String    @map("dealer_id")
+  docType         String    @map("doc_type")
+  fileUrl         String    @map("file_url")
+  fileName        String?   @map("file_name")
+  status          String    @default("pending")
+  reviewedBy      String?   @map("reviewed_by")
+  reviewedAt      DateTime? @map("reviewed_at")
+  rejectionReason String?   @map("rejection_reason") @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  dealer          Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+
+  @@index([dealerId])
+  @@map("dealer_documents")
+}
+
+model DealerAuctionEntry {
+  id        String   @id @default(uuid())
+  dealerId  String   @map("dealer_id")
+  auctionId String   @map("auction_id")
+  status    String   @default("registered")
+  maxBid    BigInt?  @map("max_bid")
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+
+  @@unique([dealerId, auctionId])
+  @@index([dealerId])
+  @@map("dealer_auction_entries")
+}
+
+model CrmTask {
+  id          String    @id @default(uuid())
+  dealerId    String    @map("dealer_id")
+  leadId      String?   @map("lead_id")
+  assignedTo  String?   @map("assigned_to")
+  title       String
+  description String?   @db.Text
+  dueAt       DateTime? @map("due_at")
+  status      String    @default("pending")
+  priority    String    @default("normal")
+  taskType    String    @default("callback") @map("task_type")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([dealerId])
+  @@map("crm_tasks")
+}
+
+model DealerLeadNote {
+  id        String   @id @default(uuid())
+  leadId    String   @map("lead_id")
+  dealerId  String   @map("dealer_id")
+  authorId  String?  @map("author_id")
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([leadId])
+  @@map("dealer_lead_notes")
+}
+
+model Vehicle {
+  id             String        @id @default(uuid())
+  dealerId       String?       @map("dealer_id")
+  sellerId       String?       @map("seller_id")
+  slug           String        @unique
+  title          String
+  brand          String
+  model          String
+  variant        String?
+  year           Int
+  price          Decimal       @db.Decimal(12, 2)
+  originalPrice  Decimal?      @map("original_price") @db.Decimal(12, 2)
+  fuelType       String        @map("fuel_type")
+  transmission   String
+  bodyType       String        @map("body_type")
+  category       String
+  kmsDriven      Int           @default(0) @map("kms_driven")
+  owners         Int           @default(1)
+  color          String?
+  location       String?
+  city           String
+  state          String
+  images         Json          @default("[]")
+  features       Json          @default("[]")
+  description    String?       @db.Text
+  isCertified    Boolean       @default(false) @map("is_certified")
+  isFeatured     Boolean       @default(false) @map("is_featured")
+  status         VehicleStatus @default(available)
+  condition      String        @default("used")
+  metadata       Json          @default("{}")
+  deletedAt      DateTime?     @map("deleted_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  dealer         Dealer?       @relation(fields: [dealerId], references: [id])
+  seller         User?         @relation("SellerVehicles", fields: [sellerId], references: [id])
+  specs          VehicleSpec?
+  wishlists      Wishlist[]
+
+  @@index([dealerId])
+  @@index([category])
+  @@index([brand, model])
+  @@index([city])
+  @@map("vehicles")
+}
+
+model VehicleSpec {
+  id          String  @id @default(uuid())
+  vehicleId   String  @unique @map("vehicle_id")
+  engine      String?
+  power       String?
+  torque      String?
+  mileage     String?
+  seating     Int?
+  bootSpace   String? @map("boot_space")
+  safety      Json    @default("[]")
+  extras      Json    @default("{}")
+
+  vehicle     Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_specs")
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  vehicleId String   @map("vehicle_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vehicleId])
+  @@map("wishlists")
+}
+
+model Lead {
+  id              String     @id @default(uuid())
+  dealerId        String     @map("dealer_id")
+  name            String
+  phone           String
+  email           String?
+  source          String?
+  status          LeadStatus @default(new)
+  vehicleId       String?    @map("vehicle_id")
+  vehicleInterest String?    @map("vehicle_interest")
+  notes           String?    @db.Text
+  metadata        Json       @default("{}")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  dealer          Dealer     @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+
+  @@index([dealerId, status])
+  @@map("leads")
+}
+
+model Auction {
+  id          String        @id @default(uuid())
+  vehicleId   String?       @map("vehicle_id")
+  title       String
+  slug        String        @unique
+  startPrice  Decimal       @map("start_price") @db.Decimal(12, 2)
+  currentBid  Decimal?      @map("current_bid") @db.Decimal(12, 2)
+  bidCount    Int           @default(0) @map("bid_count")
+  status      AuctionStatus @default(upcoming)
+  startsAt    DateTime      @map("starts_at")
+  endsAt      DateTime      @map("ends_at")
+  winnerId    String?       @map("winner_id")
+  viewerCount Int           @default(0) @map("viewer_count")
+  images      Json          @default("[]")
+  metadata    Json          @default("{}")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  bids        AuctionBid[]
+  messages    AuctionMessage[]
+
+  @@index([status])
+  @@map("auctions")
+}
+
+model AuctionBid {
+  id         String   @id @default(uuid())
+  auctionId  String   @map("auction_id")
+  bidderId   String   @map("bidder_id")
+  bidderName String?  @map("bidder_name")
+  amount     Decimal  @db.Decimal(12, 2)
+  isAutoBid  Boolean  @default(false) @map("is_auto_bid")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  auction    Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  bidder     User     @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId])
+  @@map("bids")
+}
+
+model AuctionMessage {
+  id          String   @id @default(uuid())
+  auctionId   String   @map("auction_id")
+  userId      String?  @map("user_id")
+  displayName String   @map("display_name")
+  message     String   @db.Text
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  auction     Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId])
+  @@map("auction_messages")
+}
+
+model Bank {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  logoUrl         String?  @map("logo_url")
+  bankType        String   @default("nbfc") @map("bank_type")
+  interestRateMin Decimal  @map("interest_rate_min") @db.Decimal(5, 2)
+  interestRateMax Decimal  @map("interest_rate_max") @db.Decimal(5, 2)
+  maxTenureMonths Int      @default(84) @map("max_tenure_months")
+  processingFee   String?  @map("processing_fee")
+  maxLoanAmount   BigInt   @map("max_loan_amount")
+  features        Json     @default("[]")
+  isActive        Boolean  @default(true) @map("is_active")
+  isFeatured      Boolean  @default(false) @map("is_featured")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("banks")
+}
+
+model FinanceApplication {
+  id        String        @id @default(uuid())
+  userId    String        @map("user_id")
+  bankId    String?       @map("bank_id")
+  amount    Decimal       @db.Decimal(12, 2)
+  tenure    Int
+  status    FinanceStatus @default(draft)
+  metadata  Json          @default("{}")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("finance_applications")
+}
+
+model InsuranceApplication {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  provider  String?
+  premium   Decimal? @db.Decimal(12, 2)
+  status    String   @default("draft")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("insurance_applications")
+}
+
+model PartProduct {
+  id            String   @id @default(uuid())
+  sellerId      String   @map("seller_id")
+  sku           String?
+  name          String
+  brand         String?
+  categorySlug  String   @map("category_slug")
+  price         Decimal  @db.Decimal(12, 2)
+  wholesalePrice Decimal? @map("wholesale_price") @db.Decimal(12, 2)
+  stock         Int      @default(0)
+  images        Json     @default("[]")
+  compatibility Json     @default("[]")
+  metadata      Json     @default("{}")
+  deletedAt     DateTime? @map("deleted_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([sellerId])
+  @@index([categorySlug])
+  @@map("part_products")
+}
+
+model PartOrder {
+  id        String   @id @default(uuid())
+  buyerId   String   @map("buyer_id")
+  sellerId  String?  @map("seller_id")
+  status    String   @default("pending")
+  total     Decimal  @db.Decimal(12, 2)
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items     PartOrderItem[]
+
+  @@index([buyerId])
+  @@map("part_orders")
+}
+
+model PartOrderItem {
+  id        String  @id @default(uuid())
+  orderId   String  @map("order_id")
+  productId String  @map("product_id")
+  qty       Int
+  price     Decimal @db.Decimal(12, 2)
+
+  order     PartOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  part      Part      @relation(fields: [productId], references: [id])
+
+  @@map("part_order_items")
+}
+
+model ServiceCenter {
+  id              String   @id @default(uuid())
+  ownerId         String   @map("owner_id")
+  name            String
+  slug            String   @unique
+  description     String?  @db.Text
+  address         String?  @db.Text
+  city            String
+  state           String
+  pincode         String?
+  phone           String?
+  rating          Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount     Int      @default(0) @map("review_count")
+  servicesOffered Json     @default("[]") @map("services_offered")
+  isVerified      Boolean  @default(false) @map("is_verified")
+  images          Json     @default("[]")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  bookings        ServiceBooking[]
+  catalogServices ServiceCatalog[]
+  workshopBookings Booking[]
+
+  @@index([ownerId])
+  @@map("service_centers")
+}
+
+model ServiceBooking {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  serviceCenterId String        @map("service_center_id")
+  status          BookingStatus @default(pending)
+  scheduledAt     DateTime?     @map("scheduled_at")
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  center          ServiceCenter @relation(fields: [serviceCenterId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([serviceCenterId])
+  @@map("service_bookings")
+}
+
+model CommunityPost {
+  id        String   @id @default(uuid())
+  authorId  String   @map("author_id")
+  content   String   @db.Text
+  media     Json     @default("[]")
+  likes     Int      @default(0)
+  metadata  Json     @default("{}")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@map("community_posts")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  title     String
+  body      String    @db.Text
+  message   String?   @db.Text
+  kind      String?
+  payload   Json      @default("{}")
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  metadata  Json     @default("{}")
+  ip        String?
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("activity_logs")
+}
+
+model DeviceSession {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  deviceId   String   @map("device_id")
+  userAgent  String?  @map("user_agent")
+  lastSeenAt DateTime @default(now()) @map("last_seen_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@map("device_sessions")
+}
+
+model CmsBanner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String   @map("image_url")
+  linkUrl   String?  @map("link_url")
+  position  String   @default("home")
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cms_banners")
+}
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  subject   String
+  body      String   @db.Text
+  status    String   @default("open")
+  priority  String   @default("normal")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("support_tickets")
+}
+
+model UploadedFile {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  bucket    String
+  path      String
+  mimeType  String?  @map("mime_type")
+  size      Int?
+  publicUrl String   @map("public_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([bucket, path])
+  @@map("uploaded_files")
+}
+// Append these models to schema.prisma (merged in build script)
+
+model Part {
+  id            String   @id @default(uuid())
+  sellerId      String   @map("seller_id")
+  name          String
+  slug          String   @unique
+  category      String
+  brand         String?
+  price         BigInt
+  originalPrice BigInt?  @map("original_price")
+  stock         Int      @default(0)
+  rating        Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount   Int      @default(0) @map("review_count")
+  images        Json     @default("[]")
+  compatibility Json     @default("[]")
+  isFeatured    Boolean  @default(false) @map("is_featured")
+  isActive      Boolean  @default(true) @map("is_active")
+  sku           String?
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  orderItems    PartOrderItem[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@map("parts")
+}
+
+model ServiceCatalog {
+  id              String   @id @default(uuid())
+  serviceCenterId String   @map("service_center_id")
+  name            String
+  slug            String
+  serviceType     String   @map("service_type")
+  description     String?  @db.Text
+  priceFrom       BigInt   @map("price_from")
+  priceTo         BigInt?  @map("price_to")
+  durationMinutes Int?     @map("duration_minutes")
+  isDoorstep      Boolean  @default(false) @map("is_doorstep")
+  isActive        Boolean  @default(true) @map("is_active")
+  images          Json     @default("[]")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  center          ServiceCenter @relation(fields: [serviceCenterId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+
+  @@unique([serviceCenterId, slug])
+  @@index([serviceCenterId])
+  @@map("services")
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  serviceId       String        @map("service_id")
+  serviceCenterId String        @map("service_center_id")
+  vehicleDetails  Json          @default("{}") @map("vehicle_details")
+  scheduledAt     DateTime      @map("scheduled_at")
+  status          BookingStatus @default(pending)
+  totalAmount     BigInt?       @map("total_amount")
+  otpVerified     Boolean       @default(false) @map("otp_verified")
+  notes           String?       @db.Text
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service         ServiceCatalog @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  center          ServiceCenter @relation(fields: [serviceCenterId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([serviceCenterId])
+  @@map("bookings")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  rating     Int
+  title      String?
+  comment    String?  @db.Text
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@map("reviews")
+}
+
+model SocialPost {
+  id           String    @id @default(uuid())
+  authorId     String    @map("author_id")
+  content      String    @db.Text
+  media        Json      @default("[]")
+  postType     String    @default("text") @map("post_type")
+  likeCount    Int       @default(0) @map("like_count")
+  commentCount Int       @default(0) @map("comment_count")
+  shareCount   Int       @default(0) @map("share_count")
+  metadata     Json      @default("{}")
+  deletedAt    DateTime? @map("deleted_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([authorId])
+  @@map("social_posts")
+}
+
+model CommunityGroup {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  memberCount Int      @default(0) @map("member_count")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("community_groups")
+}
+
+model PostHashtag {
+  postId  String @map("post_id")
+  hashtag String
+
+  @@id([postId, hashtag])
+  @@map("post_hashtags")
+}
+
+model PostLike {
+  postId String @map("post_id")
+  userId String @map("user_id")
+
+  @@id([postId, userId])
+  @@map("post_likes")
+}
+
+model PostComment {
+  id        String   @id @default(uuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([postId])
+  @@map("post_comments")
+}
+
+model PostShare {
+  id        String   @id @default(uuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("post_shares")
+}
+
+model PollVote {
+  postId       String @map("post_id")
+  userId       String @map("user_id")
+  optionIndex  Int    @map("option_index")
+
+  @@id([postId, userId])
+  @@map("poll_votes")
+}
+
+model UserFollow {
+  followerId  String @map("follower_id")
+  followingId String @map("following_id")
+
+  @@id([followerId, followingId])
+  @@map("user_follows")
+}
+
+model CommunityModerationFlag {
+  id        String   @id @default(uuid())
+  postId    String?  @map("post_id")
+  userId    String?  @map("user_id")
+  reason    String
+  status    String   @default("open")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("community_moderation_flags")
+}
+
+model CustomerVehicle {
+  id                 String    @id @default(uuid())
+  userId             String    @map("user_id")
+  brand              String
+  model              String
+  variant            String?
+  year               Int
+  fuelType           String?   @default("petrol") @map("fuel_type")
+  transmission       String?   @default("manual")
+  registrationNumber String?   @map("registration_number")
+  segment            String    @default("car")
+  isPrimary          Boolean   @default(false) @map("is_primary")
+  healthScore        Int?      @map("health_score")
+  metadata           Json      @default("{}")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("customer_vehicles")
+}
+
+model VehicleDocument {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  vehicleId      String?   @map("vehicle_id")
+  docType        String    @map("doc_type")
+  title          String
+  fileUrl        String?   @map("file_url")
+  documentNumber String?   @map("document_number")
+  verified       Boolean   @default(false)
+  expiresAt      DateTime? @map("expires_at")
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("vehicle_documents")
+}
+
+model InsuranceWallet {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  vehicleId    String?   @map("vehicle_id")
+  insurerName  String    @map("insurer_name")
+  policyNumber String?   @map("policy_number")
+  policyEnd    DateTime? @map("policy_end")
+  status       String    @default("active")
+  metadata     Json      @default("{}")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("insurance_wallet")
+}
+
+model ServiceRecord {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  vehicleId     String?  @map("vehicle_id")
+  serviceType   String   @map("service_type")
+  serviceCenter String?  @map("service_center")
+  amount        BigInt?
+  servicedAt    DateTime @default(now()) @map("serviced_at")
+  metadata      Json     @default("{}")
+
+  @@index([userId])
+  @@map("service_records")
+}
+
+model CustomerPreference {
+  userId               String   @id @map("user_id")
+  notifyInsurance      Boolean  @default(true) @map("notify_insurance")
+  notifyService        Boolean  @default(true) @map("notify_service")
+  profileCompletion    Int      @default(0) @map("profile_completion")
+  rewardPointsBalance  Int      @default(0) @map("reward_points_balance")
+  metadata             Json     @default("{}")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("customer_preferences")
+}
+
+model AiInsight {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  vehicleId   String?   @map("vehicle_id")
+  insightKey  String    @map("insight_key")
+  title       String
+  summary     String    @db.Text
+  severity    String    @default("info")
+  dismissedAt DateTime? @map("dismissed_at")
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("ai_insights")
+}
+
+model NotificationLog {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  type      String    @default("system")
+  title     String
+  body      String?   @db.Text
+  readAt    DateTime? @map("read_at")
+  metadata  Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("notification_logs")
+}
+
+model EngagementCampaign {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  title       String
+  body        String?   @db.Text
+  dismissedAt DateTime? @map("dismissed_at")
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("engagement_campaigns")
+}
+
+model ScheduledReminder {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  kind        String
+  title       String
+  dueAt       DateTime @map("due_at")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("scheduled_reminders")
+}
+
+model InsurancePartner {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  isActive  Boolean  @default(true) @map("is_active")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("insurance_partners")
+}
+
+model InsuranceQuote {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  partnerId String?  @map("partner_id")
+  premium   Decimal? @db.Decimal(12, 2)
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("insurance_quotes")
+}
+
+model FinanceLead {
+  id        String        @id @default(uuid())
+  userId    String?       @map("user_id")
+  dsaId     String?       @map("dsa_id")
+  amount    Decimal?      @db.Decimal(12, 2)
+  status    FinanceStatus @default(draft)
+  metadata  Json          @default("{}")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@map("finance_leads")
+}
+
+model FinanceCommission {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  amount    Decimal  @db.Decimal(12, 2)
+  status    String   @default("pending")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("finance_commissions")
+}
+
+model FinanceVerification {
+  id        String   @id @default(uuid())
+  applicationId String @map("application_id")
+  status    String
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("finance_verifications")
+}
+
+model FinanceStatusHistory {
+  id            String   @id @default(uuid())
+  applicationId String   @map("application_id")
+  status        String
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("finance_status_history")
+}
+
+model BankIntegrationConfig {
+  id        String   @id @default(uuid())
+  bankId    String?  @map("bank_id")
+  config    Json     @default("{}")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("bank_integration_configs")
+}
+
+model DsaAgent {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  licenseNumber  String?  @map("license_number")
+  commissionRate Decimal  @default(0) @map("commission_rate") @db.Decimal(5, 2)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("dsa_agents")
+}
+
+model NewCarInventory {
+  id                   String   @id @default(uuid())
+  dealerId             String   @map("dealer_id")
+  brand                String
+  model                String
+  variant              String?
+  year                 Int      @default(2025)
+  fuelType             String?  @map("fuel_type")
+  transmission         String?
+  exShowroomPrice      Decimal  @map("ex_showroom_price") @db.Decimal(12, 2)
+  onRoadPrice          Decimal? @map("on_road_price") @db.Decimal(12, 2)
+  discountAmount       Decimal  @default(0) @map("discount_amount") @db.Decimal(12, 2)
+  stockStatus          String   @default("available") @map("stock_status")
+  stockHealth          String?  @default("fast_moving") @map("stock_health")
+  colors               Json     @default("[]")
+  imageUrl             String?  @map("image_url")
+  expectedDeliveryDays Int?     @map("expected_delivery_days")
+  price                Decimal? @db.Decimal(12, 2)
+  stock                Int      @default(1)
+  metadata             Json     @default("{}")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([dealerId])
+  @@map("new_car_inventory")
+}
+
+model DealerLead {
+  id                String   @id @default(uuid())
+  dealerId          String   @map("dealer_id")
+  customerName      String   @map("customer_name")
+  phone             String
+  email             String?
+  city              String?
+  source            String   @default("website")
+  stage             String   @default("new")
+  preferredBrand    String?  @map("preferred_brand")
+  preferredModel    String?  @map("preferred_model")
+  budgetMax         Decimal? @map("budget_max") @db.Decimal(12, 2)
+  tradeInVehicle    String?  @map("trade_in_vehicle")
+  financeInterest   Boolean  @default(false) @map("finance_interest")
+  insuranceInterest Boolean  @default(false) @map("insurance_interest")
+  score             Int      @default(0)
+  name              String?
+  status            String?  @default("new")
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([dealerId])
+  @@map("dealer_leads")
+}
+
+model InventoryUpload {
+  id          String    @id @default(uuid())
+  dealerId    String    @map("dealer_id")
+  uploadedBy  String    @map("uploaded_by")
+  fileUrl     String    @map("file_url")
+  fileName    String?   @map("file_name")
+  status      String    @default("pending")
+  totalRows   Int       @default(0) @map("total_rows")
+  successRows Int       @default(0) @map("success_rows")
+  failedRows  Int       @default(0) @map("failed_rows")
+  errorLog    Json      @default("[]") @map("error_log")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+
+  @@index([dealerId])
+  @@map("inventory_uploads")
+}
+
+model ServiceJobCard {
+  id              String        @id @default(uuid())
+  serviceCenterId String        @map("service_center_id")
+  bookingId       String?       @map("booking_id")
+  status          BookingStatus @default(pending)
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([serviceCenterId])
+  @@map("service_job_cards")
+}
+
+model ServiceCustomersCrm {
+  id              String   @id @default(uuid())
+  serviceCenterId String   @map("service_center_id")
+  name            String
+  phone           String
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("service_customers_crm")
+}
+
+model ServiceAiLog {
+  id              String   @id @default(uuid())
+  serviceCenterId String   @map("service_center_id")
+  message         String   @db.Text
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("service_ai_logs")
+}
+
+model PlatformBanner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String   @map("image_url")
+  linkUrl   String?  @map("link_url")
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("platform_banners")
+}
+
+model PlatformCmsPage {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  content   String?  @db.LongText
+  status    String   @default("draft")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_cms_pages")
+}
+
+model PlatformNotification {
+  id        String   @id @default(uuid())
+  title     String
+  body      String   @db.Text
+  audience  String?
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("platform_notifications")
+}
+
+model PlatformFraudAlert {
+  id        String   @id @default(uuid())
+  title     String
+  status    String   @default("open")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("platform_fraud_alerts")
+}
+
+model PlatformReportSnapshot {
+  id        String   @id @default(uuid())
+  reportKey String   @map("report_key")
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("platform_report_snapshots")
+}
+
+model SubscriptionPlan {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  price     Decimal  @db.Decimal(12, 2)
+  features  Json     @default("[]")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("subscription_plans")
+}
+
+model PartsSupplierProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  companyName String @map("company_name")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("parts_supplier_profiles")
+}
+
+model AuctionNotification {
+  id        String    @id @default(uuid())
+  auctionId String    @map("auction_id")
+  userId    String    @map("user_id")
+  title     String
+  body      String    @db.Text
+  kind      String?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([auctionId])
+  @@map("auction_notifications")
+}

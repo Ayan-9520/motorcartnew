@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useVehicleHubStore } from "@/store/vehicleHubStore";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ChevronRight,
   IndianRupee,
@@ -15,7 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { useUIStore } from "@/store/uiStore";
 import { formatCurrency } from "@/lib/utils";
 import { createVehicle, type VehicleFormData } from "@/services/vehicle.service";
 import { setPageMeta } from "@/utils/seo";
@@ -45,7 +44,8 @@ export function SellListingPage() {
   }, [hub, setActiveHub]);
 
   const { user, isAuthenticated } = useAuth();
-  const setLoginModalOpen = useUIStore((s) => s.setLoginModalOpen);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -119,7 +119,7 @@ export function SellListingPage() {
     }
     if (!isAuthenticated || !user) {
       toast("Sign in to publish your listing", { icon: "🔐" });
-      setLoginModalOpen(true);
+      navigate("/login", { state: { from: location } });
       return;
     }
 

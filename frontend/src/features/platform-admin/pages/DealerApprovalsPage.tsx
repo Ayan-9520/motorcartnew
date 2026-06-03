@@ -21,8 +21,8 @@ export function DealerApprovalsPage() {
     void load();
   }, [load]);
 
-  const act = async (id: string, status: "verified" | "rejected") => {
-    const { error } = await setDealerVerification(id, status);
+  const act = async (id: string, status: "verified" | "rejected", ownerId?: string) => {
+    const { error } = await setDealerVerification(id, status, ownerId);
     if (error) toast.error(error);
     else {
       toast.success(status === "verified" ? "Dealer approved" : "Dealer rejected");
@@ -43,10 +43,14 @@ export function DealerApprovalsPage() {
       cell: ({ row }) =>
         !row.original.isVerified ? (
           <div className="flex gap-1">
-            <Button size="sm" onClick={() => void act(row.original.id, "verified")}>
+            <Button size="sm" onClick={() => void act(row.original.id, "verified", row.original.ownerId)}>
               Approve
             </Button>
-            <Button size="sm" variant="outline" onClick={() => void act(row.original.id, "rejected")}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void act(row.original.id, "rejected", row.original.ownerId)}
+            >
               Reject
             </Button>
           </div>

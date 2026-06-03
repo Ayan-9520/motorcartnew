@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
-import { Crown, Shield, Store, Settings } from "lucide-react";
+import { Crown, Shield, Store } from "lucide-react";
 import { DealerConsoleShell } from "../components/DealerConsoleShell";
+import { WorkspaceAccountProfile } from "@/dashboards/components/WorkspaceAccountProfile";
+import { useDealer } from "../hooks/useDealer";
 import { setPageMeta } from "@/utils/seo";
 import { useEffect } from "react";
 
@@ -11,31 +13,34 @@ const LINKS = [
 ];
 
 export function DealerSettingsPage() {
+  const { dealer, refetch } = useDealer();
+
   useEffect(() => {
-    setPageMeta({ title: "Dealer settings" });
+    setPageMeta({ title: "Account & settings" });
   }, []);
 
   return (
     <DealerConsoleShell
-      title="Settings"
-      description="Workspace configuration for your dealership on Motorcart."
+      title="Account & settings"
+      description="Edit your login and dealership profile. Sidebar account card opens this page."
       crumbs={[{ label: "Settings" }]}
     >
-      <div className="dealer-os-quick-grid">
-        {LINKS.map((l) => (
-          <Link key={l.href} to={l.href} className="dealer-os-quick-link">
-            <l.icon className="h-5 w-5 text-primary" />
-            <span>
-              <strong className="block">{l.label}</strong>
-              <span className="text-xs text-muted-foreground font-normal">{l.desc}</span>
-            </span>
-          </Link>
-        ))}
+      <WorkspaceAccountProfile dealer={dealer} onDealerSaved={() => void refetch()} />
+
+      <div className="mt-8">
+        <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">More settings</h3>
+        <div className="dealer-os-quick-grid">
+          {LINKS.map((l) => (
+            <Link key={l.href} to={l.href} className="dealer-os-quick-link">
+              <l.icon className="h-5 w-5 text-primary" />
+              <span>
+                <strong className="block">{l.label}</strong>
+                <span className="text-xs font-normal text-muted-foreground">{l.desc}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
-      <p className="text-sm text-muted-foreground flex items-center gap-2">
-        <Settings className="h-4 w-4" />
-        Notifications & integrations — coming in next release.
-      </p>
     </DealerConsoleShell>
   );
 }

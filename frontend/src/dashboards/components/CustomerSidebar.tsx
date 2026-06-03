@@ -17,7 +17,7 @@ export function CustomerSidebar() {
         sidebarOpen ? "w-64" : "w-[72px]"
       )}
     >
-      <div className="flex h-16 items-center justify-between border-b border-border/60 px-3">
+      <div className="dashboard-sidebar__head flex h-16 shrink-0 items-center justify-between border-b border-border/60 px-3">
         {sidebarOpen && (
           <div className="min-w-0 pl-1">
             <p className="truncate text-sm font-semibold tracking-tight">Motorcart</p>
@@ -30,7 +30,7 @@ export function CustomerSidebar() {
           <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
         </Button>
       </div>
-      <nav className="dashboard-sidebar__nav flex-1 overflow-y-auto p-2">
+      <nav className="dashboard-sidebar__nav min-h-0 flex-1 p-2">
         {CUSTOMER_ECOSYSTEM_NAV.map((group) => (
           <div key={group.label} className="cos-sidebar__group">
             {sidebarOpen ? <p className="cos-sidebar__group-label">{group.label}</p> : null}

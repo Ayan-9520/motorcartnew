@@ -3,6 +3,8 @@ export * from "./config/super-admin-nav";
 export { SuperAdminShell } from "./components/SuperAdminShell";
 export { SuperAdminOverviewPage } from "./pages/SuperAdminOverviewPage";
 export { UsersManagementPage } from "./pages/UsersManagementPage";
+export { BusinessApprovalsPage } from "./pages/BusinessApprovalsPage";
+export { RoleDirectoryPage } from "./pages/RoleDirectoryPage";
 export { DealerApprovalsPage } from "./pages/DealerApprovalsPage";
 export { KycVerificationPage } from "./pages/KycVerificationPage";
 export { PlatformAnalyticsPage } from "./pages/PlatformAnalyticsPage";

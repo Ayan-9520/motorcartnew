@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, Wand2, Plus, Trash2 } from "lucide-react";
+import { X, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import {
   type IndianAutoBrand,
 } from "../data/indian-automobile-catalog";
 import { generateAISpecs } from "../lib/excel-parser";
+import { VehicleImagePicker } from "./VehicleImagePicker";
 import type { VehicleListing } from "@/types/vehicle";
 
 export type VehicleFormState = {
@@ -99,6 +100,7 @@ export function vehicleToForm(v: VehicleListing, city: string, state: string): V
 type VehicleInventoryDrawerProps = {
   open: boolean;
   editing: VehicleListing | null;
+  dealerId?: string;
   defaultCity?: string;
   defaultState?: string;
   onClose: () => void;
@@ -109,6 +111,7 @@ type VehicleInventoryDrawerProps = {
 export function VehicleInventoryDrawer({
   open,
   editing,
+  dealerId,
   defaultCity = "Mumbai",
   defaultState = "Maharashtra",
   onClose,
@@ -314,46 +317,17 @@ export function VehicleInventoryDrawer({
           </div>
 
           <div className="mt-4">
-            <div className="flex items-center justify-between">
-              <Label>Images (URLs)</Label>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-medium">Listing media</span>
               <Button type="button" variant="ghost" size="sm" className="h-8 gap-1" onClick={aiFillSpecs}>
                 <Wand2 className="h-3.5 w-3.5" /> AI specs
               </Button>
             </div>
-            <div className="mt-2 space-y-2">
-              {form.imageUrls.map((url, i) => (
-                <div key={i} className="flex gap-2">
-                  <Input
-                    placeholder={`Image ${i + 1} URL`}
-                    value={url}
-                    onChange={(e) => {
-                      const next = [...form.imageUrls];
-                      next[i] = e.target.value;
-                      setForm({ ...form, imageUrls: next });
-                    }}
-                  />
-                  {form.imageUrls.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setForm({ ...form, imageUrls: form.imageUrls.filter((_, j) => j !== i) })}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-1"
-                onClick={() => setForm({ ...form, imageUrls: [...form.imageUrls, ""] })}
-              >
-                <Plus className="h-4 w-4" /> Add image
-              </Button>
-            </div>
+            <VehicleImagePicker
+              imageUrls={form.imageUrls}
+              uploadPrefix={dealerId ? `dealer-${dealerId}` : "inventory"}
+              onChange={(imageUrls) => setForm({ ...form, imageUrls })}
+            />
           </div>
 
           <div className="mt-3">

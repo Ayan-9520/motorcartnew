@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DbVehicle, DbDealer } from "@/types/database";
-import type { VehicleListing, VehicleFilters, VehicleEnquiry, TestDriveBooking } from "@/types/vehicle";
+import type { VehicleListing, VehicleFilters } from "@/types/vehicle";
 import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
 import { filterVehicles, sortVehicles, paginateVehicles, slugify } from "@/lib/vehicle-utils";
 import type { VehicleSortOption } from "@/types/vehicle";
@@ -134,52 +134,7 @@ export async function searchVehicles(options: {
   return { vehicles: items, total, page, totalPages };
 }
 
-export async function submitVehicleEnquiry(enquiry: VehicleEnquiry): Promise<{ error: string | null }> {
-  const { error } = await supabase.from("leads").insert({
-    dealer_id: enquiry.dealerId,
-    name: enquiry.name,
-    phone: enquiry.phone,
-    email: enquiry.email,
-    vehicle_id: enquiry.vehicleId,
-    source: "website",
-    notes: enquiry.message,
-    metadata: { type: "enquiry" },
-  });
-  if (error) return { error: error.message };
-  void import("@/ai/workflows/engine").then(({ runWorkflow }) =>
-    runWorkflow("new_lead", {
-      payload: {
-        lead: {
-          name: enquiry.name,
-          phone: enquiry.phone,
-          vehicle_interest: enquiry.vehicleId,
-          source: "website",
-        },
-        title: "New enquiry",
-        message: `${enquiry.name} submitted an enquiry`,
-        templateId: "lead_ack_customer",
-        phone: enquiry.phone,
-        vars: { name: enquiry.name, vehicle: "your vehicle" },
-      },
-    })
-  );
-  return { error: null };
-}
-
-export async function submitTestDrive(booking: TestDriveBooking & { dealerId: string }): Promise<{ error: string | null }> {
-  const { error } = await supabase.from("leads").insert({
-    dealer_id: booking.dealerId,
-    name: booking.name,
-    phone: booking.phone,
-    email: booking.email,
-    vehicle_id: booking.vehicleId,
-    source: "test_drive",
-    notes: `${booking.preferredDate} ${booking.preferredTime}. ${booking.message ?? ""}`,
-    metadata: { type: "test_drive", preferredDate: booking.preferredDate, preferredTime: booking.preferredTime },
-  });
-  if (error) return { error: error.message };
-  return { error: null };
-}
+export { submitVehicleEnquiry, submitTestDrive } from "@/services/leads.service";
 
 export type VehicleFormData = {
   title: string;

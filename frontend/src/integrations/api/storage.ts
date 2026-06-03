@@ -11,7 +11,11 @@ function storageApi(bucket: string) {
         const { data } = await api.post<{ path: string; publicUrl: string }>("/api/upload", form, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        return { data: { path: data.path }, error: null };
+        const base = import.meta.env.VITE_API_URL ?? "";
+        const publicUrl = data.publicUrl.startsWith("http")
+          ? data.publicUrl
+          : `${base}${data.publicUrl}`;
+        return { data: { path: data.path, publicUrl }, error: null };
       } catch (err) {
         return { data: null, error: { message: apiErrorMessage(err) } };
       }

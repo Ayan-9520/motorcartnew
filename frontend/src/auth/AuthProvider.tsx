@@ -1,4 +1,5 @@
 import { useAuthBootstrap } from "@/auth/useAuthBootstrap";
+import { useMarketScopeSync } from "@/hooks/useMarketScopeSync";
 import { useAuthStore } from "@/store/authStore";
 import { AuthBootLoader } from "@/components/auth/AuthBootLoader";
 
@@ -8,6 +9,7 @@ import { AuthBootLoader } from "@/components/auth/AuthBootLoader";
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   useAuthBootstrap();
+  useMarketScopeSync();
   const isLoading = useAuthStore((s) => s.isLoading);
   if (isLoading) {
     return <AuthBootLoader />;

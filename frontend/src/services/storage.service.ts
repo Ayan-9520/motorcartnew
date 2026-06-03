@@ -40,10 +40,12 @@ export async function uploadFile(
 
   onProgress?.(90);
   if (error) throw error;
+  if (!data?.path) throw new Error("Upload failed");
 
-  const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+  const uploaded = data as { path: string; publicUrl?: string };
+  const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(uploaded.path);
   onProgress?.(100);
-  return { path: data.path, publicUrl: urlData.publicUrl };
+  return { path: uploaded.path, publicUrl: uploaded.publicUrl ?? urlData.publicUrl };
 }
 
 export async function uploadMultiple(

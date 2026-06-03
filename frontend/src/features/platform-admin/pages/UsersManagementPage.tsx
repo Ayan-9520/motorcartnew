@@ -5,7 +5,15 @@ import { DataTable } from "@/shared/ui/data-table/DataTable";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import type { UserStatus } from "@/types/database";
-import { fetchAdminUsers, updateAdminUser } from "../services/platform-admin.service";
+import { ROLE_DISPLAY_NAMES } from "@/auth/ecosystem-roles";
+import type { AppRole } from "@/types/database";
+import {
+  approveBusinessAccount,
+  fetchAdminUsers,
+  isAdminBusinessRole,
+  rejectBusinessAccount,
+  updateAdminUser,
+} from "../services/platform-admin.service";
 import type { AdminUserRow } from "../types";
 import { SuperAdminShell } from "../components/SuperAdminShell";
 import { SuperAdminStatusBadge } from "../components/SuperAdminStatusBadge";
@@ -37,7 +45,14 @@ export function UsersManagementPage() {
   const columns: ColumnDef<AdminUserRow>[] = [
     { header: "Name", accessorKey: "fullName" },
     { header: "Email", accessorKey: "email" },
-    { header: "Role", cell: ({ row }) => <span className="text-xs font-mono">{row.original.role}</span> },
+    {
+      header: "Role",
+      cell: ({ row }) => (
+        <span className="text-xs font-medium">
+          {ROLE_DISPLAY_NAMES[row.original.role as AppRole] ?? row.original.role}
+        </span>
+      ),
+    },
     {
       header: "Status",
       cell: ({ row }) => <SuperAdminStatusBadge status={row.original.status} />,
@@ -49,24 +64,54 @@ export function UsersManagementPage() {
     { header: "City", accessorKey: "city" },
     {
       header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex gap-1">
-          {row.original.status !== "suspended" ? (
-            <Button size="sm" variant="outline" onClick={() => void setStatus(row.original.id, "suspended")}>
-              Suspend
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => void setStatus(row.original.id, "active")}>
-              Activate
-            </Button>
-          )}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const pending =
+          row.original.status === "pending_verification" &&
+          isAdminBusinessRole(row.original.role as AppRole);
+        return (
+          <div className="flex flex-wrap gap-1">
+            {pending ? (
+              <>
+                <Button size="sm" onClick={() => void approveBusinessAccount(row.original.id).then((r) => {
+                  if (r.error) toast.error(r.error);
+                  else {
+                    toast.success("Approved");
+                    void load();
+                  }
+                })}>
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void rejectBusinessAccount(row.original.id).then((r) => {
+                    if (r.error) toast.error(r.error);
+                    else {
+                      toast.success("Rejected");
+                      void load();
+                    }
+                  })}
+                >
+                  Reject
+                </Button>
+              </>
+            ) : row.original.status !== "suspended" ? (
+              <Button size="sm" variant="outline" onClick={() => void setStatus(row.original.id, "suspended")}>
+                Suspend
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => void setStatus(row.original.id, "active")}>
+                Activate
+              </Button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
   return (
-    <SuperAdminShell title="User management" description="Directory, roles, account status, and access reviews.">
+    <SuperAdminShell title="User management" description="Directory, roles, account status, and business approvals.">
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading users…</p>
       ) : (

@@ -113,17 +113,33 @@ export function DealerInventoryCRMPage() {
   };
 
   const saveVehicle = async (form: VehicleFormState) => {
-    if (!user || !dealer) return;
+    if (!user || !dealer) {
+      toast.error("Dealer profile not ready — refresh or complete signup");
+      return;
+    }
+    const images = form.imageUrls.map((u) => u.trim()).filter(Boolean);
+    if (!images.length) {
+      toast.error("Add at least one photo (upload or URL)");
+      return;
+    }
     const payload = buildPayload(form);
     if (editing) {
-      await updateVehicle(editing.id, {
+      const { error } = await updateVehicle(editing.id, {
         ...payload,
         status: form.status,
         is_featured: form.featured,
       } as never);
+      if (error) {
+        toast.error(error.message ?? "Could not update listing");
+        throw new Error(error.message);
+      }
       toast.success("Listing updated");
     } else {
-      await createVehicle(payload, user.id, dealer.id);
+      const { error } = await createVehicle(payload, user.id, dealer.id);
+      if (error) {
+        toast.error(error.message ?? "Could not add vehicle");
+        throw new Error(error.message);
+      }
       toast.success("Vehicle added to inventory");
     }
     setEditing(null);
@@ -269,6 +285,7 @@ export function DealerInventoryCRMPage() {
       <VehicleInventoryDrawer
         open={drawerOpen}
         editing={editing}
+        dealerId={dealer?.id}
         defaultCity={dealer?.city ?? "Mumbai"}
         defaultState={dealer?.state ?? "Maharashtra"}
         onClose={() => {

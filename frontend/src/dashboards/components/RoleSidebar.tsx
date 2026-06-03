@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 import type { AppRole } from "@/types/database";
 import { getRoleNavContext } from "@/dashboards/config/role-navigation";
+import { resolveUserWorkspaceRole } from "@/auth/workspace-role";
 import { RoleSidebarUserFooter } from "@/dashboards/components/RoleSidebarUserFooter";
 
 /**
@@ -13,7 +14,7 @@ import { RoleSidebarUserFooter } from "@/dashboards/components/RoleSidebarUserFo
  */
 export function RoleSidebar() {
   const user = useAuthStore((s) => s.user);
-  const role = (user?.role ?? "customer") as AppRole;
+  const role = (user ? resolveUserWorkspaceRole(user) : "customer") as AppRole;
   const { title, subtitle, items } = getRoleNavContext(role);
   const { sidebarOpen, toggleSidebar } = useUIStore();
 
@@ -24,7 +25,7 @@ export function RoleSidebar() {
         sidebarOpen ? "w-64" : "w-[72px]"
       )}
     >
-      <div className="flex h-16 items-center justify-between border-b border-border/60 px-3">
+      <div className="dashboard-sidebar__head flex h-16 shrink-0 items-center justify-between border-b border-border/60 px-3">
         {sidebarOpen && (
           <div className="min-w-0 pl-1">
             <p className="truncate text-sm font-semibold tracking-tight">{title}</p>
@@ -39,7 +40,7 @@ export function RoleSidebar() {
           <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
         </Button>
       </div>
-      <nav className="dashboard-sidebar__nav flex-1 space-y-0.5 overflow-y-auto p-2">
+      <nav className="dashboard-sidebar__nav min-h-0 flex-1 space-y-0.5 p-2">
         {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}

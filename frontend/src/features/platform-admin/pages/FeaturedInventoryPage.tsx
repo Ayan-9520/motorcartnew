@@ -43,10 +43,12 @@ export function FeaturedInventoryPage() {
     { header: "Dealer", accessorKey: "dealerName" },
     { header: "City", accessorKey: "city" },
     {
+      id: "price",
       header: "Price",
       cell: ({ row }) => formatCurrency(row.original.price),
     },
     {
+      id: "featured",
       header: "Featured",
       cell: ({ row }) =>
         row.original.platformFeatured ? (
@@ -58,7 +60,8 @@ export function FeaturedInventoryPage() {
         ),
     },
     {
-      header: "",
+      id: "actions",
+      header: "Actions",
       cell: ({ row }) => (
         <Button size="sm" variant={row.original.platformFeatured ? "outline" : "default"} onClick={() => void togglePlatform(row.original)}>
           {row.original.platformFeatured ? "Unfeature" : "Feature"}

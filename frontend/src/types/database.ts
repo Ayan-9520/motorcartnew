@@ -18,7 +18,10 @@ export type AppRole =
   | "parts_seller"
   | "admin"
   | "super_admin"
-  | "auction_partner";
+  | "auction_partner"
+  /** Legacy signup / metadata aliases — normalized in workspace-role */
+  | "service_partner"
+  | "preowned_dealer";
 
 export type UserStatus = "active" | "suspended" | "pending_verification" | "closed";
 
@@ -37,6 +40,7 @@ export interface DbUser {
   avatar_url: string | null;
   role: AppRole;
   status?: UserStatus;
+  approval_status?: string | null;
   kyc_status: KycStatus;
   kyc_data: Record<string, unknown>;
   company_name: string | null;

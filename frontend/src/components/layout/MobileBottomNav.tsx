@@ -1,22 +1,19 @@
 import { NavLink } from "react-router-dom";
-import { Car, Gavel, Home, Landmark, LayoutDashboard, User } from "lucide-react";
+import { Car, Gavel, Home, Landmark, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
-import { getRoleDashboardPath } from "@/auth/get-role-dashboard-path";
-import type { AppRole } from "@/types/database";
+import { getRoleAccountPath } from "@/auth/get-role-account-path";
 
 export function MobileBottomNav() {
   const user = useAuthStore((s) => s.user);
-  const homeTo = user ? getRoleDashboardPath(user) : "/";
-  const HomeIcon = user ? LayoutDashboard : Home;
-  const homeLabel = user ? "Workspace" : "Home";
+  const accountTo = user ? getRoleAccountPath(user) : "/login";
 
   const items = [
-    { to: homeTo, label: homeLabel, icon: HomeIcon, end: user ? false : true },
+    { to: "/", label: "Home", icon: Home, end: true },
     { to: "/buy", label: "Buy", icon: Car },
     { to: "/auctions", label: "Auctions", icon: Gavel },
     { to: "/finance", label: "Loans", icon: Landmark },
-    { to: user ? "/profile" : "/login", label: "Account", icon: User },
+    { to: accountTo, label: "Account", icon: User },
   ];
 
   return (

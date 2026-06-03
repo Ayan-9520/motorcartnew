@@ -112,6 +112,31 @@ export async function createCrmTask(input: {
   return data as CrmTask;
 }
 
+export async function createDealerLead(input: {
+  dealerId: string;
+  customerName: string;
+  phone: string;
+  email?: string;
+  vehicleTitle?: string;
+  source?: string;
+}) {
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({
+      dealer_id: input.dealerId,
+      name: input.customerName.trim(),
+      phone: input.phone.replace(/\D/g, "").slice(-10),
+      email: input.email?.trim() || null,
+      source: input.source ?? "showroom",
+      status: "new",
+      metadata: input.vehicleTitle ? { vehicle_interest: input.vehicleTitle } : {},
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function updateLeadStatus(leadId: string, status: LeadStatus, notes?: string) {
   const patch: Record<string, unknown> = { status };
   if (notes !== undefined) patch.notes = notes;

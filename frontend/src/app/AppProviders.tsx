@@ -7,9 +7,13 @@ import { router } from "@/router";
 import { AppErrorBoundary } from "@/shared/ui/error-boundary/AppErrorBoundary";
 import { AppModalHost } from "@/shared/ui/modal/AppModalHost";
 import { parsePublicEnv } from "@/app/config/env";
+import { getApiBaseUrl } from "@/lib/api/base-url";
+import { api } from "@/lib/api/axios";
 import { queryClient } from "@/lib/api/query-client";
 
 void parsePublicEnv();
+const apiBase = getApiBaseUrl();
+if (apiBase) api.defaults.baseURL = apiBase;
 
 /**
  * Root composition — theme, auth session, global error boundary, modal host, router, toasts.

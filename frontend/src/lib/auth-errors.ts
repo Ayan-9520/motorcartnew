@@ -7,6 +7,7 @@ export type AuthErrorCode =
   | "user_not_found"
   | "sign_in_blocked"
   | "user_already_registered"
+  | "phone_already_registered"
   | "signup_database"
   | "weak_password"
   | "rate_limit"
@@ -43,9 +44,18 @@ export function classifyAuthError(
   if (
     m.includes("already registered") ||
     m.includes("already been registered") ||
-    m.includes("user already exists")
+    m.includes("user already exists") ||
+    m.includes("already exists. sign in")
   ) {
     return "user_already_registered";
+  }
+
+  if (
+    m.includes("mobile number is already registered") ||
+    m.includes("phone number is already") ||
+    m.includes("users_phone_key")
+  ) {
+    return "phone_already_registered";
   }
 
   if (m.includes("password should be") || m.includes("weak password")) {
@@ -55,8 +65,14 @@ export function classifyAuthError(
   if (
     m.includes("database error saving new user") ||
     m.includes("unable to save user") ||
-    m.includes("users_phone_key") ||
     (m.includes("duplicate key") && m.includes("phone"))
+  ) {
+    return "signup_database";
+  }
+
+  if (
+    m.includes("request failed with status code 500") ||
+    m.includes("registration failed")
   ) {
     return "signup_database";
   }
@@ -65,7 +81,14 @@ export function classifyAuthError(
     return "rate_limit";
   }
 
-  if (m.includes("fetch") || m.includes("network") || m.includes("failed to fetch")) {
+  if (
+    m.includes("fetch") ||
+    m.includes("network") ||
+    m.includes("failed to fetch") ||
+    m.includes("cannot reach api") ||
+    m.includes("backend not responding") ||
+    m.includes("econnrefused")
+  ) {
     return "network";
   }
 
@@ -131,18 +154,29 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
         variant: "info",
         showForgotPassword: true,
       };
+    case "phone_already_registered":
+      return {
+        code,
+        title: "Mobile number already in use",
+        description:
+          "This mobile number is linked to another account. Sign in with that account or use a different number.",
+        variant: "info",
+        showForgotPassword: false,
+        hints: ["Try signing in at /login with the same email and password."],
+      };
     case "signup_database":
       return {
         code,
         title: "Could not create account",
         description:
-          "The server could not save your profile. Run Supabase migration 00022_signup_auth_trigger_fix.sql, or try a different phone number / email.",
+          rawMessage?.trim() ||
+          "The server could not complete signup. Ensure the backend is running on port 3001, then try again.",
         variant: "destructive",
         showForgotPassword: false,
         showSignupLink: false,
         hints: [
-          "Apply pending SQL migrations in Supabase (00009, 00010, 00022).",
-          "If this email was used before, try Sign in instead.",
+          "Start backend: cd backend && npm run dev",
+          "If this email or phone was used before, try Sign in instead.",
           "Use a unique 10-digit mobile number.",
         ],
       };
@@ -163,9 +197,12 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
     case "network":
       return {
         code,
-        title: "Connection problem",
-        description: "Could not reach the server. Check your internet connection and try again.",
+        title: "Backend not reachable",
+        description:
+          rawMessage?.trim() ||
+          "Could not reach the API. Start MySQL (XAMPP), then run the backend on port 3001.",
         variant: "destructive",
+        hints: ["Terminal 1: cd backend && npm run dev", "Terminal 2: cd frontend && npm run dev"],
       };
     default:
       return {
@@ -173,8 +210,8 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
         title: "Something went wrong",
         description: rawMessage?.trim() || "Please try again in a moment.",
         variant: "destructive",
-        showForgotPassword: true,
-        showResendVerification: true,
+        showForgotPassword: false,
+        showResendVerification: false,
       };
   }
 }
@@ -195,6 +232,8 @@ export function getAuthErrorToast(
       return "Sign-in failed — see details below.";
     case "user_already_registered":
       return "This email is already registered.";
+    case "phone_already_registered":
+      return "This mobile number is already registered.";
     case "signup_database":
       return "Account setup failed — check migrations or use another email/phone.";
     case "rate_limit":

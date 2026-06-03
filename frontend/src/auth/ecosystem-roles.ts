@@ -8,7 +8,10 @@ export const ROLE_DISPLAY_NAMES: Partial<Record<AppRole, string>> = {
   dealer: "Dealer",
   used_car_dealer: "Pre-owned dealer",
   new_car_dealer: "New car dealer",
+  bike_dealer: "Bike dealer",
+  truck_dealer: "Truck dealer",
   dsa_agent: "DSA agent",
+  super_admin: "Super admin",
   parts_seller: "Parts seller",
   service_center: "Service partner",
   admin: "Admin",
@@ -19,6 +22,8 @@ export const BUSINESS_SIGNUP_ROLES: AppRole[] = [
   "dealer",
   "used_car_dealer",
   "new_car_dealer",
+  "bike_dealer",
+  "truck_dealer",
   "dsa_agent",
   "parts_seller",
   "service_center",
@@ -32,22 +37,22 @@ export function roleRequiresAdminApproval(role: AppRole): boolean {
   return isBusinessSignupRole(role);
 }
 
-export function isAccountPendingApproval(user: Pick<User, "accountStatus" | "role">): boolean {
-  return (
-    roleRequiresAdminApproval(user.role) &&
-    user.accountStatus === "pending_verification"
-  );
+/** True when business user must not access CRM / dashboards yet. */
+export function isAccountPendingApproval(
+  user: Pick<User, "accountStatus" | "role" | "approvalStatus">
+): boolean {
+  if (!roleRequiresAdminApproval(user.role)) return false;
+  if (user.approvalStatus === "approved" && user.accountStatus === "active") return false;
+  if (user.approvalStatus === "rejected") return true;
+  return user.accountStatus !== "active" || user.approvalStatus !== "approved";
 }
 
 export const PENDING_APPROVAL_PATH = "/pending-approval";
 
-/** Paths business users may visit while awaiting approval. */
+/** Paths business users may visit while awaiting approval (no dashboard CRM). */
 export const PENDING_APPROVAL_ALLOWED_PREFIXES = [
   PENDING_APPROVAL_PATH,
   "/profile",
-  "/dashboard/dealer/verification",
-  "/dashboard/new-car",
-  "/dashboard/parts",
 ] as const;
 
 export function isPendingApprovalAllowedPath(pathname: string): boolean {

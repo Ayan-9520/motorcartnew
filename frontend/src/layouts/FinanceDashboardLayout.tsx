@@ -15,14 +15,14 @@ export function FinanceDashboardLayout() {
   const variant = variantFromPath(pathname);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="workspace-shell flex flex-col">
       <Navbar />
-      <div className="dashboard-shell-bar border-b border-border/50 px-4 py-2 lg:hidden">
+      <div className="dashboard-shell-bar shrink-0 border-b border-border/50 px-4 py-2 lg:hidden">
         <DashboardMobileNav />
       </div>
-      <div className="flex flex-1">
+      <div className="workspace-shell__body">
         <FinanceSidebar variant={variant} />
-        <main className="flex-1 overflow-auto bg-background p-4 sm:p-6">
+        <main className="workspace-shell__main bg-background p-4 sm:p-6">
           <RouteSuspense>
             <Outlet />
           </RouteSuspense>

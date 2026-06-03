@@ -1,17 +1,25 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Clock, FileCheck, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/authStore";
 import { DashboardPageShell } from "@/shared/layout/DashboardPageShell";
-import { ROLE_DISPLAY_NAMES } from "@/auth/ecosystem-roles";
-import { isDealerRole } from "@/permissions/role-matching";
+import {
+  ROLE_DISPLAY_NAMES,
+  isAccountPendingApproval,
+} from "@/auth/ecosystem-roles";
+import { getRoleDashboardPath } from "@/auth/get-role-dashboard-path";
 import type { AppRole } from "@/types/database";
 import { setPageMeta } from "@/utils/seo";
+import { fetchUserProfile } from "@/services/auth.service";
+import { mapDbUserToAppUser } from "@/services/mapUser";
 
 export function PendingApprovalPage() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const rejected = user?.approvalStatus === "rejected";
 
   useEffect(() => {
     setPageMeta({
@@ -20,12 +28,35 @@ export function PendingApprovalPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!user?.id || rejected) return;
+
+    const poll = async () => {
+      const row = await fetchUserProfile(user.id);
+      if (!row) return;
+      const mapped = mapDbUserToAppUser(row);
+      setUser(mapped);
+      if (!isAccountPendingApproval(mapped)) {
+        navigate(getRoleDashboardPath(mapped), { replace: true });
+      }
+    };
+
+    void poll();
+    const timer = window.setInterval(() => void poll(), 20_000);
+    return () => window.clearInterval(timer);
+  }, [user?.id, rejected, navigate, setUser]);
+
   const roleLabel = user ? ROLE_DISPLAY_NAMES[user.role as AppRole] ?? user.role : "Business";
+  const statusLabel = user?.approvalStatus ?? user?.accountStatus ?? "pending";
 
   return (
     <DashboardPageShell
-      title="Application under review"
-      description={`${roleLabel} account — our operations team typically reviews within 24–48 business hours.`}
+      title={rejected ? "Application not approved" : "Application under review"}
+      description={
+        rejected
+          ? `${roleLabel} account — please contact Motorcart support or re-submit documents.`
+          : `${roleLabel} account — Motorcart admin approval required before CRM, inventory, and fintech tools unlock.`
+      }
     >
       <div className="mx-auto max-w-2xl space-y-6">
         <Card className="border-primary/20 bg-card/90 shadow-card backdrop-blur-sm">
@@ -35,9 +66,9 @@ export function PendingApprovalPage() {
                 <Clock className="h-6 w-6" />
               </span>
               <div>
-                <CardTitle>Pending admin approval</CardTitle>
+                <CardTitle>{rejected ? "Application rejected" : "Pending admin approval"}</CardTitle>
                 <CardDescription>
-                  Status: <strong className="text-foreground">pending_verification</strong>
+                  Status: <strong className="text-foreground">{statusLabel}</strong>
                   {user?.companyName ? ` · ${user.companyName}` : null}
                 </CardDescription>
               </div>
@@ -45,30 +76,25 @@ export function PendingApprovalPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
-              You can complete KYC documents while you wait. Full CRM, inventory, and lead tools unlock after an admin
-              approves your profile.
+              Your account is registered but <strong className="text-foreground">dashboard access is locked</strong>{" "}
+              until a Motorcart super admin approves your business application (typically 24–48 business hours).
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                Upload GST, PAN, and trade license in verification.
+                Admin reviews GSTIN, company details, and documents from your signup.
               </li>
               <li className="flex items-start gap-2">
                 <Shield className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                Motorcart fraud checks run automatically on every dealer application.
+                After approval, your dealer / DSA / parts / service workspace opens automatically on this page.
               </li>
             </ul>
             <div className="flex flex-wrap gap-2 pt-2">
-              {user && isDealerRole(user.role as AppRole) && (
-                <Button className="rounded-xl" asChild>
-                  <Link to="/dashboard/dealer/verification">Complete verification</Link>
-                </Button>
-              )}
               <Button variant="outline" className="rounded-xl" asChild>
                 <Link to="/profile">View profile</Link>
               </Button>
               <Button variant="ghost" className="rounded-xl" asChild>
-                <Link to="/?site=1">Back to marketplace</Link>
+                <Link to="/">Back to marketplace</Link>
               </Button>
             </div>
           </CardContent>

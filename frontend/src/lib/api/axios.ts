@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { getApiBaseUrl } from "@/lib/api/base-url";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "";
+const API_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_URL || undefined,
@@ -79,8 +80,11 @@ export function apiErrorMessage(err: unknown): string {
     if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
       return "Backend not responding. Start MySQL (XAMPP), then run: npm run dev (backend on :3001, frontend on :3000).";
     }
-    if (err.code === "ERR_NETWORK") {
-      return "Cannot reach API at " + (API_URL || "localhost:3001") + ". Is the backend running?";
+    if (err.code === "ERR_NETWORK" || err.code === "ECONNREFUSED") {
+      return "Cannot reach API at " + (API_URL || "localhost:3001") + ". Start backend: cd backend && npm run dev";
+    }
+    if (err.response?.status === 500 && !msg) {
+      return "Server error during signup. Check backend terminal logs.";
     }
     return msg ?? err.message;
   }

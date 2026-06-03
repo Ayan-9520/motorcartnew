@@ -6,10 +6,13 @@ import {
   Bell,
   Bot,
   Car,
+  ClipboardCheck,
   CreditCard,
+  GitBranch,
   FileText,
   Gavel,
   Image,
+  Landmark,
   LayoutDashboard,
   LayoutTemplate,
   LifeBuoy,
@@ -17,6 +20,7 @@ import {
   Sparkles,
   Store,
   Users,
+  Waypoints,
 } from "lucide-react";
 
 export type AdminErpNavItem = {
@@ -34,14 +38,24 @@ export type AdminErpNavGroup = {
 /** Enterprise admin ERP navigation (Razorpay / Stripe style control plane) */
 export const ADMIN_ERP_NAV: AdminErpNavGroup[] = [
   {
-    items: [{ to: "/dashboard/super-admin", label: "Command center", icon: LayoutDashboard, end: true }],
+    items: [
+      { to: "/dashboard/super-admin", label: "Command center", icon: LayoutDashboard, end: true },
+      { to: "/dashboard/super-admin/operations", label: "How it works", icon: GitBranch },
+    ],
   },
   {
-    label: "Users & access",
+    label: "Approvals",
     items: [
+      {
+        to: "/dashboard/super-admin/business-approvals",
+        label: "Business accounts",
+        icon: ClipboardCheck,
+      },
+      { to: "/dashboard/super-admin/finance-approvals", label: "Fintech / loans", icon: Landmark },
       { to: "/dashboard/super-admin/users", label: "User management", icon: Users },
-      { to: "/dashboard/super-admin/dealers", label: "Dealer approval", icon: Store },
+      { to: "/dashboard/super-admin/dealers", label: "Dealer verification", icon: Store },
       { to: "/dashboard/super-admin/kyc", label: "KYC queue", icon: ShieldCheck },
+      { to: "/dashboard/super-admin/roles", label: "Role directory", icon: Waypoints },
     ],
   },
   {

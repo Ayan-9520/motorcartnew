@@ -82,7 +82,15 @@ export async function fetchDealerEnterprise(dealerId: string): Promise<DealerEnt
 
 export async function updateDealerProfile(
   dealerId: string,
-  patch: Partial<{ gst_number: string; pan_number: string; name: string; phone: string; email: string }>
+  patch: Partial<{
+    gst_number: string;
+    pan_number: string;
+    name: string;
+    phone: string;
+    email: string;
+    city: string;
+    state: string;
+  }>
 ) {
   return supabase.from("dealers").update(patch).eq("id", dealerId);
 }
@@ -271,11 +279,15 @@ export async function fetchDealerFinanceStats(dealerId: string) {
 }
 
 export async function fetchDealerAuctionEntries(dealerId: string) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("dealer_auction_entries")
-    .select("*, auctions(id, title, status, current_bid, starting_bid)")
+    .select("*")
     .eq("dealer_id", dealerId)
     .order("created_at", { ascending: false });
+  if (error) {
+    console.warn("[dealer] auction entries", error.message);
+    return [];
+  }
   return data ?? [];
 }
 

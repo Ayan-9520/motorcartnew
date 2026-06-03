@@ -110,6 +110,29 @@ export async function fetchDealerLeads(dealerId: string) {
   return data ?? [];
 }
 
+/** All leads for every showroom owned by this user (demo + multi-branch). */
+export async function fetchLeadsForDealerOwner(ownerId: string) {
+  const { data: dealers, error: dealerErr } = await supabase
+    .from("dealers")
+    .select("id")
+    .eq("owner_id", ownerId);
+
+  if (dealerErr || !dealers?.length) return [];
+
+  const ids = dealers.map((d) => (d as { id: string }).id);
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .in("dealer_id", ids)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.warn("[dealer] leads for owner", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
 export async function createInventoryUploadRecord(payload: {
   dealerId: string;
   uploadedBy: string;

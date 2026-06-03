@@ -13,6 +13,8 @@ export function resolveEffectiveAppRole(ctx: WorkspaceRoleContext): AppRole {
   const { role, dealerType, businessCategory } = ctx;
 
   if (role === "new_car_dealer") return "new_car_dealer";
+  if (role === "preowned_dealer") return "used_car_dealer";
+  if (role === "service_partner") return "service_center";
 
   if (dealerType === "new_car_dealer") return "new_car_dealer";
 

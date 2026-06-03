@@ -27,9 +27,9 @@ export function useNotifications() {
     setLoading(true);
     try {
       const rows = await fetchNotifications(user.id);
-      setItems(rows.length > 0 ? rows : loadGuestNotifications());
+      setItems(rows);
     } catch {
-      setItems(loadGuestNotifications());
+      setItems([]);
     } finally {
       setLoading(false);
     }

@@ -22,7 +22,8 @@ import {
   type AuthErrorCode,
   type AuthErrorUI,
 } from "@/lib/auth-errors";
-import { mapDbUserToAppUser } from "@/services/mapUser";
+import { enrichUserWithDealerContext } from "@/auth/enrich-user-dealer";
+import { mapAuthSessionToAppUser, mapDbUserToAppUser } from "@/services/mapUser";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/database";
 import toast from "react-hot-toast";
@@ -31,7 +32,8 @@ import { clearLegacyAuthStorage } from "@/lib/clear-auth-storage";
 import { logAuthActivity, registerDeviceTouch } from "@/services/auth-telemetry.service";
 
 export function useAuth() {
-  const { user, isLoading, isAuthenticated, setUser, setProfileHydrated, logout } = useAuthStore();
+  const { user, isLoading, isAuthenticated, setUser, setProfileHydrated, logout } =
+    useAuthStore();
 
   const loadProfile = useCallback(
     async (
@@ -49,21 +51,13 @@ export function useAuth() {
 
       const profile = await ensureUserProfile(authUser);
       if (profile) {
-        setUser(mapDbUserToAppUser(profile));
+        const mapped = mapDbUserToAppUser(profile);
+        setUser(await enrichUserWithDealerContext(mapped));
       } else {
         const { data: { user: au } } = await supabase.auth.getUser();
         if (au) {
-          setUser({
-            id: au.id,
-            email: au.email ?? "",
-            phone: au.phone ?? undefined,
-            fullName: (au.user_metadata?.full_name as string) || au.email?.split("@")[0] || "User",
-            role: (au.user_metadata?.role as AppRole) ?? "customer",
-            accountStatus: "active",
-            kycStatus: "pending",
-            isVerified: !!au.email_confirmed_at,
-            createdAt: au.created_at,
-          });
+          const mapped = mapAuthSessionToAppUser(au as Parameters<typeof mapAuthSessionToAppUser>[0]);
+          setUser(await enrichUserWithDealerContext(mapped));
         }
       }
       setProfileHydrated(true);
@@ -113,7 +107,16 @@ export function useAuth() {
       }
 
       if (data.session?.user) {
-        await loadProfile(data.session.user.id, data.session.user as Parameters<typeof loadProfile>[1]);
+        const sessionUser = data.session.user;
+        const authUser = sessionUser as NonNullable<Parameters<typeof loadProfile>[1]>;
+        try {
+          await loadProfile(sessionUser.id, authUser);
+        } catch (profileErr) {
+          console.warn("[auth] profile hydrate after login", profileErr);
+          const mapped = mapAuthSessionToAppUser(sessionUser);
+          setUser(await enrichUserWithDealerContext(mapped));
+          setProfileHydrated(true);
+        }
         void registerDeviceTouch();
         void logAuthActivity("sign_in", { channel: "email" });
       }
@@ -126,7 +129,7 @@ export function useAuth() {
         success: true as const,
       };
     },
-    [loadProfile]
+    [loadProfile, setUser, setProfileHydrated]
   );
 
   const register = useCallback(async (payload: SignUpPayload) => {

@@ -46,7 +46,7 @@ export function RoleSidebarUserFooter() {
           accountActive ? "bg-primary/10 ring-1 ring-primary/25" : "hover:bg-muted/50",
           !sidebarOpen && "justify-center px-2"
         )}
-        title="Account"
+        title="Open account & profile"
       >
         <span className="sidebar-user-avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
           {user.avatarUrl ? (

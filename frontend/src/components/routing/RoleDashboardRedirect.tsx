@@ -16,5 +16,5 @@ export function RoleDashboardRedirect() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Navigate to={getPostLoginDashboardPath(user.role as AppRole, user)} replace />;
+  return <Navigate to={getPostLoginDashboardPath(user.role as AppRole, user)} replace state={undefined} />;
 }

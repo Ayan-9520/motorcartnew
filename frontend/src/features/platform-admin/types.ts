@@ -9,10 +9,53 @@ export interface PlatformOverview {
   activeUsers: number;
   pendingKyc: number;
   pendingDealers: number;
+  pendingBusiness: number;
+  pendingFinance: number;
+  approvedFinance: number;
+  loanDisbursedTotal: number;
   openTickets: number;
   fraudOpen: number;
   mrrEstimate: number;
   listingsLive: number;
+}
+
+export interface AdminFlowRow {
+  id: string;
+  title: string;
+  from: string;
+  stores: string;
+  admin: string;
+  result: string;
+}
+
+export interface AdminFinanceApplicationRow {
+  id: string;
+  userId: string;
+  applicantName: string;
+  applicantEmail: string | null;
+  bankId: string | null;
+  amount: number;
+  tenure: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface PendingBusinessAccountRow {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  fullName: string;
+  role: AppRole;
+  status: UserStatus;
+  approvalStatus: string | null;
+  companyName: string | null;
+  city: string | null;
+  state: string | null;
+  kycStatus: KycStatus;
+  createdAt: string;
+  dealerId: string | null;
+  dealerName: string | null;
+  dealerVerificationStatus: string | null;
 }
 
 export interface AdminUserRow {

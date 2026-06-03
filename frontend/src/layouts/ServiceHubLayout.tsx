@@ -6,14 +6,14 @@ import { RouteSuspense } from "@/layouts/RouteSuspense";
 
 export function ServiceHubLayout() {
   return (
-    <div className="sh-layout flex min-h-screen flex-col">
+    <div className="sh-layout workspace-shell flex flex-col">
       <Navbar />
-      <div className="dashboard-shell-bar border-b border-border/50 px-4 py-2 lg:hidden">
+      <div className="dashboard-shell-bar shrink-0 border-b border-border/50 px-4 py-2 lg:hidden">
         <ServicePartnerMobileNav />
       </div>
-      <div className="flex flex-1">
+      <div className="workspace-shell__body">
         <ServicePartnerSidebar />
-        <main className="sh-main flex-1 overflow-auto">
+        <main className="sh-main workspace-shell__main">
           <RouteSuspense>
             <Outlet />
           </RouteSuspense>

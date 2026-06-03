@@ -21,8 +21,26 @@ import { AdminErpShell } from "../components/AdminErpShell";
 import { SuperAdminStatGrid } from "../components/SuperAdminStatGrid";
 
 const ERP_MODULES = [
+  {
+    to: "/dashboard/super-admin/business-approvals",
+    label: "Business approvals",
+    icon: Store,
+    desc: "Approve dealer, DSA, parts & service signups",
+  },
+  {
+    to: "/dashboard/super-admin/finance-approvals",
+    label: "Fintech / loans",
+    icon: Store,
+    desc: "Loan pipeline: process → approve → disburse",
+  },
+  {
+    to: "/dashboard/super-admin/operations",
+    label: "How it works",
+    icon: Store,
+    desc: "Full flow map — where data comes & goes",
+  },
   { to: "/dashboard/super-admin/users", label: "User management", icon: Users, desc: "All users, roles & suspension" },
-  { to: "/dashboard/super-admin/dealers", label: "Dealer approval", icon: Store, desc: "Verify & onboard dealers" },
+  { to: "/dashboard/super-admin/dealers", label: "Dealer verification", icon: Store, desc: "Dealer docs & storefront" },
   { to: "/dashboard/super-admin/vehicles", label: "Vehicle moderation", icon: Car, desc: "Listings & policy review" },
   { to: "/dashboard/super-admin/auctions", label: "Auction approvals", icon: Gavel, desc: "Go-live & featured lots" },
   { to: "/dashboard/super-admin/fraud", label: "Fraud detection", icon: AlertTriangle, desc: "Risk desk & blocks" },
@@ -59,6 +77,9 @@ export function SuperAdminOverviewPage() {
           stats={[
             { label: "Total users", value: o.totalUsers.toLocaleString("en-IN"), icon: Users },
             { label: "Active users", value: o.activeUsers.toLocaleString("en-IN") },
+            { label: "Pending business", value: o.pendingBusiness },
+            { label: "Pending loans", value: o.pendingFinance },
+            { label: "Disbursed", value: o.loanDisbursedTotal, format: "currency" },
             { label: "Pending KYC", value: o.pendingKyc },
             { label: "Dealer queue", value: o.pendingDealers },
             { label: "Live listings", value: o.listingsLive.toLocaleString("en-IN") },

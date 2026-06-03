@@ -14,11 +14,19 @@ export function resolveTheme(mode: ThemeMode): ResolvedTheme {
   return mode;
 }
 
+const THEME_COLOR: Record<ResolvedTheme, string> = {
+  light: "#f0f2f5",
+  dark: "#0b141a",
+};
+
 export function applyThemeToDocument(resolved: ResolvedTheme) {
   const root = document.documentElement;
   root.classList.toggle("dark", resolved === "dark");
   root.dataset.theme = resolved;
   root.style.colorScheme = resolved;
+
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", THEME_COLOR[resolved]);
 }
 
 interface ThemeState {

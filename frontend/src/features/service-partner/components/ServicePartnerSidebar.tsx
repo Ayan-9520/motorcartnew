@@ -16,24 +16,26 @@ export function ServicePartnerSidebar() {
         sidebarOpen ? "w-64" : "w-[72px]"
       )}
     >
-      <div className="sh-sidebar__brand">
-        {sidebarOpen && (
-          <div>
-            <p className="sh-sidebar__title">Service Hub OS</p>
-            <p className="sh-sidebar__sub">GoMechanic · Bosch-grade</p>
-          </div>
-        )}
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle sidebar">
-          <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
-        </Button>
+      <div className="dashboard-sidebar__head">
+        <div className="sh-sidebar__brand shrink-0">
+          {sidebarOpen && (
+            <div>
+              <p className="sh-sidebar__title">Service Hub OS</p>
+              <p className="sh-sidebar__sub">GoMechanic · Bosch-grade</p>
+            </div>
+          )}
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle sidebar">
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
+          </Button>
+        </div>
+        <div className="sh-sidebar__logo-row shrink-0">
+          <span className="sh-sidebar__logo">
+            <Wrench className="h-4 w-4" />
+          </span>
+          {sidebarOpen && <span className="text-xs text-primary/80">Workshop ERP</span>}
+        </div>
       </div>
-      <div className="sh-sidebar__logo-row">
-        <span className="sh-sidebar__logo">
-          <Wrench className="h-4 w-4" />
-        </span>
-        {sidebarOpen && <span className="text-xs text-primary/80">Workshop ERP</span>}
-      </div>
-      <nav className="sh-sidebar__nav dashboard-sidebar__nav flex-1 overflow-y-auto">
+      <nav className="sh-sidebar__nav dashboard-sidebar__nav min-h-0 flex-1">
         {SERVICE_PARTNER_NAV.map((group) => (
           <div key={group.label} className="sh-sidebar__group">
             {sidebarOpen && <p className="sh-sidebar__group-label">{group.label}</p>}

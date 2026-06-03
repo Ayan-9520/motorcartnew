@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { Car, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -22,6 +22,16 @@ export function NewCarDealerMobileNav() {
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
               <X className="h-5 w-5" />
             </Button>
+          </div>
+          <div className="border-b border-border px-3 py-2">
+            <Link
+              to="/"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-medium text-primary"
+            >
+              <Car className="h-4 w-4" />
+              Marketplace home
+            </Link>
           </div>
           <nav className="max-h-[calc(100vh-4rem)] overflow-y-auto p-3">
             {NEW_CAR_DEALER_NAV.map((group) => (

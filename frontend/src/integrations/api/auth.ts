@@ -44,6 +44,8 @@ function mapUser(raw: Record<string, unknown>): ApiAuthUser {
       ...meta,
       full_name: meta.full_name ?? raw.fullName ?? raw.full_name,
       role: meta.role ?? raw.role,
+      status: raw.status ?? meta.status,
+      approval_status: raw.approvalStatus ?? raw.approval_status ?? meta.approval_status,
     },
   };
 }

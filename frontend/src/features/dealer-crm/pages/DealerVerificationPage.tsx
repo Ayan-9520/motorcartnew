@@ -11,6 +11,7 @@ import {
   uploadDealerDocument,
   type DealerVerificationStatus,
 } from "../services/dealer-enterprise.service";
+import { uploadFile } from "@/services/storage.service";
 import { setPageMeta } from "@/utils/seo";
 import toast from "react-hot-toast";
 
@@ -64,12 +65,17 @@ export function DealerVerificationPage() {
 
   const onFile = async (docType: string, file: File) => {
     if (!dealer) return;
-    const url = `pending://${file.name}`;
     try {
+      const ext = file.name.split(".").pop() ?? "pdf";
+      const { publicUrl } = await uploadFile(
+        "dealer-documents",
+        `${dealer.id}/${docType}-${Date.now()}.${ext}`,
+        file
+      );
       await uploadDealerDocument({
         dealerId: dealer.id,
         docType,
-        fileUrl: url,
+        fileUrl: publicUrl,
         fileName: file.name,
       });
       toast.success(`${docType} uploaded`);

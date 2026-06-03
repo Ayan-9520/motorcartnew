@@ -1,5 +1,20 @@
 import { supabase } from "@/shared/api/client";
-import type { AppRole, KycStatus, UserStatus } from "@/types/database";
+import {
+  approveBusinessAccountApi,
+  fetchAdminFlowsApi,
+  fetchAdminOverviewApi,
+  fetchAdminUsersApi,
+  fetchFinanceApplicationsApi,
+  fetchPendingBusinessAccountsApi,
+  fetchPendingDealersApi,
+  isAdminBusinessRole,
+  patchAdminUserApi,
+  rejectBusinessAccountApi,
+  reviewKycApi,
+  updateFinanceStatusApi,
+} from "@/integrations/api/admin";
+import { apiErrorMessage } from "@/lib/api/axios";
+import type { AppRole, FinanceStatus, KycStatus, UserStatus } from "@/types/database";
 import {
   MOCK_ANALYTICS,
   MOCK_AUCTIONS,
@@ -21,6 +36,8 @@ import {
 import type {
   AdminAuctionRow,
   AdminDealerRow,
+  AdminFinanceApplicationRow,
+  AdminFlowRow,
   AdminUserRow,
   AdminVehicleRow,
   CmsPageRow,
@@ -29,6 +46,7 @@ import type {
   PlatformAnalytics,
   PlatformBanner,
   PlatformNotificationRow,
+  PendingBusinessAccountRow,
   PlatformOverview,
   PlatformReportRow,
   PlatformFraudStatus,
@@ -39,12 +57,92 @@ import type {
   SupportTicketRow,
 } from "../types";
 
+const USE_DEMO_FALLBACK = import.meta.env.VITE_ADMIN_DEMO_FALLBACK === "true";
+
 function useMock<T>(data: T, error: unknown): T {
-  if (error) console.warn("[platform-admin] fallback mock", error);
-  return data;
+  if (error) console.warn("[platform-admin] API error", error);
+  if (USE_DEMO_FALLBACK) return data;
+  return (Array.isArray(data) ? [] : data) as T;
+}
+
+export async function fetchPendingBusinessAccounts(): Promise<PendingBusinessAccountRow[]> {
+  try {
+    const accounts = await fetchPendingBusinessAccountsApi();
+    if (accounts.length) {
+      return accounts.map((a) => ({
+        id: a.id,
+        email: a.email,
+        phone: a.phone,
+        fullName: a.fullName,
+        role: a.role,
+        status: a.status as UserStatus,
+        approvalStatus: a.approvalStatus,
+        companyName: a.companyName,
+        city: a.city,
+        state: a.state,
+        kycStatus: a.kycStatus as KycStatus,
+        createdAt: a.createdAt,
+        dealerId: a.dealerId,
+        dealerName: a.dealerName,
+        dealerVerificationStatus: a.dealerVerificationStatus,
+      }));
+    }
+  } catch (e) {
+    console.warn("[platform-admin] pending business API fallback", e);
+  }
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, email, phone, full_name, role, status, company_name, city, state, kyc_status, created_at, approval_status")
+    .eq("status", "pending_verification")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error || !data?.length) return [];
+
+  return data.map((u) => ({
+    id: u.id,
+    email: u.email,
+    phone: u.phone,
+    fullName: u.full_name,
+    role: u.role as AppRole,
+    status: (u.status ?? "pending_verification") as UserStatus,
+    approvalStatus: (u as { approval_status?: string }).approval_status ?? "pending",
+    companyName: u.company_name,
+    city: u.city,
+    state: u.state,
+    kycStatus: u.kyc_status as KycStatus,
+    createdAt: u.created_at,
+    dealerId: null,
+    dealerName: u.company_name,
+    dealerVerificationStatus: null,
+  }));
+}
+
+export async function approveBusinessAccount(userId: string): Promise<{ error: string | null }> {
+  try {
+    await approveBusinessAccountApi(userId);
+    return { error: null };
+  } catch (e) {
+    return { error: apiErrorMessage(e) ?? "Approve failed" };
+  }
+}
+
+export async function rejectBusinessAccount(
+  userId: string,
+  reason?: string
+): Promise<{ error: string | null }> {
+  try {
+    await rejectBusinessAccountApi(userId, reason);
+    return { error: null };
+  } catch (e) {
+    return { error: apiErrorMessage(e) ?? "Reject failed" };
+  }
 }
 
 export async function fetchPlatformOverview(): Promise<PlatformOverview> {
+  const adminOverview = await fetchAdminOverviewApi();
+
   try {
     const [users, dealers, vehicles, tickets, fraud] = await Promise.all([
       supabase.from("users").select("id, status, kyc_status", { count: "exact", head: false }).limit(5000),
@@ -62,14 +160,20 @@ export async function fetchPlatformOverview(): Promise<PlatformOverview> {
     const activeUsers = rows.filter((u) => (u.status ?? "active") === "active").length;
 
     return {
-      totalUsers: users.count ?? rows.length,
-      activeUsers,
-      pendingKyc,
-      pendingDealers: dealers.count ?? 0,
+      totalUsers: adminOverview?.totalUsers ?? users.count ?? rows.length,
+      activeUsers: adminOverview?.activeUsers ?? activeUsers,
+      pendingKyc: adminOverview?.pendingKyc ?? pendingKyc,
+      pendingDealers: adminOverview?.pendingDealers ?? dealers.count ?? 0,
+      pendingBusiness:
+        adminOverview?.pendingBusiness ??
+        rows.filter((u) => u.status === "pending_verification").length,
+      pendingFinance: adminOverview?.pendingFinance ?? 0,
+      approvedFinance: adminOverview?.approvedFinance ?? 0,
+      loanDisbursedTotal: adminOverview?.loanDisbursedTotal ?? 0,
       openTickets: tickets.count ?? 0,
       fraudOpen: fraud.count ?? 0,
-      mrrEstimate: MOCK_OVERVIEW.mrrEstimate,
-      listingsLive: vehicles.count ?? 0,
+      mrrEstimate: adminOverview?.loanDisbursedTotal ?? MOCK_OVERVIEW.mrrEstimate,
+      listingsLive: adminOverview?.listingsLive ?? vehicles.count ?? 0,
     };
   } catch (e) {
     return useMock(MOCK_OVERVIEW, e);
@@ -77,13 +181,30 @@ export async function fetchPlatformOverview(): Promise<PlatformOverview> {
 }
 
 export async function fetchAdminUsers(): Promise<AdminUserRow[]> {
+  try {
+    const users = await fetchAdminUsersApi();
+    return users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      fullName: u.fullName,
+      role: u.role,
+      status: u.status,
+      kycStatus: u.kycStatus,
+      city: u.city,
+      createdAt: u.createdAt,
+    }));
+  } catch (e) {
+    console.warn("[platform-admin] users API", e);
+  }
+
   const { data, error } = await supabase
     .from("users")
     .select("id, email, full_name, role, status, kyc_status, city, created_at")
     .order("created_at", { ascending: false })
     .limit(200);
 
-  if (error || !data?.length) return useMock(MOCK_USERS, error);
+  if (error) return useMock(MOCK_USERS, error);
+  if (!data?.length) return [];
 
   return data.map((u) => ({
     id: u.id,
@@ -97,22 +218,103 @@ export async function fetchAdminUsers(): Promise<AdminUserRow[]> {
   }));
 }
 
+export async function fetchAdminFlows(): Promise<AdminFlowRow[]> {
+  try {
+    return await fetchAdminFlowsApi();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchFinanceApplications(
+  status?: FinanceStatus
+): Promise<AdminFinanceApplicationRow[]> {
+  try {
+    const apps = await fetchFinanceApplicationsApi(status);
+    return apps.map((a) => ({
+      id: a.id,
+      userId: a.userId,
+      applicantName: a.applicantName,
+      applicantEmail: a.applicantEmail,
+      bankId: a.bankId,
+      amount: a.amount,
+      tenure: a.tenure,
+      status: a.status,
+      createdAt: a.createdAt,
+    }));
+  } catch (e) {
+    console.warn("[platform-admin] finance API", e);
+    return [];
+  }
+}
+
+export async function updateFinanceApplicationStatus(
+  id: string,
+  status: FinanceStatus,
+  note?: string
+): Promise<{ error: string | null }> {
+  try {
+    await updateFinanceStatusApi(id, status, note);
+    return { error: null };
+  } catch (e) {
+    return { error: apiErrorMessage(e) ?? "Update failed" };
+  }
+}
+
+export async function reviewKycUser(
+  userId: string,
+  action: "verified" | "rejected"
+): Promise<{ error: string | null }> {
+  try {
+    await reviewKycApi(userId, action);
+    return { error: null };
+  } catch (e) {
+    return { error: apiErrorMessage(e) ?? "KYC update failed" };
+  }
+}
+
+export { isAdminBusinessRole };
+
 export async function updateAdminUser(
   id: string,
   patch: Partial<{ status: UserStatus; role: AppRole; kyc_status: KycStatus }>
 ): Promise<{ error: string | null }> {
+  try {
+    await patchAdminUserApi(id, patch);
+    return { error: null };
+  } catch (e) {
+    const msg = apiErrorMessage(e);
+    if (msg) return { error: msg };
+  }
   const { error } = await supabase.from("users").update(patch).eq("id", id);
   return { error: error?.message ?? null };
 }
 
 export async function fetchPendingDealers(): Promise<AdminDealerRow[]> {
+  try {
+    const dealers = await fetchPendingDealersApi();
+    return dealers.map((d) => ({
+      id: d.id,
+      name: d.name,
+      city: d.city,
+      ownerId: d.ownerId,
+      verificationStatus: String(d.verificationStatus ?? "pending"),
+      subscriptionTier: d.subscriptionTier ?? "free",
+      isVerified: d.isVerified,
+      createdAt: d.createdAt,
+    }));
+  } catch (e) {
+    console.warn("[platform-admin] dealers API", e);
+  }
+
   const { data, error } = await supabase
     .from("dealers")
     .select("id, name, city, owner_id, verification_status, subscription_tier, is_verified, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error || !data?.length) return useMock(MOCK_DEALERS, error);
+  if (error) return useMock(MOCK_DEALERS, error);
+  if (!data?.length) return [];
 
   return data.map((d) => ({
     id: d.id,
@@ -128,13 +330,23 @@ export async function fetchPendingDealers(): Promise<AdminDealerRow[]> {
 
 export async function setDealerVerification(
   dealerId: string,
-  status: "verified" | "rejected"
+  status: "verified" | "rejected",
+  ownerId?: string | null
 ): Promise<{ error: string | null }> {
+  if (status === "verified" && ownerId) {
+    return approveBusinessAccount(ownerId);
+  }
+
   const patch =
     status === "verified"
       ? { verification_status: "verified", is_verified: true }
       : { verification_status: "rejected", is_verified: false };
   const { error } = await supabase.from("dealers").update(patch).eq("id", dealerId);
+
+  if (status === "rejected" && ownerId && !error) {
+    return rejectBusinessAccount(ownerId);
+  }
+
   return { error: error?.message ?? null };
 }
 
@@ -146,7 +358,8 @@ export async function fetchKycQueue(): Promise<KycQueueRow[]> {
     .order("updated_at", { ascending: false })
     .limit(100);
 
-  if (error || !data?.length) return useMock(MOCK_KYC, error);
+  if (error) return useMock(MOCK_KYC, error);
+  if (!data?.length) return [];
 
   return data.map((u) => ({
     userId: u.id,
@@ -166,10 +379,13 @@ export async function fetchRevenueAnalytics(): Promise<RevenueAnalytics> {
   try {
     const { data: disbursed } = await supabase
       .from("finance_applications")
-      .select("loan_amount")
+      .select("amount")
       .eq("status", "disbursed")
       .limit(500);
-    const loanTotal = (disbursed ?? []).reduce((s, r) => s + Number(r.loan_amount ?? 0), 0);
+    const loanTotal = (disbursed ?? []).reduce(
+      (s, r) => s + Number((r as { amount?: number }).amount ?? 0),
+      0
+    );
     if (loanTotal > 0) {
       return {
         ...MOCK_REVENUE,
@@ -187,23 +403,20 @@ export async function fetchPlatformTransactions(): Promise<PlatformTransactionRo
   try {
     const { data } = await supabase
       .from("finance_applications")
-      .select("id, loan_amount, status, created_at, users(full_name), banks(name)")
+      .select("id, amount, status, created_at")
       .in("status", ["approved", "disbursed"])
       .order("created_at", { ascending: false })
       .limit(50);
 
     if (data?.length) {
       return data.map((r) => {
-        const row = r as unknown as Record<string, unknown> & {
-          users?: { full_name: string } | null;
-          banks?: { name: string } | null;
-        };
+        const row = r as Record<string, unknown>;
         return {
           id: String(row.id),
           type: "loan" as const,
           reference: `FIN-${String(row.id).slice(0, 8)}`,
-          party: `${row.banks?.name ?? "Bank"} · ${row.users?.full_name ?? "Applicant"}`,
-          amount: Number(row.loan_amount),
+          party: "Finance application",
+          amount: Number(row.amount ?? 0),
           status: String(row.status),
           createdAt: String(row.created_at),
         };

@@ -162,6 +162,10 @@ import { CommunityLayout } from "@/layouts/CommunityLayout";
 import { SuperAdminLayout } from "@/layouts/SuperAdminLayout";
 import {
   SuperAdminOverviewPage,
+  BusinessApprovalsPage,
+  RoleDirectoryPage,
+  FinanceApprovalsPage,
+  AdminOperationsPage,
   UsersManagementPage,
   DealerApprovalsPage,
   KycVerificationPage,
@@ -811,6 +815,10 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: "dashboard/super-admin", element: <SuperAdminOverviewPage /> },
+      { path: "dashboard/super-admin/business-approvals", element: <BusinessApprovalsPage /> },
+      { path: "dashboard/super-admin/finance-approvals", element: <FinanceApprovalsPage /> },
+      { path: "dashboard/super-admin/operations", element: <AdminOperationsPage /> },
+      { path: "dashboard/super-admin/roles", element: <RoleDirectoryPage /> },
       { path: "dashboard/super-admin/users", element: <UsersManagementPage /> },
       { path: "dashboard/super-admin/dealers", element: <DealerApprovalsPage /> },
       { path: "dashboard/super-admin/kyc", element: <KycVerificationPage /> },

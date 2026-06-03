@@ -3,13 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Mail } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Lock, Mail, Phone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthStatusAlert } from "@/components/auth/AuthStatusAlert";
+import { AuthPageChrome } from "@/components/auth/AuthPageChrome";
+import { AuthFormField } from "@/components/auth/AuthFormField";
+import { AuthPageLinks } from "@/components/auth/AuthPageLinks";
+import { AuthRoleSwitch } from "@/components/auth/AuthRoleSwitch";
 import { normalizeAuthEmail } from "@/services/auth.service";
 import type { AuthErrorUI } from "@/lib/auth-errors";
 import { useAuthStore } from "@/store/authStore";
@@ -84,107 +85,109 @@ export function CustomerSignupPage() {
 
   if (verifyEmail) {
     return (
-      <Card className="border-0 shadow-none sm:border sm:shadow-card">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Mail className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle>Verify your email</CardTitle>
-          <CardDescription className="text-pretty">
-            We sent a confirmation link to <strong>{verifyEmail}</strong>. After verifying, sign in to open your
-            dashboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            disabled={resending}
-            onClick={async () => {
-              setResending(true);
-              await resendEmailConfirmation(verifyEmail);
-              setResending(false);
-            }}
-          >
-            {resending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending…
-              </>
-            ) : (
-              "Resend verification email"
-            )}
-          </Button>
-          <Button type="button" variant="default" className="w-full" asChild>
-            <Link to="/login">Go to sign in</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <AuthPageChrome
+        eyebrow="Almost there"
+        title="Verify your email"
+        description={
+          <>
+            We sent a confirmation link to <strong className="text-foreground">{verifyEmail}</strong>. After
+            verifying, sign in to open your personal dashboard.
+          </>
+        }
+      >
+        <div className="rounded-xl border border-border/70 bg-muted/30 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+          Links expire in 24 hours. Check spam or resend below.
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-4 h-11 w-full rounded-xl"
+          disabled={resending}
+          onClick={async () => {
+            setResending(true);
+            await resendEmailConfirmation(verifyEmail);
+            setResending(false);
+          }}
+        >
+          {resending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending…
+            </>
+          ) : (
+            "Resend verification email"
+          )}
+        </Button>
+        <Button type="button" className="auth-cta mt-2 w-full" asChild>
+          <Link to="/login">Go to sign in</Link>
+        </Button>
+      </AuthPageChrome>
     );
   }
 
   return (
-    <Card className="border-0 shadow-none sm:border sm:shadow-card">
-      <CardHeader>
-        <CardTitle>Create customer account</CardTitle>
-        <CardDescription>
-          Save vehicles, track loans, service bookings, and auction bids — one personal dashboard.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {signupError && <AuthStatusAlert error={signupError} className="mb-4" />}
+    <AuthPageChrome
+      variant="compact"
+      eyebrow="Personal account"
+      title="Customer signup"
+      description="Your ownership dashboard — garage, finance & services."
+      footer={<AuthPageLinks prompt="Already have an account?" linkLabel="Sign in" linkTo="/login" />}
+    >
+      <AuthRoleSwitch mode="signup" />
+      {signupError && <AuthStatusAlert error={signupError} className="mb-3" />}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <div>
-            <Label htmlFor="cust-name">Full name</Label>
-            <Input id="cust-name" className="mt-1" disabled={loading} {...register("fullName")} />
-            {errors.fullName && (
-              <p className="mt-1 text-xs text-destructive">{errors.fullName.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="cust-email">Email</Label>
-            <Input id="cust-email" type="email" autoComplete="email" className="mt-1" disabled={loading} {...register("email")} />
-            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="cust-phone">Mobile</Label>
-            <Input id="cust-phone" className="mt-1" placeholder="9876543210" inputMode="tel" disabled={loading} {...register("phone")} />
-            {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="cust-password">Password</Label>
-            <Input id="cust-password" type="password" autoComplete="new-password" className="mt-1" disabled={loading} {...register("password")} />
-            {errors.password && (
-              <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-          <Button type="submit" variant="default" className="w-full" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating account…
-              </>
-            ) : (
-              "Create customer account"
-            )}
-          </Button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Registering a dealership?{" "}
-          <Link to="/signup/business" className="font-medium text-primary hover:underline">
-            Business signup
-          </Link>
-        </p>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          Have an account?{" "}
-          <Link to="/login" className="font-medium text-primary hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+      <form onSubmit={handleSubmit(onSubmit)} className="auth-form__fields auth-form__fields--grid" noValidate>
+        <AuthFormField
+          id="cust-name"
+          label="Full name"
+          autoComplete="name"
+          disabled={loading}
+          icon={<User className="h-4 w-4" />}
+          error={errors.fullName?.message}
+          {...register("fullName")}
+        />
+        <AuthFormField
+          id="cust-email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          disabled={loading}
+          icon={<Mail className="h-4 w-4" />}
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <AuthFormField
+          id="cust-phone"
+          label="Mobile"
+          placeholder="9876543210"
+          inputMode="tel"
+          autoComplete="tel"
+          disabled={loading}
+          icon={<Phone className="h-4 w-4" />}
+          error={errors.phone?.message}
+          {...register("phone")}
+        />
+        <AuthFormField
+          id="cust-password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          disabled={loading}
+          icon={<Lock className="h-4 w-4" />}
+          error={errors.password?.message}
+          {...register("password")}
+        />
+        <Button type="submit" disabled={loading} className="auth-cta w-full">
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating account…
+            </>
+          ) : (
+            "Create customer account"
+          )}
+        </Button>
+      </form>
+    </AuthPageChrome>
   );
 }

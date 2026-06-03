@@ -9,6 +9,7 @@ import {
   isPendingApprovalAllowedPath,
   PENDING_APPROVAL_PATH,
 } from "@/auth/ecosystem-roles";
+import { getWorkspaceHomePath, isPathInUserWorkspace } from "@/auth/workspace-redirect";
 import { PageSpinner } from "@/shared/ui/loading/PageSpinner";
 
 interface ProtectedRouteProps {
@@ -54,6 +55,14 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
     !isPendingApprovalAllowedPath(location.pathname)
   ) {
     return <Navigate to={PENDING_APPROVAL_PATH} replace />;
+  }
+
+  if (
+    user &&
+    location.pathname.startsWith("/dashboard") &&
+    !isPathInUserWorkspace(user, location.pathname)
+  ) {
+    return <Navigate to={getWorkspaceHomePath(user)} replace />;
   }
 
   return <>{children}</>;

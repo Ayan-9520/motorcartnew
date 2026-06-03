@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:dist": "npm run build",
+    "preview:dist": "vite preview --port 4173",
     "lint": "eslint .",
     "preview": "vite preview",
     "seed:vehicles": "npx --yes tsx scripts/seed-vehicles.ts",

@@ -143,7 +143,10 @@ export interface TestDriveBooking {
 
 export interface VehicleEnquiry {
   vehicleId: string;
-  dealerId: string;
+  vehicleTitle: string;
+  vehicleSlug?: string;
+  dealerId?: string;
+  dealerSlug?: string;
   name: string;
   phone: string;
   email?: string;

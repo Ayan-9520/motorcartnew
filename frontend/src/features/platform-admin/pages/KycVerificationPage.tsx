@@ -4,7 +4,7 @@ import { setPageMeta } from "@/utils/seo";
 import { DataTable } from "@/shared/ui/data-table/DataTable";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
-import { fetchKycQueue, updateAdminUser } from "../services/platform-admin.service";
+import { fetchKycQueue, reviewKycUser } from "../services/platform-admin.service";
 import type { KycQueueRow } from "../types";
 import { SuperAdminShell } from "../components/SuperAdminShell";
 import { SuperAdminStatusBadge } from "../components/SuperAdminStatusBadge";
@@ -19,11 +19,11 @@ export function KycVerificationPage() {
     void load();
   }, []);
 
-  const review = async (userId: string, kyc_status: "verified" | "rejected") => {
-    const { error } = await updateAdminUser(userId, { kyc_status });
+  const review = async (userId: string, action: "verified" | "rejected") => {
+    const { error } = await reviewKycUser(userId, action);
     if (error) toast.error(error);
     else {
-      toast.success(`KYC ${kyc_status}`);
+      toast.success(`KYC ${action}`);
       void load();
     }
   };
@@ -56,7 +56,7 @@ export function KycVerificationPage() {
   ];
 
   return (
-    <SuperAdminShell title="KYC verification" description="Identity and business document review for users and dealers.">
+    <SuperAdminShell title="KYC verification" description="Identity and business document review — updates users.kyc_status via admin API.">
       <DataTable title="Review queue" data={rows} columns={columns} className="sa-table-card" />
     </SuperAdminShell>
   );
