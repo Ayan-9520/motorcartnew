@@ -1,35 +1,60 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Shield } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroSearchModule } from "@/features/home/components/HeroSearchModule";
 import { HeroSearchInsights } from "@/features/home/components/HeroSearchInsights";
 import { HeroDashboardPanel } from "@/features/home/components/HeroDashboardPanel";
+import { HeroLiveStatsBar } from "@/features/home/components/HeroLiveStatsBar";
 import { useHeroSearch } from "@/features/home/components/hero-search-context";
 import { getHeroHubConfig } from "@/features/home/data/hero-hub-config";
-import { SITE_STATS_BAR } from "@/content/site-content";
 import { HERO_HEADLINE_WORDS } from "@/features/home/data/homepage-data";
 import { PHASE1_ROTATING_LINES, PHASE1_TAGLINE } from "@/features/home/data/phase1-home-data";
+import { useHomePage } from "@/features/home/context/HomePageContext";
+import { formatPrice } from "@/lib/vehicle-utils";
+import { formatCurrency } from "@/lib/utils";
 
 export function HeroSection() {
   const { pathname } = useLocation();
   const isHome = pathname === "/";
   const { mode } = useHeroSearch();
   const hub = getHeroHubConfig(mode);
-  const rotatingLines = isHome ? PHASE1_ROTATING_LINES : HERO_HEADLINE_WORDS;
+  const { featuredVehicles, auctions, heroStats, data } = useHomePage();
+
+  const rotatingLines = useMemo(() => {
+    if (!isHome) return [...HERO_HEADLINE_WORDS];
+
+    const dynamic: string[] = [];
+    featuredVehicles.slice(0, 3).forEach((v) => {
+      dynamic.push(`${v.brand} ${v.model} — ${formatPrice(v.price)}`);
+    });
+    auctions.slice(0, 2).forEach((a) => {
+      dynamic.push(`Live auction: ${a.title} · ${formatCurrency(a.currentBid)}`);
+    });
+    heroStats.slice(0, 2).forEach((s) => {
+      dynamic.push(`${s.value} ${s.label.toLowerCase()}`);
+    });
+    if (data?.generated_at) {
+      dynamic.push("Inventory refreshed from live marketplace");
+    }
+
+    return dynamic.length >= 3 ? dynamic : [...PHASE1_ROTATING_LINES];
+  }, [isHome, featuredVehicles, auctions, heroStats, data?.generated_at]);
+
   const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
       setWordIndex((i) => (i + 1) % rotatingLines.length);
-    }, 2800);
+    }, 3200);
     return () => clearInterval(id);
   }, [rotatingLines.length]);
 
   return (
     <section className="hero-section relative overflow-hidden border-b border-border">
       <div className="hero-section-surface" aria-hidden />
+      <div className="hero-section-glow" aria-hidden />
 
       <div className="container relative py-8 md:py-11 lg:py-12">
         <div className="hero-layout-grid">
@@ -39,10 +64,7 @@ export function HeroSection() {
             transition={{ duration: 0.45 }}
             className="hero-layout-left min-w-0 space-y-5"
           >
-            <div className="hero-eyebrow">
-              <Shield className="h-3.5 w-3.5" />
-              <span>{SITE_STATS_BAR}</span>
-            </div>
+            <HeroLiveStatsBar />
 
             <motion.div className="space-y-3">
               <h1 className="hero-headline">
@@ -53,7 +75,7 @@ export function HeroSection() {
               <p className="hero-rotating-line">
                 <AnimatePresence mode="wait">
                   <motion.span
-                    key={`${mode}-${wordIndex}`}
+                    key={`${mode}-${wordIndex}-${rotatingLines[wordIndex]}`}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}

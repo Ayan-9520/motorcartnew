@@ -56,6 +56,9 @@ export type NcdInventoryItem = {
   stockHealth: NcdStockHealth;
   colors: string[];
   expectedDeliveryDays?: number;
+  waitingPeriodDays?: number;
+  brochureUrl?: string;
+  offers?: { title: string; amount?: number; validUntil?: string }[];
   mileage?: string;
   seating?: number;
   imageUrl: string;

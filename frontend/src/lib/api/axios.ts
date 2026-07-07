@@ -1,11 +1,11 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { getApiBaseUrl } from "@/lib/api/base-url";
+import { getApiBaseUrl, joinApiUrl } from "@/lib/api/base-url";
 
 const API_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_URL || undefined,
-  timeout: 30_000,
+  timeout: 15_000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -45,7 +45,7 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refresh) return null;
   try {
     const { data } = await axios.post<{ accessToken: string; refreshToken?: string }>(
-      `${API_URL}/api/auth/refresh`,
+      joinApiUrl("/api/auth/refresh"),
       { refreshToken: refresh }
     );
     setTokens(data.accessToken, data.refreshToken ?? refresh);
@@ -78,10 +78,11 @@ export function apiErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
     const msg = (err.response?.data as { message?: string })?.message;
     if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
-      return "Backend not responding. Start MySQL (XAMPP), then run: npm run dev (backend on :3001, frontend on :3000).";
+      return "Backend not responding. Check API health at /api/health and ensure the backend service is running.";
     }
     if (err.code === "ERR_NETWORK" || err.code === "ECONNREFUSED") {
-      return "Cannot reach API at " + (API_URL || "localhost:3001") + ". Start backend: cd backend && npm run dev";
+      const target = API_URL || "same-origin /api";
+      return `Cannot reach API (${target}). Start backend or run: npm run docker:up`;
     }
     if (err.response?.status === 500 && !msg) {
       return "Server error during signup. Check backend terminal logs.";

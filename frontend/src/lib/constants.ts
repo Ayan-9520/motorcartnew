@@ -38,6 +38,7 @@ export const USER_ROLES = [
   "admin",
   "super_admin",
   "auction_partner",
+  "broker",
 ] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
@@ -60,6 +61,7 @@ export const DASHBOARD_ROUTES: Partial<Record<UserRole, string>> = {
   parts_seller: "/dashboard/parts",
   admin: "/dashboard/super-admin",
   auction_partner: "/dashboard/auction",
+  broker: "/dashboard/broker",
 };
 
 /** Main nav entry for all vehicle hubs (cars, bikes, trucks, …) — not only cars */

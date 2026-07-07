@@ -6,8 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "./SectionHeader";
 import { homeServiceImage } from "@/lib/media/india-media-catalog";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 
-const serviceCards = [
+const fallbackServiceCards = [
   {
     id: "wash",
     title: "Premium Car Wash",
@@ -46,7 +47,32 @@ const serviceCards = [
   },
 ];
 
+const SERVICE_ICONS: Record<string, typeof Droplets> = {
+  wash: Droplets,
+  repair: Wrench,
+  detailing: Car,
+  rsa: Shield,
+};
+
 export function ServicesSection() {
+  const { data } = useHomePage();
+  const serviceCards =
+    data?.services?.length && data.services.length > 0
+      ? data.services.map((s, i) => {
+          const type = String(s.service_type ?? s.slug ?? "repair").toLowerCase();
+          const icon = SERVICE_ICONS[type] ?? Wrench;
+          return {
+            id: String(s.id ?? i),
+            title: String(s.name ?? "Service"),
+            type,
+            description: String(s.description ?? "Book at partner service centers"),
+            priceFrom: Number(s.price_from ?? 499),
+            icon,
+            image: homeServiceImage(type.includes("wash") ? "wash" : "repair"),
+          };
+        })
+      : fallbackServiceCards;
+
   return (
     <section className="home-section-alt">
       <div className="container home-stack">

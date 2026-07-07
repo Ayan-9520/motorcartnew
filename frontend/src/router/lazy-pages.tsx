@@ -42,6 +42,66 @@ export const FinanceManagerIntegrationsPage = lazyNamed(
 export const LenderDashboardPage = lazyNamed(() => import("@/features/finance/pages/LenderDashboardPage"), "LenderDashboardPage");
 export const LenderApplicationsPage = lazyNamed(() => import("@/features/finance/pages/LenderApplicationsPage"), "LenderApplicationsPage");
 
+// Broker CRM (minimal shell E0–E3)
+export const BrokerOverviewPage = lazyNamed(
+  () => import("@/features/broker-crm/pages/BrokerOverviewPage"),
+  "BrokerOverviewPage"
+);
+
+// Growth CRM (Phase J2+J3)
+export const GrowthOverviewPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthOverviewPage"),
+  "GrowthOverviewPage"
+);
+export const GrowthWorkspacesPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthWorkspacesPage"),
+  "GrowthWorkspacesPage"
+);
+export const GrowthAssetsPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthAssetsPage"),
+  "GrowthAssetsPage"
+);
+export const GrowthDesignsPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthDesignsPage"),
+  "GrowthDesignsPage"
+);
+export const GrowthDesignEditorPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthDesignEditorPage"),
+  "GrowthDesignEditorPage"
+);
+export const GrowthWhatsappPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthWhatsappPage"),
+  "GrowthWhatsappPage"
+);
+export const GrowthWhatsappArchitecturePage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthWhatsappArchitecturePage"),
+  "GrowthWhatsappArchitecturePage"
+);
+export const GrowthSocialSchedulerPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthSocialSchedulerPage"),
+  "GrowthSocialSchedulerPage"
+);
+export const GrowthLeadsPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthLeadsPage"),
+  "GrowthLeadsPage"
+);
+export const GrowthLeadDetailPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthLeadDetailPage"),
+  "GrowthLeadDetailPage"
+);
+export const GrowthLeadPipelinePage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthLeadPipelinePage"),
+  "GrowthLeadPipelinePage"
+);
+export const GrowthLeadPipelineDetailPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthLeadPipelineDetailPage"),
+  "GrowthLeadPipelineDetailPage"
+);
+export const GrowthLeadAnalyticsPage = lazyNamed(
+  () => import("@/features/growth-crm/pages/GrowthLeadAnalyticsPage"),
+  "GrowthLeadAnalyticsPage"
+);
+
 // Auctions & AI
 export const AuctionRoomPage = lazyNamed(() => import("@/features/auctions/pages/AuctionRoomPage"), "AuctionRoomPage");
 export const AuctionAdminPage = lazyNamed(() => import("@/features/auctions/pages/AuctionAdminPage"), "AuctionAdminPage");
@@ -81,6 +141,18 @@ export const VehicleModerationPage = lazyNamed(() => import("@/features/platform
 export const FeaturedInventoryPage = lazyNamed(() => import("@/features/platform-admin/pages/FeaturedInventoryPage"), "FeaturedInventoryPage");
 export const AuctionApprovalsPage = lazyNamed(() => import("@/features/platform-admin/pages/AuctionApprovalsPage"), "AuctionApprovalsPage");
 export const TransactionsPage = lazyNamed(() => import("@/features/platform-admin/pages/TransactionsPage"), "TransactionsPage");
+export const DirectoryMonetizationPage = lazyNamed(
+  () => import("@/features/platform-admin/pages/DirectoryMonetizationPage"),
+  "DirectoryMonetizationPage"
+);
+export const FounderDashboardPage = lazyNamed(
+  () => import("@/features/founder-dashboard/pages/FounderDashboardPage"),
+  "FounderDashboardPage"
+);
+export const LeadRouterPage = lazyNamed(
+  () => import("@/features/platform-admin/pages/LeadRouterPage"),
+  "LeadRouterPage"
+);
 
 // Heavy marketplace
 export const VehicleDetailPage = lazyNamed(() => import("@/features/vehicles/pages/VehicleDetailPage"), "VehicleDetailPage");

@@ -15,6 +15,9 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 700,
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -36,16 +39,16 @@ export default defineConfig({
     open: true,
     proxy: {
       "/api": {
-        target: "http://localhost:3001",
+        target: process.env.VITE_DEV_PROXY_TARGET || "http://127.0.0.1:3001",
         changeOrigin: true,
       },
       "/socket.io": {
-        target: "http://localhost:3001",
+        target: process.env.VITE_DEV_PROXY_TARGET || "http://127.0.0.1:3001",
         changeOrigin: true,
         ws: true,
       },
       "/uploads": {
-        target: "http://localhost:3001",
+        target: process.env.VITE_DEV_PROXY_TARGET || "http://127.0.0.1:3001",
         changeOrigin: true,
       },
     },

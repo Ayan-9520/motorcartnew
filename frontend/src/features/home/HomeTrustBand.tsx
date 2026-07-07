@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { HERO_STATS, HOME_TRUST_PILLS } from "@/features/home/data/homepage-data";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 
 const PILL_ICONS = {
   users: Users,
@@ -20,6 +21,8 @@ const PILL_ICONS = {
 } as const;
 
 export function HomeTrustBand() {
+  const { heroStats } = useHomePage();
+  const stats = heroStats.length ? heroStats : HERO_STATS;
   return (
     <section className="border-b border-border bg-muted/15 py-4 md:py-6">
       <div className="container">
@@ -31,7 +34,7 @@ export function HomeTrustBand() {
           className="hero-trust-band"
         >
           <div className="hero-stats-row">
-            {HERO_STATS.map((stat, i) => (
+            {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 8 }}

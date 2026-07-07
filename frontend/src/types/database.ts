@@ -19,6 +19,7 @@ export type AppRole =
   | "admin"
   | "super_admin"
   | "auction_partner"
+  | "broker"
   /** Legacy signup / metadata aliases — normalized in workspace-role */
   | "service_partner"
   | "preowned_dealer";
@@ -104,6 +105,7 @@ export interface DbVehicle {
   is_certified: boolean;
   is_featured: boolean;
   condition: string;
+  sale_mode?: string | null;
   status: VehicleStatus;
   ai_price_score: number | null;
   metadata: Record<string, unknown>;

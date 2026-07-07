@@ -9,8 +9,15 @@ export async function GET(req: NextRequest) {
   const category = sp.get("category");
   const brand = sp.get("brand");
   const city = sp.get("city");
+  const saleMode = sp.get("sale_mode") ?? sp.get("saleMode");
   const limit = Math.min(parseInt(sp.get("limit") ?? "24", 10), 100);
   const offset = parseInt(sp.get("offset") ?? "0", 10);
+
+  const saleModeFilter =
+    saleMode &&
+    ["direct_owner", "broker_assisted", "dealer_offer", "auction_sale"].includes(saleMode)
+      ? { saleMode: saleMode as "direct_owner" | "broker_assisted" | "dealer_offer" | "auction_sale" }
+      : {};
 
   const vehicles = await prisma.vehicle.findMany({
     where: {
@@ -19,6 +26,7 @@ export async function GET(req: NextRequest) {
       ...(category ? { category } : {}),
       ...(brand ? { brand } : {}),
       ...(city ? { city } : {}),
+      ...saleModeFilter,
     },
     include: { specs: true },
     orderBy: { createdAt: "desc" },

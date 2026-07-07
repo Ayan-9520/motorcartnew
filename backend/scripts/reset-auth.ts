@@ -1,6 +1,6 @@
 /**
  * Clears all users/sessions and re-seeds demo accounts with known passwords.
- * Run: npm run db:reset-auth  (MySQL must be running)
+ * Run: npm run db:reset-auth  (PostgreSQL must be running — npm run db:up)
  */
 import { PrismaClient } from "@prisma/client";
 import { execSync } from "node:child_process";

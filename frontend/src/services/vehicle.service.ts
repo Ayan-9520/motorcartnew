@@ -5,6 +5,11 @@ import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
 import { filterVehicles, sortVehicles, paginateVehicles, slugify } from "@/lib/vehicle-utils";
 import type { VehicleSortOption } from "@/types/vehicle";
 import { resolveVehicleGallery } from "@/lib/media/resolve-images";
+import { resolveSaleMode } from "@/lib/sale-mode";
+import { featureFlags } from "@/config/feature-flags";
+import { api } from "@/lib/api/axios";
+import { hasConfiguredApi } from "@/lib/api/base-url";
+import { withApiTimeout } from "@/lib/api/with-timeout";
 
 type VehicleMetaExtras = VehicleListing["metadata"] & {
   dealerName?: string;
@@ -73,6 +78,7 @@ export function mapDbToListing(v: DbVehicle, dealer?: DbDealer | null): VehicleL
     dealerPhone: dealer?.phone ?? meta.dealerPhone,
     dealerRating: dealer ? Number(dealer.rating) : meta.dealerRating,
     dealerVerified: dealer?.is_verified ?? meta.dealerVerified,
+    saleMode: resolveSaleMode(v.sale_mode, meta as Record<string, unknown>),
     metadata: meta,
     createdAt: v.created_at,
   };
@@ -88,33 +94,48 @@ export async function getVehiclePool(): Promise<VehicleListing[]> {
 }
 
 export async function fetchVehiclesFromDb(limit = 500): Promise<VehicleListing[]> {
-  const { data, error } = await supabase
-    .from("vehicles")
-    .select("*, dealers(name, slug, phone, rating, is_verified)")
-    .eq("status", "available")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  try {
+    const { data, error } = await supabase
+      .from("vehicles")
+      .select("*")
+      .eq("status", "available")
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-  if (error || !data?.length) return [];
+    if (error || !data?.length) return [];
 
-  return (data as Record<string, unknown>[]).map((row) => {
-    const dealer = (row as { dealers?: DbDealer | null }).dealers;
-    const { dealers: _, ...vehicle } = row as unknown as DbVehicle & { dealers?: DbDealer };
-    return mapDbToListing(vehicle, dealer);
-  });
+    return (data as DbVehicle[]).map((vehicle) => mapDbToListing(vehicle, null));
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchVehicleBySlug(slug: string): Promise<VehicleListing | null> {
-  const { data, error } = await supabase
-    .from("vehicles")
-    .select("*, dealers(name, slug, phone, rating, is_verified, address, city, state, email, website)")
-    .eq("slug", slug)
-    .maybeSingle();
+  if (featureFlags.unifiedVehicleApi && hasConfiguredApi()) {
+    try {
+      const { data } = await withApiTimeout(
+        api.get<{
+          vehicle: DbVehicle;
+          dealer: DbDealer | null;
+        }>(`/api/vehicles/slug/${encodeURIComponent(slug)}`, { timeout: 5000 }),
+        5000
+      );
+      if (data?.vehicle) {
+        return mapDbToListing(data.vehicle, data.dealer ?? null);
+      }
+    } catch {
+      /* fall through to legacy */
+    }
+  }
 
-  if (!error && data) {
-    const dealer = (data as { dealers?: DbDealer }).dealers;
-    const { dealers: _, ...vehicle } = data as DbVehicle & { dealers?: DbDealer };
-    return mapDbToListing(vehicle, dealer);
+  try {
+    const { data, error } = await supabase.from("vehicles").select("*").eq("slug", slug).maybeSingle();
+
+    if (!error && data) {
+      return mapDbToListing(data as DbVehicle, null);
+    }
+  } catch {
+    /* fall through to mock */
   }
 
   return MOCK_VEHICLES.find((v) => v.slug === slug) ?? null;
@@ -157,6 +178,7 @@ export type VehicleFormData = {
   features?: string[];
   images?: string[];
   condition: "new" | "used";
+  saleMode?: VehicleListing["saleMode"];
   metadata?: VehicleListing["metadata"];
 };
 
@@ -186,6 +208,7 @@ export async function createVehicle(data: VehicleFormData, sellerId: string, dea
     condition: data.condition,
     seller_id: sellerId,
     dealer_id: dealerId,
+    sale_mode: data.saleMode ?? "dealer_offer",
     metadata: data.metadata ?? {},
     status: "available",
   }).select().single();

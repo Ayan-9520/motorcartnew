@@ -1,4 +1,7 @@
 import { supabase } from "@/shared/api/client";
+import { api } from "@/lib/api/axios";
+import { hasConfiguredApi } from "@/lib/api/base-url";
+import { featureFlags } from "@/config/feature-flags";
 import { getVehicleHero } from "@/lib/media/vehicle-media-registry";
 import { buildMockNewCarDealerSnapshot, getLeadDetail } from "../data/mock-ncd-data";
 import type { NewCarDealerSnapshot, NcdInventoryItem, NcdLead, NcdLeadDetail } from "../types";
@@ -29,6 +32,9 @@ function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): Ncd
     stockHealth: (r.stock_health ?? meta.stockHealth ?? "fast_moving") as NcdInventoryItem["stockHealth"],
     colors: Array.isArray(r.colors) ? (r.colors as string[]) : ["White"],
     expectedDeliveryDays: (r.expected_delivery_days as number | undefined) ?? undefined,
+    waitingPeriodDays: (r.waiting_period_days as number | undefined) ?? undefined,
+    brochureUrl: (r.brochure_url as string | undefined) ?? undefined,
+    offers: Array.isArray(r.offers) ? (r.offers as NcdInventoryItem["offers"]) : [],
     imageUrl: String(r.image_url ?? meta.imageUrl ?? fallbackImage),
   };
 }
@@ -130,11 +136,15 @@ export async function createNewCarInventory(
     onRoadPrice?: number;
     stockStatus?: string;
     imageUrl?: string;
+    waitingPeriodDays?: number;
+    brochureUrl?: string;
+    offers?: NcdInventoryItem["offers"];
+    stock?: number;
   }
 ) {
   const ex = payload.exShowroomPrice;
   const onRoad = payload.onRoadPrice ?? Math.round(ex * 1.12);
-  return supabase.from("new_car_inventory").insert({
+  const row = {
     dealer_id: dealerId,
     brand: payload.brand.trim(),
     model: payload.model.trim(),
@@ -144,15 +154,57 @@ export async function createNewCarInventory(
     ex_showroom_price: ex,
     on_road_price: onRoad,
     price: ex,
-    stock: 1,
+    stock: payload.stock ?? 1,
     stock_status: payload.stockStatus ?? "available",
     stock_health: "fast_moving",
     colors: ["White"],
     image_url:
       payload.imageUrl ?? getVehicleHero({ brand: payload.brand, model: payload.model, bodyType: "Sedan" }),
-    expected_delivery_days: 14,
+    expected_delivery_days: payload.waitingPeriodDays ?? 14,
+    waiting_period_days: payload.waitingPeriodDays,
+    brochure_url: payload.brochureUrl ?? null,
+    offers: payload.offers ?? [],
     year: new Date().getFullYear(),
-  });
+  };
+
+  if (featureFlags.newCarInventoryV2 && hasConfiguredApi()) {
+    try {
+      const { data, status } = await api.post<{ data?: Record<string, unknown> }>(
+        "/api/new-car/inventory",
+        row
+      );
+      if (status >= 200 && status < 300) return { data: data?.data, error: null };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "API error";
+      return { data: null, error: { message: msg } };
+    }
+  }
+
+  return supabase.from("new_car_inventory").insert(row);
+}
+
+export async function uploadDailyNewCarStock(
+  dealerId: string,
+  inventoryId: string,
+  stockAfter: number,
+  fileName?: string,
+  notes?: string
+) {
+  if (!featureFlags.newCarInventoryV2 || !hasConfiguredApi()) {
+    return { data: null, error: { message: "Daily stock API not configured" } };
+  }
+  try {
+    const { data } = await api.post("/api/new-car/inventory/stock-upload", {
+      dealer_id: dealerId,
+      inventory_id: inventoryId,
+      stock_after: stockAfter,
+      file_name: fileName,
+      notes,
+    });
+    return { data, error: null };
+  } catch (e) {
+    return { data: null, error: { message: e instanceof Error ? e.message : "Upload failed" } };
+  }
 }
 
 export async function createDealerLead(

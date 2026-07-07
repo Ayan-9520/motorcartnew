@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import type { AppRole } from "@prisma/client";
 
 export type JwtPayload = {
@@ -12,15 +12,20 @@ const accessSecret = () =>
 const refreshSecret = () =>
   process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET ?? "dev-refresh-secret-change-in-production";
 
+const accessExpires = (): SignOptions["expiresIn"] =>
+  (process.env.JWT_ACCESS_EXPIRES ?? "15m") as SignOptions["expiresIn"];
+const refreshExpires = (): SignOptions["expiresIn"] =>
+  (process.env.JWT_REFRESH_EXPIRES ?? "7d") as SignOptions["expiresIn"];
+
 export function signAccessToken(payload: JwtPayload) {
   return jwt.sign(payload, accessSecret(), {
-    expiresIn: process.env.JWT_ACCESS_EXPIRES ?? "15m",
+    expiresIn: accessExpires(),
   });
 }
 
 export function signRefreshToken(payload: { sub: string }) {
   return jwt.sign(payload, refreshSecret(), {
-    expiresIn: process.env.JWT_REFRESH_EXPIRES ?? "7d",
+    expiresIn: refreshExpires(),
   });
 }
 

@@ -1,67 +1,81 @@
-# Motorcart — local dev (exact steps)
+# Motorcart — local dev (PostgreSQL + Redis)
 
-## Problem you had
-
-1. Port **3000** was busy → Vite moved to **3001**
-2. Backend also needs **3001** → crash `EADDRINUSE`
-3. Login called `localhost:3001` but got **Vite**, not API → **timeout 30s**
-
-## Fix (do this every time)
-
-### 1. Stop old servers
-
-In **both** terminals where `npm run dev` is running: press **Ctrl+C**.
-
-### 2. Free ports + start both apps
-
-From project root:
+## One-time setup
 
 ```powershell
 cd E:\Projects\motorcartcursor
+copy backend\.env.example backend\.env
+copy frontend\.env.example frontend\.env.local
+npm install
+npm run install:all
+npm run db:up
+cd backend
+npx prisma migrate deploy
+npm run db:seed
+cd ..
+```
+
+Or run: `powershell -ExecutionPolicy Bypass -File setup.ps1`
+
+## Every dev session
+
+### 1. Start PostgreSQL + Redis
+
+```powershell
+npm run db:up
+```
+
+### 2. Stop old dev servers
+
+Press **Ctrl+C** in terminals running `npm run dev`.
+
+### 3. Start frontend + backend
+
+```powershell
 npm run ports:free
 npm run dev
 ```
 
 - Frontend: **http://localhost:3000**
-- Backend API: **http://localhost:3001/api/health** → must show `"status":"ok"`
+- API: **http://localhost:3001/api/health** → `"status":"ok"`, `"database":"postgresql"`
 
-### 3. XAMPP
-
-Start **MySQL** in XAMPP (green).
-
-### 4. Clear old login + reset DB users (once)
+## Docker full stack (optional)
 
 ```powershell
-cd E:\Projects\motorcartcursor\backend
-npm run db:reset-auth
+copy .env.docker.example .env.docker
+npm run docker:up
 ```
 
-Then hard-refresh browser (Ctrl+Shift+R) on http://localhost:3000 — old Supabase tokens are cleared automatically.
+App via Nginx: **http://localhost**
 
-### 5. Login credentials
+## Login credentials
 
 | Email | Password | Role |
 |-------|----------|------|
-| `dealer@gmail.com` | `Dealer@123` | dealer |
-| `admin@motorcart.in` | `Admin@12345` | super_admin |
-| `customer@motorcart.in` | `Customer@123` | customer |
+| dealer@gmail.com | Dealer@123 | dealer |
+| admin@motorcart.in | Admin@12345 | super_admin |
+| customer@motorcart.in | Customer@123 | customer |
 
-Open: **http://localhost:3000/login**
+## Feature flags (local)
 
-**Super Admin dashboard:** http://localhost:3000/dashboard/super-admin  
-→ **Business approvals:** `/dashboard/super-admin/business-approvals` (approve pending dealer/DSA/parts/service signups)
+`backend/.env` and `frontend/.env.local` may have all `FEATURE_*` / `VITE_FEATURE_*` set to `true`. Restart servers after env changes.
 
-New signup works at `/signup` and `/signup/business` (password min 6 chars, email auto-confirmed in dev).
+## Reset auth users (once if login broken)
+
+```powershell
+cd backend
+npm run db:reset-auth
+```
+
+Hard-refresh browser (Ctrl+Shift+R).
 
 ## Wrong URLs
 
-- Do **not** open **http://localhost:3001** in the browser for the app UI (that is the API port).
-- Always use **http://localhost:3000** for the website.
+- Do **not** open http://localhost:3001 for the website UI (API only).
+- Use **http://localhost:3000** for React app.
 
-## If port 3000 still busy
+## If ports busy
 
 ```powershell
 npm run ports:free
 ```
-
-Then only **one** `npm run dev` from root — not separate frontend/backend in two terminals unless you freed ports first.

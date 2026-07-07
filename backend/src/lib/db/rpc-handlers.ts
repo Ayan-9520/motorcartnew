@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import type { JwtPayload } from "@/lib/auth/jwt";
 import { loadUserAccess, isPendingBusinessAccess } from "@/lib/auth/account-access";
 import { emitDbChange } from "@/lib/socket-emit";
@@ -110,7 +111,11 @@ async function createPartOrder(args: RpcArgs, auth: JwtPayload | null) {
       buyerId: auth.sub,
       status: "confirmed",
       total,
-      metadata: { shipping, payment_method: args.p_payment_method, cod: args.p_cod },
+      metadata: {
+        shipping,
+        payment_method: args.p_payment_method,
+        cod: args.p_cod,
+      } as Prisma.InputJsonValue,
     },
   });
   for (const it of items ?? []) {
@@ -122,7 +127,7 @@ async function createPartOrder(args: RpcArgs, auth: JwtPayload | null) {
           orderId: order.id,
           productId: part.id,
           qty: it.qty,
-          price: part.price,
+          price: Number(part.price),
         },
       })
       .catch(() => {});
@@ -244,7 +249,7 @@ async function updateBookingTracking(args: RpcArgs, auth: JwtPayload | null) {
         metadata: {
           ...(booking.metadata as object),
           tracking: args.p_status ?? args.status,
-        },
+        } as Prisma.InputJsonValue,
       },
     });
   }

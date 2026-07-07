@@ -4,8 +4,17 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PartnerLogoMarquee } from "@/features/home/components/PartnerLogoMarquee";
 import { SectionHeader } from "./SectionHeader";
+import { useHomePage } from "@/features/home/context/HomePageContext";
+import { mapBanksToPartnerLogos, mapBrandsToPartnerLogos } from "@/features/home/lib/map-home-data";
 
 export function HomePartnersPremium() {
+  const { banks, data } = useHomePage();
+  const bankLogos = banks.length >= 4 ? mapBanksToPartnerLogos(banks) : undefined;
+  const carLogos =
+    data?.brands?.length && data.brands.length >= 4
+      ? mapBrandsToPartnerLogos(data.brands)
+      : undefined;
+
   return (
     <section className="home-partners-premium home-section-alt">
       <div className="container home-stack">
@@ -22,7 +31,7 @@ export function HomePartnersPremium() {
           viewport={{ once: true }}
           className="home-partners-premium-panel"
         >
-          <PartnerLogoMarquee />
+          <PartnerLogoMarquee bankLogos={bankLogos} carLogos={carLogos} />
         </motion.div>
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Button size="sm" className="home-section-cta rounded-xl font-semibold" asChild>

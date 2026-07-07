@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { featureFlags } from "@/config/feature-flags";
 import { createNewCarInventory } from "../services/new-car-dealer.service";
 
 type Props = {
@@ -29,6 +30,10 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, onSaved
   const [fuelType, setFuelType] = useState("Petrol");
   const [transmission, setTransmission] = useState("Manual");
   const [price, setPrice] = useState("");
+  const [waitingDays, setWaitingDays] = useState("14");
+  const [brochureUrl, setBrochureUrl] = useState("");
+  const [offerTitle, setOfferTitle] = useState("");
+  const v2 = featureFlags.newCarInventoryV2;
 
   const reset = () => {
     setBrand("");
@@ -37,6 +42,9 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, onSaved
     setFuelType("Petrol");
     setTransmission("Manual");
     setPrice("");
+    setWaitingDays("14");
+    setBrochureUrl("");
+    setOfferTitle("");
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -54,6 +62,12 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, onSaved
       fuelType,
       transmission,
       exShowroomPrice: ex,
+      waitingPeriodDays: v2 ? Number(waitingDays) || 14 : undefined,
+      brochureUrl: v2 && brochureUrl.trim() ? brochureUrl.trim() : undefined,
+      offers:
+        v2 && offerTitle.trim()
+          ? [{ title: offerTitle.trim(), validUntil: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10) }]
+          : undefined,
     });
     setLoading(false);
     if (error) {
@@ -102,6 +116,22 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, onSaved
             <Label htmlFor="ncd-price">Ex-showroom price (₹)</Label>
             <Input id="ncd-price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="1899000" />
           </div>
+          {v2 ? (
+            <>
+              <div>
+                <Label htmlFor="ncd-wait">Waiting period (days)</Label>
+                <Input id="ncd-wait" inputMode="numeric" value={waitingDays} onChange={(e) => setWaitingDays(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="ncd-brochure">Brochure URL</Label>
+                <Input id="ncd-brochure" value={brochureUrl} onChange={(e) => setBrochureUrl(e.target.value)} placeholder="https://…/brochure.pdf" />
+              </div>
+              <div>
+                <Label htmlFor="ncd-offer">Dealer offer (title)</Label>
+                <Input id="ncd-offer" value={offerTitle} onChange={(e) => setOfferTitle(e.target.value)} placeholder="Festival discount" />
+              </div>
+            </>
+          ) : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

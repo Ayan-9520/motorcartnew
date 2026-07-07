@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PreownedCarCard } from "@/features/preowned-cars/components/PreownedCarCard";
-import { getFeaturedPreowned } from "@/features/preowned-cars/services/preowned-cars.service";
 import { TRUST_BADGES } from "@/features/preowned-cars/data/preowned-data";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { SectionHeader } from "./SectionHeader";
 
 export function PreownedCarsHomeSection() {
-  const featured = getFeaturedPreowned(4);
+  const { preownedCars } = useHomePage();
+  const featured = preownedCars.slice(0, 4);
 
   return (
     <section className="home-section-alt">

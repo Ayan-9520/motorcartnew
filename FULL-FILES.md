@@ -1,6 +1,6 @@
-# Motorcart — Full File Map (Supabase → MySQL)
+# Motorcart — Full File Map (PostgreSQL + Prisma)
 
-**UI same hai. Sirf backend/database badla.**
+**UI same hai. Backend: PostgreSQL + Redis + Docker.**
 
 ---
 
@@ -8,11 +8,11 @@
 
 | File | Kaam |
 |------|------|
-| `package.json` | `npm run dev` — frontend + backend dono |
-| `setup.ps1` | Windows one-time MySQL setup |
-| `MIGRATION.md` | Migration guide (Hindi + English) |
-| `README.md` | Quick start |
-| `FULL-FILES.md` | Yeh file — saari important files |
+| `package.json` | `npm run dev`, `npm run db:up`, `npm run docker:up` |
+| `setup.ps1` | Windows one-time PostgreSQL + Docker setup |
+| `docker-compose.yml` | postgres, redis, backend, frontend, nginx |
+| `MIGRATION.md` | Stack guide |
+| `DEV-START.md` | Daily dev steps |
 
 ---
 
@@ -49,7 +49,7 @@
 | `src/components/` |
 | `public/` |
 
-### Scripts (MySQL)
+### Scripts
 | File |
 |------|
 | `scripts/seed-vehicles.ts` → backend API |
@@ -57,22 +57,24 @@
 
 ---
 
-## Backend (`backend/`) — MySQL + Prisma + Next.js
+## Backend (`backend/`) — PostgreSQL + Prisma + Node.js
 
 ### Database
 | File | Kaam |
 |------|------|
-| `prisma/schema.prisma` | **Saari MySQL tables** (60+ models) |
+| `prisma/schema.prisma` | All models (`provider = postgresql`) |
+| `prisma/migrations/` | Prisma migrate SQL |
 | `prisma/seed.ts` | Admin + customer + sample vehicles |
-| `mysql-init.sql` | XAMPP: `CREATE DATABASE motorcart` |
-| `supabase/migrations/*.sql` | **Reference only** — MySQL par mat chalao |
+| `supabase/migrations/*.sql` | **Reference only** — do not import |
 
 ### Server
 | File | Kaam |
 |------|------|
-| `server.ts` | Next.js + Socket.io + `/uploads` |
+| `server.ts` | Express middleware + Next.js API + Socket.io |
+| `Dockerfile` | Production container |
+| `docker-entrypoint.sh` | migrate + seed on start |
 | `next.config.ts` | CORS headers |
-| `.env` / `.env.example` | `DATABASE_URL`, JWT, PORT |
+| `.env` / `.env.example` | `DATABASE_URL`, `REDIS_URL`, JWT, PORT |
 
 ### API routes (`src/app/api/`)
 | Path | Kaam |
@@ -114,7 +116,7 @@
 
 ---
 
-## Tables (Postgres → MySQL same names)
+## Tables (Prisma / PostgreSQL)
 
 `users`, `dealers`, `vehicles`, `leads`, `auctions`, `bids`, `parts`, `part_orders`,  
 `bookings`, `services`, `service_centers`, `finance_applications`, `finance_leads`,  
@@ -130,11 +132,12 @@
 .\setup.ps1
 
 # Daily dev
+npm run db:up
 npm run dev
 
-# DB reset
+# DB migrate + seed
 cd backend
-npx prisma db push
+npx prisma migrate deploy
 npm run db:seed
 ```
 

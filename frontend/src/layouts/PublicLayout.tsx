@@ -15,9 +15,9 @@ export function PublicLayout() {
   const hideDefaultFooter = isCommunity;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-background text-foreground">
       <Navbar />
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="min-w-0 flex-1 pb-20 md:pb-0">
         <RouteSuspense>
           <Outlet />
         </RouteSuspense>

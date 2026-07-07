@@ -8,6 +8,7 @@ export type BusinessCategory =
   | "parts_wholesale"
   | "service_garage"
   | "dsa_finance"
+  | "vehicle_broker"
   | "other";
 
 export type BusinessSignupForm = {

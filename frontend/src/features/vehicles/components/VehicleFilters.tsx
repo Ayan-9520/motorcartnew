@@ -6,6 +6,8 @@ import { X } from "lucide-react";
 import type { HubCategorySlug } from "@/features/marketplace/types";
 import { getHubBrands, getHubBodyTypes, getHubFuels } from "@/features/marketplace/data/hub-filter-catalog";
 import { MarketplaceFilterChips } from "@/features/marketplace/components/MarketplaceFilterChips";
+import { featureFlags } from "@/config/feature-flags";
+import { SALE_MODE_OPTIONS } from "@/lib/sale-mode";
 
 interface VehicleFiltersProps {
   filters: Record<string, string | number | undefined>;
@@ -65,6 +67,23 @@ export function VehicleFilters({ filters, onFilter, onClear, hub }: VehicleFilte
         />
       )}
       <FilterSelect label="Color" value={filters.color as string} options={VEHICLE_COLORS} onChange={(v) => onFilter("color", v)} />
+      {featureFlags.vehicleSaleMode && (hub === "cars" || !hub) ? (
+        <div>
+          <Label className="text-xs text-muted-foreground">Sale mode</Label>
+          <select
+            className="mt-1 flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
+            value={(filters.saleMode as string) ?? ""}
+            onChange={(e) => onFilter("saleMode", e.target.value || undefined)}
+          >
+            <option value="">All</option>
+            {SALE_MODE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
       <RangeFilter label="Price (₹)" minKey="priceMin" maxKey="priceMax" filters={filters} onFilter={onFilter} step={50000} />
       <div>
         <Label className="text-xs text-muted-foreground">Max EMI / month (₹)</Label>

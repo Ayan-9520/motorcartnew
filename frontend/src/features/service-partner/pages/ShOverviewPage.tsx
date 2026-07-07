@@ -16,7 +16,16 @@ export function ShOverviewPage() {
   if (loading && !data) {
     return <div className="sh-page sh-loading">Loading workshop desk…</div>;
   }
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="sh-page space-y-4 p-6">
+        <h1 className="text-xl font-semibold">Service hub dashboard</h1>
+        <p className="text-muted-foreground">
+          Workshop data could not be loaded. Check your connection or complete service partner onboarding.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="sh-page space-y-8">

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, Gavel, MapPin, Users } from "lucide-react";
 import { liveAuctions } from "@/data/mock";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ function formatTimeLeft(endsAt: string): string {
 }
 
 export function AuctionsSection() {
+  const { auctions } = useHomePage();
+  const list = auctions.length ? auctions : liveAuctions;
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -38,7 +41,7 @@ export function AuctionsSection() {
           linkLabel="All auctions"
         />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {liveAuctions.map((auction, index) => (
+          {list.map((auction, index) => (
             <motion.div
               key={auction.id}
               initial={{ opacity: 0, y: 12 }}
@@ -85,7 +88,13 @@ export function AuctionsSection() {
                       </p>
                     </div>
                     <Button variant="default" size="sm" className="h-8 shrink-0 px-2.5 text-xs" asChild>
-                      <Link to="/auctions">
+                      <Link
+                        to={
+                          "slug" in auction && typeof auction.slug === "string"
+                            ? `/auctions/${auction.slug}`
+                            : "/auctions"
+                        }
+                      >
                         <Gavel className="h-3.5 w-3.5" />
                         Bid
                       </Link>

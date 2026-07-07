@@ -1,4 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useMemo } from "react";
 import { Search, SlidersHorizontal, X, ArrowRight, Sparkles } from "lucide-react";
 import { buildHeroBuyPath } from "@/features/home/data/homepage-data";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   type HeroSearchMode,
 } from "@/features/home/data/homepage-data";
 import { getHeroHubConfig } from "@/features/home/data/hero-hub-config";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { useHeroSearch } from "@/features/home/components/hero-search-context";
 import { cn } from "@/lib/utils";
 import { useVehicleHubStore } from "@/store/vehicleHubStore";
@@ -93,17 +95,35 @@ export function HeroSearchModule() {
   const setBuyContext = useVehicleHubStore((s) => s.setBuyContext);
 
   const hub = getHeroHubConfig(mode);
+  const { featuredVehicles, data } = useHomePage();
   const activeTab = HERO_SEARCH_TABS.find((t) => t.id === mode) ?? HERO_SEARCH_TABS[0];
   const searchPath = buildHeroSearchPath(mode, query, filters);
   const buyHubPath = heroBuyHubHref(mode, activeCondition);
   const cities = SEARCH_CITY_SUGGESTIONS;
 
+  const brandOptions = useMemo(() => {
+    if (isHome && data?.brands?.length) {
+      return data.brands.map((b) => b.name);
+    }
+    return hub.brands;
+  }, [isHome, data?.brands, hub.brands]);
+
+  const quickSuggestions = useMemo(() => {
+    if (isHome && featuredVehicles.length) {
+      return featuredVehicles.slice(0, 4).map((v) => ({
+        id: v.id,
+        title: `${v.brand} ${v.model}`.trim(),
+        mode: "cars" as HeroSearchMode,
+        query: `${v.brand} ${v.model}`.trim(),
+      }));
+    }
+    return hub.trending.slice(0, 4);
+  }, [isHome, featuredVehicles, hub.trending]);
+
   const onSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     navigate(searchPath);
   };
-
-  const quickSuggestions = hub.trending.slice(0, 4);
 
   return (
     <div className="hero-search-module space-y-3">
@@ -170,7 +190,7 @@ export function HeroSearchModule() {
             label="Brand"
             value={brand}
             onChange={setBrand}
-            options={hub.brands}
+            options={brandOptions}
             placeholder="Type or pick brand"
           />
           <HeroFilterField

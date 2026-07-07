@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { joinApiUrl } from "@/lib/api/base-url";
+import { fetchWithTimeout } from "@/lib/api/with-timeout";
 import type { AppRole } from "@/types/database";
 import type { DbUser } from "@/types/database";
 
@@ -34,11 +36,8 @@ export function resetAuthSettingsCache(): void {
 }
 
 export async function fetchAuthProviderSettings(): Promise<AuthProviderSettings | null> {
-  const base = import.meta.env.VITE_API_URL;
-  if (!base) return null;
-
   try {
-    const res = await fetch(`${base}/api/auth/settings`);
+    const res = await fetchWithTimeout(joinApiUrl("/api/auth/settings"), undefined, 5000);
     if (!res.ok) return null;
     const data = (await res.json()) as {
       emailEnabled?: boolean;

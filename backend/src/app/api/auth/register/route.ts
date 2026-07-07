@@ -7,6 +7,7 @@ import { formatAuthUser } from "@/lib/auth/format-user";
 import { z } from "zod";
 import { Prisma, type AppRole } from "@prisma/client";
 import { createHash } from "crypto";
+import { createBrokerStubForOwner } from "@/services/broker-profile.service";
 
 const schema = z.object({
   email: z.string().email(),
@@ -41,6 +42,7 @@ const VALID_ROLES = new Set<AppRole>([
   "auction_partner",
   "employee",
   "finance_partner",
+  "broker",
 ]);
 
 const DEALER_STUB_ROLES = new Set<AppRole>([
@@ -65,21 +67,28 @@ function mapRole(role?: string): AppRole {
   return VALID_ROLES.has(mapped) ? mapped : "customer";
 }
 
+function resolveSignupRole(body: z.infer<typeof schema>): AppRole {
+  const category = (body.business as { business_category?: string } | undefined)
+    ?.business_category;
+  if (category === "vehicle_broker") return "broker";
+  return mapRole(body.role);
+}
+
 function normalizePhone(phone?: string): string | null {
   if (!phone) return null;
   const digits = phone.replace(/\D/g, "").slice(-10);
   return digits.length === 10 ? digits : null;
 }
 
-function buildUserMetadata(body: z.infer<typeof schema>, business: boolean) {
-  const { password: _pw, email: _em, ...rest } = body;
+function buildUserMetadata(body: z.infer<typeof schema>, business: boolean): Prisma.InputJsonValue {
+  const { password: _pw, email: _em, business: biz, ...rest } = body;
   return {
     ...rest,
     business_signup: business,
-    ...(body.business ? { business: body.business } : {}),
+    ...(biz ? { business: biz as Prisma.InputJsonValue } : {}),
     onboarding_status: business ? "submitted" : undefined,
     approval_status: business ? "pending" : undefined,
-  };
+  } as Prisma.InputJsonValue;
 }
 
 function duplicateMessage(target: unknown): string {
@@ -111,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     const business = body.business_signup === true;
     const autoConfirm = process.env.MAILER_AUTOCONFIRM === "true";
-    const role = mapRole(body.role);
+    const role = resolveSignupRole(body);
 
     const user = await prisma.user.create({
       data: {
@@ -133,6 +142,19 @@ export async function POST(req: NextRequest) {
         metadata: buildUserMetadata(body, business),
       },
     });
+
+    if (business && user.role === "broker") {
+      await createBrokerStubForOwner({
+        ownerId: user.id,
+        name: body.company_name ?? user.fullName,
+        city: body.city,
+        state: body.state,
+        phone,
+        email,
+      }).catch((brokerErr) => {
+        console.warn("[register] broker stub skipped", brokerErr);
+      });
+    }
 
     if (business && DEALER_STUB_ROLES.has(user.role)) {
       const slug = (body.company_name ?? user.fullName)

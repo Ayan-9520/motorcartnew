@@ -51,16 +51,26 @@ function mapApplication(
 }
 
 export async function fetchLenders(): Promise<Lender[]> {
-  const { data, error } = await supabase
-    .from("banks")
-    .select("*")
-    .eq("is_active", true)
-    .order("ranking_score", { ascending: false });
+  // In Docker/local installs Supabase may be unconfigured; never block the UI.
+  const timeoutMs = 2500;
+  try {
+    const res = await Promise.race([
+      supabase
+        .from("banks")
+        .select("*")
+        .eq("is_active", true)
+        .order("ranking_score", { ascending: false }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("SUPABASE_TIMEOUT")), timeoutMs)),
+    ]);
 
-  if (!error && data?.length) {
-    return mergeLenders((data as (DbBank & { ranking_score?: number })[]).map(mapDbBank));
+    const { data, error } = res as { data: unknown[] | null; error: unknown | null };
+    if (!error && data?.length) {
+      return mergeLenders((data as (DbBank & { ranking_score?: number })[]).map(mapDbBank));
+    }
+    return MOCK_LENDERS;
+  } catch {
+    return MOCK_LENDERS;
   }
-  return MOCK_LENDERS;
 }
 
 export async function fetchLenderBySlug(slug: string): Promise<Lender | null> {

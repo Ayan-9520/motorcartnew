@@ -1,5 +1,5 @@
 /**
- * Dev: verify user email in MySQL (run from backend folder recommended)
+ * Dev: verify user email via backend API
  * Usage: npm run auth:confirm -- user@email.com
  *
  * Or from backend: npx tsx scripts/confirm-email.ts user@email.com

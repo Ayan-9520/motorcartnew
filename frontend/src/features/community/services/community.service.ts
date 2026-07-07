@@ -8,6 +8,11 @@ import {
   MEDIA_DEFAULTS,
   getModelImages,
 } from "@/lib/media/india-media-catalog";
+import { featureFlags } from "@/config/feature-flags";
+import {
+  fetchCommunityGroupBySlugApi,
+  fetchCommunityGroupsApi,
+} from "./community-api.service";
 import type {
   CommunityComment,
   CommunityGroup,
@@ -264,13 +269,13 @@ function mapGroupRow(r: Record<string, unknown>): CommunityGroup {
     slug: r.slug as string,
     name: r.name as string,
     description: (r.description as string) ?? null,
-    groupType: r.group_type as CommunityGroup["groupType"],
+    groupType: (r.group_type ?? r.groupType) as CommunityGroup["groupType"],
     ruleKey: (r.rule_key as string) ?? null,
     ruleValue: (r.rule_value as string) ?? null,
     dealerId: (r.dealer_id as string) ?? null,
     coverUrl: (r.cover_url as string) ?? null,
     memberCount: Number(r.member_count ?? 0),
-    createdAt: r.created_at as string,
+    createdAt: (r.created_at as string) ?? new Date().toISOString(),
   };
 }
 
@@ -302,12 +307,20 @@ function mapPostRow(r: Record<string, unknown>, extras?: Partial<CommunityPost>)
 }
 
 export async function fetchCommunityGroups(): Promise<CommunityGroup[]> {
+  if (featureFlags.communityV2 && featureFlags.communityGroups) {
+    const api = await fetchCommunityGroupsApi();
+    if (api?.data?.length) return api.data.map(mapGroupRow);
+  }
   const { data, error } = await supabase.from("community_groups").select("*").order("member_count", { ascending: false });
   if (!error && data?.length) return (data as Record<string, unknown>[]).map(mapGroupRow);
   return MOCK_GROUPS;
 }
 
 export async function fetchCommunityGroupBySlug(slug: string): Promise<CommunityGroup | null> {
+  if (featureFlags.communityV2 && featureFlags.communityGroups) {
+    const api = await fetchCommunityGroupBySlugApi(slug);
+    if (api?.data) return mapGroupRow(api.data);
+  }
   const { data, error } = await supabase.from("community_groups").select("*").eq("slug", slug).maybeSingle();
   if (!error && data) return mapGroupRow(data as Record<string, unknown>);
   return MOCK_GROUPS.find((g) => g.slug === slug) ?? null;

@@ -36,11 +36,19 @@ function MarqueeRow({
   );
 }
 
-export function PartnerLogoMarquee() {
+type PartnerLogoMarqueeProps = {
+  bankLogos?: PartnerLogoItem[];
+  carLogos?: PartnerLogoItem[];
+};
+
+export function PartnerLogoMarquee({ bankLogos, carLogos }: PartnerLogoMarqueeProps) {
+  const banks = bankLogos?.length ? bankLogos : PARTNER_BANK_LOGOS;
+  const cars = carLogos?.length ? carLogos : PARTNER_CAR_LOGOS;
+
   return (
     <div className="partner-marquee">
-      <MarqueeRow items={PARTNER_BANK_LOGOS} direction="ltr" label="Banking partners" />
-      <MarqueeRow items={PARTNER_CAR_LOGOS} direction="rtl" label="Automobile brands" />
+      <MarqueeRow items={banks} direction="ltr" label="Banking partners" />
+      <MarqueeRow items={cars} direction="rtl" label="Automobile brands" />
     </div>
   );
 }

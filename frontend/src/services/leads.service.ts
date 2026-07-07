@@ -1,5 +1,4 @@
 import { api, apiErrorMessage } from "@/lib/api/axios";
-import { getApiBaseUrl, hasConfiguredApi } from "@/lib/api/base-url";
 import type { VehicleEnquiry, TestDriveBooking } from "@/types/vehicle";
 
 export async function postMarketplaceLead(payload: {
@@ -15,14 +14,8 @@ export async function postMarketplaceLead(payload: {
   vehicle_slug?: string;
   metadata?: Record<string, unknown>;
 }): Promise<{ error: string | null }> {
-  if (!hasConfiguredApi()) {
-    return {
-      error: "API not configured. Set VITE_API_URL=http://localhost:3001 in frontend/.env.local and restart npm run dev",
-    };
-  }
-
   try {
-    await api.post("/api/leads", payload, { baseURL: getApiBaseUrl() });
+    await api.post("/api/leads", payload);
     return { error: null };
   } catch (err) {
     return { error: apiErrorMessage(err) };

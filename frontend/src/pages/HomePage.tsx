@@ -22,6 +22,7 @@ import { StatsSection } from "@/features/home/StatsSection";
 import { TestimonialsSection } from "@/features/home/TestimonialsSection";
 import { AppDownloadSection } from "@/features/home/AppDownloadSection";
 import { HeroSearchProvider } from "@/features/home/components/hero-search-context";
+import { HomePageProvider } from "@/features/home/context/HomePageContext";
 import { MarketingHomeGate } from "@/components/routing/MarketingHomeGate";
 import { setPageMeta } from "@/utils/seo";
 import { SITE_TAGLINE } from "@/lib/constants";
@@ -43,8 +44,9 @@ export function HomePage() {
 
   return (
     <MarketingHomeGate>
-      <div className="home-page bg-background">
-        <HeroSearchProvider>
+      <HomePageProvider>
+        <div className="home-page bg-background">
+          <HeroSearchProvider>
           <HeroSection />
           <QuickAccessSection />
           <HomePlatformMatrix />
@@ -67,8 +69,9 @@ export function HomePage() {
           <StatsSection />
           <TestimonialsSection />
           <AppDownloadSection />
-        </HeroSearchProvider>
-      </div>
+          </HeroSearchProvider>
+        </div>
+      </HomePageProvider>
     </MarketingHomeGate>
   );
 }

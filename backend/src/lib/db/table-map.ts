@@ -19,6 +19,11 @@ export const tableDelegates: Record<string, keyof typeof prisma> = {
   bids: "auctionBid",
   auction_messages: "auctionMessage",
   auction_notifications: "auctionNotification",
+  auction_auto_bids: "auctionAutoBid",
+  auction_proxy_bids: "auctionProxyBid",
+  auction_watchlists: "auctionWatchlist",
+  auction_bid_attempts: "auctionBidAttempt",
+  auction_bidder_eligibility: "auctionBidderEligibility",
   banks: "bank",
   finance_applications: "financeApplication",
   finance_leads: "financeLead",
@@ -44,6 +49,11 @@ export const tableDelegates: Record<string, keyof typeof prisma> = {
   service_ai_logs: "serviceAiLog",
   social_posts: "socialPost",
   community_posts: "communityPost",
+  community_user_profiles: "communityUserProfile",
+  community_business_profiles: "communityBusinessProfile",
+  community_follows: "communityFollow",
+  community_group_members: "communityGroupMember",
+  community_role_assignments: "communityRoleAssignment",
   community_groups: "communityGroup",
   post_hashtags: "postHashtag",
   post_likes: "postLike",
@@ -62,7 +72,23 @@ export const tableDelegates: Record<string, keyof typeof prisma> = {
   engagement_campaigns: "engagementCampaign",
   scheduled_reminders: "scheduledReminder",
   new_car_inventory: "newCarInventory",
+  new_car_stock_daily_logs: "newCarStockDailyLog",
+  part_compatibility_rules: "partCompatibilityRule",
+  part_registration_lookups: "partRegistrationLookup",
   dealer_leads: "dealerLead",
+  brokers: "broker",
+  broker_buyers: "brokerBuyer",
+  broker_sellers: "brokerSeller",
+  broker_leads: "brokerLead",
+  broker_deals: "brokerDeal",
+  broker_deal_vehicles: "brokerDealVehicle",
+  broker_deal_stage_history: "brokerDealStageHistory",
+  broker_tasks: "brokerTask",
+  broker_commissions: "brokerCommission",
+  broker_lead_notes: "brokerLeadNote",
+  broker_whatsapp_configs: "brokerWhatsAppConfig",
+  broker_whatsapp_templates: "brokerWhatsAppTemplate",
+  broker_whatsapp_messages: "brokerWhatsAppMessage",
   inventory_uploads: "inventoryUpload",
   notifications: "notification",
   reviews: "review",
@@ -97,7 +123,7 @@ export function tableHasSoftDelete(table: string) {
 export function getDelegate(table: string) {
   const key = tableDelegates[table];
   if (!key) return null;
-  return (prisma as Record<string, unknown>)[key as string] as {
+  return (prisma as unknown as Record<string, unknown>)[key as string] as {
     findMany: (args?: unknown) => Promise<unknown[]>;
     findFirst: (args?: unknown) => Promise<unknown | null>;
     create: (args: unknown) => Promise<unknown>;

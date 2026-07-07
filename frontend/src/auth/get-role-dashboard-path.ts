@@ -30,6 +30,7 @@ export function usesDedicatedWorkspace(role: AppRole): boolean {
     role === "parts_seller" ||
     role === "dsa_agent" ||
     role === "bank_nbfc" ||
-    role === "auction_partner"
+    role === "auction_partner" ||
+    role === "broker"
   );
 }

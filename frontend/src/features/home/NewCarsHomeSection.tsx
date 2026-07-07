@@ -2,12 +2,17 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewCarCard } from "@/features/new-cars/components/NewCarCard";
-import { getFeaturedNewCars } from "@/features/new-cars/services/new-cars.service";
 import { NEW_CAR_BRANDS } from "@/features/new-cars/data/new-cars-data";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { SectionHeader } from "./SectionHeader";
 
 export function NewCarsHomeSection() {
-  const featured = getFeaturedNewCars(4);
+  const { newCars, data } = useHomePage();
+  const featured = newCars.slice(0, 4);
+  const brands =
+    data?.brands?.length && data.brands.length >= 4
+      ? data.brands.slice(0, 8).map((b) => ({ slug: b.slug, name: b.name, href: `/buy/cars?brand=${encodeURIComponent(b.name)}` }))
+      : NEW_CAR_BRANDS.slice(0, 8);
 
   return (
     <section className="home-section">
@@ -20,7 +25,7 @@ export function NewCarsHomeSection() {
           linkLabel="New cars hub"
         />
         <div className="partner-scroll flex gap-2 pb-1">
-          {NEW_CAR_BRANDS.slice(0, 8).map((b) => (
+          {brands.map((b) => (
             <Link key={b.slug} to={b.href} className="partner-pill hover:text-primary">
               {b.name}
             </Link>

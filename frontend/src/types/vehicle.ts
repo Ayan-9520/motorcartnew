@@ -1,4 +1,5 @@
 import type { VehicleStatus } from "@/types/database";
+import type { VehicleSaleMode } from "@/lib/sale-mode";
 
 export type VehicleCategory =
   | "new-cars"
@@ -96,6 +97,8 @@ export interface VehicleListing {
   dealerPhone?: string;
   dealerRating?: number;
   dealerVerified?: boolean;
+  /** Phase B — used vehicle sale mode */
+  saleMode?: VehicleSaleMode;
   metadata: VehicleMetadata;
   createdAt: string;
 }
@@ -120,6 +123,8 @@ export interface VehicleFilters {
   bodyType?: string;
   /** Max monthly EMI (₹) */
   emiMax?: number;
+  /** Used cars — sale mode filter */
+  saleMode?: VehicleSaleMode;
   q?: string;
 }
 

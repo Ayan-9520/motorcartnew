@@ -18,6 +18,8 @@ import {
   sortVehicles,
   vehicleDetailPath,
 } from "@/lib/vehicle-utils";
+import type { VehicleListing } from "@/types/vehicle";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useVehicleMarketStore } from "@/store/vehicleMarketStore";
@@ -31,6 +33,8 @@ const featured = sortVehicles(
 ).slice(0, 12);
 
 export function FeaturedVehicles() {
+  const { featuredVehicles, isLoading } = useHomePage();
+  const list = featuredVehicles.length ? featuredVehicles : featured;
   return (
     <section className="home-section">
       <div className="container home-stack">
@@ -42,7 +46,10 @@ export function FeaturedVehicles() {
           linkLabel="View all vehicles"
         />
         <div className="home-featured-carousel -mx-1 px-1">
-          {featured.map((vehicle, index) => (
+          {isLoading && list.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Loading featured vehicles…</p>
+          ) : null}
+          {list.map((vehicle, index) => (
             <FeaturedVehicleCard key={vehicle.id} vehicle={vehicle} index={index} />
           ))}
         </div>
@@ -55,7 +62,7 @@ function FeaturedVehicleCard({
   vehicle,
   index,
 }: {
-  vehicle: (typeof featured)[number];
+  vehicle: VehicleListing;
   index: number;
 }) {
   const toggleWishlist = useVehicleMarketStore((s) => s.toggleWishlist);

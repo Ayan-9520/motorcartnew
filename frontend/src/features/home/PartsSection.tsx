@@ -2,15 +2,18 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingCart, Star } from "lucide-react";
 import { autoParts } from "@/data/parts";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeader } from "./SectionHeader";
 
-const featuredParts = autoParts.slice(0, 4);
+const fallbackParts = autoParts.slice(0, 4);
 
 export function PartsSection() {
+  const { parts } = useHomePage();
+  const featuredParts = parts.length ? parts : fallbackParts;
   return (
     <section className="section-padding">
       <div className="container home-stack">

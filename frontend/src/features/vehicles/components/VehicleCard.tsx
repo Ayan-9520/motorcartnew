@@ -29,6 +29,8 @@ import {
 } from "@/lib/vehicle-utils";
 import { useVehicleMarketStore } from "@/store/vehicleMarketStore";
 import type { FairPriceLabel, VehicleListing } from "@/types/vehicle";
+import { featureFlags } from "@/config/feature-flags";
+import { SALE_MODE_LABELS } from "@/lib/sale-mode";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { VehicleImage } from "./VehicleImage";
@@ -225,6 +227,11 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
               {discount ? (
                 <Badge className="border-0 bg-destructive px-1.5 py-0 text-[9px] text-destructive-foreground">
                   {discount}% OFF
+                </Badge>
+              ) : null}
+              {!isNew && featureFlags.vehicleSaleMode && vehicle.saleMode && vehicle.saleMode !== "dealer_offer" ? (
+                <Badge variant="secondary" className="px-1.5 py-0 text-[9px]">
+                  {SALE_MODE_LABELS[vehicle.saleMode]}
                 </Badge>
               ) : null}
             </div>

@@ -21,6 +21,9 @@ import {
   Store,
   Users,
   Waypoints,
+  BadgeIndianRupee,
+  LineChart,
+  Route,
 } from "lucide-react";
 
 export type AdminErpNavItem = {
@@ -40,6 +43,8 @@ export const ADMIN_ERP_NAV: AdminErpNavGroup[] = [
   {
     items: [
       { to: "/dashboard/super-admin", label: "Command center", icon: LayoutDashboard, end: true },
+      { to: "/dashboard/super-admin/founder", label: "Founder dashboard", icon: LineChart },
+      { to: "/dashboard/super-admin/lead-router", label: "Lead router", icon: Route },
       { to: "/dashboard/super-admin/operations", label: "How it works", icon: GitBranch },
     ],
   },
@@ -63,6 +68,11 @@ export const ADMIN_ERP_NAV: AdminErpNavGroup[] = [
     items: [
       { to: "/dashboard/super-admin/vehicles", label: "Vehicle moderation", icon: Car },
       { to: "/dashboard/super-admin/featured", label: "Featured inventory", icon: Sparkles },
+      {
+        to: "/dashboard/super-admin/directory-monetization",
+        label: "Directory monetization",
+        icon: BadgeIndianRupee,
+      },
       { to: "/dashboard/super-admin/auctions", label: "Auction approvals", icon: Gavel },
     ],
   },

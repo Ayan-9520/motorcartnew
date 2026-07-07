@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.next
+out
+uploads
+.data
+.env
+.env.*
+!.env.example
+dist
+*.tsbuildinfo
+.git
+.gitignore
+README.md
+docs
+coverage
+*.md

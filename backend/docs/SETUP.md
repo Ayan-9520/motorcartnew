@@ -1,86 +1,86 @@
-# Motorcart Backend — MySQL Setup (XAMPP)
+# Motorcart Backend — PostgreSQL + Redis Setup
 
-## Prerequisites
+## Stack
 
-- Node.js 20+
-- XAMPP with MySQL running (port 3306)
-- phpMyAdmin (optional)
+| Service | Local (Docker) | Full Docker stack |
+|---------|----------------|-------------------|
+| PostgreSQL 16 | `localhost:5432` | `postgres:5432` |
+| Redis 7 | `localhost:6379` | `redis:6379` |
+| API | `localhost:3001` | `backend:3001` (via nginx `/api`) |
 
-## 1. Create database
+## 1. Start database (Docker)
 
-Open phpMyAdmin → SQL → paste and run:
+From repo root:
 
-```sql
-CREATE DATABASE IF NOT EXISTS motorcart
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+```powershell
+npm run db:up
 ```
 
-Or run from terminal:
+This starts **postgres** + **redis** only. Data persists in Docker volumes `postgres_data` and `redis_data`.
 
-```bash
-mysql -u root < mysql-init.sql
-```
+## 2. Backend environment
 
-## 2. Configure environment
-
-```bash
+```powershell
 cd backend
 copy .env.example .env
 ```
 
-Edit `.env`:
+Default local URL (matches Docker postgres service on host port 5432):
 
-```
-DATABASE_URL="mysql://root:@localhost:3306/motorcart"
-JWT_ACCESS_SECRET=your-long-random-secret-here
-JWT_REFRESH_SECRET=another-long-random-secret
+```env
+DATABASE_URL="postgresql://motorcart:strongpassword@localhost:5432/motorcart?schema=public"
+REDIS_URL="redis://localhost:6379"
 PORT=3001
-CORS_ORIGIN=http://localhost:3000
+JWT_SECRET=change-me-jwt-secret-min-32-characters-long
 ```
 
-## 3. Install and migrate
+## 3. Apply schema & seed
 
-```bash
-npm install
-npx prisma generate
-npx prisma db push
+```powershell
+cd backend
+npx prisma migrate deploy
 npm run db:seed
 ```
 
-## 4. Start API server
+Alternative for empty dev DB: `npm run db:push` then `npm run db:seed`.
 
-```bash
+## 4. Run API
+
+```powershell
 npm run dev
 ```
 
-API: http://localhost:3001
+Health check: http://localhost:3001/api/health → `"database":"postgresql"`
 
-## 5. Start frontend
+## Full stack (API + React + Nginx)
 
-```bash
-cd ../frontend
-copy .env.example .env.local
-npm install
-npm run dev
+From repo root:
+
+```powershell
+copy .env.docker.example .env.docker
+npm run docker:up
 ```
 
-App: http://localhost:3000
+- App: http://localhost  
+- Health: http://localhost/api/health  
 
-## Seed accounts
+## Seed users
 
-| Email | Password | Role |
-|-------|----------|------|
-| admin@motorcart.in | Admin@12345 | super_admin |
-| customer@motorcart.in | Customer@123 | customer |
+| Email | Password |
+|-------|----------|
+| admin@motorcart.in | Admin@12345 |
+| customer@motorcart.in | Customer@123 |
+| dealer@gmail.com | Dealer@123 |
 
 ## Troubleshooting
 
-- **ECONNREFUSED MySQL** — Start MySQL in XAMPP Control Panel.
-- **Access denied** — Check username/password in `DATABASE_URL`.
-- **Prisma P1012** — Ensure `.env` exists with `DATABASE_URL`.
+| Issue | Fix |
+|-------|-----|
+| `ECONNREFUSED` on 5432 | `npm run db:up` — wait for postgres healthy |
+| `migrate deploy` fails | Ensure `DATABASE_URL` uses `postgresql://` not `mysql://` |
+| Redis optional errors | Set `REDIS_URL=redis://localhost:6379` or leave unset |
+| Port 3001 busy | `npm run ports:free` from root |
 
-## Legacy Postgres reference
+## Legacy SQL
 
-Original Supabase SQL files are kept at `backend/supabase/migrations/` for reference only.  
-**Do not run them on MySQL** — use Prisma schema instead.
+`backend/supabase/migrations/*.sql` — **reference only** (historical Postgres). Do not import manually; use Prisma migrations in `backend/prisma/migrations/`.

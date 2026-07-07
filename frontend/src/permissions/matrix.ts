@@ -151,4 +151,12 @@ export const ROLE_CAPABILITIES: Record<
     partsConsole: false,
     serviceConsole: false,
   },
+  broker: {
+    manageUsers: false,
+    manageMarketplace: true,
+    financeConsole: false,
+    dealerConsole: false,
+    partsConsole: false,
+    serviceConsole: false,
+  },
 };

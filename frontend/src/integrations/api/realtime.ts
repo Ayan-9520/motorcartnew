@@ -1,6 +1,13 @@
 import { io, type Socket } from "socket.io-client";
+import { getApiBaseUrl } from "@/lib/api/base-url";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? import.meta.env.VITE_API_URL ?? "";
+function getSocketUrl(): string | undefined {
+  const fromEnv = (import.meta.env.VITE_SOCKET_URL as string | undefined)?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  const apiBase = getApiBaseUrl();
+  if (apiBase) return apiBase;
+  return undefined;
+}
 
 type PostgresChangeFilter = {
   event: string;
@@ -50,7 +57,12 @@ export function createChannel(name: string, _config?: Record<string, unknown>): 
     subscribe(cb) {
       if (subscribed) return channel;
       subscribed = true;
-      socket = sockets.get(name) ?? io(SOCKET_URL, { transports: ["websocket"], autoConnect: true });
+      const socketUrl = getSocketUrl();
+      socket =
+        sockets.get(name) ??
+        (socketUrl
+          ? io(socketUrl, { transports: ["websocket"], autoConnect: true })
+          : io({ transports: ["websocket"], autoConnect: true }));
       sockets.set(name, socket);
 
       socket.emit("join", { room: name });

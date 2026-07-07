@@ -200,7 +200,7 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
         title: "Backend not reachable",
         description:
           rawMessage?.trim() ||
-          "Could not reach the API. Start MySQL (XAMPP), then run the backend on port 3001.",
+          "Could not reach the API. Start PostgreSQL and Redis (npm run db:up), then run the backend on port 3001.",
         variant: "destructive",
         hints: ["Terminal 1: cd backend && npm run dev", "Terminal 2: cd frontend && npm run dev"],
       };

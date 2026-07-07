@@ -3,10 +3,13 @@ import { ArrowRight, Clock, Percent } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { BANK_OFFERS } from "@/features/home/data/homepage-data";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { SectionHeader } from "./SectionHeader";
 
 export function BanksStripSection() {
+  const { banks } = useHomePage();
+  const offers = banks.length ? banks : BANK_OFFERS;
   return (
     <section className="home-section-card">
       <div className="container home-stack">
@@ -18,7 +21,7 @@ export function BanksStripSection() {
           linkLabel="Compare all lenders"
         />
         <motion.div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
-          {BANK_OFFERS.map((bank, i) => (
+          {offers.map((bank, i) => (
             <motion.div
               key={bank.code}
               initial={{ opacity: 0, y: 10 }}

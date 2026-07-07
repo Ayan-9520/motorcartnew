@@ -12,6 +12,7 @@ export const BUSINESS_APPROVAL_ROLES: AppRole[] = [
   "dsa_agent",
   "parts_seller",
   "service_center",
+  "broker",
 ];
 
 const PLATFORM_ADMIN_ROLES = new Set<AppRole>(["admin", "super_admin", "finance_manager"]);

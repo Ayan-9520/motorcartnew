@@ -35,11 +35,11 @@ export function VehicleHubPage() {
 
   return (
     <div className="vehicle-hub-page min-h-screen bg-background">
-      <div className="container pt-4 md:pt-6">
+      <div className="container px-4 pt-4 md:pt-6">
         <HubBreadcrumbs items={[{ label: hub.label }]} />
       </div>
       <HubHero hub={hub} />
-      <div className="container space-y-8 pb-14 md:space-y-10 md:pb-16">
+      <div className="container px-4 space-y-8 pb-14 md:space-y-10 md:pb-16">
         <HubFilterChips filters={hub.filters} />
         <HubBannerStrip banners={hub.banners} />
         <HubServiceGrid services={hub.services} hubLabel={hub.label} />

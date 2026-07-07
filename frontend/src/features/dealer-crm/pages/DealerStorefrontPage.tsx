@@ -37,7 +37,19 @@ export function DealerStorefrontPage() {
   };
 
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
-  if (!dealer) return null;
+  if (!dealer) {
+    return (
+      <DealerConsoleShell
+        title="Public storefront"
+        description="Complete your dealer profile to manage your public storefront."
+        crumbs={[{ label: "Storefront" }]}
+      >
+        <p className="text-muted-foreground">
+          No dealer profile found for this account. Complete onboarding or contact support.
+        </p>
+      </DealerConsoleShell>
+    );
+  }
 
   return (
     <DealerConsoleShell

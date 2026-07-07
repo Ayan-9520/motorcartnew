@@ -1,5 +1,5 @@
 /**
- * Seed vehicles via Motorcart MySQL backend API.
+ * Seed vehicles via Motorcart backend API.
  * Requires: backend running on VITE_API_URL (default http://localhost:3001)
  * Run: npm run seed:vehicles
  */
@@ -40,7 +40,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 async function main() {
   const limit = Number(process.env.SEED_LIMIT ?? MOCK_VEHICLES.length);
   const pool = MOCK_VEHICLES.slice(0, limit);
-  console.log(`Seeding ${pool.length} vehicles to MySQL via ${API}…`);
+  console.log(`Seeding ${pool.length} vehicles via ${API}…`);
 
   let inserted = 0;
   let errors = 0;

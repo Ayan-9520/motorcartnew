@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Car, Package, Sparkles, Loader2 } from "lucide-react";
+import { isUnifiedSearchEnabled } from "@/integrations/api/unified-search";
+import { UnifiedSearchPage } from "@/features/unified-search/pages/UnifiedSearchPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { setPageMeta } from "@/utils/seo";
@@ -12,6 +14,13 @@ import { MOCK_PARTS_CATALOG } from "@/features/parts/data/mock-parts-catalog";
 import { searchVehicles } from "@/services/vehicle.service";
 
 export function SearchResultsPage() {
+  if (isUnifiedSearchEnabled()) {
+    return <UnifiedSearchPage />;
+  }
+  return <LegacySearchResultsPage />;
+}
+
+function LegacySearchResultsPage() {
   const [params, setParams] = useSearchParams();
   const q = params.get("q") ?? "";
   const hub = params.get("hub");

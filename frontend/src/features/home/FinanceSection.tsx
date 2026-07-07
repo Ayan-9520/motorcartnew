@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Calculator, CheckCircle2, Percent } from "lucide-react";
 import { loanProducts } from "@/data/loans";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,9 +19,10 @@ function calcEmi(principal: number, annualRate: number, months: number): number 
 }
 
 export function FinanceSection() {
+  const { loanProducts: dynamicLoans } = useHomePage();
   const [amount, setAmount] = useState(1200000);
   const [tenure, setTenure] = useState(60);
-  const featured = loanProducts.filter((p) => p.is_featured).slice(0, 3);
+  const featured = (dynamicLoans.length ? dynamicLoans : loanProducts.filter((p) => p.is_featured)).slice(0, 3);
 
   const emi = useMemo(() => calcEmi(amount, 9.5, tenure), [amount, tenure]);
 

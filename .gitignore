@@ -14,21 +14,30 @@ backend/out/
 # Env
 .env
 .env.local
+.env.docker
 .env.*.local
 !.env.example
+!.env.docker.example
 !frontend/.env.example
 !backend/.env.example
 
 # Uploads & logs
 backend/uploads/
+backend/.data/
+backend/backups/
+backend/.data/unified-notifications/
 *.log
 npm-debug.log*
 
 # IDE / OS
 .DS_Store
+Thumbs.db
 .vercel
 dist.zip
+*.zip
 
-# Legacy (removed from root — use frontend/ & backend/ only)
-/src/
-/public/
+# Docker local overrides (keep .env.docker.example)
+.env.docker
+
+# Cursor / editor
+.cursor/

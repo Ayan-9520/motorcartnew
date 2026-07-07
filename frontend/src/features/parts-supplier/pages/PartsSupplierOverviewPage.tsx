@@ -20,7 +20,16 @@ export function PartsSupplierOverviewPage() {
     return <div className="psp-page psp-loading">Loading supplier desk…</div>;
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="psp-page space-y-4 p-6">
+        <h1 className="text-xl font-semibold">Parts supplier dashboard</h1>
+        <p className="text-muted-foreground">
+          Supplier data could not be loaded. Check your connection or complete parts supplier onboarding.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="psp-page space-y-8">

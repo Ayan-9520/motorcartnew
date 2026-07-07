@@ -9,7 +9,14 @@
     "dev:backend": "npm run dev --prefix backend",
     "build": "npm run build --prefix frontend && npm run build --prefix backend",
     "build:frontend": "npm run build --prefix frontend",
-    "install:all": "npm install --prefix frontend && npm install --prefix backend"
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "docker:up": "docker compose --env-file .env.docker up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "db:up": "docker compose up postgres redis -d",
+    "db:down": "docker compose stop postgres redis",
+    "migrate": "npm run db:migrate --prefix backend",
+    "seed": "npm run db:seed --prefix backend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

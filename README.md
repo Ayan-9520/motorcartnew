@@ -2,38 +2,57 @@
 
 **India's AI-Powered Automobile Ecosystem**
 
-Project lives in two folders only:
-
 ```
 motorcart/
-├── frontend/   React + Vite + TypeScript + Tailwind (UI)
-└── backend/    Next.js API + Prisma + MySQL + JWT + Socket.io
+├── frontend/   React + Vite + TypeScript + Tailwind
+├── backend/    Node.js + Next.js API + Prisma + PostgreSQL + Redis
+└── docker-compose.yml
 ```
 
-## Quick start
+## Quick start (recommended)
 
-```bash
-# Install (from root)
-npm install
-npm run install:all
+```powershell
+# One-time
+powershell -ExecutionPolicy Bypass -File setup.ps1
 
-# Backend — MySQL required
-cd backend
-cp .env.example .env
-npx prisma db push
-npm run db:seed
-npm run dev
-
-# Frontend (new terminal)
-cd frontend
-cp .env.example .env.local
+# Every session
+npm run db:up
 npm run dev
 ```
-
-Or both from root: `npm run dev`
 
 - **App:** http://localhost:3000  
-- **API:** http://localhost:3001  
+- **API:** http://localhost:3001/api/health  
+
+## Docker full stack
+
+```powershell
+copy .env.docker.example .env.docker
+npm run docker:up
+```
+
+- **App (Nginx):** http://localhost:3000  
+- **Health:** http://localhost:3000/api/health  
+
+## Git + GitHub push
+
+Monorepo root se push — details: **[GITHUB_SETUP.md](GITHUB_SETUP.md)**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-git-github.ps1 -Push
+```
+
+Remote: `https://github.com/Ayan-9520/motorcart.in.git`
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Frontend + backend (local) |
+| `npm run db:up` | PostgreSQL + Redis containers |
+| `npm run db:down` | Stop DB containers |
+| `npm run docker:up` | Full stack (frontend, backend, postgres, redis, nginx) |
+| `npm run migrate` | `prisma migrate deploy` |
+| `npm run seed` | Seed demo users |
 
 ## Seed users
 
@@ -41,7 +60,12 @@ Or both from root: `npm run dev`
 |-------|----------|
 | admin@motorcart.in | Admin@12345 |
 | customer@motorcart.in | Customer@123 |
+| dealer@gmail.com | Dealer@123 |
 
-- **Setup (XAMPP/MySQL):** [backend/docs/SETUP.md](backend/docs/SETUP.md)
-- **API docs:** [backend/docs/API.md](backend/docs/API.md)
-- Legacy Postgres SQL (reference only): `backend/supabase/migrations/`
+## Docs
+
+- **Docker setup:** [DOCKER.md](DOCKER.md)
+- [DEV-START.md](DEV-START.md) — daily dev steps
+- [backend/docs/SETUP.md](backend/docs/SETUP.md) — PostgreSQL + Redis
+- [backend/docs/API.md](backend/docs/API.md) — API reference  
+- [docs/phases/](docs/phases/) — phase plans (archive)

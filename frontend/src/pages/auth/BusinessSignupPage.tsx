@@ -63,6 +63,7 @@ const schema = z.object({
     "parts_wholesale",
     "service_garage",
     "dsa_finance",
+    "vehicle_broker",
     "other",
   ] as [BusinessCategory, ...BusinessCategory[]]),
 });
@@ -313,6 +314,7 @@ export function BusinessSignupPage() {
               <option value="parts_wholesale">Parts wholesale</option>
               <option value="service_garage">Service garage</option>
               <option value="dsa_finance">DSA / finance</option>
+              <option value="vehicle_broker">Vehicle broker / intermediary</option>
               <option value="other">Other</option>
             </select>
           </div>

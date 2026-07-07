@@ -1,7 +1,7 @@
 # Motorcart Project Audit Report
 
 **Date:** 2026-05-23  
-**Stack:** React/Vite frontend + Next.js/Prisma/MySQL backend
+**Stack:** React/Vite frontend + Next.js/Prisma/**PostgreSQL** + Redis backend
 
 ---
 
@@ -12,7 +12,7 @@
 | UI / layout / routes | ✅ Unchanged (as required) |
 | Supabase npm package | ✅ Removed from frontend |
 | API compatibility layer | ✅ `integrations/api/*` replaces SDK |
-| MySQL + Prisma (70 tables) | ✅ Synced |
+| PostgreSQL + Prisma | ✅ Migrations in `backend/prisma/migrations/` |
 | Auth (JWT) | ✅ Working when backend runs |
 | Generic CRUD `/api/db/query` | ✅ Core path for dashboards |
 | Dedicated REST routes | ⚠️ Partial (auth, vehicles, leads, auctions, notifications, upload) |
@@ -73,7 +73,7 @@ Not required if db query + RPC cover frontend calls.
 - `@/shared/api/client` → same
 - Comments in `types/database.ts`
 
-**Scripts fixed:** `seed-vehicles.ts`, `confirm-user-email.ts` use MySQL backend.
+**Scripts fixed:** `seed-vehicles.ts`, `confirm-user-email.ts` use backend REST API.
 
 ---
 
@@ -107,11 +107,11 @@ Not required if db query + RPC cover frontend calls.
 
 ## Runtime checklist
 
+- [ ] `npm run db:up` (PostgreSQL + Redis)
 - [ ] Backend on :3001
 - [ ] Frontend on :3000
-- [ ] `VITE_API_URL=http://localhost:3001` in `frontend/.env.local`
-- [ ] MySQL running (XAMPP)
-- [ ] `npx prisma db push` after schema updates
+- [ ] `DATABASE_URL` uses `postgresql://` in `backend/.env`
+- [ ] `npx prisma migrate deploy` (or `db push`) after schema updates
 
 ---
 

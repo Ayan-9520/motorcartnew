@@ -93,7 +93,9 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
       const { tableDelegates } = await import("@/lib/db/table-map");
       const key = tableDelegates[p.table];
       if (key) {
-        const delegate = (prisma as Record<string, { count: (args?: unknown) => Promise<number> }>)[key as string];
+        const delegate = (prisma as unknown as Record<string, { count: (args?: unknown) => Promise<number> }>)[
+          key as string
+        ];
         const total = await delegate?.count?.({ where: { deletedAt: null } });
         return ok({ data, count: total ?? 0 });
       }

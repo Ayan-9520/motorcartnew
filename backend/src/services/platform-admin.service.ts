@@ -11,6 +11,7 @@ export const BUSINESS_ROLES: AppRole[] = [
   "dsa_agent",
   "parts_seller",
   "service_center",
+  "broker",
 ];
 
 const DEALER_ROLES: AppRole[] = [
@@ -160,7 +161,8 @@ export async function listPendingDealers(): Promise<AdminDealerRow[]> {
       deletedAt: null,
       OR: [
         { isVerified: false },
-        { verificationStatus: { in: ["pending", "documents_submitted", "under_review", null] } },
+        { verificationStatus: { in: ["pending", "documents_submitted", "under_review"] } },
+        { verificationStatus: null },
       ],
     },
     orderBy: { createdAt: "desc" },

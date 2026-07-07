@@ -1,11 +1,11 @@
-// Motorcart.in — MySQL schema (migrated from Supabase/Postgres)
+// Motorcart.in — PostgreSQL schema (Prisma migrations)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -29,6 +29,7 @@ enum AppRole {
   auction_partner
   employee
   finance_partner
+  broker
 }
 
 enum UserStatus {
@@ -52,11 +53,26 @@ enum VehicleStatus {
   sold
 }
 
+enum VehicleSaleMode {
+  direct_owner
+  broker_assisted
+  dealer_offer
+  auction_sale
+}
+
 enum AuctionStatus {
   upcoming
   live
   ended
   cancelled
+}
+
+enum AuctionCategory {
+  bank
+  insurance
+  fleet
+  dealer
+  government
 }
 
 enum LeadStatus {
@@ -84,6 +100,49 @@ enum BookingStatus {
   cancelled
 }
 
+enum CommunityPersona {
+  customer
+  dealer
+  broker
+  dsa
+  insurance_agent
+  workshop
+  parts_seller
+  influencer
+}
+
+enum CommunityBusinessEntityType {
+  dealer
+  broker
+  dsa
+  insurance_agent
+  workshop
+  parts_seller
+  influencer
+}
+
+enum CommunityMemberRole {
+  member
+  moderator
+  admin
+  group_owner
+  group_moderator
+}
+
+enum SocialPostKind {
+  discussion
+  review
+  poll
+  embed
+}
+
+enum SocialModerationStatus {
+  pending
+  approved
+  rejected
+  hidden
+}
+
 model User {
   id                String     @id @default(uuid())
   email             String?    @unique
@@ -105,6 +164,9 @@ model User {
   onboardingStatus  String?    @map("onboarding_status")
   approvalStatus    String?    @map("approval_status")
   profileCompletion Int        @default(0) @map("profile_completion")
+  communityHandle   String?    @unique @map("community_handle") @db.VarChar(32)
+  communityBio      String?    @map("community_bio") @db.Text
+  communityCoverUrl String?    @map("community_cover_url") @db.VarChar(512)
   deletedAt         DateTime?  @map("deleted_at")
   createdAt         DateTime   @default(now()) @map("created_at")
   updatedAt         DateTime   @updatedAt @map("updated_at")
@@ -123,6 +185,18 @@ model User {
   notifications     Notification[]
   communityPosts    CommunityPost[]
   customerVehicles  CustomerVehicle[]
+  ownedBrokers      Broker[]
+  communityProfile  CommunityUserProfile?
+  communityBusinessProfiles CommunityBusinessProfile[]
+  communityFollows  CommunityFollow[]          @relation("CommunityFollower")
+  communityGroupMembers CommunityGroupMember[]
+  communityRoleAssignments CommunityRoleAssignment[]
+  socialPosts       SocialPost[]
+  postLikes         PostLike[]
+  postComments      PostComment[]
+  postShares        PostShare[]
+  pollVotes         PollVote[]
+  growthWorkspacesOwned GrowthWorkspace[] @relation("GrowthWorkspaceOwner")
 
   @@index([role])
   @@index([email])
@@ -334,6 +408,307 @@ model DealerLeadNote {
   @@map("dealer_lead_notes")
 }
 
+// --- Phase E: Broker CRM (isolated from dealer leads / crm_tasks) ---
+
+model Broker {
+  id                    String   @id @default(uuid())
+  ownerId               String   @map("owner_id")
+  name                  String   @db.VarChar(128)
+  slug                  String   @unique @db.VarChar(64)
+  licenseNumber         String?  @map("license_number") @db.VarChar(64)
+  city                  String   @db.VarChar(64)
+  state                 String   @db.VarChar(64)
+  phone                 String?  @db.VarChar(20)
+  whatsappNumber        String?  @map("whatsapp_number") @db.VarChar(20)
+  email                 String?  @db.VarChar(128)
+  commissionDefaultRate Decimal  @default(2.00) @map("commission_default_rate") @db.Decimal(5, 2)
+  isVerified            Boolean  @default(false) @map("is_verified")
+  metadata              Json     @default("{}")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  owner                 User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  buyers                BrokerBuyer[]
+  sellers               BrokerSeller[]
+  leads                 BrokerLead[]
+  deals                 BrokerDeal[]
+  tasks                 BrokerTask[]
+  commissions           BrokerCommission[]
+  leadNotes             BrokerLeadNote[]
+  whatsappConfig        BrokerWhatsAppConfig?
+  whatsappTemplates     BrokerWhatsAppTemplate[]
+  whatsappMessages      BrokerWhatsAppMessage[]
+
+  @@index([ownerId])
+  @@map("brokers")
+}
+
+model BrokerBuyer {
+  id              String   @id @default(uuid())
+  brokerId        String   @map("broker_id")
+  fullName        String   @map("full_name") @db.VarChar(128)
+  phone           String   @db.VarChar(20)
+  email           String?  @db.VarChar(128)
+  city            String?  @db.VarChar(64)
+  budgetMin       BigInt?  @map("budget_min")
+  budgetMax       BigInt?  @map("budget_max")
+  preferredBrands Json     @default("[]") @map("preferred_brands")
+  preferredFuel   String?  @map("preferred_fuel") @db.VarChar(32)
+  notes           String?  @db.Text
+  status          String   @default("active") @db.VarChar(24)
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  broker          Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  leads           BrokerLead[]
+  deals           BrokerDeal[]
+
+  @@index([brokerId, phone])
+  @@index([brokerId, status])
+  @@map("broker_buyers")
+}
+
+model BrokerSeller {
+  id        String   @id @default(uuid())
+  brokerId  String   @map("broker_id")
+  fullName  String   @map("full_name") @db.VarChar(128)
+  phone     String   @db.VarChar(20)
+  email     String?  @db.VarChar(128)
+  city      String?  @db.VarChar(64)
+  sellerType String  @default("individual") @map("seller_type") @db.VarChar(24)
+  kycStatus String   @default("pending") @map("kyc_status") @db.VarChar(24)
+  notes     String?  @db.Text
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  broker    Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  leads     BrokerLead[]
+  deals     BrokerDeal[]
+
+  @@index([brokerId, phone])
+  @@map("broker_sellers")
+}
+
+model BrokerLead {
+  id              String   @id @default(uuid())
+  brokerId        String   @map("broker_id")
+  buyerId         String?  @map("buyer_id")
+  sellerId        String?  @map("seller_id")
+  name            String   @db.VarChar(128)
+  phone           String   @db.VarChar(20)
+  email           String?  @db.VarChar(128)
+  source          String   @default("manual") @db.VarChar(32)
+  status          String   @default("new") @db.VarChar(24)
+  vehicleInterest String?  @map("vehicle_interest") @db.VarChar(255)
+  vehicleId       String?  @map("vehicle_id")
+  vehicleSlug     String?  @map("vehicle_slug") @db.VarChar(128)
+  saleMode        String?  @map("sale_mode") @db.VarChar(32)
+  assignedTo      String?  @map("assigned_to")
+  notes           String?  @db.Text
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  broker          Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  buyer           BrokerBuyer? @relation(fields: [buyerId], references: [id], onDelete: SetNull)
+  seller          BrokerSeller? @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  deals            BrokerDeal[]
+  tasks            BrokerTask[]
+  leadNotes        BrokerLeadNote[]
+  whatsappMessages BrokerWhatsAppMessage[]
+
+  @@index([brokerId, status])
+  @@index([brokerId, createdAt])
+  @@map("broker_leads")
+}
+
+model BrokerDeal {
+  id               String    @id @default(uuid())
+  brokerId         String    @map("broker_id")
+  leadId           String?   @map("lead_id")
+  buyerId          String?   @map("buyer_id")
+  sellerId         String?   @map("seller_id")
+  title            String    @db.VarChar(255)
+  stage            String    @default("inquiry") @db.VarChar(32)
+  dealValue        BigInt?   @map("deal_value")
+  tokenAmount      BigInt?   @map("token_amount")
+  expectedCloseAt  DateTime? @map("expected_close_at") @db.Date
+  closedAt         DateTime? @map("closed_at")
+  lostReason       String?   @map("lost_reason") @db.VarChar(255)
+  commissionRate   Decimal?  @map("commission_rate") @db.Decimal(5, 2)
+  commissionAmount BigInt?   @map("commission_amount")
+  assignedTo       String?   @map("assigned_to")
+  notes            String?   @db.Text
+  metadata         Json      @default("{}")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  broker           Broker    @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  lead             BrokerLead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  buyer            BrokerBuyer? @relation(fields: [buyerId], references: [id], onDelete: SetNull)
+  seller           BrokerSeller? @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  vehicles         BrokerDealVehicle[]
+  stageHistory     BrokerDealStageHistory[]
+  commission       BrokerCommission?
+  tasks            BrokerTask[]
+  whatsappMessages BrokerWhatsAppMessage[]
+
+  @@index([brokerId, stage])
+  @@index([brokerId, closedAt])
+  @@map("broker_deals")
+}
+
+model BrokerDealVehicle {
+  id           String   @id @default(uuid())
+  dealId       String   @map("deal_id")
+  vehicleId    String?  @map("vehicle_id")
+  vehicleSlug  String?  @map("vehicle_slug") @db.VarChar(128)
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  listingTitle String?  @map("listing_title") @db.VarChar(255)
+  listingPrice BigInt?  @map("listing_price")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  deal         BrokerDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([vehicleId])
+  @@map("broker_deal_vehicles")
+}
+
+model BrokerDealStageHistory {
+  id         String   @id @default(uuid())
+  dealId     String   @map("deal_id")
+  fromStage  String?  @map("from_stage") @db.VarChar(32)
+  toStage    String   @map("to_stage") @db.VarChar(32)
+  changedBy  String?  @map("changed_by")
+  note       String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  deal       BrokerDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@map("broker_deal_stage_history")
+}
+
+model BrokerTask {
+  id          String    @id @default(uuid())
+  brokerId    String    @map("broker_id")
+  leadId      String?   @map("lead_id")
+  dealId      String?   @map("deal_id")
+  assignedTo  String?   @map("assigned_to")
+  taskType    String    @default("callback") @map("task_type") @db.VarChar(32)
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  dueAt       DateTime? @map("due_at")
+  status      String    @default("pending") @db.VarChar(24)
+  priority    String    @default("normal") @db.VarChar(16)
+  completedAt DateTime? @map("completed_at")
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  broker      Broker    @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  lead        BrokerLead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  deal        BrokerDeal? @relation(fields: [dealId], references: [id], onDelete: SetNull)
+
+  @@index([brokerId, dueAt])
+  @@index([brokerId, status])
+  @@map("broker_tasks")
+}
+
+model BrokerCommission {
+  id               String    @id @default(uuid())
+  brokerId         String    @map("broker_id")
+  dealId           String    @unique @map("deal_id")
+  dealValue        BigInt    @map("deal_value")
+  commissionRate   Decimal   @map("commission_rate") @db.Decimal(5, 2)
+  commissionAmount BigInt    @map("commission_amount")
+  status           String    @default("pending") @db.VarChar(24)
+  paidAt           DateTime? @map("paid_at")
+  payoutReference  String?   @map("payout_reference") @db.VarChar(64)
+  metadata         Json      @default("{}")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  broker           Broker    @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  deal             BrokerDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([brokerId, status])
+  @@map("broker_commissions")
+}
+
+model BrokerLeadNote {
+  id        String   @id @default(uuid())
+  leadId    String   @map("lead_id")
+  brokerId  String   @map("broker_id")
+  authorId  String?  @map("author_id")
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lead      BrokerLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  broker    Broker     @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("broker_lead_notes")
+}
+
+model BrokerWhatsAppConfig {
+  id            String   @id @default(uuid())
+  brokerId      String   @unique @map("broker_id")
+  provider      String   @default("manual") @db.VarChar(32)
+  businessPhone String   @map("business_phone") @db.VarChar(20)
+  webhookSecret String?  @map("webhook_secret") @db.VarChar(128)
+  apiConfig     Json     @default("{}") @map("api_config")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  broker        Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+
+  @@map("broker_whatsapp_configs")
+}
+
+model BrokerWhatsAppTemplate {
+  id                 String   @id @default(uuid())
+  brokerId           String   @map("broker_id")
+  templateKey        String   @map("template_key") @db.VarChar(64)
+  name               String   @db.VarChar(128)
+  body               String   @db.Text
+  language           String   @default("en") @db.VarChar(8)
+  providerTemplateId String?  @map("provider_template_id") @db.VarChar(64)
+  status             String   @default("draft") @db.VarChar(24)
+  metadata           Json     @default("{}")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  broker             Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+
+  @@index([brokerId])
+  @@map("broker_whatsapp_templates")
+}
+
+model BrokerWhatsAppMessage {
+  id                String   @id @default(uuid())
+  brokerId          String   @map("broker_id")
+  leadId            String?  @map("lead_id")
+  dealId            String?  @map("deal_id")
+  direction         String   @db.VarChar(8)
+  providerMessageId String?  @unique @map("provider_message_id") @db.VarChar(128)
+  phone             String   @db.VarChar(20)
+  body              String   @db.Text
+  status            String   @default("queued") @db.VarChar(24)
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  broker            Broker     @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  lead              BrokerLead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  deal              BrokerDeal? @relation(fields: [dealId], references: [id], onDelete: SetNull)
+
+  @@index([brokerId, createdAt])
+  @@index([leadId])
+  @@map("broker_whatsapp_messages")
+}
+
 model Vehicle {
   id             String        @id @default(uuid())
   dealerId       String?       @map("dealer_id")
@@ -363,6 +738,7 @@ model Vehicle {
   isFeatured     Boolean       @default(false) @map("is_featured")
   status         VehicleStatus @default(available)
   condition      String        @default("used")
+  saleMode       VehicleSaleMode? @default(dealer_offer) @map("sale_mode")
   metadata       Json          @default("{}")
   deletedAt      DateTime?     @map("deleted_at")
   createdAt      DateTime      @default(now()) @map("created_at")
@@ -377,6 +753,7 @@ model Vehicle {
   @@index([category])
   @@index([brand, model])
   @@index([city])
+  @@index([saleMode])
   @@map("vehicles")
 }
 
@@ -432,27 +809,38 @@ model Lead {
 }
 
 model Auction {
-  id          String        @id @default(uuid())
-  vehicleId   String?       @map("vehicle_id")
-  title       String
-  slug        String        @unique
-  startPrice  Decimal       @map("start_price") @db.Decimal(12, 2)
-  currentBid  Decimal?      @map("current_bid") @db.Decimal(12, 2)
-  bidCount    Int           @default(0) @map("bid_count")
-  status      AuctionStatus @default(upcoming)
-  startsAt    DateTime      @map("starts_at")
-  endsAt      DateTime      @map("ends_at")
-  winnerId    String?       @map("winner_id")
-  viewerCount Int           @default(0) @map("viewer_count")
-  images      Json          @default("[]")
-  metadata    Json          @default("{}")
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
+  id              String          @id @default(uuid())
+  vehicleId       String?         @map("vehicle_id")
+  organizerId     String?         @map("organizer_id")
+  title           String
+  slug            String          @unique
+  startPrice      Decimal         @map("start_price") @db.Decimal(12, 2)
+  currentBid      Decimal?        @map("current_bid") @db.Decimal(12, 2)
+  reservePrice    Decimal?        @map("reserve_price") @db.Decimal(12, 2)
+  bidIncrement    Decimal         @default(1000) @map("bid_increment") @db.Decimal(12, 2)
+  bidCount        Int             @default(0) @map("bid_count")
+  auctionCategory AuctionCategory @default(dealer) @map("auction_category")
+  status          AuctionStatus   @default(upcoming)
+  startsAt        DateTime        @map("starts_at")
+  endsAt          DateTime        @map("ends_at")
+  winnerId        String?         @map("winner_id")
+  viewerCount     Int             @default(0) @map("viewer_count")
+  location        String?         @db.VarChar(128)
+  isFeatured      Boolean         @default(false) @map("is_featured")
+  images          Json            @default("[]")
+  metadata        Json            @default("{}")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  bids        AuctionBid[]
-  messages    AuctionMessage[]
+  bids            AuctionBid[]
+  messages        AuctionMessage[]
+  autoBids        AuctionAutoBid[]
+  proxyBids       AuctionProxyBid[]
+  watchlists      AuctionWatchlist[]
 
   @@index([status])
+  @@index([auctionCategory, status])
+  @@index([organizerId])
   @@map("auctions")
 }
 
@@ -463,6 +851,7 @@ model AuctionBid {
   bidderName String?  @map("bidder_name")
   amount     Decimal  @db.Decimal(12, 2)
   isAutoBid  Boolean  @default(false) @map("is_auto_bid")
+  bidSource  String?  @map("bid_source") @db.VarChar(16)
   createdAt  DateTime @default(now()) @map("created_at")
 
   auction    Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
@@ -485,6 +874,78 @@ model AuctionMessage {
 
   @@index([auctionId])
   @@map("auction_messages")
+}
+
+model AuctionAutoBid {
+  id        String   @id @default(uuid())
+  auctionId String   @map("auction_id")
+  bidderId  String   @map("bidder_id")
+  maxAmount Decimal  @map("max_amount") @db.Decimal(12, 2)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@unique([auctionId, bidderId])
+  @@index([auctionId])
+  @@map("auction_auto_bids")
+}
+
+model AuctionProxyBid {
+  id        String   @id @default(uuid())
+  auctionId String   @map("auction_id")
+  bidderId  String   @map("bidder_id")
+  maxAmount Decimal  @map("max_amount") @db.Decimal(12, 2)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@unique([auctionId, bidderId])
+  @@index([auctionId])
+  @@map("auction_proxy_bids")
+}
+
+model AuctionWatchlist {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  auctionId String   @map("auction_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, auctionId])
+  @@index([userId])
+  @@map("auction_watchlists")
+}
+
+model AuctionBidAttempt {
+  id              String   @id @default(uuid())
+  auctionId       String   @map("auction_id")
+  bidderId        String   @map("bidder_id")
+  amount          Decimal  @db.Decimal(12, 2)
+  success         Boolean  @default(false)
+  rejectionReason String?  @map("rejection_reason") @db.VarChar(255)
+  riskScore       Int      @default(0) @map("risk_score")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([auctionId, bidderId, createdAt])
+  @@map("auction_bid_attempts")
+}
+
+model AuctionBidderEligibility {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  auctionId String?  @map("auction_id")
+  kycStatus String   @map("kyc_status") @db.VarChar(24)
+  eligible  Boolean
+  reason    String?  @db.VarChar(255)
+  checkedAt DateTime @default(now()) @map("checked_at")
+
+  @@index([userId, checkedAt])
+  @@map("auction_bidder_eligibility")
 }
 
 model Bank {
@@ -556,6 +1017,8 @@ model PartProduct {
   deletedAt     DateTime? @map("deleted_at")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
+
+  compatibilityRules PartCompatibilityRule[]
 
   @@index([sellerId])
   @@index([categorySlug])
@@ -636,6 +1099,7 @@ model ServiceBooking {
   @@map("service_bookings")
 }
 
+/// Legacy community posts — frozen for new writes; use SocialPost when FEATURE_COMMUNITY_V2 is on (I1+).
 model CommunityPost {
   id        String   @id @default(uuid())
   authorId  String   @map("author_id")
@@ -763,7 +1227,8 @@ model Part {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  orderItems    PartOrderItem[]
+  orderItems           PartOrderItem[]
+  compatibilityRules   PartCompatibilityRule[]
 
   @@index([sellerId])
   @@index([category])
@@ -833,21 +1298,45 @@ model Review {
   @@map("reviews")
 }
 
+/// Canonical community feed posts (I0). Legacy writes use CommunityPost until I1+.
 model SocialPost {
-  id           String    @id @default(uuid())
-  authorId     String    @map("author_id")
-  content      String    @db.Text
-  media        Json      @default("[]")
-  postType     String    @default("text") @map("post_type")
-  likeCount    Int       @default(0) @map("like_count")
-  commentCount Int       @default(0) @map("comment_count")
-  shareCount   Int       @default(0) @map("share_count")
-  metadata     Json      @default("{}")
-  deletedAt    DateTime? @map("deleted_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id                 String                 @id @default(uuid())
+  authorId           String                 @map("author_id")
+  content            String                 @db.Text
+  media              Json                   @default("[]")
+  postKind           SocialPostKind         @default(discussion) @map("post_type")
+  vehicleId          String?                @map("vehicle_id")
+  dealerId           String?                @map("dealer_id")
+  brokerId           String?                @map("broker_id")
+  groupId            String?                @map("group_id")
+  embedProvider      String?                @map("embed_provider") @db.VarChar(16)
+  embedUrl           String?                @map("embed_url") @db.VarChar(512)
+  pollOptions        Json?                  @map("poll_options")
+  pollEndsAt         DateTime?              @map("poll_ends_at")
+  likeCount          Int                    @default(0) @map("like_count")
+  commentCount       Int                    @default(0) @map("comment_count")
+  shareCount         Int                    @default(0) @map("share_count")
+  spamScore          Decimal                @default(0) @map("spam_score") @db.Decimal(5, 2)
+  moderationStatus   SocialModerationStatus @default(approved) @map("moderation_status")
+  needsReview        Boolean                @default(false) @map("needs_review")
+  metadata           Json                   @default("{}")
+  deletedAt          DateTime?              @map("deleted_at")
+  createdAt          DateTime               @default(now()) @map("created_at")
+  updatedAt          DateTime               @updatedAt @map("updated_at")
+
+  author             User                   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  group              CommunityGroup?        @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  likes              PostLike[]
+  comments           PostComment[]
+  shares             PostShare[]
+  hashtags           PostHashtag[]
+  pollVotes          PollVote[]
 
   @@index([authorId])
+  @@index([authorId, createdAt])
+  @@index([groupId, createdAt])
+  @@index([moderationStatus, createdAt])
+  @@index([createdAt])
   @@map("social_posts")
 }
 
@@ -856,63 +1345,95 @@ model CommunityGroup {
   name        String
   slug        String   @unique
   description String?  @db.Text
+  groupType   String   @default("open") @map("group_type") @db.VarChar(24)
+  ruleKey     String?  @map("rule_key") @db.VarChar(64)
+  ruleValue   String?  @map("rule_value") @db.VarChar(128)
+  dealerId    String?  @map("dealer_id")
+  coverUrl    String?  @map("cover_url") @db.VarChar(512)
   memberCount Int      @default(0) @map("member_count")
   metadata    Json     @default("{}")
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
+  posts       SocialPost[]
+  members     CommunityGroupMember[]
+
+  @@index([groupType])
   @@map("community_groups")
 }
 
 model PostHashtag {
-  postId  String @map("post_id")
+  postId  String     @map("post_id")
   hashtag String
 
+  post    SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   @@id([postId, hashtag])
+  @@index([hashtag])
   @@map("post_hashtags")
 }
 
 model PostLike {
-  postId String @map("post_id")
-  userId String @map("user_id")
+  postId    String     @map("post_id")
+  userId    String     @map("user_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([postId, userId])
   @@map("post_likes")
 }
 
 model PostComment {
-  id        String   @id @default(uuid())
-  postId    String   @map("post_id")
-  userId    String   @map("user_id")
-  content   String   @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
+  id        String     @id @default(uuid())
+  postId    String     @map("post_id")
+  userId    String     @map("user_id")
+  parentId  String?    @map("parent_id")
+  content   String     @db.Text
+  hidden    Boolean    @default(false)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@map("post_comments")
 }
 
 model PostShare {
-  id        String   @id @default(uuid())
-  postId    String   @map("post_id")
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  id        String     @id @default(uuid())
+  postId    String     @map("post_id")
+  userId    String     @map("user_id")
+  createdAt DateTime   @default(now()) @map("created_at")
 
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
   @@map("post_shares")
 }
 
 model PollVote {
-  postId       String @map("post_id")
-  userId       String @map("user_id")
-  optionIndex  Int    @map("option_index")
+  postId      String     @map("post_id")
+  userId      String     @map("user_id")
+  optionIndex Int        @map("option_index")
+
+  post        SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([postId, userId])
   @@map("poll_votes")
 }
 
 model UserFollow {
-  followerId  String @map("follower_id")
-  followingId String @map("following_id")
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   @@id([followerId, followingId])
+  @@index([followingId])
   @@map("user_follows")
 }
 
@@ -926,6 +1447,109 @@ model CommunityModerationFlag {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("community_moderation_flags")
+}
+
+// --- Phase I0: Community domain (isolated from dealer/broker CRM) ---
+
+model CommunityUserProfile {
+  id             String           @id @default(uuid())
+  userId         String           @unique @map("user_id")
+  persona        CommunityPersona @default(customer)
+  displayName    String           @map("display_name") @db.VarChar(128)
+  handle         String           @unique @db.VarChar(32)
+  avatarUrl      String?          @map("avatar_url")
+  coverUrl       String?          @map("cover_url")
+  bio            String?          @db.Text
+  locationCity   String?          @map("location_city") @db.VarChar(64)
+  isVerified     Boolean          @default(false) @map("is_verified")
+  isPrivate      Boolean          @default(false) @map("is_private")
+  followerCount  Int              @default(0) @map("follower_count")
+  followingCount Int              @default(0) @map("following_count")
+  postCount      Int              @default(0) @map("post_count")
+  metadata       Json             @default("{}")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([persona])
+  @@map("community_user_profiles")
+}
+
+model CommunityBusinessProfile {
+  id            String                      @id @default(uuid())
+  ownerUserId   String                      @map("owner_user_id")
+  entityType    CommunityBusinessEntityType @map("entity_type")
+  entityId      String?                     @map("entity_id")
+  slug          String                      @unique @db.VarChar(64)
+  name          String                      @db.VarChar(128)
+  tagline       String?                     @db.VarChar(255)
+  logoUrl       String?                     @map("logo_url")
+  coverUrl      String?                     @map("cover_url")
+  website       String?                     @db.VarChar(255)
+  phone         String?                     @db.VarChar(20)
+  city          String?                     @db.VarChar(64)
+  state         String?                     @db.VarChar(64)
+  followerCount Int                         @default(0) @map("follower_count")
+  isVerified    Boolean                     @default(false) @map("is_verified")
+  metadata      Json                        @default("{}")
+  createdAt     DateTime                    @default(now()) @map("created_at")
+  updatedAt     DateTime                    @updatedAt @map("updated_at")
+
+  owner         User                        @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  followers     CommunityFollow[]
+
+  @@index([entityType, entityId])
+  @@index([ownerUserId])
+  @@map("community_business_profiles")
+}
+
+model CommunityFollow {
+  id               String                    @id @default(uuid())
+  followerUserId   String                    @map("follower_user_id")
+  targetType       String                    @db.VarChar(16)
+  targetUserId     String?                   @map("target_user_id")
+  targetBusinessId String?                   @map("target_business_id")
+  createdAt        DateTime                  @default(now()) @map("created_at")
+
+  follower         User                      @relation("CommunityFollower", fields: [followerUserId], references: [id], onDelete: Cascade)
+  targetBusiness   CommunityBusinessProfile? @relation(fields: [targetBusinessId], references: [id], onDelete: Cascade)
+
+  @@unique([followerUserId, targetType, targetUserId, targetBusinessId])
+  @@index([followerUserId])
+  @@index([targetUserId])
+  @@index([targetBusinessId])
+  @@map("community_follows")
+}
+
+model CommunityGroupMember {
+  id       String              @id @default(uuid())
+  groupId  String              @map("group_id")
+  userId   String              @map("user_id")
+  role     CommunityMemberRole @default(member)
+  joinedAt DateTime            @default(now()) @map("joined_at")
+
+  group    CommunityGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("community_group_members")
+}
+
+model CommunityRoleAssignment {
+  id        String              @id @default(uuid())
+  userId    String              @map("user_id")
+  scope     String              @db.VarChar(16)
+  scopeId   String?             @map("scope_id")
+  role      CommunityMemberRole
+  grantedBy String?             @map("granted_by")
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scope, scopeId])
+  @@map("community_role_assignments")
 }
 
 model CustomerVehicle {
@@ -1169,6 +1793,11 @@ model NewCarInventory {
   colors               Json     @default("[]")
   imageUrl             String?  @map("image_url")
   expectedDeliveryDays Int?     @map("expected_delivery_days")
+  waitingPeriodDays    Int?     @map("waiting_period_days")
+  brochureUrl          String?  @map("brochure_url") @db.VarChar(512)
+  offers               Json     @default("[]")
+  lastStockUpdateAt    DateTime? @map("last_stock_update_at")
+  view360Url           String?  @map("view360_url") @db.VarChar(512)
   price                Decimal? @db.Decimal(12, 2)
   stock                Int      @default(1)
   metadata             Json     @default("{}")
@@ -1177,6 +1806,57 @@ model NewCarInventory {
 
   @@index([dealerId])
   @@map("new_car_inventory")
+}
+
+model NewCarStockDailyLog {
+  id          String   @id @default(uuid())
+  dealerId    String   @map("dealer_id")
+  inventoryId String?  @map("inventory_id")
+  uploadedBy  String   @map("uploaded_by")
+  fileName    String?  @map("file_name")
+  stockBefore Int      @map("stock_before")
+  stockAfter  Int      @map("stock_after")
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([dealerId, createdAt])
+  @@index([inventoryId])
+  @@map("new_car_stock_daily_logs")
+}
+
+model PartCompatibilityRule {
+  id            String   @id @default(uuid())
+  partId        String?  @map("part_id")
+  partProductId String?  @map("part_product_id")
+  brand         String
+  model         String
+  variant       String?
+  yearFrom      Int?     @map("year_from")
+  yearTo        Int?     @map("year_to")
+  fuelType      String?  @map("fuel_type")
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  part          Part?        @relation(fields: [partId], references: [id], onDelete: Cascade)
+  partProduct   PartProduct? @relation(fields: [partProductId], references: [id], onDelete: Cascade)
+
+  @@index([brand, model])
+  @@index([partId])
+  @@index([partProductId])
+  @@map("part_compatibility_rules")
+}
+
+model PartRegistrationLookup {
+  id                 String   @id @default(uuid())
+  registrationNumber String   @unique @map("registration_number")
+  brand              String?
+  model              String?
+  year               Int?
+  fuelType           String?  @map("fuel_type")
+  metadata           Json     @default("{}")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("part_registration_lookups")
 }
 
 model DealerLead {
@@ -1272,7 +1952,7 @@ model PlatformCmsPage {
   id        String   @id @default(uuid())
   slug      String   @unique
   title     String
-  content   String?  @db.LongText
+  content   String?  @db.Text
   status    String   @default("draft")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -1343,4 +2023,336 @@ model AuctionNotification {
 
   @@index([auctionId])
   @@map("auction_notifications")
+}
+
+// --- Phase J0 MVP: Growth CRM (isolated from dealer/broker/community/marketplace) ---
+
+enum GrowthBusinessType {
+  dealer
+  broker
+  dsa
+  insurance_agent
+  workshop
+  parts_seller
+  influencer
+}
+
+enum GrowthWorkspaceStatus {
+  active
+  suspended
+  archived
+}
+
+enum GrowthAssetKind {
+  image
+  video
+  logo
+  document
+}
+
+enum GrowthDesignFormat {
+  facebook_post
+  instagram_post
+  instagram_story
+  linkedin_post
+  banner
+  poster
+}
+
+enum GrowthDesignStatus {
+  draft
+  ready
+  archived
+}
+
+enum GrowthWhatsappTemplateStatus {
+  draft
+  pending_approval
+  approved
+  rejected
+}
+
+enum GrowthBroadcastStatus {
+  draft
+  scheduled
+  sending
+  completed
+  failed
+  cancelled
+}
+
+enum GrowthDeliveryStatus {
+  queued
+  sent
+  delivered
+  read
+  failed
+  opted_out
+}
+
+enum GrowthLeadCaptureStatus {
+  new
+  qualified
+  spam
+  archived
+}
+
+model GrowthWorkspace {
+  id                   String                @id @default(uuid())
+  ownerUserId          String                @map("owner_user_id")
+  businessType         GrowthBusinessType    @map("business_type")
+  name                 String                @db.VarChar(128)
+  slug                 String                @unique @db.VarChar(64)
+  entityId             String?               @map("entity_id")
+  subscriptionPlanSlug String?               @map("subscription_plan_slug") @db.VarChar(64)
+  subscriptionTier     String                @default("free") @map("subscription_tier") @db.VarChar(32)
+  status               GrowthWorkspaceStatus @default(active)
+  metadata             Json                  @default("{}")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  owner                User                  @relation("GrowthWorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  entitlements         GrowthWorkspaceEntitlement?
+  assets               GrowthAsset[]
+  designs              GrowthDesign[]
+  whatsappTemplates    GrowthWhatsappTemplate[]
+  contactLists         GrowthContactList[]
+  broadcasts           GrowthWhatsappBroadcast[]
+  messageLogs          GrowthMessageLog[]
+  leadForms            GrowthLeadCaptureForm[]
+
+  @@index([ownerUserId])
+  @@index([businessType])
+  @@index([entityId])
+  @@map("growth_workspaces")
+}
+
+model GrowthWorkspaceEntitlement {
+  id          String    @id @default(uuid())
+  workspaceId String    @unique @map("workspace_id")
+  planSlug    String    @default("free") @map("plan_slug") @db.VarChar(64)
+  limits      Json      @default("{}")
+  usage       Json      @default("{}")
+  refreshedAt DateTime  @default(now()) @map("refreshed_at")
+  trialEndsAt DateTime? @map("trial_ends_at")
+
+  workspace   GrowthWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("growth_workspace_entitlements")
+}
+
+model GrowthAsset {
+  id          String          @id @default(uuid())
+  workspaceId String          @map("workspace_id")
+  kind        GrowthAssetKind
+  name        String          @db.VarChar(255)
+  storagePath String          @map("storage_path") @db.VarChar(512)
+  publicUrl   String          @map("public_url") @db.VarChar(512)
+  mimeType    String?         @map("mime_type") @db.VarChar(128)
+  sizeBytes   Int?            @map("size_bytes")
+  width       Int?
+  height      Int?
+  tags        Json            @default("[]")
+  metadata    Json            @default("{}")
+  deletedAt   DateTime?       @map("deleted_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  workspace   GrowthWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, kind])
+  @@index([workspaceId, createdAt])
+  @@map("growth_assets")
+}
+
+model GrowthDesign {
+  id          String             @id @default(uuid())
+  workspaceId String             @map("workspace_id")
+  name        String             @db.VarChar(128)
+  format      GrowthDesignFormat
+  status      GrowthDesignStatus @default(draft)
+  canvasJson  Json               @map("canvas_json")
+  width       Int                @default(1080)
+  height      Int                @default(1080)
+  metadata    Json               @default("{}")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  workspace   GrowthWorkspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  exports     GrowthDesignExport[]
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, format])
+  @@map("growth_designs")
+}
+
+model GrowthDesignExport {
+  id        String   @id @default(uuid())
+  designId  String   @map("design_id")
+  format    String   @default("png") @db.VarChar(8)
+  publicUrl String   @map("public_url") @db.VarChar(512)
+  width     Int
+  height    Int
+  sizeBytes Int?     @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  design    GrowthDesign @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  @@index([designId, createdAt])
+  @@map("growth_design_exports")
+}
+
+model GrowthWhatsappTemplate {
+  id                 String                       @id @default(uuid())
+  workspaceId        String                       @map("workspace_id")
+  templateKey        String                       @map("template_key") @db.VarChar(64)
+  name               String                       @db.VarChar(128)
+  category           String                       @default("marketing") @db.VarChar(32)
+  body               String                       @db.Text
+  language           String                       @default("en") @db.VarChar(8)
+  variablesSchema    Json                         @default("[]") @map("variables_schema")
+  providerTemplateId String?                      @map("provider_template_id") @db.VarChar(64)
+  status             GrowthWhatsappTemplateStatus @default(draft)
+  metadata           Json                         @default("{}")
+  createdAt          DateTime                     @default(now()) @map("created_at")
+  updatedAt          DateTime                     @updatedAt @map("updated_at")
+
+  workspace          GrowthWorkspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  broadcasts         GrowthWhatsappBroadcast[]
+
+  @@unique([workspaceId, templateKey])
+  @@index([workspaceId, status])
+  @@map("growth_whatsapp_templates")
+}
+
+model GrowthContactList {
+  id          String   @id @default(uuid())
+  workspaceId String   @map("workspace_id")
+  name        String   @db.VarChar(128)
+  description String?  @db.Text
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace   GrowthWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     GrowthContactListMember[]
+  broadcasts  GrowthWhatsappBroadcast[]
+
+  @@index([workspaceId])
+  @@map("growth_contact_lists")
+}
+
+model GrowthContactListMember {
+  id        String    @id @default(uuid())
+  listId    String    @map("list_id")
+  phone     String    @db.VarChar(20)
+  fullName  String?   @map("full_name") @db.VarChar(128)
+  optInAt   DateTime? @map("opt_in_at")
+  optOutAt  DateTime? @map("opt_out_at")
+  metadata  Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  list      GrowthContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, phone])
+  @@index([phone])
+  @@map("growth_contact_list_members")
+}
+
+model GrowthWhatsappBroadcast {
+  id          String                @id @default(uuid())
+  workspaceId String                @map("workspace_id")
+  templateId  String                @map("template_id")
+  listId      String                @map("list_id")
+  name        String                @db.VarChar(128)
+  status      GrowthBroadcastStatus @default(draft)
+  scheduleAt  DateTime?             @map("schedule_at")
+  startedAt   DateTime?             @map("started_at")
+  completedAt DateTime?             @map("completed_at")
+  metadata    Json                  @default("{}")
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+
+  workspace   GrowthWorkspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  template    GrowthWhatsappTemplate  @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  list        GrowthContactList       @relation(fields: [listId], references: [id], onDelete: Restrict)
+  recipients  GrowthWhatsappBroadcastRecipient[]
+  messageLogs GrowthMessageLog[]
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt])
+  @@index([scheduleAt])
+  @@map("growth_whatsapp_broadcasts")
+}
+
+model GrowthWhatsappBroadcastRecipient {
+  id          String               @id @default(uuid())
+  broadcastId String               @map("broadcast_id")
+  phone       String               @db.VarChar(20)
+  status      GrowthDeliveryStatus @default(queued)
+  lastEventAt DateTime?            @map("last_event_at")
+  metadata    Json                 @default("{}")
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  broadcast   GrowthWhatsappBroadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+
+  @@unique([broadcastId, phone])
+  @@index([broadcastId, status])
+  @@map("growth_whatsapp_broadcast_recipients")
+}
+
+model GrowthMessageLog {
+  id          String               @id @default(uuid())
+  workspaceId String               @map("workspace_id")
+  broadcastId String?              @map("broadcast_id")
+  channel     String               @default("whatsapp") @db.VarChar(16)
+  direction   String               @db.VarChar(8)
+  phone       String?              @db.VarChar(20)
+  body        String               @db.Text
+  status      GrowthDeliveryStatus @default(queued)
+  providerId  String?              @map("provider_id") @db.VarChar(128)
+  metadata    Json                 @default("{}")
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  workspace   GrowthWorkspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  broadcast   GrowthWhatsappBroadcast? @relation(fields: [broadcastId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([broadcastId])
+  @@map("growth_message_logs")
+}
+
+model GrowthLeadCaptureForm {
+  id           String   @id @default(uuid())
+  workspaceId  String   @map("workspace_id")
+  name         String   @db.VarChar(128)
+  slug         String   @db.VarChar(64)
+  fieldsSchema Json     @default("[]") @map("fields_schema")
+  thankYouUrl  String?  @map("thank_you_url") @db.VarChar(512)
+  isActive     Boolean  @default(true) @map("is_active")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  workspace    GrowthWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  events       GrowthLeadCaptureEvent[]
+
+  @@unique([workspaceId, slug])
+  @@map("growth_lead_capture_forms")
+}
+
+model GrowthLeadCaptureEvent {
+  id        String                  @id @default(uuid())
+  formId    String                  @map("form_id")
+  status    GrowthLeadCaptureStatus @default(new)
+  payload   Json                    @default("{}")
+  ipHash    String?                 @map("ip_hash") @db.VarChar(64)
+  userAgent String?                 @map("user_agent") @db.VarChar(255)
+  createdAt DateTime                @default(now()) @map("created_at")
+
+  form      GrowthLeadCaptureForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId, createdAt])
+  @@index([status])
+  @@map("growth_lead_capture_events")
 }

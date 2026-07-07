@@ -1,0 +1,16 @@
+.git
+.gitignore
+**/node_modules
+**/dist
+**/.next
+**/uploads
+**/.data
+**/.env
+**/.env.local
+!**/.env.example
+!**/.env.docker.example
+*.md
+docs
+terminals
+assets
+dist.zip

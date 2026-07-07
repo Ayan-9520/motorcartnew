@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { Quote, Star } from "lucide-react";
 import { testimonials } from "@/data/mock";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeader } from "./SectionHeader";
 
 export function TestimonialsSection() {
+  const { testimonials: dynamic } = useHomePage();
+  const items = dynamic.length ? dynamic : testimonials;
   return (
     <section className="home-section">
       <div className="container home-stack">
@@ -15,9 +18,9 @@ export function TestimonialsSection() {
           align="center"
         />
         <motion.div className="grid gap-3 md:grid-cols-3">
-          {testimonials.map((item, index) => (
+          {items.map((item, index) => (
             <motion.div
-              key={item.name}
+              key={item.name + index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

@@ -14,6 +14,7 @@ export const ROLE_DISPLAY_NAMES: Partial<Record<AppRole, string>> = {
   super_admin: "Super admin",
   parts_seller: "Parts seller",
   service_center: "Service partner",
+  broker: "Vehicle broker",
   admin: "Admin",
 };
 
@@ -27,6 +28,7 @@ export const BUSINESS_SIGNUP_ROLES: AppRole[] = [
   "dsa_agent",
   "parts_seller",
   "service_center",
+  "broker",
 ];
 
 export function isBusinessSignupRole(role: AppRole): boolean {

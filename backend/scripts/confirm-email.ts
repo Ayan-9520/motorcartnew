@@ -1,5 +1,5 @@
 /**
- * Dev: mark user email as verified in MySQL
+ * Dev: mark user email as verified in PostgreSQL
  * Usage: npx tsx scripts/confirm-email.ts user@email.com
  */
 import { PrismaClient } from "@prisma/client";

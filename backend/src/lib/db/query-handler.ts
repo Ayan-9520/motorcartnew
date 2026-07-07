@@ -119,7 +119,10 @@ export async function runDbQuery(params: {
     for (const [k, v] of Object.entries((params.body ?? {}) as Record<string, unknown>)) {
       data[camelColumn(k)] = v;
     }
-    const row = await delegate.update({ where: where as Prisma.Args<typeof delegate.update, "where">["where"], data });
+    const row = await delegate.update({
+      where: where as Record<string, unknown>,
+      data,
+    });
     return toSnakeRow(row as Record<string, unknown>);
   }
 

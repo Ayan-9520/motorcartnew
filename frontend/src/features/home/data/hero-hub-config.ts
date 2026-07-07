@@ -47,6 +47,9 @@ export interface HeroDashboardCard {
   href: string;
   badge?: string;
   live?: boolean;
+  /** ISO timestamp — powers live auction countdown in hero panel */
+  endsAt?: string;
+  bidCount?: number;
 }
 
 export interface HeroHubConfig {

@@ -1,0 +1,59 @@
+import { NextRequest } from "next/server";
+import { ok, err } from "@/lib/api-response";
+import { toSnakeRow } from "@/lib/db/table-map";
+import { requireBrokerContext } from "@/lib/broker/guard";
+import {
+  deleteBrokerBuyer,
+  getBrokerBuyer,
+  updateBrokerBuyer,
+} from "@/services/broker-buyer.service";
+
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const gate = await requireBrokerContext(req, "contacts");
+  if ("response" in gate) return gate.response;
+
+  const { id } = await ctx.params;
+  const row = await getBrokerBuyer(gate.ctx.broker.id, id);
+  if (!row) return err("Buyer not found", 404);
+  return ok({ data: toSnakeRow(row as unknown as Record<string, unknown>) });
+}
+
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const gate = await requireBrokerContext(req, "contacts");
+  if ("response" in gate) return gate.response;
+
+  const { id } = await ctx.params;
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  await updateBrokerBuyer(gate.ctx.broker.id, id, {
+    fullName: body.full_name != null ? String(body.full_name) : undefined,
+    phone: body.phone != null ? String(body.phone) : undefined,
+    email: body.email != null ? String(body.email) : undefined,
+    city: body.city != null ? String(body.city) : undefined,
+    status: body.status != null ? String(body.status) : undefined,
+    notes: body.notes != null ? String(body.notes) : undefined,
+    metadata: body.metadata as object | undefined,
+  });
+
+  const row = await getBrokerBuyer(gate.ctx.broker.id, id);
+  if (!row) return err("Buyer not found", 404);
+  return ok({ data: toSnakeRow(row as unknown as Record<string, unknown>) });
+}
+
+export async function DELETE(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const gate = await requireBrokerContext(req, "contacts");
+  if ("response" in gate) return gate.response;
+
+  const { id } = await ctx.params;
+  const okDel = await deleteBrokerBuyer(gate.ctx.broker.id, id);
+  if (!okDel) return err("Buyer not found", 404);
+  return ok({ data: { deleted: true } });
+}

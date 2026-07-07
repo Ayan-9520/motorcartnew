@@ -22,7 +22,12 @@ const AUTH_PATHS = new Set([
 function workspaceRoots(workspace: AppRole): string[] {
   switch (workspace) {
     case "super_admin":
-      return ["/dashboard/super-admin", "/dashboard/admin", "/dashboard/auction"];
+      return [
+        "/dashboard/super-admin",
+        "/dashboard/founder",
+        "/dashboard/admin",
+        "/dashboard/auction",
+      ];
     case "admin":
       return ["/dashboard/super-admin", "/dashboard/admin"];
     case "new_car_dealer":
@@ -52,7 +57,7 @@ function workspaceRoots(workspace: AppRole): string[] {
 function isPublicPostLoginPath(pathname: string): boolean {
   if (pathname === "/") return true;
   if (pathname.startsWith("/dashboard")) return false;
-  if (pathname.startsWith("/pending-approval") || pathname === "/profile") return true;
+  if (pathname.startsWith("/pending-approval") || pathname === "/profile" || pathname === "/notifications") return true;
   return (
     pathname.startsWith("/buy") ||
     pathname.startsWith("/sell") ||
@@ -63,6 +68,8 @@ function isPublicPostLoginPath(pathname: string): boolean {
     pathname.startsWith("/parts") ||
     pathname.startsWith("/services") ||
     pathname.startsWith("/community") ||
+    pathname.startsWith("/directory") ||
+    pathname.startsWith("/business") ||
     pathname.startsWith("/auctions")
   );
 }
@@ -78,6 +85,16 @@ export function isPathInUserWorkspace(
 
   if (!pathname.startsWith("/dashboard")) {
     return isPublicPostLoginPath(pathname);
+  }
+
+  /** Growth CRM is a cross-role add-on workspace (Phase J). */
+  if (pathname === "/dashboard/growth" || pathname.startsWith("/dashboard/growth/")) {
+    return true;
+  }
+
+  /** Billing MVP is cross-role (Phase N2.1). */
+  if (pathname === "/dashboard/billing" || pathname.startsWith("/dashboard/billing/")) {
+    return true;
   }
 
   const workspace = resolveUserWorkspaceRole(user);

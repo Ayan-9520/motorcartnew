@@ -3,9 +3,12 @@ import { motion } from "framer-motion";
 import { MessageCircle, Play, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { COMMUNITY_POSTS, SOCIAL_LINKS } from "@/features/home/data/homepage-data";
+import { useHomePage } from "@/features/home/context/HomePageContext";
 import { SectionHeader } from "./SectionHeader";
 
 export function CommunitySection() {
+  const { communityPosts } = useHomePage();
+  const posts = communityPosts.length ? communityPosts : COMMUNITY_POSTS;
   return (
     <section className="home-section-alt">
       <div className="container home-stack">
@@ -18,15 +21,15 @@ export function CommunitySection() {
         />
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="space-y-2.5 lg:col-span-2">
-            {COMMUNITY_POSTS.map((post, i) => (
+            {posts.map((post, i) => (
               <motion.div
-                key={post.title}
+                key={`${post.title}-${i}`}
                 initial={{ opacity: 0, x: -12 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
               >
-                <Link to="/community" className="mc-card-interactive flex items-start gap-3 p-3.5">
+                <Link to={"href" in post && post.href ? String(post.href) : "/community"} className="mc-card-interactive flex items-start gap-3 p-3.5">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <MessageCircle className="h-5 w-5" />
                   </span>

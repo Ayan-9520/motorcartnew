@@ -215,6 +215,9 @@ export function filterVehicles(
   if (filters.city) result = result.filter((v) => v.city.toLowerCase() === filters.city!.toLowerCase());
   if (filters.color) result = result.filter((v) => (v.color ?? "").toLowerCase() === filters.color!.toLowerCase());
   if (filters.bodyType) result = result.filter((v) => v.bodyType.toLowerCase() === filters.bodyType!.toLowerCase());
+  if (filters.saleMode) {
+    result = result.filter((v) => (v.saleMode ?? "dealer_offer") === filters.saleMode);
+  }
   if (filters.emiMax != null) {
     result = result.filter((v) => getVehicleEmi(v) <= filters.emiMax!);
   }

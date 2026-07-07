@@ -136,6 +136,24 @@ import { PartsCheckoutPage } from "@/features/parts/pages/PartsCheckoutPage";
 import { PartsOrdersListPage } from "@/features/parts/pages/PartsOrdersListPage";
 import { PartsOrderDetailPage } from "@/features/parts/pages/PartsOrderDetailPage";
 import { PartInvoicePage } from "@/features/parts/pages/PartInvoicePage";
+import { BrokerDashboardLayout } from "@/features/broker-crm/components/BrokerDashboardLayout";
+import { GrowthDashboardLayout } from "@/features/growth-crm/components/GrowthDashboardLayout";
+import {
+  BrokerOverviewPage,
+  GrowthOverviewPage,
+  GrowthWorkspacesPage,
+  GrowthAssetsPage,
+  GrowthDesignsPage,
+  GrowthDesignEditorPage,
+  GrowthWhatsappPage,
+  GrowthWhatsappArchitecturePage,
+  GrowthSocialSchedulerPage,
+  GrowthLeadsPage,
+  GrowthLeadDetailPage,
+  GrowthLeadPipelinePage,
+  GrowthLeadPipelineDetailPage,
+  GrowthLeadAnalyticsPage,
+} from "@/router/lazy-pages";
 import { PartsSupplierLayout } from "@/layouts/PartsSupplierLayout";
 import * as PartsSupplier from "@/features/parts-supplier";
 import { ServicesHubPage } from "@/features/service-booking/pages/ServicesHubPage";
@@ -156,6 +174,7 @@ import { CommunityPostPage } from "@/features/community/pages/CommunityPostPage"
 import { CommunityGroupsPage } from "@/features/community/pages/CommunityGroupsPage";
 import { CommunityGroupPage } from "@/features/community/pages/CommunityGroupPage";
 import { CommunityDealerPage } from "@/features/community/pages/CommunityDealerPage";
+import { CommunityBusinessPage } from "@/features/community/pages/CommunityBusinessPage";
 import { CommunityInfluencerPage } from "@/features/community/pages/CommunityInfluencerPage";
 import { CommunityMeRedirect } from "@/features/community/pages/CommunityMeRedirect";
 import { CommunityLayout } from "@/layouts/CommunityLayout";
@@ -182,6 +201,9 @@ import {
   FeaturedInventoryPage,
   AuctionApprovalsPage,
   TransactionsPage,
+  DirectoryMonetizationPage,
+  FounderDashboardPage,
+  LeadRouterPage,
   AIControlCenterPage,
   CommunityModerationPage,
 } from "@/router/lazy-pages";
@@ -189,6 +211,14 @@ import { DealersHubPage } from "@/features/dealer-network/pages/DealersHubPage";
 import { DealersBrowsePage } from "@/features/dealer-network/pages/DealersBrowsePage";
 import { DealerProfilePage } from "@/features/dealer-network/pages/DealerProfilePage";
 import { VehicleHubPage } from "@/features/ecosystem/pages/VehicleHubPage";
+import {
+  DirectoryHubPage,
+  DirectoryListPage,
+  DirectoryBusinessPage,
+} from "@/features/business-directory";
+import { BusinessHubPage } from "@/features/business-hub";
+import { UnifiedNotificationsPage } from "@/features/notifications-center";
+import { BillingDashboardPage } from "@/features/billing";
 
 const ph = (title: string, desc?: string) => (
   <PlaceholderPage title={title} description={desc} />
@@ -319,10 +349,15 @@ export const router = createBrowserRouter([
           { path: "post/:id", element: <CommunityPostPage /> },
           { path: "groups", element: <CommunityGroupsPage /> },
           { path: "groups/:slug", element: <CommunityGroupPage /> },
+          { path: "business/:slug", element: <CommunityBusinessPage /> },
           { path: "dealers/:slug", element: <CommunityDealerPage /> },
           { path: "u/:userId", element: <CommunityInfluencerPage /> },
         ],
       },
+      { path: "directory", element: <DirectoryHubPage /> },
+      { path: "directory/:category", element: <DirectoryListPage /> },
+      { path: "directory/:category/:slug", element: <DirectoryBusinessPage /> },
+      { path: "business/:slug", element: <BusinessHubPage /> },
       { path: "dealers", element: <DealersHubPage /> },
       { path: "dealers/browse", element: <DealersBrowsePage /> },
       { path: "dealers/:slug", element: <DealerProfilePage /> },
@@ -335,6 +370,14 @@ export const router = createBrowserRouter([
       { path: "privacy", element: <PrivacyPage /> },
       { path: "terms", element: <TermsPage /> },
       { path: "faqs", element: <FaqsPage /> },
+      {
+        path: "notifications",
+        element: (
+          <ProtectedRoute>
+            <UnifiedNotificationsPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "profile",
         element: (
@@ -429,6 +472,48 @@ export const router = createBrowserRouter([
       { path: "dashboard/new-car/storefront", element: <NewCarStorefrontPage /> },
       { path: "dashboard/new-car/settings", element: <NewCarSettingsPage /> },
     ],
+  },
+  {
+    element: (
+      <ProtectedRoute roles={["broker", "admin", "super_admin"]}>
+        <BrokerDashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ path: "dashboard/broker", element: <BrokerOverviewPage /> }],
+  },
+  {
+    element: (
+      <ProtectedRoute>
+        <GrowthDashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      { path: "dashboard/growth", element: <GrowthOverviewPage /> },
+      { path: "dashboard/growth/workspaces", element: <GrowthWorkspacesPage /> },
+      { path: "dashboard/growth/assets", element: <GrowthAssetsPage /> },
+      { path: "dashboard/growth/designs", element: <GrowthDesignsPage /> },
+      { path: "dashboard/growth/designs/new", element: <GrowthDesignEditorPage /> },
+      { path: "dashboard/growth/designs/:id", element: <GrowthDesignEditorPage /> },
+      { path: "dashboard/growth/whatsapp", element: <GrowthWhatsappPage /> },
+      {
+        path: "dashboard/growth/whatsapp/architecture",
+        element: <GrowthWhatsappArchitecturePage />,
+      },
+      { path: "dashboard/growth/social", element: <GrowthSocialSchedulerPage /> },
+      { path: "dashboard/growth/leads/pipeline", element: <GrowthLeadPipelinePage /> },
+      { path: "dashboard/growth/leads/pipeline/:eventId", element: <GrowthLeadPipelineDetailPage /> },
+      { path: "dashboard/growth/leads/analytics", element: <GrowthLeadAnalyticsPage /> },
+      { path: "dashboard/growth/leads", element: <GrowthLeadsPage /> },
+      { path: "dashboard/growth/leads/:formId", element: <GrowthLeadDetailPage /> },
+    ],
+  },
+  {
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ path: "dashboard/billing", element: <BillingDashboardPage /> }],
   },
   {
     element: (
@@ -835,6 +920,13 @@ export const router = createBrowserRouter([
       { path: "dashboard/super-admin/ai", element: <SuperAdminAIPage /> },
       { path: "dashboard/super-admin/fraud", element: <FraudDetectionPage /> },
       { path: "dashboard/super-admin/tickets", element: <SupportTicketsPage /> },
+      {
+        path: "dashboard/super-admin/directory-monetization",
+        element: <DirectoryMonetizationPage />,
+      },
+      { path: "dashboard/super-admin/founder", element: <FounderDashboardPage /> },
+      { path: "dashboard/super-admin/lead-router", element: <LeadRouterPage /> },
+      { path: "dashboard/founder", element: <FounderDashboardPage /> },
     ],
   },
   {
