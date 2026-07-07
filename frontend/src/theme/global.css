@@ -5250,16 +5250,16 @@
 
   .hub-hero-bg {
     @apply absolute inset-0 bg-cover bg-center;
-    filter: brightness(0.38) saturate(1.05);
+    filter: brightness(0.42) saturate(1.05);
   }
 
   .hub-hero-bg::after {
     content: "";
-    @apply absolute inset-0 bg-gradient-to-r from-background/95 via-background/75 to-background/45;
+    @apply absolute inset-0 bg-gradient-to-r from-background/95 via-background/75 to-background/40;
   }
 
   .hub-hero-inner {
-    @apply relative z-[1] max-w-4xl pb-10 pt-8 md:pb-14 md:pt-12;
+    @apply relative z-[1] max-w-3xl pb-10 pt-2 md:pb-12;
   }
 
 
@@ -5280,7 +5280,7 @@
   }
 
   .hub-hero-title {
-    @apply text-4xl font-bold tracking-tight md:text-5xl;
+    @apply text-3xl font-bold tracking-tight md:text-4xl;
   }
 
   .hub-hero-tagline {
@@ -5324,7 +5324,7 @@
   }
 
   .hub-filter-rail {
-    @apply -mx-1 flex gap-2.5 overflow-x-auto pb-2 px-1;
+    @apply flex gap-2 overflow-x-auto pb-1;
     scrollbar-width: none;
   }
 
@@ -5333,11 +5333,11 @@
   }
 
   .hub-filter-chip {
-    @apply shrink-0 rounded-full border border-border/70 bg-card/85 px-4 py-2.5 text-sm font-medium text-foreground shadow-sm backdrop-blur transition-all hover:border-primary/35 hover:bg-primary/5;
+    @apply shrink-0 rounded-full border border-border/80 bg-card px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-primary/35;
   }
 
   .hub-filter-chip-active {
-    @apply border-primary/55 bg-primary/10 text-primary;
+    @apply border-primary/50 bg-primary/10 text-primary;
   }
 
   .hub-banner-strip {
@@ -5345,7 +5345,7 @@
   }
 
   .hub-banner-card {
-    @apply flex min-h-[8.25rem] flex-col justify-end rounded-2xl border p-6 transition-all hover:shadow-[var(--shadow-card-hover)];
+    @apply flex min-h-[7.5rem] flex-col justify-end rounded-2xl border p-5 transition-all hover:shadow-[var(--shadow-card-hover)];
   }
 
   .hub-banner-card-primary {

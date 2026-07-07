@@ -1,8 +1,4 @@
 import { api, apiErrorMessage } from "@/lib/api/axios";
-import { withApiTimeout } from "@/lib/api/with-timeout";
-
-const READ_TIMEOUT_MS = 5000;
-const WRITE_TIMEOUT_MS = 12000;
 
 type FilterOp = { column: string; op: string; value: unknown };
 
@@ -157,37 +153,24 @@ export class ApiQueryBuilder<T = Record<string, unknown>> {
       let result: { data: any; error: null; count?: number | null };
 
       if (this.action === "select") {
-        const { data } = await withApiTimeout(
-          api.get<{ data: unknown; count?: number | null }>("/api/db/query", {
-            params: this.buildParams(),
-            timeout: READ_TIMEOUT_MS,
-          }),
-          READ_TIMEOUT_MS
-        );
+        const { data } = await api.get<{ data: unknown; count?: number | null }>("/api/db/query", {
+          params: this.buildParams(),
+        });
         result = { data: data.data, error: null, count: data.count ?? null };
       } else if (this.action === "insert" || this.action === "upsert") {
-        const { data } = await withApiTimeout(
-          api.post<{ data: unknown }>("/api/db/query", {
-            ...this.buildParams(),
-            body: this.body,
-          }, { timeout: WRITE_TIMEOUT_MS }),
-          WRITE_TIMEOUT_MS
-        );
+        const { data } = await api.post<{ data: unknown }>("/api/db/query", {
+          ...this.buildParams(),
+          body: this.body,
+        });
         result = { data: data.data, error: null };
       } else if (this.action === "update") {
-        const { data } = await withApiTimeout(
-          api.patch<{ data: unknown }>("/api/db/query", {
-            ...this.buildParams(),
-            body: this.body,
-          }, { timeout: WRITE_TIMEOUT_MS }),
-          WRITE_TIMEOUT_MS
-        );
+        const { data } = await api.patch<{ data: unknown }>("/api/db/query", {
+          ...this.buildParams(),
+          body: this.body,
+        });
         result = { data: data.data, error: null };
       } else {
-        await withApiTimeout(
-          api.delete("/api/db/query", { params: this.buildParams(), timeout: WRITE_TIMEOUT_MS }),
-          WRITE_TIMEOUT_MS
-        );
+        await api.delete("/api/db/query", { params: this.buildParams() });
         result = { data: null, error: null };
       }
 
@@ -210,10 +193,7 @@ export function fromTable<T = Record<string, unknown>>(table: string) {
 
 export async function rpc<T = unknown>(fn: string, args?: Record<string, unknown>) {
   try {
-    const { data } = await withApiTimeout(
-      api.post<{ data: T }>(`/api/db/rpc/${fn}`, args ?? {}, { timeout: WRITE_TIMEOUT_MS }),
-      WRITE_TIMEOUT_MS
-    );
+    const { data } = await api.post<{ data: T }>(`/api/db/rpc/${fn}`, args ?? {});
     return { data: data.data, error: null };
   } catch (err) {
     return { data: null, error: { message: apiErrorMessage(err) } };

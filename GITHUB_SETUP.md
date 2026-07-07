@@ -16,6 +16,27 @@ Naya terminal kholo, phir check karo:
 git --version
 ```
 
+**Agar `git is not recognized` aaye:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/fix-git-path.ps1
+```
+
+Phir **terminal band karke naya kholo** (ya Cursor restart).
+
+**Agar `dubious ownership` aaye** (folder kisi aur user se bana ho):
+
+```powershell
+git config --global --add safe.directory E:/Projects/motorcartcursor
+```
+
+Ya wrapper use karo (global config ki zaroorat nahi):
+
+```powershell
+.\scripts\git.ps1 status
+.\scripts\git.ps1 push -u origin main
+```
+
 ## 2. Repo root par jao
 
 ```powershell
@@ -54,7 +75,7 @@ powershell -ExecutionPolicy Bypass -File scripts/setup-git-github.ps1 -RemoteUrl
 **Current remote (already configured):**
 
 ```
-https://github.com/Ayan-9520/motorcart.in.git
+https://github.com/Ayan-9520/motorcartnew.git
 ```
 
 ## 4. GitHub login (push ke liye zaroori)
@@ -148,7 +169,7 @@ git push -u origin main
 | Error | Fix |
 |-------|-----|
 | `dubious ownership` | `git config --local safe.directory E:/Projects/motorcartcursor` |
-| `git not recognized` | Git install karo, terminal restart |
+| `git not recognized` | `scripts/fix-git-path.ps1` chalao, phir **naya terminal** kholo |
 | `Authentication failed` | PAT ya `gh auth login` |
 | `rejected (fetch first)` | `git pull --rebase origin main` phir push |
 | `npm.ps1 cannot be loaded` | PowerShell: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
