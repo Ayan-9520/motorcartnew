@@ -1,5 +1,29 @@
 # GitHub Connect Guide - Motorcart (Hindi/English)
 
+## Daily workflow (normal git commands)
+
+Pehli baar sirf ek script chalao:
+
+```powershell
+cd E:\Projects\motorcartcursor
+powershell -ExecutionPolicy Bypass -File scripts/git-setup-once.ps1
+```
+
+Phir **naya terminal** kholo (Ctrl+Shift+` ya Cursor restart).
+
+Uske baad hamesha yeh:
+
+```powershell
+cd E:\Projects\motorcartcursor
+git add .
+git commit -m "code change"
+git push origin main
+```
+
+Repo: **https://github.com/Ayan-9520/motorcartnew** | Branch: **main**
+
+---
+
 ## Problem: `git not recognized`
 Git install hai lekin terminal PATH update nahi kiya. **3 easy tarike:**
 
