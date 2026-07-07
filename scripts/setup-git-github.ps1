@@ -55,7 +55,17 @@ if (-not (Test-Path ".git")) {
 try {
   Invoke-Git config --local safe.directory $safePath
 } catch {
-  Write-Host "Note: using -c safe.directory for this session (ownership fix)." -ForegroundColor Yellow
+  Write-Host "Note: using -c safe.directory for this session." -ForegroundColor Yellow
+}
+
+$name = & $git -c "safe.directory=$safePath" config --local user.name 2>$null
+$email = & $git -c "safe.directory=$safePath" config --local user.email 2>$null
+if (-not $name -or -not $email) {
+  Write-Host ""
+  Write-Host "Git identity not set for this repo." -ForegroundColor Yellow
+  Write-Host '  git config --local user.name "Your Name"' -ForegroundColor Cyan
+  Write-Host '  git config --local user.email "you@example.com"' -ForegroundColor Cyan
+  Write-Host ""
 }
 
 if ($RemoteUrl) {

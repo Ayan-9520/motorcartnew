@@ -22,6 +22,17 @@ git --version
 cd E:\Projects\motorcartcursor
 ```
 
+## 2b. Git identity (pehli baar commit ke liye)
+
+Sirf is repo ke liye (global config change nahi):
+
+```powershell
+git config --local user.name "Your Name"
+git config --local user.email "your@email.com"
+```
+
+GitHub noreply email: `YOUR_USERNAME@users.noreply.github.com`
+
 ## 3. Automated setup (recommended)
 
 ```powershell
