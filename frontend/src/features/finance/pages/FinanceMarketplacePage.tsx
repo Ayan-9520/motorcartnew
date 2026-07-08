@@ -55,7 +55,7 @@ export function FinanceMarketplacePage() {
 
       <div className="finance-offers-banner mb-6 mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
         <Building2 className="h-5 w-5 shrink-0 text-primary" />
-        <p className="text-sm text-muted-foreground">
+        <p className="min-w-0 flex-1 text-sm text-muted-foreground">
           {loanType ? (
             <>
               Offers for <strong className="text-foreground">{financeCategoryLabel(loanType)}</strong>
@@ -69,7 +69,7 @@ export function FinanceMarketplacePage() {
             </>
           )}
         </p>
-        <Button size="sm" className="ml-auto rounded-lg shadow-[var(--shadow-primary)]" asChild>
+        <Button size="sm" className="w-full rounded-lg shadow-[var(--shadow-primary)] sm:ml-auto sm:w-auto" asChild>
           <Link to={applyHref}>
             Apply <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Link>

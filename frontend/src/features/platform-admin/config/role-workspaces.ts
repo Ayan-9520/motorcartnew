@@ -16,6 +16,7 @@ const BUSINESS_ROLES: AppRole[] = [
   "new_car_dealer",
   "bike_dealer",
   "truck_dealer",
+  "broker",
   "dsa_agent",
   "parts_seller",
   "service_center",

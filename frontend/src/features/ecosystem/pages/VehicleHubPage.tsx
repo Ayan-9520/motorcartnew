@@ -34,7 +34,7 @@ export function VehicleHubPage() {
   }
 
   return (
-    <div className="vehicle-hub-page min-h-screen bg-background">
+    <div className="vehicle-hub-page min-h-screen min-w-0 overflow-x-hidden bg-background">
       <div className="container pt-4 md:pt-6">
         <HubBreadcrumbs items={[{ label: hub.label }]} />
       </div>

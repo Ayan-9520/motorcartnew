@@ -71,6 +71,11 @@ function resolveSignupRole(body: z.infer<typeof schema>): AppRole {
   const category = (body.business as { business_category?: string } | undefined)
     ?.business_category;
   if (category === "vehicle_broker") return "broker";
+  if (category === "new_car_showroom") return "new_car_dealer";
+  if (category === "preowned_lot" && body.role === "dealer") return "used_car_dealer";
+  if (category === "parts_wholesale") return "parts_seller";
+  if (category === "service_garage") return "service_center";
+  if (category === "dsa_finance") return "dsa_agent";
   return mapRole(body.role);
 }
 

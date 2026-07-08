@@ -20,7 +20,7 @@ export function FinanceSubpageShell({
   className,
 }: FinanceSubpageShellProps) {
   return (
-    <div className={cn("finance-subpage min-h-screen pb-14", className)}>
+    <div className={cn("finance-subpage min-h-screen min-w-0 overflow-x-hidden pb-14", className)}>
       <div className="finance-subpage-hero border-b border-border/80">
         <div className="container py-6 md:py-8">
           <nav className="mb-4 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
@@ -38,7 +38,7 @@ export function FinanceSubpageShell({
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">{subtitle}</p>
         </div>
       </div>
-      <div className="container pt-6 md:pt-8">{children}</div>
+      <div className="container min-w-0 pt-6 md:pt-8">{children}</div>
     </div>
   );
 }

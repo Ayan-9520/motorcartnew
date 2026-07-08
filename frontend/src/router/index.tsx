@@ -3,6 +3,7 @@ import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/guards/ProtectedRoute";
+import { FinanceDashboardAlias } from "@/components/routing/FinanceDashboardAlias";
 import { HomePage } from "@/pages/HomePage";
 import { LoginPage } from "@/pages/LoginPage";
 import { SignupPage } from "@/pages/SignupPage";
@@ -1162,8 +1163,8 @@ export const router = createBrowserRouter([
   {
     path: "finance/dashboard",
     element: (
-      <ProtectedRoute roles={["dsa_agent", "admin"]}>
-        <Navigate to="/dashboard/dsa" replace />
+      <ProtectedRoute>
+        <FinanceDashboardAlias />
       </ProtectedRoute>
     ),
   },

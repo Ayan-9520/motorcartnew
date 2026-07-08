@@ -33,7 +33,7 @@ export function FloatingButtons() {
       <Button
         size="icon"
         variant="default"
-        className="ai-fab fixed bottom-6 right-4 z-50 h-14 w-14 rounded-full bg-primary shadow-lg hover:bg-primary/90 md:bottom-8"
+        className="ai-fab fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] right-4 z-50 h-14 w-14 rounded-full bg-primary shadow-lg hover:bg-primary/90 md:bottom-8"
         onClick={() => setAiOpen(!aiOpen)}
         aria-label="AI Assistant"
       >

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchLenders } from "../services/finance.service";
+import { MOCK_LENDERS } from "../data/lenders";
 import { buildLoanOffers, getAiRecommendations } from "../lib/ai-engine";
 import type { EligibilityInput, Lender, LoanOffer, AiRecommendation } from "../types";
 
 export function useFinanceMarketplace() {
-  const [lenders, setLenders] = useState<Lender[]>([]);
+  const [lenders, setLenders] = useState<Lender[]>(MOCK_LENDERS);
   const [loading, setLoading] = useState(true);
   const [loanAmount, setLoanAmount] = useState(1200000);
   const [tenureMonths, setTenureMonths] = useState(60);
@@ -19,14 +20,28 @@ export function useFinanceMarketplace() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const list = await fetchLenders();
-    setLenders(list);
-    setLoading(false);
+    try {
+      const list = await fetchLenders();
+      setLenders(list);
+    } catch {
+      setLenders(MOCK_LENDERS);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!loading) return;
+    const t = window.setTimeout(() => {
+      setLenders((prev) => (prev.length ? prev : MOCK_LENDERS));
+      setLoading(false);
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, [loading]);
 
   const input: EligibilityInput = useMemo(
     () => ({ ...eligibility, loanAmount, tenureMonths }),

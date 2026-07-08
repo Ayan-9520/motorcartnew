@@ -51,14 +51,24 @@ function mapApplication(
 }
 
 export async function fetchLenders(): Promise<Lender[]> {
-  const { data, error } = await supabase
-    .from("banks")
-    .select("*")
-    .eq("is_active", true)
-    .order("ranking_score", { ascending: false });
+  try {
+    const result = await Promise.race([
+      supabase
+        .from("banks")
+        .select("*")
+        .eq("is_active", true)
+        .order("ranking_score", { ascending: false }),
+      new Promise<{ data: null; error: { message: string } }>((resolve) =>
+        window.setTimeout(() => resolve({ data: null, error: { message: "timeout" } }), 2500)
+      ),
+    ]);
 
-  if (!error && data?.length) {
-    return mergeLenders((data as (DbBank & { ranking_score?: number })[]).map(mapDbBank));
+    const { data, error } = result;
+    if (!error && data?.length) {
+      return mergeLenders((data as (DbBank & { ranking_score?: number })[]).map(mapDbBank));
+    }
+  } catch {
+    /* fall through to mock */
   }
   return MOCK_LENDERS;
 }

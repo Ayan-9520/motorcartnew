@@ -5,7 +5,7 @@ import {
   isAccountPendingApproval,
   PENDING_APPROVAL_PATH,
 } from "@/auth/ecosystem-roles";
-import { resolveUserWorkspaceRole, isNewCarDealerWorkspace } from "@/auth/workspace-role";
+import { resolveUserWorkspaceRole, isNewCarDealerWorkspace, isNewCarSharedDealerPath } from "@/auth/workspace-role";
 import { isDealerRole } from "@/permissions/role-matching";
 
 const AUTH_PATHS = new Set([
@@ -32,6 +32,8 @@ function workspaceRoots(workspace: AppRole): string[] {
       return ["/dashboard/super-admin", "/dashboard/admin"];
     case "new_car_dealer":
       return ["/dashboard/new-car"];
+    case "broker":
+      return ["/dashboard/broker"];
     case "customer":
       return ["/dashboard/customer"];
     case "dsa_agent":
@@ -99,7 +101,15 @@ export function isPathInUserWorkspace(
 
   const workspace = resolveUserWorkspaceRole(user);
   const roots = workspaceRoots(workspace);
-  return roots.some((root) => pathname === root || pathname.startsWith(`${root}/`));
+  if (roots.some((root) => pathname === root || pathname.startsWith(`${root}/`))) {
+    return true;
+  }
+
+  if (workspace === "new_car_dealer" && isNewCarSharedDealerPath(pathname)) {
+    return true;
+  }
+
+  return false;
 }
 
 /** Map legacy / dealer URLs to the user's canonical workspace (e.g. new-car dealer off /dashboard/dealer). */

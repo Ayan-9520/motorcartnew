@@ -45,7 +45,7 @@ export function FeaturedVehicles() {
           href="/buy"
           linkLabel="View all vehicles"
         />
-        <div className="home-featured-carousel -mx-1 px-1">
+        <div className="home-featured-carousel px-1">
           {isLoading && list.length === 0 ? (
             <p className="text-sm text-muted-foreground">Loading featured vehicles…</p>
           ) : null}

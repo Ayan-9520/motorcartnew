@@ -17,7 +17,7 @@ export function MobileBottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 pb-safe backdrop-blur-md md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
       <div className="flex items-center justify-around px-2 py-2">
         {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink

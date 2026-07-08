@@ -33,7 +33,7 @@ const dsaLinks = [
 const lenderLinks = [
   { to: "/dashboard/finance", label: "Lender overview", icon: LayoutDashboard },
   { to: "/dashboard/finance/applications", label: "Applications", icon: FileText },
-  { to: "/dashboard/finance/team", label: "Team", icon: Users },
+  { to: "/finance/offers", label: "Loan marketplace", icon: Building2 },
 ];
 
 interface FinanceSidebarProps {
