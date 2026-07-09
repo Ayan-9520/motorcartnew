@@ -73,11 +73,29 @@ export function isBlockedImageUrl(url: string): boolean {
   return BLOCKED_IMAGE_FRAGMENTS.some((f) => u.includes(f));
 }
 
+/**
+ * Real user/dealer uploaded media served by our own backend/nginx
+ * (`/uploads/...`) or bundled local assets (`/media/...`), plus in-browser
+ * previews (`blob:`/`data:`). These must be honored on listings instead of
+ * being replaced by stock Pexels galleries.
+ */
+export function isUserMediaUrl(url: string): boolean {
+  if (typeof url !== "string") return false;
+  const u = url.trim();
+  return (
+    u.startsWith("/uploads/") ||
+    u.startsWith("/media/") ||
+    u.includes("/uploads/") ||
+    u.startsWith("blob:") ||
+    u.startsWith("data:image/")
+  );
+}
+
 export function cleanImageUrls(urls: readonly string[]): string[] {
   return urls.filter(
     (u) =>
       typeof u === "string" &&
-      u.startsWith("https://images.pexels.com/") &&
+      (u.startsWith("https://images.pexels.com/") || isUserMediaUrl(u)) &&
       !isBlockedImageUrl(u)
   );
 }
@@ -294,9 +312,9 @@ export function localAssetPath(
 export function isListingSafeUrl(url?: string | null): url is string {
   if (!url || typeof url !== "string") return false;
   const t = url.trim();
-  if (t.length < 20) return false;
+  if (t.length < 5) return false;
   if (isBlockedImageUrl(t)) return false;
-  return t.startsWith("https://images.pexels.com/");
+  return t.startsWith("https://images.pexels.com/") || isUserMediaUrl(t);
 }
 
 export function getModelImages(

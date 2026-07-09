@@ -205,9 +205,9 @@ import {
   DirectoryMonetizationPage,
   FounderDashboardPage,
   LeadRouterPage,
-  AIControlCenterPage,
   CommunityModerationPage,
-} from "@/router/lazy-pages";
+} from "@/router/admin-pages";
+import { AIControlCenterPage } from "@/router/lazy-pages";
 import { DealersHubPage } from "@/features/dealer-network/pages/DealersHubPage";
 import { DealersBrowsePage } from "@/features/dealer-network/pages/DealersBrowsePage";
 import { DealerProfilePage } from "@/features/dealer-network/pages/DealerProfilePage";

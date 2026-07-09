@@ -1,4 +1,5 @@
 import { api } from "@/lib/api/axios";
+import { withApiTimeout } from "@/lib/api/with-timeout";
 
 export type FounderDashboardDto = {
   totals: {
@@ -24,7 +25,10 @@ export type FounderDashboardDto = {
 
 export async function fetchFounderOverviewApi(): Promise<FounderDashboardDto | null> {
   try {
-    const { data } = await api.get<{ data: FounderDashboardDto }>("/api/founder/overview");
+    const { data } = await withApiTimeout(
+      api.get<{ data: FounderDashboardDto }>("/api/founder/overview", { timeout: 5000 }),
+      5000
+    );
     return data.data ?? null;
   } catch {
     return null;

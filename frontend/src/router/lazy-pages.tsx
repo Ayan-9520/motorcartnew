@@ -1,11 +1,12 @@
-import { lazy, type ComponentType } from "react";
+import { lazy } from "react";
+import { lazyNamedWithRetry } from "@/lib/lazy-retry";
 
 /** Code-split feature areas — keeps initial bundle lean for public/marketing paths. */
 function lazyNamed<T extends Record<string, unknown>, K extends keyof T>(
   factory: () => Promise<T>,
   name: K
 ) {
-  return lazy(() => factory().then((m) => ({ default: m[name] as ComponentType<object> })));
+  return lazyNamedWithRetry(factory, name);
 }
 
 // Dealer OS

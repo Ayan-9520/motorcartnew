@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   fetchBusinessHub,
-  isBusinessHubEnabled,
 } from "@/features/business-hub/services/business-hub-api.service";
 import { businessProfilePath } from "@/features/business-directory/services/directory-api.service";
 import { getApiBaseUrl } from "@/lib/api/base-url";
@@ -17,7 +16,7 @@ export function BusinessHubPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!slug || !isBusinessHubEnabled()) {
+    if (!slug) {
       setLoading(false);
       return;
     }
@@ -30,16 +29,17 @@ export function BusinessHubPage() {
     })();
   }, [slug]);
 
-  if (!isBusinessHubEnabled()) {
+  if (loading) return <p className="container py-8 text-muted-foreground">Loading…</p>;
+  if (!hub) {
     return (
-      <p className="container py-16 text-center text-muted-foreground">
-        Business hub is disabled. Enable VITE_FEATURE_M2_UNIFIED_BUSINESS.
-      </p>
+      <div className="container mx-auto max-w-lg px-4 py-16 text-center space-y-3">
+        <h1 className="text-xl font-semibold">Business hub</h1>
+        <p className="text-sm text-muted-foreground">
+          {slug ? "Business profile not found or hub API is still syncing." : "Select a business slug in the URL."}
+        </p>
+      </div>
     );
   }
-
-  if (loading) return <p className="container py-8 text-muted-foreground">Loading…</p>;
-  if (!hub) return <p className="container py-8">Business not found.</p>;
 
   const profile = (hub.community_business_profile ?? {}) as Record<string, unknown>;
   const directory = (hub.directory_listing ?? {}) as Record<string, unknown>;

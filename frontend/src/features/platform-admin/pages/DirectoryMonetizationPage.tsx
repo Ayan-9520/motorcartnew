@@ -6,30 +6,15 @@ import {
   fetchPremiumListings,
   fetchSponsoredBusinesses,
 } from "@/features/business-directory/services/directory-api.service";
-import { featureFlags } from "@/config/feature-flags";
 import { SuperAdminShell } from "../components/SuperAdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function DirectoryMonetizationPage() {
-  const enabled =
-    featureFlags.businessDirectoryV2 && featureFlags.directoryMonetizationK1;
-
   const configQ = useQuery({
     queryKey: ["k1-config"],
     queryFn: fetchMonetizationConfig,
-    enabled,
+    retry: 1,
   });
-
-  if (!enabled) {
-    return (
-      <SuperAdminShell
-        title="Directory monetization (K1)"
-        description="Enable directory + K1 feature flags on API and frontend."
-      >
-        <p className="text-sm text-muted-foreground">K1 monetization layer is disabled.</p>
-      </SuperAdminShell>
-    );
-  }
 
   return (
     <SuperAdminShell

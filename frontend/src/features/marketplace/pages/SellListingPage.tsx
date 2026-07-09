@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useVehicleHubStore } from "@/store/vehicleHubStore";
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   Upload,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
 import { createVehicle, type VehicleFormData } from "@/services/vehicle.service";
+import { uploadMultiple, validateImageFile } from "@/services/storage.service";
 import { setPageMeta } from "@/utils/seo";
 import {
   hubCategoryLabel,
@@ -49,6 +51,9 @@ export function SellListingPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const MAX_PHOTOS = 8;
   const [form, setForm] = useState({
     brand: "",
     model: "",
@@ -87,7 +92,7 @@ export function SellListingPage() {
   const title = sellPageTitle(hub);
   const hubLabel = hubCategoryLabel(hub);
 
-  const buildPayload = (): VehicleFormData => ({
+  const buildPayload = (images: string[]): VehicleFormData => ({
     title: `${form.year} ${form.brand} ${form.model}`.trim(),
     brand: form.brand,
     model: form.model,
@@ -103,9 +108,39 @@ export function SellListingPage() {
     city: form.city,
     state: form.state,
     condition: "used",
-    images: [],
+    images,
     description: `Owner listing via Motorcart Sell — ${hubLabel}. Contact: ${form.phone}`,
   });
+
+  const handlePhotoSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (e.target) e.target.value = "";
+    if (!files.length) return;
+
+    const accepted: { file: File; preview: string }[] = [];
+    for (const file of files) {
+      if (photos.length + accepted.length >= MAX_PHOTOS) {
+        toast.error(`You can add up to ${MAX_PHOTOS} photos`);
+        break;
+      }
+      try {
+        validateImageFile(file);
+        accepted.push({ file, preview: URL.createObjectURL(file) });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Invalid image");
+      }
+    }
+    if (accepted.length) setPhotos((prev) => [...prev, ...accepted]);
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => {
+      const next = [...prev];
+      const [removed] = next.splice(index, 1);
+      if (removed) URL.revokeObjectURL(removed.preview);
+      return next;
+    });
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -124,16 +159,39 @@ export function SellListingPage() {
     }
 
     setSubmitting(true);
-    const { error } = await createVehicle(buildPayload(), user.id);
-    setSubmitting(false);
+    try {
+      let imageUrls: string[] = [];
+      if (photos.length) {
+        const toastId = toast.loading(`Uploading ${photos.length} photo(s)…`);
+        try {
+          const uploaded = await uploadMultiple(
+            "vehicle-images",
+            photos.map((p) => p.file),
+            `sell/${user.id}`
+          );
+          imageUrls = uploaded.map((u) => u.publicUrl).filter(Boolean);
+          toast.dismiss(toastId);
+        } catch (err) {
+          toast.dismiss(toastId);
+          toast.error(err instanceof Error ? err.message : "Photo upload failed");
+          setSubmitting(false);
+          return;
+        }
+      }
 
-    if (error) {
-      toast.error(error.message ?? "Could not submit listing");
-      return;
+      const { error } = await createVehicle(buildPayload(imageUrls), user.id);
+      if (error) {
+        toast.error(error.message ?? "Could not submit listing");
+        return;
+      }
+
+      photos.forEach((p) => URL.revokeObjectURL(p.preview));
+      setPhotos([]);
+      setSubmitted(true);
+      toast.success("Listing submitted successfully!");
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitted(true);
-    toast.success("Listing submitted successfully!");
   };
 
   if (submitted) {
@@ -267,11 +325,64 @@ export function SellListingPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                  <p className="text-sm font-medium">Photos (coming soon)</p>
-                  <p className="text-xs text-muted-foreground">You can submit with listing details for now</p>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Photos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={handlePhotoSelect}
+                  />
+
+                  {photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      {photos.map((p, i) => (
+                        <div
+                          key={p.preview}
+                          className="group relative aspect-[4/3] overflow-hidden rounded-lg border bg-muted"
+                        >
+                          <img src={p.preview} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+                          {i === 0 && (
+                            <span className="absolute left-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                              Cover
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(i)}
+                            className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100"
+                            aria-label="Remove photo"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {photos.length < MAX_PHOTOS && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex w-full flex-col items-center gap-2 rounded-lg border border-dashed py-8 text-center transition hover:border-primary/50 hover:bg-primary/5"
+                    >
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        {photos.length ? "Add more photos" : "Add photos"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        JPG, PNG or WebP · up to {MAX_PHOTOS} · max 10MB each
+                      </span>
+                    </button>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    First photo is used as the cover. Real photos get more buyer responses.
+                  </p>
                 </CardContent>
               </Card>
 

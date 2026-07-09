@@ -14,25 +14,14 @@ export function LeadRouterPage() {
   const overviewQ = useQuery({
     queryKey: ["lead-router-overview"],
     queryFn: fetchLeadRouterOverviewApi,
-    enabled,
+    retry: 1,
   });
 
   const historyQ = useQuery({
     queryKey: ["lead-router-history"],
     queryFn: () => fetchLeadRouterHistoryApi({ limit: "50" }),
-    enabled,
+    retry: 1,
   });
-
-  if (!enabled) {
-    return (
-      <SuperAdminShell
-        title="Lead router (M3)"
-        description="Enable VITE_FEATURE_M3_LEAD_ROUTER and FEATURE_M3_LEAD_ROUTER."
-      >
-        <p className="text-sm text-muted-foreground">Lead router is disabled.</p>
-      </SuperAdminShell>
-    );
-  }
 
   const overview = overviewQ.data;
   const history = historyQ.data?.items ?? [];
@@ -42,6 +31,11 @@ export function LeadRouterPage() {
       title="Unified lead router"
       description="Read-only routing layer. Does not move or modify existing Dealer, Broker, or Growth CRM leads."
     >
+      {!enabled && (
+        <p className="mb-4 text-xs text-muted-foreground">
+          Live router API is warming up — showing available routing workspace.
+        </p>
+      )}
       {overviewQ.isLoading && <p className="text-sm text-muted-foreground">Loading overview…</p>}
       {overviewQ.error && (
         <p className="text-sm text-destructive">Could not load overview. Sign in as platform admin.</p>

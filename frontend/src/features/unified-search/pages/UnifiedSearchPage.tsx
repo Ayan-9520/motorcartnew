@@ -9,7 +9,6 @@ import {
   fetchFederatedSearch,
   fetchSearchCategories,
   fetchSearchSuggestions,
-  isUnifiedSearchEnabled,
   loadRecentSearches,
   saveRecentSearch,
   type UnifiedSearchResultDto,
@@ -35,7 +34,6 @@ export function UnifiedSearchPage() {
   }, [q]);
 
   useEffect(() => {
-    if (!isUnifiedSearchEnabled()) return;
     void fetchSearchCategories().then((d) => {
       if (d?.categories) setCategories(d.categories);
     });
@@ -44,7 +42,6 @@ export function UnifiedSearchPage() {
 
   useEffect(() => {
     setInput(q);
-    if (!isUnifiedSearchEnabled()) return;
     if (!q.trim() && !category) {
       setResults([]);
       setTotal(0);
@@ -64,7 +61,7 @@ export function UnifiedSearchPage() {
   }, [q, category]);
 
   useEffect(() => {
-    if (!isUnifiedSearchEnabled() || input.trim().length < 2) {
+    if (input.trim().length < 2) {
       setSuggestions([]);
       return;
     }
@@ -93,14 +90,6 @@ export function UnifiedSearchPage() {
     else next.delete("category");
     setParams(next);
   };
-
-  if (!isUnifiedSearchEnabled()) {
-    return (
-      <div className="container py-16 text-center text-muted-foreground">
-        Unified search is disabled. Enable VITE_FEATURE_M5_UNIFIED_SEARCH.
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">

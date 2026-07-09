@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { featureFlags } from "@/config/feature-flags";
 import { GrowthEmptyState } from "@/features/growth-crm/components/GrowthEmptyState";
 import {
   fetchWhatsappArchitecture,
@@ -14,32 +13,24 @@ import { useGrowthWorkspaceStore } from "@/features/growth-crm/store/growthWorks
 
 export function GrowthWhatsappArchitecturePage() {
   const workspaceId = useGrowthWorkspaceStore((s) => s.workspaceId);
-  const enabled = featureFlags.growthWhatsappProviders;
 
   const configQ = useQuery({
     queryKey: ["wa-provider-config"],
     queryFn: () => fetchWhatsappProviderConfig(),
-    enabled,
+    retry: 1,
   });
   const archQ = useQuery({
     queryKey: ["wa-arch", workspaceId],
     queryFn: () => fetchWhatsappArchitecture(),
-    enabled: enabled && !!workspaceId,
+    enabled: !!workspaceId,
+    retry: 1,
   });
   const queueQ = useQuery({
     queryKey: ["wa-queue", workspaceId],
     queryFn: () => fetchWhatsappQueue(),
-    enabled: enabled && !!workspaceId,
+    enabled: !!workspaceId,
+    retry: 1,
   });
-
-  if (!enabled) {
-    return (
-      <GrowthEmptyState
-        title="WhatsApp provider architecture (L1)"
-        description="Enable VITE_FEATURE_GROWTH_WHATSAPP_PROVIDERS and backend FEATURE_GROWTH_WHATSAPP_PROVIDERS."
-      />
-    );
-  }
 
   if (!workspaceId) {
     return (

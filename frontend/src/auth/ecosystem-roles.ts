@@ -39,14 +39,26 @@ export function roleRequiresAdminApproval(role: AppRole): boolean {
   return isBusinessSignupRole(role);
 }
 
+/** Approval flags that keep a business account locked out of its workspace. */
+const PENDING_APPROVAL_FLAGS = new Set(["pending", "under_review", "submitted", "in_review"]);
+
 /** True when business user must not access CRM / dashboards yet. */
 export function isAccountPendingApproval(
   user: Pick<User, "accountStatus" | "role" | "approvalStatus">
 ): boolean {
   if (!roleRequiresAdminApproval(user.role)) return false;
-  if (user.approvalStatus === "approved" && user.accountStatus === "active") return false;
   if (user.approvalStatus === "rejected") return true;
-  return user.accountStatus !== "active" || user.approvalStatus !== "approved";
+  if (user.approvalStatus === "approved" && user.accountStatus === "active") return false;
+  // Active accounts without an explicit pending/rejected flag are treated as approved.
+  // Covers seeded, legacy, or manually activated business accounts and avoids an
+  // approval deadlock where the user is locked but never appears in the admin queue.
+  if (
+    user.accountStatus === "active" &&
+    !PENDING_APPROVAL_FLAGS.has(String(user.approvalStatus ?? "").toLowerCase())
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export const PENDING_APPROVAL_PATH = "/pending-approval";

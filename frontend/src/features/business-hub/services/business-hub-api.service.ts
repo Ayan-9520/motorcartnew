@@ -1,4 +1,3 @@
-import { featureFlags } from "@/config/feature-flags";
 import { hasConfiguredApi, joinApiUrl } from "@/lib/api/base-url";
 import { fetchWithTimeout } from "@/lib/api/with-timeout";
 import { getAccessToken } from "@/lib/api/axios";
@@ -8,7 +7,7 @@ export type BusinessHubResult<T> =
   | { ok: false; error: string; status: number };
 
 function enabled() {
-  return featureFlags.unifiedBusiness && hasConfiguredApi();
+  return hasConfiguredApi();
 }
 
 export async function fetchBusinessHub(slug: string): Promise<BusinessHubResult<{ data: Record<string, unknown> }>> {

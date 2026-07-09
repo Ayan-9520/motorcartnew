@@ -32,7 +32,7 @@ export function UnifiedNotificationsPage() {
   const overviewQ = useQuery({
     queryKey: ["notifications-overview"],
     queryFn: fetchNotificationsOverviewApi,
-    enabled,
+    retry: 1,
   });
 
   const listQ = useQuery({
@@ -42,16 +42,8 @@ export function UnifiedNotificationsPage() {
         unread_only: filter === "unread",
         source: source || undefined,
       }),
-    enabled,
+    retry: 1,
   });
-
-  if (!enabled) {
-    return (
-      <div className="container py-16 text-center text-muted-foreground">
-        Notification center is disabled. Enable VITE_FEATURE_M4_NOTIFICATIONS.
-      </div>
-    );
-  }
 
   const items = listQ.data?.items ?? [];
 
@@ -77,6 +69,11 @@ export function UnifiedNotificationsPage() {
             <Badge variant="secondary">{overviewQ.data.unread} unread</Badge>
           )}
         </div>
+        {!enabled && (
+          <p className="w-full text-xs text-muted-foreground">
+            Live notification sync is warming up — filters and layout stay available.
+          </p>
+        )}
         <Button variant="outline" size="sm" onClick={() => void handleMarkAll()}>
           <CheckCheck className="h-4 w-4 mr-1" />
           Mark all read

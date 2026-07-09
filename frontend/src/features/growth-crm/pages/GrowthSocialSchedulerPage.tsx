@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { featureFlags } from "@/config/feature-flags";
 import { GrowthEmptyState } from "@/features/growth-crm/components/GrowthEmptyState";
 import {
   fetchSocialAnalytics,
@@ -16,42 +15,36 @@ import { useGrowthWorkspaceStore } from "@/features/growth-crm/store/growthWorks
 
 export function GrowthSocialSchedulerPage() {
   const workspaceId = useGrowthWorkspaceStore((s) => s.workspaceId);
-  const enabled = featureFlags.growthSocialScheduler;
 
   const configQ = useQuery({
     queryKey: ["social-config"],
     queryFn: () => fetchSocialSchedulerConfig(),
-    enabled,
+    retry: 1,
   });
   const channelsQ = useQuery({
     queryKey: ["social-channels", workspaceId],
     queryFn: () => fetchSocialChannels(),
-    enabled: enabled && !!workspaceId,
+    enabled: !!workspaceId,
+    retry: 1,
   });
   const schedulesQ = useQuery({
     queryKey: ["social-schedules", workspaceId],
     queryFn: () => fetchSocialSchedules(),
-    enabled: enabled && !!workspaceId,
+    enabled: !!workspaceId,
+    retry: 1,
   });
   const queueQ = useQuery({
     queryKey: ["social-queue", workspaceId],
     queryFn: () => fetchSocialPublishQueue(),
-    enabled: enabled && !!workspaceId,
+    enabled: !!workspaceId,
+    retry: 1,
   });
   const analyticsQ = useQuery({
     queryKey: ["social-analytics", workspaceId],
     queryFn: () => fetchSocialAnalytics(),
-    enabled: enabled && !!workspaceId,
+    enabled: !!workspaceId,
+    retry: 1,
   });
-
-  if (!enabled) {
-    return (
-      <GrowthEmptyState
-        title="Social scheduler (L2)"
-        description="Enable VITE_FEATURE_GROWTH_SOCIAL_SCHEDULER and backend FEATURE_GROWTH_SOCIAL_SCHEDULER."
-      />
-    );
-  }
 
   if (!workspaceId) {
     return (

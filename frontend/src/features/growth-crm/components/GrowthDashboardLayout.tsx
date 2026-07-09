@@ -1,6 +1,5 @@
-import { Link, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
-import { isGrowthUiEnabled } from "@/config/feature-flags";
 import { Navbar } from "@/components/layout/Navbar";
 import { GrowthSidebar } from "@/features/growth-crm/components/GrowthSidebar";
 import { RouteSuspense } from "@/layouts/RouteSuspense";
@@ -12,24 +11,6 @@ import { cn } from "@/lib/utils";
 
 export function GrowthDashboardLayout() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
-
-  if (!isGrowthUiEnabled()) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <div className="mx-auto max-w-lg px-4 py-20 text-center">
-          <h1 className="text-xl font-semibold">Growth CRM</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Growth CRM is not enabled. Set <code className="text-xs">VITE_FEATURE_GROWTH_V2=true</code>{" "}
-            (and slice flags) in the environment, then restart the dev server.
-          </p>
-          <Link to="/" className="mt-6 inline-block text-sm text-primary underline">
-            Back to home
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="workspace-shell flex min-h-screen flex-col">

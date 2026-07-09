@@ -1,6 +1,5 @@
 import { hasConfiguredApi, joinApiUrl } from "@/lib/api/base-url";
 import { fetchWithTimeout } from "@/lib/api/with-timeout";
-import { featureFlags } from "@/config/feature-flags";
 
 export type UnifiedSearchResultDto = {
   result_type: string;
@@ -19,7 +18,7 @@ export type FederatedSearchResponse = {
 };
 
 function enabled() {
-  return featureFlags.unifiedSearch && hasConfiguredApi();
+  return hasConfiguredApi();
 }
 
 async function searchFetch<T>(path: string): Promise<T | null> {

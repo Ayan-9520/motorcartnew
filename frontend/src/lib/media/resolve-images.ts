@@ -34,15 +34,17 @@ function registryGallery(input: VehicleResolveInput): string[] {
   });
 }
 
-/** Listing images — always valid Pexels URLs for category */
+/** Listing images — honor real uploaded photos first, else category-safe stock. */
 export function resolveVehicleGallery(
   brand: string,
   model: string,
   bodyType: string,
-  _existing?: string[] | null,
+  existing?: string[] | null,
   seed = 0,
   extra?: { category?: VehicleCategory | string; fuelType?: string }
 ): string[] {
+  const uploaded = cleanImageUrls(existing ?? []);
+  if (uploaded.length >= 1) return uploaded.slice(0, 6);
   return registryGallery({
     brand,
     model,
@@ -94,6 +96,8 @@ export function resolveVehicleHero(
   seed = 0,
   extra?: { category?: VehicleCategory | string; fuelType?: string }
 ): string {
+  const uploaded = cleanImageUrls(existing ?? []);
+  if (uploaded[0]) return uploaded[0];
   return getVehicleHero({
     brand,
     model,

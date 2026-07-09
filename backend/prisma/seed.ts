@@ -37,13 +37,24 @@ async function main() {
 
   const dealerUser = await prisma.user.upsert({
     where: { email: "dealer@gmail.com" },
-    update: { passwordHash: dealerPass, emailVerified: true, status: "active" },
+    update: {
+      passwordHash: dealerPass,
+      emailVerified: true,
+      status: "active",
+      approvalStatus: "approved",
+      onboardingStatus: "approved",
+      kycStatus: "verified",
+      isVerified: true,
+    },
     create: {
       email: "dealer@gmail.com",
       passwordHash: dealerPass,
       fullName: "Demo Dealer",
       role: "dealer",
       status: "active",
+      approvalStatus: "approved",
+      onboardingStatus: "approved",
+      kycStatus: "verified",
       emailVerified: true,
       isVerified: true,
     },

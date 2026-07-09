@@ -92,7 +92,7 @@ export async function listPendingBusinessAccounts(): Promise<PendingBusinessAcco
       role: { in: BUSINESS_ROLES },
       OR: [
         { status: "pending_verification" },
-        { approvalStatus: { in: ["pending", "under_review"] } },
+        { approvalStatus: { in: ["pending", "under_review", "submitted", "in_review"] } },
       ],
     },
     orderBy: { createdAt: "desc" },
@@ -385,7 +385,10 @@ export async function getPlatformAdminOverview() {
       where: {
         deletedAt: null,
         role: { in: BUSINESS_ROLES },
-        status: "pending_verification",
+        OR: [
+          { status: "pending_verification" },
+          { approvalStatus: { in: ["pending", "under_review", "submitted", "in_review"] } },
+        ],
       },
     }),
     prisma.user.count({

@@ -5229,15 +5229,19 @@
   }
 
   .hub-breadcrumbs-list {
-    @apply flex flex-wrap items-center gap-1 text-xs text-muted-foreground;
+    @apply flex flex-wrap items-center gap-0.5 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur;
   }
 
   .hub-breadcrumbs-link {
     @apply inline-flex items-center gap-1 rounded-md px-1 py-0.5 transition-colors hover:text-primary;
   }
 
+  .hub-breadcrumbs-home {
+    @apply text-muted-foreground;
+  }
+
   .hub-breadcrumbs-current {
-    @apply font-medium text-foreground;
+    @apply font-semibold text-foreground;
   }
 
   .hub-breadcrumbs-sep {
@@ -5245,46 +5249,67 @@
   }
 
   .hub-hero {
-    @apply relative overflow-hidden border-b border-border/80;
+    @apply relative overflow-hidden border-b border-border/60;
   }
 
   .hub-hero-bg {
     @apply absolute inset-0 bg-cover bg-center;
-    filter: brightness(0.42) saturate(1.05);
+    filter: brightness(0.4) saturate(1.15);
+    transform: scale(1.04);
   }
 
   .hub-hero-bg::after {
     content: "";
-    @apply absolute inset-0 bg-gradient-to-r from-background/95 via-background/75 to-background/40;
+    @apply absolute inset-0;
+    background:
+      radial-gradient(120% 90% at 8% 10%, hsl(var(--primary) / 0.22) 0%, transparent 48%),
+      linear-gradient(
+        105deg,
+        hsl(var(--background) / 0.97) 0%,
+        hsl(var(--background) / 0.82) 42%,
+        hsl(var(--background) / 0.45) 100%
+      );
   }
 
   .hub-hero-inner {
-    @apply relative z-[1] max-w-3xl pb-10 pt-2 md:pb-12;
+    @apply relative z-[1] max-w-3xl pb-11 pt-4 md:pb-14 md:pt-6;
   }
 
-
   .hub-hero-badge {
-    @apply mb-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground;
+    @apply mb-5 inline-flex flex-wrap items-center gap-2.5 rounded-full border border-border/60 bg-card/70 py-1.5 pl-1.5 pr-4 text-xs text-muted-foreground shadow-[0_8px_28px_-16px_rgba(0,0,0,0.6)] backdrop-blur-md;
   }
 
   .hub-hero-icon {
-    @apply flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary;
+    @apply flex h-9 w-9 items-center justify-center rounded-full text-primary-foreground shadow-[var(--shadow-primary)];
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, var(--mc-green-hover, hsl(var(--primary))) 100%);
+  }
+
+  .hub-hero-stat {
+    @apply inline-flex items-center gap-1;
   }
 
   .hub-hero-stat strong {
-    @apply font-semibold text-foreground;
+    @apply font-bold text-foreground;
   }
 
   .hub-hero-stat-divider {
-    @apply h-3 w-px bg-border;
+    @apply h-3.5 w-px bg-border/80;
   }
 
   .hub-hero-title {
-    @apply text-3xl font-bold tracking-tight md:text-4xl;
+    @apply text-4xl font-extrabold tracking-tight md:text-5xl;
+    background: linear-gradient(180deg, hsl(var(--foreground)) 0%, hsl(var(--foreground) / 0.72) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .hub-hero-tagline {
-    @apply mt-1 text-base font-medium text-primary;
+    @apply mt-2 text-base font-semibold md:text-lg;
+    background: linear-gradient(90deg, hsl(var(--primary)) 0%, var(--mc-green-hover, hsl(var(--primary))) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .hub-hero-desc {
@@ -5316,7 +5341,7 @@
   }
 
   .hub-search-chip {
-    @apply rounded-full border border-border/80 bg-card px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5;
+    @apply rounded-full border border-border/70 bg-card/80 px-3.5 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/45 hover:bg-primary/5 hover:text-primary;
   }
 
   .hub-search-chip-muted {
@@ -5324,7 +5349,7 @@
   }
 
   .hub-filter-rail {
-    @apply flex gap-2 overflow-x-auto pb-1;
+    @apply flex gap-2.5 overflow-x-auto pb-1 pt-0.5;
     scrollbar-width: none;
   }
 
@@ -5333,11 +5358,12 @@
   }
 
   .hub-filter-chip {
-    @apply shrink-0 rounded-full border border-border/80 bg-card px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-primary/35;
+    @apply shrink-0 rounded-full border border-border/70 bg-card/80 px-4 py-2 text-sm font-medium text-foreground shadow-[0_6px_18px_-14px_rgba(0,0,0,0.7)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:text-primary hover:shadow-[0_10px_24px_-14px_rgba(37,211,102,0.55)];
   }
 
   .hub-filter-chip-active {
-    @apply border-primary/50 bg-primary/10 text-primary;
+    @apply border-transparent text-primary-foreground shadow-[var(--shadow-primary)] hover:text-primary-foreground;
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, var(--mc-green-hover, hsl(var(--primary))) 100%);
   }
 
   .hub-banner-strip {

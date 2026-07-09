@@ -18,13 +18,13 @@ export function BillingDashboardPage() {
   const plansQuery = useQuery({
     queryKey: ["billing-plans"],
     queryFn: fetchBillingPlansApi,
-    enabled,
+    retry: 1,
   });
 
   const overviewQuery = useQuery({
     queryKey: ["billing-overview"],
     queryFn: () => fetchBillingOverviewApi(),
-    enabled,
+    retry: 1,
   });
 
   const upgrade = useMutation({
@@ -34,17 +34,6 @@ export function BillingDashboardPage() {
       qc.invalidateQueries({ queryKey: ["billing-overview"] });
     },
   });
-
-  if (!enabled) {
-    return (
-      <BillingShell
-        title="Billing"
-        description="Enable VITE_FEATURE_BILLING_V2 and FEATURE_BILLING_V2 on the API."
-      >
-        <p className="text-sm text-muted-foreground">Billing MVP is disabled.</p>
-      </BillingShell>
-    );
-  }
 
   const overview = overviewQuery.data;
   const sub = overview?.subscription as {
@@ -59,6 +48,11 @@ export function BillingDashboardPage() {
       title="Billing & subscription"
       description="Plans, entitlements, and usage (mock — no Razorpay, Stripe, GST, or auto-renew)."
     >
+      {!enabled && (
+        <p className="mb-4 text-xs text-muted-foreground">
+          Billing API is warming up — plan cards load when the API is reachable.
+        </p>
+      )}
       {overviewQuery.isLoading && (
         <p className="text-sm text-muted-foreground">Loading billing overview…</p>
       )}
