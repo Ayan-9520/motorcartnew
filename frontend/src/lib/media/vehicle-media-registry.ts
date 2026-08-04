@@ -40,13 +40,15 @@ const PX = {
   truck1: 4480506,
   truck2: 3642618,
   truck3: 2365572,
-  bus1: 2999064,
-  bus2: 757889,
+  bus1: 757889,
+  bus2: 2999064,
   ev1: 1106441,
   ev2: 1714516,
   ev3: 2485648,
-  auto1: 1250892,
-  auto2: 1139557,
+  auto1: 1139557,
+  auto2: 1250892,
+  equipment1: 162553,
+  equipment2: 248547,
 } as const;
 
 export const BLOCKED_IMAGE_FRAGMENTS = [
@@ -84,18 +86,22 @@ export function isUserMediaUrl(url: string): boolean {
   const u = url.trim();
   return (
     u.startsWith("/uploads/") ||
-    u.startsWith("/media/") ||
     u.includes("/uploads/") ||
     u.startsWith("blob:") ||
     u.startsWith("data:image/")
   );
 }
 
+/** Bundled /media paths only count when the file is present (checked in dev/build sync). */
+export function isBundledMediaUrl(url: string): boolean {
+  return typeof url === "string" && url.trim().startsWith("/media/");
+}
+
 export function cleanImageUrls(urls: readonly string[]): string[] {
   return urls.filter(
     (u) =>
       typeof u === "string" &&
-      (u.startsWith("https://images.pexels.com/") || isUserMediaUrl(u)) &&
+      (u.startsWith("https://images.pexels.com/") || isUserMediaUrl(u) || isBundledMediaUrl(u)) &&
       !isBlockedImageUrl(u)
   );
 }
@@ -120,7 +126,7 @@ export const SEGMENT_POOLS: Record<VehicleSegment, readonly string[]> = {
   buses: [pexels(PX.bus1), pexels(PX.bus2)],
   ev: [pexels(PX.ev1), pexels(PX.ev2), pexels(PX.ev3)],
   auto: [pexels(PX.auto1), pexels(PX.auto2)],
-  equipment: [pexels(PX.truck1), pexels(PX.truck2), pexels(PX.truck3)],
+  equipment: [pexels(PX.equipment1), pexels(PX.equipment2), pexels(PX.truck2)],
 };
 
 export const SEGMENT_DEFAULTS: Record<VehicleSegment, string> = {
@@ -139,13 +145,13 @@ export const HUB_HERO_IMAGES: Record<
   "cars" | "bikes" | "trucks" | "buses" | "ev" | "auto" | "equipment",
   string
 > = {
-  cars: pexels(PX.car3, 1400),
+  cars: "/brand/hero-automotive-premium-v2.webp",
   bikes: pexels(PX.bike1, 1400),
   trucks: pexels(PX.truck1, 1400),
   buses: pexels(PX.bus1, 1400),
   ev: pexels(PX.ev1, 1400),
   auto: pexels(PX.auto1, 1400),
-  equipment: pexels(PX.truck1, 1400),
+  equipment: pexels(PX.equipment1, 1400),
 };
 
 /** Indian OEM brands — stable gallery offset within segment (visual consistency per brand) */
@@ -314,7 +320,7 @@ export function isListingSafeUrl(url?: string | null): url is string {
   const t = url.trim();
   if (t.length < 5) return false;
   if (isBlockedImageUrl(t)) return false;
-  return t.startsWith("https://images.pexels.com/") || isUserMediaUrl(t);
+  return t.startsWith("https://images.pexels.com/") || isUserMediaUrl(t) || isBundledMediaUrl(t);
 }
 
 export function getModelImages(

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ChevronRight, Sparkles } from "lucide-react";
 import { HOME_AI_RECOMMENDATIONS } from "@/features/home/data/homepage-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
+import { auctionDetailPath } from "@/features/auctions/lib/auction-utils";
 import { formatPrice, vehicleDetailPath } from "@/lib/vehicle-utils";
 import { SectionHeader } from "./SectionHeader";
 
@@ -23,7 +24,7 @@ export function AIRecommendationsHomeSection() {
             id: a.id,
             title: a.title,
             subtitle: `Live auction · ${a.bidCount} bids`,
-            href: `/auctions/${a.slug ?? a.id}`,
+            href: auctionDetailPath(a),
             badge: "Live bid",
           })),
           ...loanProducts.slice(0, 1).map((l) => ({

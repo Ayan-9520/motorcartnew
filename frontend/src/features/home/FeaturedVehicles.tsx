@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
+import { realDataOnly } from "@/config/real-data";
 import {
   formatPrice,
   getVehicleEmi,
@@ -27,14 +28,16 @@ import { SectionHeader } from "./SectionHeader";
 import { VehicleImage } from "@/features/vehicles/components/VehicleImage";
 import toast from "react-hot-toast";
 
-const featured = sortVehicles(
+const mockFeatured = realDataOnly
+  ? []
+  : sortVehicles(
   MOCK_VEHICLES.filter((v) => v.isFeatured && v.status === "available"),
   "ai-score"
 ).slice(0, 12);
 
 export function FeaturedVehicles() {
   const { featuredVehicles, isLoading } = useHomePage();
-  const list = featuredVehicles.length ? featuredVehicles : featured;
+  const list = featuredVehicles.length ? featuredVehicles : mockFeatured;
   return (
     <section className="home-section">
       <div className="container home-stack">
@@ -48,6 +51,22 @@ export function FeaturedVehicles() {
         <div className="home-featured-carousel px-1">
           {isLoading && list.length === 0 ? (
             <p className="text-sm text-muted-foreground">Loading featured vehicles…</p>
+          ) : null}
+          {!isLoading && list.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
+              <p className="text-sm font-semibold text-foreground">No vehicles listed yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Dealers add inventory at{" "}
+                <Link to="/dashboard/dealer/inventory" className="font-medium text-primary hover:underline">
+                  Dealer inventory
+                </Link>
+                , or customers can{" "}
+                <Link to="/sell/cars" className="font-medium text-primary hover:underline">
+                  sell a vehicle
+                </Link>
+                .
+              </p>
+            </div>
           ) : null}
           {list.map((vehicle, index) => (
             <FeaturedVehicleCard key={vehicle.id} vehicle={vehicle} index={index} />

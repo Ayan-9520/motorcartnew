@@ -16,7 +16,11 @@ export function NewCarDealerMobileNav() {
         New Car OS
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="left-0 top-0 h-full max-h-none w-[min(100vw,300px)] translate-x-0 translate-y-0 rounded-none border-r p-0">
+        <DialogContent
+          showCloseButton={false}
+          aria-describedby={undefined}
+          className="left-0 top-0 h-full max-h-none w-[min(100vw,300px)] translate-x-0 translate-y-0 rounded-none border-r p-0"
+        >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <DialogTitle>New Car Dealer OS</DialogTitle>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>

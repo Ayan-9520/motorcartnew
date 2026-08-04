@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
+import { auctionDetailPath } from "@/features/auctions/lib/auction-utils";
 import { cn } from "@/lib/utils";
 
 export type AuctionLot = {
@@ -101,7 +102,7 @@ export function AuctionDesk({ liveAuctions, registrations, onRegister }: Auction
                 <p className="text-xs text-muted-foreground">Auto-bid cap: {formatCurrency(b.autoBidMax)}</p>
               )}
               <Button size="sm" className="mt-3 w-full" variant="outline" asChild>
-                <Link to={`/auctions/${b.auctionId}`}>Open lot room</Link>
+                <Link to={auctionDetailPath({ id: b.auctionId, status: "live" })}>Open lot room</Link>
               </Button>
             </article>
           ))}
@@ -122,7 +123,7 @@ export function AuctionDesk({ liveAuctions, registrations, onRegister }: Auction
                   Register
                 </Button>
                 <Button size="sm" variant="outline" asChild>
-                  <Link to={`/auctions/${a.id}`}>Bid</Link>
+                  <Link to={auctionDetailPath({ id: a.id, status: a.status })}>Bid</Link>
                 </Button>
               </div>
             </article>

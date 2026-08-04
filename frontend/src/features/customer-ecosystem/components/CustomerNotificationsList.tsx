@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import type { CustomerNotification } from "../types";
 
 const typeColors: Record<CustomerNotification["type"], string> = {
-  emi: "bg-blue-500/10 text-blue-700",
+  emi: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
   insurance: "bg-amber-500/10 text-amber-800",
   service: "bg-emerald-500/10 text-emerald-800",
   auction: "bg-purple-500/10 text-purple-800",

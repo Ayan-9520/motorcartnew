@@ -13,7 +13,7 @@ export function PartOriginBadge({ origin, className }: PartOriginBadgeProps) {
       variant="outline"
       className={cn(
         "text-[10px] font-bold uppercase tracking-wide",
-        origin === "oem" && "border-blue-500/40 bg-blue-500/10 text-blue-700",
+        origin === "oem" && "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300",
         origin === "aftermarket" && "border-amber-500/40 bg-amber-500/10 text-amber-800",
         origin === "genuine_accessory" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-700",
         className

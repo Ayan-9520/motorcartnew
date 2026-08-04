@@ -27,7 +27,7 @@ export function AdminOperationsPage() {
   return (
     <SuperAdminShell
       title="Operations map"
-      description="Kahan se data aata hai, admin kya karta hai, user ko kya milta hai — end-to-end."
+      description="Trace data sources, admin actions, and customer outcomes across the Motorcart ecosystem — end to end."
     >
       <div className="mb-6 flex flex-wrap gap-2">
         {QUICK_LINKS.map((l) => (

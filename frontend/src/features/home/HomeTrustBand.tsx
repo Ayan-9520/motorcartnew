@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { HERO_STATS, HOME_TRUST_PILLS } from "@/features/home/data/homepage-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
+import { realDataOnly } from "@/config/real-data";
 
 const PILL_ICONS = {
   users: Users,
@@ -22,7 +23,8 @@ const PILL_ICONS = {
 
 export function HomeTrustBand() {
   const { heroStats } = useHomePage();
-  const stats = heroStats.length ? heroStats : HERO_STATS;
+  const stats = heroStats.length ? heroStats : realDataOnly ? [] : HERO_STATS;
+  if (!stats.length && realDataOnly) return null;
   return (
     <section className="border-b border-border bg-muted/15 py-4 md:py-6">
       <div className="container">

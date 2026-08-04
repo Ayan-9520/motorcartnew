@@ -11,6 +11,7 @@ import {
   mapHomeVehicles,
 } from "@/features/home/lib/map-home-data";
 import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
+import { realDataOnly } from "@/config/real-data";
 import { liveAuctions, platformStats, testimonials } from "@/data/mock";
 import { loanProducts } from "@/data/loans";
 import { autoParts } from "@/data/parts";
@@ -41,6 +42,25 @@ type HomePageContextValue = {
 const HomePageContext = createContext<HomePageContextValue | null>(null);
 
 function buildFallback(): HomePageContextValue {
+  if (realDataOnly) {
+    return {
+      data: null,
+      isLoading: false,
+      isLive: false,
+      featuredVehicles: [],
+      newCars: [],
+      preownedCars: [],
+      auctions: [],
+      banks: [],
+      loanProducts: [],
+      parts: [],
+      communityPosts: [],
+      heroStats: [],
+      platformStats: [],
+      testimonials: [],
+    };
+  }
+
   const mockFeatured = sortVehicles(
     MOCK_VEHICLES.filter((v) => v.isFeatured && v.status === "available"),
     "ai-score"
@@ -119,17 +139,15 @@ export function HomePageProvider({ children }: { children: ReactNode }) {
       data,
       isLoading,
       isLive: hasLiveContent,
-      featuredVehicles: featuredFromApi.length ? featuredFromApi : fb.featuredVehicles,
-      newCars: newFromApi.length ? newFromApi : fb.newCars,
-      preownedCars: preownedFromApi.length ? preownedFromApi : fb.preownedCars,
-      auctions: data.auctions.length
-        ? data.auctions.map(mapHomeAuctionToCard)
-        : fb.auctions,
-      banks: data.banks.length ? data.banks.map(mapHomeBankToOffer) : fb.banks,
+      featuredVehicles: featuredFromApi.length ? featuredFromApi : realDataOnly ? [] : fb.featuredVehicles,
+      newCars: newFromApi.length ? newFromApi : realDataOnly ? [] : fb.newCars,
+      preownedCars: preownedFromApi.length ? preownedFromApi : realDataOnly ? [] : fb.preownedCars,
+      auctions: data.auctions.length ? data.auctions.map(mapHomeAuctionToCard) : realDataOnly ? [] : fb.auctions,
+      banks: data.banks.length ? data.banks.map(mapHomeBankToOffer) : realDataOnly ? [] : fb.banks,
       loanProducts: data.banks.length
         ? data.banks.filter((b) => b.is_featured).slice(0, 3).map(mapHomeBankToLoanProduct)
-        : fb.loanProducts,
-      parts: data.parts.length ? data.parts.map(mapHomePartToCard) : fb.parts,
+        : realDataOnly ? [] : fb.loanProducts,
+      parts: data.parts.length ? data.parts.map(mapHomePartToCard) : realDataOnly ? [] : fb.parts,
       communityPosts: data.community_posts.length
         ? data.community_posts.map((p) => ({
             tag: p.tag,
@@ -138,13 +156,13 @@ export function HomePageProvider({ children }: { children: ReactNode }) {
             replies: p.replies,
             href: p.href,
           }))
-        : fb.communityPosts,
+        : realDataOnly ? [] : fb.communityPosts,
       heroStats: data.hero_stats.length
         ? data.hero_stats.map((s) => ({ label: s.label, value: s.value, href: s.href }))
-        : fb.heroStats,
+        : realDataOnly ? [] : fb.heroStats,
       platformStats: data.platform_stats.length
         ? data.platform_stats.map((s) => ({ label: s.label, value: s.value }))
-        : fb.platformStats,
+        : realDataOnly ? [] : fb.platformStats,
       testimonials: data.testimonials.length
         ? data.testimonials.map((t) => ({
             name: t.name,
@@ -152,7 +170,7 @@ export function HomePageProvider({ children }: { children: ReactNode }) {
             text: t.text,
             rating: t.rating,
           }))
-        : fb.testimonials,
+        : realDataOnly ? [] : fb.testimonials,
     };
   })();
 

@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DbAuction, DbBid } from "@/types/database";
 import { MOCK_AUCTIONS, MOCK_BIDS, MOCK_MESSAGES } from "../data/mock-auctions";
+import { realDataOnly } from "@/config/real-data";
 import { mapDbAuction } from "../lib/auction-utils";
 import type {
   AuctionListing,
@@ -28,6 +29,8 @@ export async function fetchAuctions(filters?: {
     return (data as DbAuction[]).map((a) => mapDbAuction(a));
   }
 
+  if (realDataOnly) return [];
+
   let pool = [...MOCK_AUCTIONS];
   if (filters?.status) pool = pool.filter((a) => a.status === filters.status);
   if (filters?.type) pool = pool.filter((a) => a.auctionType === filters.type);
@@ -39,6 +42,7 @@ export async function fetchAuctionBySlug(slug: string): Promise<AuctionListing |
   const { data } = await supabase.from("auctions").select("*").eq("slug", slug).maybeSingle();
   if (data) return mapDbAuction(data as DbAuction);
 
+  if (realDataOnly) return null;
   return MOCK_AUCTIONS.find((a) => a.slug === slug) ?? null;
 }
 
@@ -65,6 +69,7 @@ export async function fetchAuctionBids(auctionId: string): Promise<AuctionBid[]>
     });
   }
 
+  if (realDataOnly) return [];
   return MOCK_BIDS[auctionId] ?? [];
 }
 
@@ -88,6 +93,7 @@ export async function fetchAuctionMessages(auctionId: string): Promise<AuctionMe
     }));
   }
 
+  if (realDataOnly) return [];
   return MOCK_MESSAGES[auctionId] ?? [];
 }
 

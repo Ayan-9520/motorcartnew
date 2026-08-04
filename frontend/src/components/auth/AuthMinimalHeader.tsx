@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Car } from "lucide-react";
-import { SITE_NAME } from "@/lib/constants";
+import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
 import { cn } from "@/lib/utils";
 
 export function AuthMinimalHeader() {
@@ -11,17 +10,13 @@ export function AuthMinimalHeader() {
 
   return (
     <header className="auth-header shrink-0 border-b border-border/60 bg-card/80 backdrop-blur-xl">
-      <div className="container flex h-12 items-center justify-between gap-4">
-        <Link to="/" className="auth-header__brand inline-flex items-center gap-2.5 no-underline">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25">
-            <Car className="h-5 w-5" />
-          </span>
-          <span className="text-base font-bold tracking-tight text-foreground">
-            {SITE_NAME}
-          </span>
+      <div className="container flex h-12 items-center justify-between gap-3 sm:h-14">
+        <Link to="/" className="auth-header__brand inline-flex items-center no-underline" aria-label="Motorcart home">
+          <MotorcartLogo variant="full" height={34} className="hidden sm:block" />
+          <MotorcartLogo variant="full" height={28} className="sm:hidden" />
         </Link>
 
-        <nav className="flex items-center gap-2 sm:gap-3">
+        <nav className="flex shrink-0 items-center gap-2 sm:gap-3">
           {!onLogin ? (
             <Link
               to="/login"

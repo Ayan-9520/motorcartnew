@@ -1,0 +1,57 @@
+# Production overrides — use with:
+#   docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Postgres/Redis are NOT exposed publicly. Only nginx (80/443) and optional mobile web (8090).
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+
+  redis:
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+
+  backend:
+    environment:
+      NODE_ENV: production
+      STRICT_DB_QUERY: ${STRICT_DB_QUERY:-true}
+
+  frontend:
+    build:
+      args:
+        VITE_FULL_ECOSYSTEM: ${VITE_FULL_ECOSYSTEM:-true}
+        VITE_FEATURE_WISHLIST_DB: ${VITE_FEATURE_WISHLIST_DB:-true}
+        VITE_FEATURE_UNIFIED_VEHICLE_API: ${VITE_FEATURE_UNIFIED_VEHICLE_API:-true}
+        VITE_FEATURE_M4_NOTIFICATIONS: ${VITE_FEATURE_M4_NOTIFICATIONS:-true}
+
+  nginx:
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+    volumes:
+      - ./infra/nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      # Uncomment after certbot:
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+
+  mobile-app:
+    profiles: ["mobile"]
+    build:
+      context: ./apps/mobile-customer
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: ${MOBILE_EXPO_PUBLIC_API_URL:-}
+        EXPO_PUBLIC_WEB_URL: ${VITE_SITE_URL:-http://localhost}
+        EXPO_PUBLIC_SHOW_DEMO: ${MOBILE_SHOW_DEMO:-0}
+    image: motorcart-mobile-app:local
+    restart: unless-stopped
+    ports:
+      - "${MOBILE_APP_PORT:-8090}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

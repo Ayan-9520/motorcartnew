@@ -4,6 +4,7 @@ import { partMatchesVehicleHub } from "@/lib/vehicle-hub-catalog";
 import { resolvePartGallery } from "@/lib/media/resolve-images";
 import type { DbPart, DbReview } from "@/types/database";
 import { MOCK_PARTS_CATALOG } from "../data/mock-parts-catalog";
+import { realDataOnly } from "@/config/real-data";
 import type {
   PartCategorySlug,
   PartOrder,
@@ -69,9 +70,7 @@ export function mapDbPart(row: DbPart & { description?: string; sku?: string; gs
 }
 
 function mergeCatalog(db: PartProduct[]): PartProduct[] {
-  if (db.length >= 8) return db;
-  const slugs = new Set(db.map((p) => p.slug));
-  return [...db, ...MOCK_PARTS_CATALOG.filter((m) => !slugs.has(m.slug))];
+  return db;
 }
 
 export async function fetchParts(filters?: {
@@ -113,9 +112,13 @@ export async function fetchPartBySlug(category: string | undefined, slug: string
   const { data } = await supabase.from("parts").select("*").eq("slug", slug).maybeSingle();
   if (data) {
     const p = mapDbPart(data as Parameters<typeof mapDbPart>[0]);
-    if (cat && p.categorySlug !== cat) return MOCK_PARTS_CATALOG.find((m) => m.slug === slug && m.categorySlug === cat) ?? p;
+    if (cat && p.categorySlug !== cat) {
+      if (realDataOnly) return null;
+      return MOCK_PARTS_CATALOG.find((m) => m.slug === slug && m.categorySlug === cat) ?? p;
+    }
     return p;
   }
+  if (realDataOnly) return null;
   return MOCK_PARTS_CATALOG.find((p) => p.slug === slug && (!cat || p.categorySlug === cat)) ?? null;
 }
 

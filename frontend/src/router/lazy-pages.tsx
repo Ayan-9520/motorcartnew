@@ -156,5 +156,6 @@ export const LeadRouterPage = lazyNamed(
 );
 
 // Heavy marketplace
+/** @deprecated Imported eagerly from router/index.tsx to avoid chunk 404 on vehicle detail. */
 export const VehicleDetailPage = lazyNamed(() => import("@/features/vehicles/pages/VehicleDetailPage"), "VehicleDetailPage");
 export const CommunityModerationPage = lazyNamed(() => import("@/features/community/pages/CommunityModerationPage"), "CommunityModerationPage");

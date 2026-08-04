@@ -10,8 +10,9 @@ import { PartCategoryNav } from "../components/PartCategoryNav";
 import { PartCard } from "../components/PartCard";
 import { PartsAiRecommendations } from "../components/PartsAiRecommendations";
 import { PartsCatalogShell } from "../components/PartsCatalogShell";
+import { PartsCatalogEmpty } from "../components/PartsCatalogEmpty";
 import { recommendParts } from "../lib/ai-parts";
-import { MOCK_PARTS_CATALOG } from "../data/mock-parts-catalog";
+import { realDataOnly } from "@/config/real-data";
 import { parseCategoryParam } from "../lib/part-utils";
 import { PART_CATEGORIES, PART_ORIGIN_LABELS, type PartOrigin } from "../types";
 import { usePartsCartStore } from "@/store/partsCartStore";
@@ -68,12 +69,12 @@ export function PartsListingPage() {
 
   const aiPicks = useMemo(
     () =>
-      recommendParts(MOCK_PARTS_CATALOG, {
+      recommendParts(parts, {
         category: category ?? undefined,
         vehicle: vehicle || undefined,
         hub,
       }, 6),
-    [category, vehicle, hub]
+    [category, vehicle, hub, parts]
   );
 
   const catMeta = category ? PART_CATEGORIES.find((c) => c.slug === category) : null;
@@ -99,7 +100,9 @@ export function PartsListingPage() {
       subtitle={
         catMeta
           ? `${catMeta.description}${hubLabel ? ` · ${hubLabel}` : ""}`
-          : `50,000+ SKUs · cars, bikes, auto, trucks, buses, equipment & EV${hubLabel ? ` · ${hubLabel}` : ""}`
+          : realDataOnly
+            ? `Live catalogue · cars, bikes, auto, trucks, buses, equipment & EV${hubLabel ? ` · ${hubLabel}` : ""}`
+            : `50,000+ SKUs · cars, bikes, auto, trucks, buses, equipment & EV${hubLabel ? ` · ${hubLabel}` : ""}`
       }
       category={category}
     >
@@ -107,7 +110,7 @@ export function PartsListingPage() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Vehicle type
         </p>
-        <VehicleHubFilterRail activeHub={hub} buildHref={buildHubHref} />
+        <VehicleHubFilterRail activeHub={hub} buildHref={buildHubHref} className="parts-catalog-vehicle-rail" />
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -183,12 +186,7 @@ export function PartsListingPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <p className="py-16 text-center text-muted-foreground">
-            No products match.{" "}
-            <Link to="/parts" className="font-medium text-primary hover:underline">
-              Back to parts hub
-            </Link>
-          </p>
+          <PartsCatalogEmpty hubLabel={hubLabel} />
         ) : (
           <div className="parts-product-grid">
             {filtered.map((part, i) => (

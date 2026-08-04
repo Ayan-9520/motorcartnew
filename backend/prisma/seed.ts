@@ -22,7 +22,7 @@ async function main() {
     },
   });
 
-  await prisma.user.upsert({
+  const customerUser = await prisma.user.upsert({
     where: { email: "customer@motorcart.in" },
     update: {},
     create: {
@@ -128,6 +128,72 @@ async function main() {
         sellerId: dealerUser.id,
       },
     });
+  }
+
+  await prisma.communityUserProfile.upsert({
+    where: { userId: customerUser.id },
+    update: {},
+    create: {
+      userId: customerUser.id,
+      displayName: "Demo Customer",
+      handle: "demo_customer",
+      bio: "Car enthusiast from Mumbai",
+      locationCity: "Mumbai",
+    },
+  });
+
+  await prisma.communityUserProfile.upsert({
+    where: { userId: dealerUser.id },
+    update: {},
+    create: {
+      userId: dealerUser.id,
+      displayName: "Demo Dealer",
+      handle: "demo_dealer",
+      persona: "dealer",
+      bio: "Trusted dealer on MotorCart",
+      locationCity: "Mumbai",
+      isVerified: true,
+    },
+  });
+
+  const groups = [
+    { slug: "ev-enthusiasts", name: "EV Enthusiasts", description: "Electric vehicles and charging in India" },
+    { slug: "mumbai-car-club", name: "Mumbai Car Club", description: "Buy, sell, discuss cars in Mumbai" },
+    { slug: "bike-riders-india", name: "Bike Riders India", description: "Motorcycles, touring, and gear" },
+  ] as const;
+
+  const seededGroups: { id: string; slug: string }[] = [];
+  for (const g of groups) {
+    const row = await prisma.communityGroup.upsert({
+      where: { slug: g.slug },
+      update: { name: g.name, description: g.description },
+      create: { name: g.name, slug: g.slug, description: g.description, groupType: "open" },
+    });
+    seededGroups.push({ id: row.id, slug: row.slug });
+  }
+
+  const demoPosts = [
+    { authorId: customerUser.id, content: "Just test-drove the Hyundai Creta — smooth ride! #creta #suv", groupSlug: "mumbai-car-club" },
+    { authorId: dealerUser.id, content: "Fresh stock: Royal Enfield Classic 350 at AutoMax Mumbai. #bikes", groupSlug: "bike-riders-india" },
+    { authorId: customerUser.id, content: "EV for daily commute — Tata Nexon EV vs MG Comet? #ev", groupSlug: "ev-enthusiasts" },
+    { authorId: dealerUser.id, content: "Weekend offer on certified pre-owned SUVs. Browse on MotorCart.", groupSlug: "mumbai-car-club" },
+  ] as const;
+
+  for (const p of demoPosts) {
+    const group = seededGroups.find((g) => g.slug === p.groupSlug);
+    const existing = await prisma.socialPost.findFirst({
+      where: { authorId: p.authorId, content: p.content },
+    });
+    if (!existing) {
+      await prisma.socialPost.create({
+        data: {
+          authorId: p.authorId,
+          content: p.content,
+          groupId: group?.id,
+          moderationStatus: "approved",
+        },
+      });
+    }
   }
 
   console.log("Seed complete:");

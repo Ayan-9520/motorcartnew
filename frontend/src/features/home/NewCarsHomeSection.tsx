@@ -11,7 +11,11 @@ export function NewCarsHomeSection() {
   const featured = newCars.slice(0, 4);
   const brands =
     data?.brands?.length && data.brands.length >= 4
-      ? data.brands.slice(0, 8).map((b) => ({ slug: b.slug, name: b.name, href: `/buy/cars?brand=${encodeURIComponent(b.name)}` }))
+      ? data.brands.slice(0, 8).map((b) => ({
+          slug: b.slug,
+          name: b.name,
+          href: `/buy/cars/new?brand=${encodeURIComponent(b.name)}`,
+        }))
       : NEW_CAR_BRANDS.slice(0, 8);
 
   return (
@@ -32,9 +36,20 @@ export function NewCarsHomeSection() {
           ))}
         </div>
         <div className="vehicle-card-grid">
-          {featured.map((v, i) => (
-            <NewCarCard key={v.id} vehicle={v} index={i} compact />
-          ))}
+          {featured.length === 0 ? (
+            <div className="col-span-full rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
+              <p className="text-sm font-semibold">No new cars listed yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Dealers add OEM stock at{" "}
+                <Link to="/dashboard/dealer/inventory" className="font-medium text-primary hover:underline">
+                  Dealer inventory
+                </Link>
+                .
+              </p>
+            </div>
+          ) : (
+            featured.map((v, i) => <NewCarCard key={v.id} vehicle={v} index={i} compact />)
+          )}
         </div>
         <div className="text-center">
           <Button size="sm" className="home-section-cta rounded-lg" asChild>

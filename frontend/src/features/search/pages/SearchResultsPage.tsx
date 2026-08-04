@@ -10,7 +10,7 @@ import { runGlobalSearch, buildBuySearchUrl } from "@/lib/global-search";
 import { VehicleCard } from "@/features/vehicles/components/VehicleCard";
 import { filtersFromSearchParams } from "@/lib/vehicle-utils";
 import type { VehicleListing, VehicleFilters } from "@/types/vehicle";
-import { MOCK_PARTS_CATALOG } from "@/features/parts/data/mock-parts-catalog";
+import { fetchParts } from "@/features/parts/services/parts.service";
 import { searchVehicles } from "@/services/vehicle.service";
 
 export function SearchResultsPage() {
@@ -26,19 +26,29 @@ function LegacySearchResultsPage() {
   const hub = params.get("hub");
   const [vehicleResults, setVehicleResults] = useState<VehicleListing[]>([]);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
-
-  const partResults = useMemo(() => {
-    if (!q.trim()) return [];
-    const needle = q.toLowerCase();
-    return MOCK_PARTS_CATALOG.filter(
-      (p) =>
-        p.name.toLowerCase().includes(needle) ||
-        (p.brand?.toLowerCase().includes(needle) ?? false) ||
-        p.categorySlug.toLowerCase().includes(needle)
-    );
-  }, [q]);
+  const [partResults, setPartResults] = useState<Awaited<ReturnType<typeof fetchParts>>>([]);
+  const [loadingParts, setLoadingParts] = useState(false);
 
   const quickLinks = useMemo(() => runGlobalSearch(q, 6).filter((r) => r.type === "page"), [q]);
+
+  useEffect(() => {
+    if (!q.trim()) {
+      setPartResults([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingParts(true);
+    fetchParts({ search: q })
+      .then((rows) => {
+        if (!cancelled) setPartResults(rows);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingParts(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [q]);
 
   useEffect(() => {
     const filters: VehicleFilters = { ...filtersFromSearchParams(params) };

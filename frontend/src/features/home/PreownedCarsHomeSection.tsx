@@ -31,9 +31,24 @@ export function PreownedCarsHomeSection() {
           ))}
         </div>
         <div className="vehicle-card-grid">
-          {featured.map((v, i) => (
-            <PreownedCarCard key={v.id} vehicle={v} index={i} compact />
-          ))}
+          {featured.length === 0 ? (
+            <div className="col-span-full rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
+              <p className="text-sm font-semibold">No pre-owned cars listed yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Upload at{" "}
+                <Link to="/dashboard/dealer/inventory/excel" className="font-medium text-primary hover:underline">
+                  Bulk Excel upload
+                </Link>{" "}
+                or{" "}
+                <Link to="/sell/cars" className="font-medium text-primary hover:underline">
+                  sell your car
+                </Link>
+                .
+              </p>
+            </div>
+          ) : (
+            featured.map((v, i) => <PreownedCarCard key={v.id} vehicle={v} index={i} compact />)
+          )}
         </div>
         <div className="text-center">
           <Button size="sm" className="home-section-cta rounded-lg" asChild>

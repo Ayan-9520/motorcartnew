@@ -112,7 +112,7 @@ const TABLES_WITH_SOFT_DELETE = new Set([
   "dealers",
   "vehicles",
   "part_products",
-  "community_posts",
+  "social_posts",
   "parts",
 ]);
 
@@ -140,7 +140,9 @@ export function toSnakeRow(row: Record<string, unknown>): Record<string, unknown
     const snake = k.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
     if (v instanceof Date) out[snake] = v.toISOString();
     else if (typeof v === "bigint") out[snake] = Number(v);
-    else out[snake] = v;
+    else if (v !== null && typeof v === "object" && "toNumber" in v && typeof (v as { toNumber: () => number }).toNumber === "function") {
+      out[snake] = (v as { toNumber: () => number }).toNumber();
+    } else out[snake] = v;
   }
   return out;
 }

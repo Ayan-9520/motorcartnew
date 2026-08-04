@@ -1,20 +1,58 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth/middleware";
-import { ok, err, unauthorized } from "@/lib/api-response";
+import { ok, err, unauthorized, forbidden } from "@/lib/api-response";
 import { toSnakeRow } from "@/lib/db/table-map";
 import { createMarketplaceLead } from "@/services/marketplace-lead.service";
+
+const ADMIN_ROLES = new Set(["super_admin", "admin"]);
+const DEALER_ROLES = new Set(["dealer", "used_car_dealer", "new_car_dealer", "bike_dealer", "truck_dealer"]);
 
 export async function GET(req: NextRequest) {
   const auth = getAuthUser(req);
   if (!auth) return unauthorized();
-  const dealerId = req.nextUrl.searchParams.get("dealer_id");
+
+  const dealerIdParam = req.nextUrl.searchParams.get("dealer_id");
+  const limit = Math.min(Number(req.nextUrl.searchParams.get("limit") ?? 100) || 100, 200);
+
+  let where: { dealerId?: string | { in: string[] } } | undefined;
+
+  if (ADMIN_ROLES.has(auth.role)) {
+    where = dealerIdParam ? { dealerId: dealerIdParam } : undefined;
+  } else if (DEALER_ROLES.has(auth.role)) {
+    const owned = await prisma.dealer.findMany({
+      where: { ownerId: auth.sub, deletedAt: null },
+      select: { id: true },
+    });
+    const ids = owned.map((d) => d.id);
+    if (!ids.length) return ok({ data: [] });
+    if (dealerIdParam && !ids.includes(dealerIdParam)) return forbidden();
+    where = { dealerId: dealerIdParam ? dealerIdParam : { in: ids } };
+  } else {
+    return forbidden("Only dealers and platform admins can list leads");
+  }
+
   const leads = await prisma.lead.findMany({
-    where: dealerId ? { dealerId } : undefined,
+    where,
     orderBy: { createdAt: "desc" },
-    take: 100,
+    take: limit,
+    include: { dealer: { select: { name: true, slug: true } } },
   });
-  return ok({ data: leads.map((l) => toSnakeRow(l as unknown as Record<string, unknown>)) });
+
+  return ok({
+    data: leads.map((l) => {
+      const row = toSnakeRow(l as unknown as Record<string, unknown>);
+      delete row.dealer;
+      return {
+        ...row,
+        dealer_name: l.dealer?.name ?? null,
+        dealer_slug: l.dealer?.slug ?? null,
+        vehicle_title:
+          (row.vehicle_interest as string | null) ??
+          ((l.metadata as { vehicle_title?: string })?.vehicle_title ?? null),
+      };
+    }),
+  });
 }
 
 export async function POST(req: NextRequest) {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
+import { FileSpreadsheet, Plus, Upload } from "lucide-react";
 import { featureFlags } from "@/config/feature-flags";
 import { Button } from "@/components/ui/button";
 import { NewCarDealerShell } from "../components/NewCarDealerShell";
@@ -24,6 +25,11 @@ export function NewCarInventoryPage() {
       description="Variants, pricing, stock health, offers & delivery timelines."
       actions={
         <div className="flex flex-wrap gap-2">
+          <Button className="rounded-xl" variant="secondary" asChild>
+            <Link to="/dashboard/new-car/inventory/bulk">
+              <FileSpreadsheet className="mr-1 h-4 w-4" /> Bulk Excel upload
+            </Link>
+          </Button>
           {featureFlags.newCarInventoryV2 ? (
             <Button className="rounded-xl" variant="outline" disabled={!dealer?.id} onClick={() => setStockOpen(true)}>
               <Upload className="mr-1 h-4 w-4" /> Daily stock
@@ -40,6 +46,27 @@ export function NewCarInventoryPage() {
           {[1, 2, 3].map((i) => (
             <div key={i} className="ncd-inventory-card h-72 animate-pulse bg-muted/30" />
           ))}
+        </div>
+      ) : (data?.inventory?.length ?? 0) === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-12 text-center">
+          <p className="text-base font-semibold">No new cars in stock yet</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Upload your price list (30+ models) or add vehicles one by one. Stock appears here and on{" "}
+            <Link to="/buy/cars/new" className="font-medium text-primary hover:underline">
+              /buy/cars/new
+            </Link>
+            .
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Button className="rounded-xl" asChild>
+              <Link to="/dashboard/new-car/inventory/bulk">
+                <FileSpreadsheet className="mr-1 h-4 w-4" /> Bulk Excel upload
+              </Link>
+            </Button>
+            <Button className="rounded-xl" variant="outline" onClick={() => setAddOpen(true)}>
+              <Plus className="mr-1 h-4 w-4" /> Add new car
+            </Button>
+          </div>
         </div>
       ) : (
         <NcdInventoryGrid items={data?.inventory ?? []} />

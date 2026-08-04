@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { parseWorkbook, parseCSV, parsedRowToVehiclePayload, detectDuplicates } from "../lib/excel-parser";
+import { createNewCarInventory } from "@/features/new-car-dealer/services/new-car-dealer.service";
 import { createVehicle } from "@/services/vehicle.service";
 import { createInventoryUploadRecord, completeInventoryUpload, fetchDealerVehiclesByDealerId } from "../services/dealer.service";
 import type { BulkUploadState, ParsedInventoryRow, UploadRowResult } from "../types";
@@ -78,6 +79,20 @@ export function useBulkUpload(dealer: DealerProfile | null, sellerId: string | u
           });
           const { data, error } = await createVehicle(payload, sellerId, dealer.id);
           if (error) throw new Error(error.message);
+          if (dealer.dealerType === "new_car_dealer") {
+            await createNewCarInventory(dealer.id, {
+              brand: row.brand,
+              model: row.model,
+              variant: row.variant ?? "Standard",
+              fuelType: row.fuel,
+              transmission: row.transmission,
+              exShowroomPrice: row.dealerPrice ?? row.price,
+              onRoadPrice: row.price,
+              stockStatus: "available",
+              imageUrl: row.mainImageUrl,
+              waitingPeriodDays: 14,
+            });
+          }
           success++;
           results.push({ row: row.rowNumber, success: true, vehicleId: data?.id, data: row });
         } catch (e) {

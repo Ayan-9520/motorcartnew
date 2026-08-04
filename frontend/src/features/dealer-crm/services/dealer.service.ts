@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DbDealer } from "@/types/database";
 import type { DealerProfile } from "../types";
+import type { DealerVertical, PublicDealer } from "@/features/dealer-network/types";
 
 export function mapDealer(d: DbDealer): DealerProfile {
   return {
@@ -81,7 +82,10 @@ export async function ensureDealerForUser(
     .select()
     .single();
 
-  if (error) return null;
+  if (error) {
+    console.warn("[ensureDealerForUser] create failed", error.message);
+    return null;
+  }
   const profile = mapDealer(data as DbDealer);
   await seedDealerWorkspace(
     profile,
@@ -169,4 +173,42 @@ export async function completeInventoryUpload(
       completed_at: new Date().toISOString(),
     })
     .eq("id", uploadId);
+}
+
+function mapDealerVertical(dealerType: string): DealerVertical {
+  if (dealerType === "new_car_dealer") return "new-cars";
+  if (dealerType === "dealer") return "used-cars";
+  if (dealerType === "bike_dealer") return "bikes";
+  if (dealerType.includes("commercial")) return "commercial";
+  if (dealerType.includes("ev")) return "ev";
+  return "multi-brand";
+}
+
+function mapPublicDealer(d: DbDealer): PublicDealer {
+  return {
+    id: d.id,
+    name: d.name,
+    slug: d.slug,
+    city: d.city,
+    state: d.state,
+    rating: Number(d.rating),
+    reviewCount: d.review_count,
+    isVerified: d.is_verified,
+    vertical: mapDealerVertical(String(d.dealer_type)),
+    specialties: d.specialties ?? [],
+    brands: d.specialties?.length ? d.specialties : [],
+    listingCount: 0,
+    logoUrl: d.logo_url ?? "",
+    coverUrl: "",
+    phone: d.phone ?? "",
+    sinceYear: new Date(d.created_at).getFullYear(),
+    responseMins: 30,
+  };
+}
+
+/** Public dealer directory — real PostgreSQL rows only. */
+export async function fetchPublicDealers(): Promise<PublicDealer[]> {
+  const { data, error } = await supabase.from("dealers").select("*").order("rating", { ascending: false });
+  if (error || !data?.length) return [];
+  return (data as DbDealer[]).map(mapPublicDealer);
 }

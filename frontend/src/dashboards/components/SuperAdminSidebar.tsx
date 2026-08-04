@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export function SuperAdminSidebar() {
   return (
-    <aside className="sa-sidebar erp-sidebar dashboard-sidebar w-[17rem] shrink-0 flex-col">
+    <aside className="sa-sidebar erp-sidebar dashboard-sidebar flex w-[17rem] shrink-0 flex-col">
       <div className="sa-sidebar__brand erp-sidebar__brand shrink-0">
         <div className="erp-sidebar__logo">
           <LayoutGrid className="h-5 w-5" />

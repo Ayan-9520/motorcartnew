@@ -33,6 +33,8 @@ export function DashboardMobileNav() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           id="dashboard-mobile-menu"
+          showCloseButton={false}
+          aria-describedby={undefined}
           className="dashboard-mobile-sheet left-0 top-0 h-full max-h-none w-[min(100vw,320px)] translate-x-0 translate-y-0 rounded-none border-r p-0 sm:max-w-none"
         >
           <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">

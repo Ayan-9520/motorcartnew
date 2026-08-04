@@ -56,8 +56,9 @@ import type {
   SubscriptionPlanRow,
   SupportTicketRow,
 } from "../types";
+import { adminDemoFallback } from "@/config/real-data";
 
-const USE_DEMO_FALLBACK = import.meta.env.VITE_ADMIN_DEMO_FALLBACK === "true";
+const USE_DEMO_FALLBACK = adminDemoFallback;
 
 function useMock<T>(data: T, error: unknown): T {
   if (error) console.warn("[platform-admin] API error", error);

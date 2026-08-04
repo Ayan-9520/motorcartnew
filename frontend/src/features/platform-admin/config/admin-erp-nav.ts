@@ -45,6 +45,7 @@ export const ADMIN_ERP_NAV: AdminErpNavGroup[] = [
       { to: "/dashboard/super-admin", label: "Command center", icon: LayoutDashboard, end: true },
       { to: "/dashboard/super-admin/founder", label: "Founder dashboard", icon: LineChart },
       { to: "/dashboard/super-admin/lead-router", label: "Lead router", icon: Route },
+      { to: "/dashboard/super-admin/marketplace-leads", label: "Marketplace leads", icon: Users },
       { to: "/dashboard/super-admin/operations", label: "How it works", icon: GitBranch },
     ],
   },

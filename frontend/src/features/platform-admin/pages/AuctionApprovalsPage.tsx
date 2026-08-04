@@ -79,7 +79,7 @@ export function AuctionApprovalsPage() {
       description="Approve lots, publish live auctions, and manage featured auction inventory."
       actions={
         <Button size="sm" variant="outline" asChild>
-          <Link to="/dashboard/auction">Full auction desk</Link>
+          <Link to="/dashboard/super-admin/auction-desk">Full auction desk</Link>
         </Button>
       }
     >

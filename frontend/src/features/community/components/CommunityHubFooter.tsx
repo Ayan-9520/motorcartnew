@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Car } from "lucide-react";
+import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
 
 const USEFUL_LINKS = [
   { label: "Explore New Cars", href: "/new-cars" },
@@ -44,10 +44,7 @@ export function CommunityHubFooter() {
         <div>
           <h3 className="community-hub-footer-title">Contact Details</h3>
           <div className="mt-3 rounded-lg border border-primary-foreground/20 bg-primary-foreground/10 p-4">
-            <div className="flex items-center gap-2 font-bold tracking-wide text-primary-foreground">
-              <Car className="h-5 w-5" />
-              MOTORCART
-            </div>
+            <MotorcartLogo variant="full" height={32} alt="Motorcart" />
           </div>
           <p className="mt-3 text-sm leading-relaxed text-primary-foreground/85">
             Plot No.526, II Floor, Patparganj Industrial Area, New Delhi-110092

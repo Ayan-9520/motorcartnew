@@ -62,6 +62,20 @@ export const PARTS_TRUST_STATS = [
   { label: "4.8★", sub: "Avg rating" },
 ];
 
+/** Hero pills — live counts when real-data mode, demo stats otherwise */
+export function partsTrustStatsForCatalog(skuCount: number, liveOnly: boolean) {
+  if (liveOnly) {
+    const countLabel = skuCount > 0 ? skuCount.toLocaleString("en-IN") : "0";
+    return [
+      { label: countLabel, sub: "SKUs live" },
+      { label: "18%", sub: "GST on parts" },
+      { label: "B2B", sub: "Wholesale ready" },
+      { label: "COD", sub: "Pay on delivery" },
+    ];
+  }
+  return PARTS_TRUST_STATS;
+}
+
 export const PARTS_VEHICLE_CHIPS = [
   "All vehicles",
   "Maruti Swift",

@@ -9,10 +9,12 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset-auth": "tsx scripts/reset-auth.ts",
     "auth:confirm": "tsx scripts/confirm-email.ts",
-    "seed:vehicles": "tsx scripts/seed-vehicles-catalog.ts"
+    "seed:vehicles": "tsx scripts/seed-vehicles-catalog.ts",
+    "seed:new-cars": "tsx scripts/seed-new-cars-bulk.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",

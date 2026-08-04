@@ -1,5 +1,6 @@
 ﻿import { Link } from "react-router-dom";
-import { Car, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
+import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
 import { FOOTER_COLUMNS, FOOTER_LEGAL_LINKS, SITE_CONTACT } from "@/content/site-content";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
 import { SOCIAL_LINKS } from "@/features/home/data/homepage-data";
@@ -11,11 +12,8 @@ export function Footer() {
       <div className="container relative">
         <div className="site-footer__main">
           <div className="site-footer__brand">
-            <Link to="/" className="site-footer__logo">
-              <span className="site-footer__logo-mark">
-                <Car className="h-5 w-5" />
-              </span>
-              <span>{SITE_NAME}</span>
+            <Link to="/" className="site-footer__logo inline-flex items-center no-underline">
+              <MotorcartLogo variant="full" height={36} />
             </Link>
             <p className="site-footer__tagline">{SITE_TAGLINE}</p>
 

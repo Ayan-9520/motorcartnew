@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { featureFlags } from "@/config/feature-flags";
 import {
@@ -7,6 +8,7 @@ import {
 import { SuperAdminShell } from "../components/SuperAdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export function LeadRouterPage() {
   const enabled = featureFlags.leadRouter;
@@ -52,13 +54,24 @@ export function LeadRouterPage() {
                   .growth_lead_capture_events ?? 0
               )}
             />
-            <StatCard
-              label="Marketplace leads (readonly)"
-              value={Number(
-                (overview.external_counts_readonly as { marketplace_leads_table?: number })
-                  .marketplace_leads_table ?? 0
-              )}
-            />
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Marketplace leads
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-semibold">
+                  {Number(
+                    (overview.external_counts_readonly as { marketplace_leads_table?: number })
+                      .marketplace_leads_table ?? 0
+                  )}
+                </p>
+                <Button variant="link" className="mt-2 h-auto p-0 text-primary" asChild>
+                  <Link to="/dashboard/super-admin/marketplace-leads">Open inbox →</Link>
+                </Button>
+              </CardContent>
+            </Card>
             <StatCard
               label="Dealer leads (readonly)"
               value={Number(

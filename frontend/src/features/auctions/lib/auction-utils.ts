@@ -54,6 +54,17 @@ export function isReserveMet(auction: Pick<AuctionListing, "currentBid" | "reser
   return (auction.currentBid ?? 0) >= auction.reservePrice;
 }
 
-export function auctionDetailPath(auction: Pick<AuctionListing, "slug" | "status">): string {
-  return `/auctions/${auction.status === "live" ? "live" : auction.status}/${auction.slug}`;
+type AuctionPathInput = {
+  slug?: string;
+  id?: string;
+  status?: string;
+};
+
+/** Room URL — `/auctions/{status}/{slug}`. Falls back to id when slug missing. */
+export function auctionDetailPath(auction: AuctionPathInput): string {
+  const slug = auction.slug?.trim() || auction.id;
+  if (!slug) return "/auctions";
+  const status =
+    !auction.status || auction.status === "live" ? "live" : auction.status;
+  return `/auctions/${status}/${slug}`;
 }

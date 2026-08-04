@@ -1,16 +1,17 @@
 import { Link } from "react-router-dom";
 import { PARTS_HUB_BRANDS } from "../data/parts-hub-data";
 
-export function PartsBrandStrip() {
+export function PartsBrandStrip({ browseHref = "/parts/browse" }: { browseHref?: string }) {
   return (
-    <section className="container pb-10">
-      <p className="mb-4 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        Authorised &amp; trusted brands
-      </p>
+    <section className="container pb-10 pt-2">
+      <div className="parts-hub-section-head parts-hub-section-head--center mb-5">
+        <p className="parts-hub-section-eyebrow">OEM &amp; aftermarket</p>
+        <p className="parts-hub-section-desc text-xs font-bold uppercase tracking-wider">Authorised &amp; trusted brands</p>
+      </div>
       <ul className="parts-brands-row">
         {PARTS_HUB_BRANDS.map((b) => (
           <li key={b.name}>
-            <Link to="/parts/browse" className="parts-brand-tile group overflow-hidden" title={b.name}>
+            <Link to={browseHref} className="parts-brand-tile group overflow-hidden" title={b.name}>
               <img
                 src={b.image}
                 alt={b.name}

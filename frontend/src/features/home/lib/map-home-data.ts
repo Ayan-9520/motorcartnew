@@ -5,6 +5,7 @@ import type { NewCarListing } from "@/features/new-cars/types";
 import type { PreownedCarListing } from "@/features/preowned-cars/types";
 import type { HomeAuctionItem, HomeBankItem, HomePartItem } from "@/integrations/api/home";
 import { formatCurrency } from "@/lib/utils";
+import { auctionDetailPath } from "@/features/auctions/lib/auction-utils";
 import { vehicleDetailPath } from "@/lib/vehicle-utils";
 import type { HeroDashboardCard } from "@/features/home/data/hero-hub-config";
 import type { PartnerLogoItem } from "@/features/home/data/homepage-data";
@@ -132,7 +133,7 @@ export function buildHeroDashboardPool(input: {
     title: auction.title,
     price: auction.currentBid ?? auction.startingBid,
     meta: `${formatAuctionTimeLeft(auction.endsAt)} · ${auction.bidCount} bids`,
-    href: `/auctions/${auction.slug ?? auction.id}`,
+    href: auctionDetailPath(auction),
     badge: "LIVE",
     live: true,
     endsAt: auction.endsAt,

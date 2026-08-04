@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Motorcart",
+    "slug": "motorcart-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "motorcart",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050d18"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "in.motorcart.app"
+    },
+    "android": {
+      "package": "in.motorcart.app",
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#050d18",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "Motorcart",
+      "shortName": "Motorcart",
+      "description": "Motorcart companion CRM — marketplace, leads, and role desks"
+    },
+    "plugins": ["expo-secure-store"]
+  }
+}

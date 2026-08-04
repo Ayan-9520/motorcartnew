@@ -1,4 +1,5 @@
 import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
+import { realDataOnly } from "@/config/real-data";
 import { searchVehicles } from "@/services/vehicle.service";
 import { deriveFairPriceLabel, filterVehicles, paginateVehicles, sortVehicles } from "@/lib/vehicle-utils";
 import type { FairPriceLabel, VehicleFilters, VehicleSearchResult, VehicleSortOption } from "@/types/vehicle";
@@ -66,6 +67,7 @@ export async function searchPreownedCars(params: {
 }
 
 export function getFeaturedPreowned(limit = 8): PreownedCarListing[] {
+  if (realDataOnly) return [];
   return sortVehicles(asPreowned(MOCK_VEHICLES).filter((v) => v.isCertified), "ai-score").slice(0, limit) as PreownedCarListing[];
 }
 

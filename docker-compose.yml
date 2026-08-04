@@ -76,6 +76,11 @@ services:
         VITE_SOCKET_URL: ${VITE_SOCKET_URL:-}
         VITE_SITE_URL: ${VITE_SITE_URL:-http://localhost}
         VITE_FULL_ECOSYSTEM: ${VITE_FULL_ECOSYSTEM:-true}
+        VITE_FEATURE_WISHLIST_DB: ${VITE_FEATURE_WISHLIST_DB:-true}
+        VITE_FEATURE_UNIFIED_VEHICLE_API: ${VITE_FEATURE_UNIFIED_VEHICLE_API:-true}
+        VITE_FEATURE_M4_NOTIFICATIONS: ${VITE_FEATURE_M4_NOTIFICATIONS:-true}
+        VITE_REAL_DATA_ONLY: ${VITE_REAL_DATA_ONLY:-true}
+        VITE_ADMIN_DEMO_FALLBACK: ${VITE_ADMIN_DEMO_FALLBACK:-false}
     restart: unless-stopped
     expose:
       - "80"
@@ -88,6 +93,28 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+  mobile-app:
+    build:
+      context: ./apps/mobile-customer
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: ${MOBILE_EXPO_PUBLIC_API_URL:-}
+        EXPO_PUBLIC_WEB_URL: ${VITE_SITE_URL:-http://localhost:3000}
+        EXPO_PUBLIC_SHOW_DEMO: ${MOBILE_SHOW_DEMO:-1}
+    image: motorcart-mobile-app:local
+    restart: unless-stopped
+    ports:
+      - "${MOBILE_APP_PORT:-8090}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   nginx:
     image: nginx:1.27-alpine

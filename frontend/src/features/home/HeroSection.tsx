@@ -14,6 +14,7 @@ import { PHASE1_ROTATING_LINES, PHASE1_TAGLINE } from "@/features/home/data/phas
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { formatPrice } from "@/lib/vehicle-utils";
 import { formatCurrency } from "@/lib/utils";
+import { HUB_HERO_IMAGES, MEDIA_DEFAULTS } from "@/lib/media/india-media-catalog";
 
 export function HeroSection() {
   const { pathname } = useLocation();
@@ -52,11 +53,30 @@ export function HeroSection() {
   }, [rotatingLines.length]);
 
   return (
-    <section className="hero-section relative overflow-hidden border-b border-border">
-      <div className="hero-section-surface" aria-hidden />
+    <section className="hero-section hero-section--photo relative overflow-hidden border-b border-border">
+      <div className="hero-section-bg" aria-hidden>
+        <img
+          src={MEDIA_DEFAULTS.vehicleWide}
+          alt=""
+          className="hero-section-bg-photo"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+        />
+        <img
+          src={HUB_HERO_IMAGES.cars}
+          alt=""
+          className="hero-section-bg-brand"
+          loading="eager"
+          decoding="async"
+          aria-hidden
+        />
+        <div className="hero-section-bg-overlay" />
+        <div className="hero-section-bg-mesh" />
+      </div>
       <div className="hero-section-glow" aria-hidden />
 
-      <div className="container relative py-8 md:py-11 lg:py-12">
+      <div className="container relative z-[1] py-8 md:py-11 lg:py-12">
         <div className="hero-layout-grid">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -138,7 +158,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 }}
-            className="hero-layout-right hidden min-w-0 md:flex md:flex-col lg:sticky lg:top-20"
+            className="hero-layout-right hidden min-w-0 md:flex md:flex-col lg:sticky lg:top-[calc(var(--nav-height,4rem)+0.75rem)]"
           >
             <HeroDashboardPanel />
           </motion.div>

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Menu, X, Search, User, Users, Car, ShoppingCart, Heart } from "lucide-react";
+import { Menu, X, Search, User, Users, ShoppingCart, Heart } from "lucide-react";
+import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
 import { Button } from "@/components/ui/button";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 import { isVehicleHubNavPath, NAV_LINKS, VEHICLE_HUB_NAV } from "@/lib/constants";
@@ -32,6 +33,7 @@ function navMenuLinkClass(linkHref: string, isActive: boolean, pathname: string)
 
 export function Navbar() {
   const { pathname } = useLocation();
+  const headerRef = useRef<HTMLElement>(null);
   const hideVehicleHubBar =
     pathname === "/community" ||
     pathname.startsWith("/community/") ||
@@ -50,6 +52,25 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const syncNavHeight = () => {
+      document.documentElement.style.setProperty("--nav-height", `${el.offsetHeight}px`);
+    };
+
+    syncNavHeight();
+    const observer = new ResizeObserver(syncNavHeight);
+    observer.observe(el);
+    window.addEventListener("resize", syncNavHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncNavHeight);
+    };
+  }, [mobileMenuOpen, hideVehicleHubBar, pathname]);
 
   const openSearch = () => setSearchOpen(true);
   const closeMobile = () => setMobileMenuOpen(false);
@@ -156,17 +177,16 @@ export function Navbar() {
 
   return (
     <>
-      <header className={cn("nav-shell nav-shell-stacked", scrolled && "nav-shell-scrolled")}>
+      <header
+        ref={headerRef}
+        className={cn("nav-shell nav-shell-stacked nav-shell-fixed", scrolled && "nav-shell-scrolled")}
+      >
         {/* Row 1: logo + small vehicle icons + search & utilities */}
         <div className="nav-top-bar">
           <div className="container nav-top-bar-inner">
-            <Link to="/" className="nav-brand shrink-0" aria-label="Motorcart home — marketplace">
-              <span className="nav-brand-mark">
-                <Car className="h-5 w-5" />
-              </span>
-              <span className="hidden sm:inline">
-                Motor<span className="text-primary">cart</span>
-              </span>
+            <Link to="/" className="nav-brand shrink-0" aria-label="Motorcart home">
+              <MotorcartLogo variant="icon" height={36} className="sm:hidden" />
+              <MotorcartLogo variant="full" height={32} className="hidden sm:inline-block" />
             </Link>
 
             {!hideVehicleHubBar && (
@@ -179,10 +199,10 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Row 2: pages menu only */}
-        <div className="nav-menu-bar">
+        {/* Row 2: desktop pages menu only (mobile uses drawer — avoids double header) */}
+        <div className="nav-menu-bar hidden md:block">
           <div className="container nav-menu-bar-inner">
-            <nav className="nav-menu-track hidden md:flex" aria-label="Main">
+            <nav className="nav-menu-track flex" aria-label="Main">
               {NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.href}
@@ -194,11 +214,6 @@ export function Navbar() {
                 </NavLink>
               ))}
             </nav>
-            {!hideVehicleHubBar && (
-              <div className="nav-menu-hub-mobile flex min-w-0 flex-1 justify-center overflow-hidden md:hidden">
-                <VehicleHubIconBar variant="inline" />
-              </div>
-            )}
           </div>
         </div>
 
@@ -299,7 +314,7 @@ export function Navbar() {
           </div>
         )}
       </header>
-
+      <div className="nav-shell-spacer" aria-hidden />
     </>
   );
 }

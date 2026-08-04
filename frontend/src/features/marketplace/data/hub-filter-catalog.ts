@@ -1,5 +1,6 @@
 import type { HubCategorySlug } from "../types";
 import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
+import { realDataOnly } from "@/config/real-data";
 import { inferVehicleSegment } from "@/lib/media/vehicle-media-registry";
 import type { VehicleListing } from "@/types/vehicle";
 
@@ -110,13 +111,16 @@ function listingMatchesHub(v: VehicleListing, hub: HubCategorySlug): boolean {
 
 export function getHubBrands(hub: HubCategorySlug): string[] {
   const brands = new Set<string>(HUB_BRAND_LISTS[hub]);
-  for (const v of MOCK_VEHICLES) {
-    if (listingMatchesHub(v, hub)) brands.add(v.brand);
+  if (!realDataOnly) {
+    for (const v of MOCK_VEHICLES) {
+      if (listingMatchesHub(v, hub)) brands.add(v.brand);
+    }
   }
   return [...brands].sort();
 }
 
 export function getHubBodyTypes(hub: HubCategorySlug): string[] {
+  if (realDataOnly) return [];
   const types = new Set<string>();
   for (const v of MOCK_VEHICLES) {
     if (listingMatchesHub(v, hub)) types.add(v.bodyType);
@@ -125,6 +129,7 @@ export function getHubBodyTypes(hub: HubCategorySlug): string[] {
 }
 
 export function getHubFuels(hub: HubCategorySlug): string[] {
+  if (realDataOnly) return [];
   const fuels = new Set<string>();
   for (const v of MOCK_VEHICLES) {
     if (listingMatchesHub(v, hub)) fuels.add(v.fuelType);

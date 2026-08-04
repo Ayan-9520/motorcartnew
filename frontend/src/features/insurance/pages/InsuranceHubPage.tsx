@@ -66,6 +66,12 @@ export function InsuranceHubPage() {
         <Button size="lg" variant="ghost" className="rounded-xl" asChild>
           <Link to="/dashboard/customer/insurance">My policies</Link>
         </Button>
+        <Button size="lg" variant="ghost" className="rounded-xl" asChild>
+          <Link to={`/insurance/renew?type=${vehicleType}`}>Renew policy</Link>
+        </Button>
+        <Button size="lg" variant="ghost" className="rounded-xl" asChild>
+          <Link to={`/insurance/claims?type=${vehicleType}`}>File a claim</Link>
+        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3 mb-10">

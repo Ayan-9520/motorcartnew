@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { BookingStatus, DbBooking, DbReview, DbService, DbServiceCenter } from "@/types/database";
 import { MOCK_SERVICE_CENTERS, MOCK_SERVICES } from "../data/mock-service-data";
+import { realDataOnly } from "@/config/real-data";
 import type {
   BookingAnalytics,
   BookingTrackingEvent,
@@ -138,13 +139,13 @@ export function mapBooking(
 }
 
 function mergeCenters(db: ServiceCenter[]): ServiceCenter[] {
-  if (db.length >= 2) return db;
+  if (realDataOnly || db.length >= 2) return db;
   const ids = new Set(db.map((c) => c.id));
   return [...db, ...MOCK_SERVICE_CENTERS.filter((m) => !ids.has(m.id))];
 }
 
 function mergeCatalog(db: ServiceCatalogItem[]): ServiceCatalogItem[] {
-  if (db.length >= 4) return db;
+  if (realDataOnly || db.length >= 4) return db;
   const ids = new Set(db.map((s) => s.id));
   return [...db, ...MOCK_SERVICES.filter((m) => !ids.has(m.id))];
 }
@@ -165,6 +166,7 @@ export async function fetchServiceCenters(city?: string): Promise<ServiceCenter[
 export async function fetchServiceCenterBySlug(slug: string): Promise<ServiceCenter | null> {
   const { data, error } = await supabase.from("service_centers").select("*").eq("slug", slug).maybeSingle();
   if (!error && data) return mapServiceCenter(data as DbServiceCenter);
+  if (realDataOnly) return null;
   return MOCK_SERVICE_CENTERS.find((c) => c.slug === slug) ?? null;
 }
 

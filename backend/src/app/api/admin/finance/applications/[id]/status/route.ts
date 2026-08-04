@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import type { FinanceStatus } from "@prisma/client";
-import { requirePlatformAdmin } from "@/lib/auth/require-platform-admin";
+import { requireFinanceDesk } from "@/lib/auth/require-finance-desk";
 import { ok, err, unauthorized, forbidden } from "@/lib/api-response";
 import { updateFinanceApplicationStatus } from "@/services/platform-admin.service";
 
@@ -14,7 +14,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest, context: Ctx) {
   try {
-    const admin = requirePlatformAdmin(req);
+    const admin = requireFinanceDesk(req);
     const { id } = await context.params;
     const { status, note } = schema.parse(await req.json());
     await updateFinanceApplicationStatus(id, status as FinanceStatus, admin.sub, note);

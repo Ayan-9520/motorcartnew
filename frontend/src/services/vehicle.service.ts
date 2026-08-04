@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { DbVehicle, DbDealer } from "@/types/database";
 import type { VehicleListing, VehicleFilters } from "@/types/vehicle";
 import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
+import { realDataOnly } from "@/config/real-data";
 import { filterVehicles, sortVehicles, paginateVehicles, slugify } from "@/lib/vehicle-utils";
 import type { VehicleSortOption } from "@/types/vehicle";
 import { resolveVehicleGallery } from "@/lib/media/resolve-images";
@@ -84,13 +85,9 @@ export function mapDbToListing(v: DbVehicle, dealer?: DbDealer | null): VehicleL
   };
 }
 
-/** Mock catalog + Supabase rows (DB wins on slug collision). */
+/** DB vehicles only — no mock catalog merge. */
 export async function getVehiclePool(): Promise<VehicleListing[]> {
-  const available = MOCK_VEHICLES.filter((v) => v.status === "available");
-  const dbVehicles = await fetchVehiclesFromDb(500);
-  if (!dbVehicles.length) return available;
-  const slugs = new Set(dbVehicles.map((v) => v.slug));
-  return [...dbVehicles, ...available.filter((v) => !slugs.has(v.slug))];
+  return fetchVehiclesFromDb(500);
 }
 
 export async function fetchVehiclesFromDb(limit = 500): Promise<VehicleListing[]> {
@@ -135,9 +132,10 @@ export async function fetchVehicleBySlug(slug: string): Promise<VehicleListing |
       return mapDbToListing(data as DbVehicle, null);
     }
   } catch {
-    /* fall through to mock */
+    /* fall through */
   }
 
+  if (realDataOnly) return null;
   return MOCK_VEHICLES.find((v) => v.slug === slug) ?? null;
 }
 

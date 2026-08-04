@@ -11,11 +11,16 @@
     "build:frontend": "npm run build --prefix frontend",
     "install:all": "npm install --prefix frontend && npm install --prefix backend",
     "docker:up": "docker compose --env-file .env.docker up -d --build && docker compose --env-file .env.docker up -d --force-recreate nginx",
+    "docker:prod:up": "docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml up -d --build",
+    "docker:prod:down": "docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml down",
+    "docker:prod:deploy": "powershell -ExecutionPolicy Bypass -File scripts/deploy-server.ps1 -EnvFile .env.production",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
+    "docker:verify": "powershell -Command \"Invoke-WebRequest -Uri http://localhost:3000/api/health -UseBasicParsing | Select-Object -ExpandProperty Content\"",
     "db:up": "docker compose up postgres redis -d",
     "db:down": "docker compose stop postgres redis",
     "migrate": "npm run db:migrate --prefix backend",
+    "migrate:deploy": "npm run db:migrate:deploy --prefix backend",
     "seed": "npm run db:seed --prefix backend"
   },
   "devDependencies": {

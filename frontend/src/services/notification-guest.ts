@@ -1,4 +1,5 @@
 import type { DbNotification } from "@/types/database";
+import { realDataOnly } from "@/config/real-data";
 import { getCurrentMarketScopeKey } from "@/lib/market-scope";
 import { useAuthStore } from "@/store/authStore";
 
@@ -25,6 +26,7 @@ function withUserId(rows: Omit<DbNotification, "user_id">[]): DbNotification[] {
 
 export function loadGuestNotifications(): DbNotification[] {
   if (useAuthStore.getState().user?.id) return [];
+  if (realDataOnly) return [];
 
   try {
     const raw = localStorage.getItem(storageKey());

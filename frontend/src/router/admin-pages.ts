@@ -24,5 +24,8 @@ export { AuctionApprovalsPage } from "@/features/platform-admin/pages/AuctionApp
 export { TransactionsPage } from "@/features/platform-admin/pages/TransactionsPage";
 export { DirectoryMonetizationPage } from "@/features/platform-admin/pages/DirectoryMonetizationPage";
 export { LeadRouterPage } from "@/features/platform-admin/pages/LeadRouterPage";
+export { MarketplaceLeadsPage } from "@/features/platform-admin/pages/MarketplaceLeadsPage";
 export { FounderDashboardPage } from "@/features/founder-dashboard/pages/FounderDashboardPage";
 export { CommunityModerationPage } from "@/features/community/pages/CommunityModerationPage";
+export { AuctionAdminPage } from "@/features/auctions/pages/AuctionAdminPage";
+export { AuctionDeskGate } from "@/features/auctions/pages/AuctionDeskGate";

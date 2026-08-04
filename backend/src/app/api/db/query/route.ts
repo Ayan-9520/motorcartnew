@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { runDbQuery } from "@/lib/db/query-handler";
+import { runDbQuery, countDbQuery } from "@/lib/db/query-handler";
 import { getAuthUser } from "@/lib/auth/middleware";
 import {
   isPendingBusinessAccess,
@@ -89,16 +89,8 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
     const countRequested = req.nextUrl.searchParams.get("count") === "exact" || (body as Record<string, string> | undefined)?.count === "exact";
     const data = await runDbQuery(p);
     if (countRequested && p.table) {
-      const { prisma } = await import("@/lib/prisma");
-      const { tableDelegates } = await import("@/lib/db/table-map");
-      const key = tableDelegates[p.table];
-      if (key) {
-        const delegate = (prisma as unknown as Record<string, { count: (args?: unknown) => Promise<number> }>)[
-          key as string
-        ];
-        const total = await delegate?.count?.({ where: { deletedAt: null } });
-        return ok({ data, count: total ?? 0 });
-      }
+      const total = await countDbQuery(p.table, p.filters);
+      return ok({ data, count: total });
     }
     return ok({ data });
   } catch (e) {

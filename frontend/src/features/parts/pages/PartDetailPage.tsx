@@ -14,7 +14,7 @@ import { PartsAiRecommendations } from "../components/PartsAiRecommendations";
 import { usePartsCartStore } from "@/store/partsCartStore";
 import { displayUnitPrice } from "../lib/part-utils";
 import { recommendParts } from "../lib/ai-parts";
-import { MOCK_PARTS_CATALOG } from "../data/mock-parts-catalog";
+import { usePartsList } from "../hooks/usePartsList";
 import toast from "react-hot-toast";
 import { postPartReview } from "../services/parts.service";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 export function PartDetailPage() {
   const { category, slug } = useParams<{ category: string; slug: string }>();
   const { part, reviews, loading } = usePartDetail(category, slug);
+  const { parts: categoryParts } = usePartsList(part?.categorySlug, "", null);
   const { user, isAuthenticated } = useAuth();
   const addProduct = usePartsCartStore((s) => s.addProduct);
   const [qty, setQty] = useState(1);
@@ -39,7 +40,7 @@ export function PartDetailPage() {
 
   const related = part
     ? recommendParts(
-        MOCK_PARTS_CATALOG.filter((p) => p.id !== part.id),
+        categoryParts.filter((item) => item.id !== part.id),
         { category: part.categorySlug, vehicle: part.compatibility[0] },
         4
       )

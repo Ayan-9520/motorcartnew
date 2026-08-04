@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Car, ShieldCheck, Sparkles, TrendingUp, Zap } from "lucide-react";
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
+import { ShieldCheck, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { SITE_TAGLINE } from "@/lib/constants";
+import { MotorcartBrandPlate } from "@/components/brand/MotorcartBrandPlate";
 import { AuthSurface } from "@/components/auth/AuthSurface";
 import { AuthMinimalHeader } from "@/components/auth/AuthMinimalHeader";
 import { useUIStore } from "@/store/uiStore";
@@ -34,11 +35,8 @@ export function AuthLayout() {
           <div className="auth-layout__brand-center">
           <div className="auth-layout__brand-inner">
             <div className="auth-layout__brand-main">
-              <Link to="/" className="auth-layout__logo">
-                <span className="auth-layout__logo-mark">
-                  <Car className="h-5 w-5" />
-                </span>
-                <span className="text-lg font-bold tracking-tight">{SITE_NAME}</span>
+              <Link to="/" className="auth-layout__logo" aria-label="Motorcart">
+                <MotorcartBrandPlate variant="full" height={42} plateClassName="px-3.5 py-2" />
               </Link>
 
               <div className="auth-layout__hero">

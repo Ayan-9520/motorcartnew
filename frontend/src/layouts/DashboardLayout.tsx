@@ -20,9 +20,11 @@ export function DashboardLayout() {
           : "workspace-shell flex flex-col"
       }
     >
-      <Navbar />
-      <div className="dashboard-shell-bar shrink-0 border-b border-border/50 px-4 py-2 lg:hidden">
-        {isCustomer ? <CustomerMobileNav /> : <DashboardMobileNav />}
+      <div className="workspace-shell__top shrink-0">
+        <Navbar />
+        <div className="dashboard-shell-bar border-b border-border/50 px-4 py-2 lg:hidden">
+          {isCustomer ? <CustomerMobileNav /> : <DashboardMobileNav />}
+        </div>
       </div>
       <div className="workspace-shell__body">
         {isCustomer ? <CustomerSidebar /> : <RoleSidebar />}

@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DbBank, DbFinanceApplication, FinanceStatus } from "@/types/database";
 import { MOCK_LENDERS } from "../data/lenders";
+import { realDataOnly } from "@/config/real-data";
 import { buildMockBankIntegrations } from "../data/mock-bank-integrations";
 import {
   buildDsaDemoApplications,
@@ -68,9 +69,9 @@ export async function fetchLenders(): Promise<Lender[]> {
       return mergeLenders((data as (DbBank & { ranking_score?: number })[]).map(mapDbBank));
     }
   } catch {
-    /* fall through to mock */
+    /* fall through */
   }
-  return MOCK_LENDERS;
+  return realDataOnly ? [] : MOCK_LENDERS;
 }
 
 export async function fetchLenderBySlug(slug: string): Promise<Lender | null> {

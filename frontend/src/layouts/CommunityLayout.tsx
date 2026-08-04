@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { SocialAvatar } from "@/features/community/components/SocialAvatar";
+import { communityLoginPath, communitySignupPath } from "@/features/community/lib/community-routes";
 import { Button } from "@/components/ui/button";
 
 function isFeedPath(pathname: string) {
@@ -20,22 +21,22 @@ export function CommunityLayout() {
   const navigate = useNavigate();
   const { user, isAuthenticated, signOut, isLoading } = useAuth();
 
-  const profileHref = user ? `/community/u/${user.id}` : "/login?redirect=/community/me";
+  const profileHref = user ? `/community/u/${user.id}` : communityLoginPath("/community/me");
 
   const nav = [
     { href: "/community", label: "Feed", icon: Home, active: isFeedPath(pathname) },
+    {
+      href: "/community/groups",
+      label: "Groups",
+      icon: Users,
+      active: pathname.startsWith("/community/groups"),
+    },
     {
       href: profileHref,
       label: "Profile",
       icon: UserCircle,
       active: pathname.startsWith("/community/u/") || pathname === "/community/me",
       authOnly: true,
-    },
-    {
-      href: "/community/groups",
-      label: "Groups",
-      icon: Users,
-      active: pathname.startsWith("/community/groups"),
     },
   ];
 
@@ -44,17 +45,26 @@ export function CommunityLayout() {
     navigate("/community", { replace: true });
   };
 
+  const mobileItems = [
+    ...nav.filter((item) => !item.authOnly || isAuthenticated),
+    isAuthenticated
+      ? ({ type: "signout" as const, label: "Sign out", icon: LogOut })
+      : ({ type: "link" as const, href: communityLoginPath("/community"), label: "Sign in", icon: UserCircle }),
+  ];
+
   return (
     <div className="community-app-shell">
       <aside className="community-app-rail hidden lg:flex" aria-label="Community">
-        <Link to="/" className="community-app-back">
-          <ArrowLeft className="h-4 w-4" />
-          Motorcart
-        </Link>
+        <div className="community-app-rail-head shrink-0">
+          <Link to="/" className="community-app-back">
+            <ArrowLeft className="h-4 w-4" />
+            Motorcart
+          </Link>
 
-        <p className="community-app-rail-title">Community</p>
+          <p className="community-app-rail-title">Community</p>
+        </div>
 
-        <nav className="community-app-nav">
+        <nav className="community-app-nav" aria-label="Community sections">
           {nav.map((item) => {
             if (item.authOnly && !isAuthenticated) return null;
             const Icon = item.icon;
@@ -91,18 +101,15 @@ export function CommunityLayout() {
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </Button>
-              <p className="px-1 text-[11px] leading-snug text-muted-foreground">
-                Account login is shared with Motorcart workspace — community profile is separate under Profile.
-              </p>
             </>
           ) : (
             <>
               <Button className="w-full rounded-xl font-semibold" asChild>
-                <Link to="/login?redirect=/community">Sign in to post</Link>
+                <Link to={communityLoginPath("/community")}>Sign in to post</Link>
               </Button>
               <p className="px-1 text-[11px] text-muted-foreground">
                 New here?{" "}
-                <Link to="/signup?redirect=/community" className="font-medium text-primary hover:underline">
+                <Link to={communitySignupPath("/community")} className="font-medium text-primary hover:underline">
                   Create account
                 </Link>
               </p>
@@ -116,35 +123,44 @@ export function CommunityLayout() {
       </div>
 
       <nav className="community-app-mobile-bar lg:hidden" aria-label="Community">
-        {nav.map((item) => {
-          if (item.authOnly && !isAuthenticated) return null;
+        {mobileItems.map((item) => {
+          if ("type" in item && item.type === "signout") {
+            const Icon = item.icon;
+            return (
+              <button
+                key="signout"
+                type="button"
+                className="community-app-mobile-item community-app-mobile-item--danger"
+                onClick={() => void handleSignOut()}
+              >
+                <span className="community-app-mobile-icon">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="community-app-mobile-label">{item.label}</span>
+              </button>
+            );
+          }
+
           const Icon = item.icon;
+          const href = "href" in item ? item.href : "/community";
+          const active = "active" in item ? item.active : false;
+
           return (
             <Link
-              key={item.href}
-              to={item.href}
-              className={cn("community-app-mobile-item", item.active && "community-app-mobile-item-active")}
+              key={href}
+              to={href}
+              className={cn(
+                "community-app-mobile-item",
+                active && "community-app-mobile-item-active"
+              )}
             >
-              <Icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <span className="community-app-mobile-icon">
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="community-app-mobile-label">{item.label}</span>
             </Link>
           );
         })}
-        {isAuthenticated ? (
-          <button
-            type="button"
-            className="community-app-mobile-item text-destructive"
-            onClick={() => void handleSignOut()}
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Sign out</span>
-          </button>
-        ) : (
-          <Link to="/login?redirect=/community" className="community-app-mobile-item">
-            <UserCircle className="h-5 w-5" />
-            <span>Sign in</span>
-          </Link>
-        )}
       </nav>
     </div>
   );

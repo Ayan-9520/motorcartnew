@@ -1,4 +1,5 @@
 import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
+import { realDataOnly } from "@/config/real-data";
 import { searchVehicles } from "@/services/vehicle.service";
 import { filterVehicles, paginateVehicles, sortVehicles } from "@/lib/vehicle-utils";
 import type { VehicleFilters, VehicleSearchResult, VehicleSortOption } from "@/types/vehicle";
@@ -31,6 +32,7 @@ export function getNewCarInventory(): NewCarListing[] {
 }
 
 export function getFeaturedNewCars(limit = 8): NewCarListing[] {
+  if (realDataOnly) return [];
   return sortVehicles(asNewCars(MOCK_VEHICLES), "ai-score")
     .filter((v) => v.isFeatured || v.metadata.isLatestLaunch)
     .slice(0, limit) as NewCarListing[];

@@ -134,6 +134,14 @@ export async function runDbQuery(params: {
   throw new Error(`Unsupported action: ${params.action}`);
 }
 
+export async function countDbQuery(table: string, filters?: string) {
+  const delegate = getDelegate(table);
+  if (!delegate) throw new Error(`Unknown table: ${table}`);
+  const filtersArr: Filter[] = filters ? JSON.parse(filters) : [];
+  const where = buildWhere(filtersArr, table);
+  return delegate.count({ where });
+}
+
 /** Maps legacy `analytics` table inserts to `activity_logs` */
 function mapAnalyticsInsert(row: Record<string, unknown>): Record<string, unknown> {
   const payload = (row.payload as Record<string, unknown>) ?? {};

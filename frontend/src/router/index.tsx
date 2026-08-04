@@ -24,6 +24,7 @@ import { PrivacyPage } from "@/pages/PrivacyPage";
 import { TermsPage } from "@/pages/TermsPage";
 import { FaqsPage } from "@/pages/FaqsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { PricingPage } from "@/pages/PricingPage";
 import { UnauthorizedPage } from "@/pages/UnauthorizedPage";
 import { AccountSuspendedPage } from "@/pages/AccountSuspendedPage";
 import { RoleDashboardRedirect } from "@/components/routing/RoleDashboardRedirect";
@@ -49,7 +50,7 @@ import { BuyHubPage } from "@/features/marketplace/pages/BuyHubPage";
 import { SellHubPage } from "@/features/marketplace/pages/SellHubPage";
 import { SellListingPage } from "@/features/marketplace/pages/SellListingPage";
 import { BuyCategoryListingPage } from "@/features/marketplace/pages/BuyCategoryListingPage";
-import { VehicleDetailPage } from "@/router/lazy-pages";
+import { VehicleDetailPage } from "@/features/vehicles/pages/VehicleDetailPage";
 import { VehicleComparePage } from "@/features/vehicles/pages/VehicleComparePage";
 import { WishlistPage } from "@/features/vehicles/pages/WishlistPage";
 import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
@@ -62,6 +63,7 @@ import { NewCarDealerLayout } from "@/layouts/NewCarDealerLayout";
 import {
   NewCarOverviewPage,
   NewCarInventoryPage,
+  NewCarBulkUploadPage,
   NewCarLeadsPage,
   NewCarLeadDetailPage,
   NewCarBookingsPage,
@@ -100,7 +102,7 @@ import {
 } from "@/router/lazy-pages";
 import { AuctionHubPage } from "@/features/auctions/pages/AuctionHubPage";
 import { AuctionListingPage } from "@/features/auctions/pages/AuctionListingPage";
-import { AuctionRoomPage, AuctionAdminPage } from "@/router/lazy-pages";
+import { AuctionRoomPage } from "@/router/lazy-pages";
 import { FinanceHubPage } from "@/features/finance/pages/FinanceHubPage";
 import { FinanceMarketplacePage } from "@/features/finance/pages/FinanceMarketplacePage";
 import { LoanComparePage } from "@/features/finance/pages/LoanComparePage";
@@ -113,6 +115,8 @@ import { InsuranceHubPage } from "@/features/insurance/pages/InsuranceHubPage";
 import { InsuranceQuotePage } from "@/features/insurance/pages/InsuranceQuotePage";
 import { InsuranceComparePage } from "@/features/insurance/pages/InsuranceComparePage";
 import { InsuranceApplyPage } from "@/features/insurance/pages/InsuranceApplyPage";
+import { InsuranceClaimsPage } from "@/features/insurance/pages/InsuranceClaimsPage";
+import { InsuranceRenewPage } from "@/features/insurance/pages/InsuranceRenewPage";
 import { CustomerInsurancePage } from "@/features/insurance/pages/CustomerInsurancePage";
 import {
   DsaPortalPage,
@@ -205,7 +209,10 @@ import {
   DirectoryMonetizationPage,
   FounderDashboardPage,
   LeadRouterPage,
+  MarketplaceLeadsPage,
   CommunityModerationPage,
+  AuctionAdminPage,
+  AuctionDeskGate,
 } from "@/router/admin-pages";
 import { AIControlCenterPage } from "@/router/lazy-pages";
 import { DealersHubPage } from "@/features/dealer-network/pages/DealersHubPage";
@@ -268,6 +275,8 @@ export const router = createBrowserRouter([
       { path: "insurance/quote", element: <InsuranceQuotePage /> },
       { path: "insurance/compare", element: <InsuranceComparePage /> },
       { path: "insurance/apply", element: <InsuranceApplyPage /> },
+      { path: "insurance/renew", element: <InsuranceRenewPage /> },
+      { path: "insurance/claims", element: <InsuranceClaimsPage /> },
       { path: "parts", element: <PartsHubPage /> },
       { path: "parts/browse", element: <PartsListingPage /> },
       { path: "parts/:category", element: <PartsListingPage /> },
@@ -362,7 +371,7 @@ export const router = createBrowserRouter([
       { path: "dealers", element: <DealersHubPage /> },
       { path: "dealers/browse", element: <DealersBrowsePage /> },
       { path: "dealers/:slug", element: <DealerProfilePage /> },
-      { path: "pricing", element: ph("Pricing", "Dealer SaaS plans") },
+      { path: "pricing", element: <PricingPage /> },
       { path: "ai", element: <AIControlCenterPage /> },
       { path: "about", element: <AboutPage /> },
       { path: "contact", element: <ContactPage /> },
@@ -454,6 +463,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "dashboard/new-car", element: <NewCarOverviewPage /> },
       { path: "dashboard/new-car/inventory", element: <NewCarInventoryPage /> },
+      { path: "dashboard/new-car/inventory/bulk", element: <NewCarBulkUploadPage /> },
       { path: "dashboard/new-car/leads", element: <NewCarLeadsPage /> },
       { path: "dashboard/new-car/leads/:id", element: <NewCarLeadDetailPage /> },
       { path: "dashboard/new-car/test-drives", element: <NewCarTestDrivesPage /> },
@@ -887,7 +897,7 @@ export const router = createBrowserRouter([
         path: "dashboard/auction",
         element: (
           <ProtectedRoute roles={["admin", "auction_partner", "super_admin"]}>
-            <AuctionAdminPage />
+            <AuctionDeskGate />
           </ProtectedRoute>
         ),
       },
@@ -911,6 +921,7 @@ export const router = createBrowserRouter([
       { path: "dashboard/super-admin/vehicles", element: <VehicleModerationPage /> },
       { path: "dashboard/super-admin/featured", element: <FeaturedInventoryPage /> },
       { path: "dashboard/super-admin/auctions", element: <AuctionApprovalsPage /> },
+      { path: "dashboard/super-admin/auction-desk", element: <AuctionAdminPage /> },
       { path: "dashboard/super-admin/analytics", element: <PlatformAnalyticsPage /> },
       { path: "dashboard/super-admin/transactions", element: <TransactionsPage /> },
       { path: "dashboard/super-admin/subscriptions", element: <SubscriptionsPage /> },
@@ -927,6 +938,7 @@ export const router = createBrowserRouter([
       },
       { path: "dashboard/super-admin/founder", element: <FounderDashboardPage /> },
       { path: "dashboard/super-admin/lead-router", element: <LeadRouterPage /> },
+      { path: "dashboard/super-admin/marketplace-leads", element: <MarketplaceLeadsPage /> },
       { path: "dashboard/founder", element: <FounderDashboardPage /> },
     ],
   },

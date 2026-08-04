@@ -1,13 +1,34 @@
 import { Link } from "react-router-dom";
+import {
+  Bike,
+  Bus,
+  Car,
+  CarTaxiFront,
+  LayoutGrid,
+  Tractor,
+  Truck,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VEHICLE_HUB_ENTRIES } from "@/lib/vehicle-hub-catalog";
 import type { HubCategorySlug } from "@/features/marketplace/types";
+
+const HUB_ICONS: Record<HubCategorySlug, LucideIcon> = {
+  cars: Car,
+  bikes: Bike,
+  trucks: Truck,
+  buses: Bus,
+  auto: CarTaxiFront,
+  equipment: Tractor,
+  ev: Zap,
+};
 
 type VehicleHubFilterRailProps = {
   activeHub: HubCategorySlug | null;
   buildHref: (hub: HubCategorySlug | null) => string;
   className?: string;
-  /** Screen reader label */
+  variant?: "cards" | "icons";
   ariaLabel?: string;
 };
 
@@ -15,8 +36,50 @@ export function VehicleHubFilterRail({
   activeHub,
   buildHref,
   className,
+  variant = "icons",
   ariaLabel = "Filter by vehicle type",
 }: VehicleHubFilterRailProps) {
+  if (variant === "icons") {
+    return (
+      <div className={cn("vehicle-hub-rail-wrap", className)}>
+        <nav
+          className="vehicle-hub-rail vehicle-hub-rail--icons"
+          aria-label={ariaLabel}
+        >
+          <Link
+            to={buildHref(null)}
+            className={cn(
+              "vehicle-hub-icon-pill",
+              activeHub === null && "vehicle-hub-icon-pill--active"
+            )}
+          >
+            <span className="vehicle-hub-icon-pill__icon" aria-hidden>
+              <LayoutGrid className="h-[1.125rem] w-[1.125rem]" />
+            </span>
+            <span className="vehicle-hub-icon-pill__label">All types</span>
+          </Link>
+          {VEHICLE_HUB_ENTRIES.map((h) => {
+            const Icon = HUB_ICONS[h.id];
+            const active = activeHub === h.id;
+            return (
+              <Link
+                key={h.id}
+                to={buildHref(h.id)}
+                title={`${h.label} — ${h.tagline}`}
+                className={cn("vehicle-hub-icon-pill", active && "vehicle-hub-icon-pill--active")}
+              >
+                <span className="vehicle-hub-icon-pill__icon" aria-hidden>
+                  <Icon className="h-[1.125rem] w-[1.125rem]" />
+                </span>
+                <span className="vehicle-hub-icon-pill__label">{h.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    );
+  }
+
   return (
     <nav
       className={cn(

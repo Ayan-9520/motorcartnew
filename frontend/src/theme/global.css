@@ -33,6 +33,7 @@
 
     /* Layout */
     --radius: 1.25rem;
+    --nav-height: 3.75rem;
 
     /* Raw tokens (for non-hsl use) */
     --mc-green: #25d366;
@@ -91,6 +92,22 @@
   body {
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Chrome autofill: keep typed text readable in dark mode */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active,
+  .dark textarea:-webkit-autofill,
+  .dark textarea:-webkit-autofill:hover,
+  .dark textarea:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill:active {
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    caret-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--card)) inset !important;
+    box-shadow: 0 0 0 1000px hsl(var(--card)) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 
   h1 {
@@ -178,11 +195,87 @@
   }
 
   .hero-section {
-    @apply relative bg-background;
+    @apply relative isolate overflow-hidden bg-background;
+  }
+
+  .hero-section-bg {
+    @apply pointer-events-none absolute inset-0;
+  }
+
+  .hero-section-bg-photo {
+    @apply absolute inset-0 h-full w-full object-cover;
+    object-position: 72% 42%;
+    opacity: 0.55;
+    filter: saturate(1.1) contrast(1.05);
+    animation: heroBgDrift 30s ease-in-out infinite alternate;
+  }
+
+  .dark .hero-section-bg-photo {
+    opacity: 0.42;
+    object-position: 70% 40%;
+  }
+
+  .hero-section-bg-brand {
+    @apply absolute inset-0 h-full w-full object-cover;
+    object-position: 85% 30%;
+    opacity: 0;
+    mix-blend-mode: soft-light;
+  }
+
+  .dark .hero-section-bg-brand {
+    opacity: 0.18;
+  }
+
+  @keyframes heroBgDrift {
+    0% {
+      transform: scale(1.03);
+    }
+    100% {
+      transform: scale(1.09) translate3d(-1%, -0.5%, 0);
+    }
+  }
+
+  .hero-section-bg-overlay {
+    @apply absolute inset-0;
+    background:
+      linear-gradient(
+        92deg,
+        hsl(var(--background) / 0.97) 0%,
+        hsl(var(--background) / 0.9) 32%,
+        hsl(var(--background) / 0.62) 52%,
+        hsl(var(--background) / 0.22) 72%,
+        hsl(var(--background) / 0.06) 100%
+      ),
+      linear-gradient(to top, hsl(var(--background) / 0.88) 0%, transparent 36%);
+  }
+
+  .dark .hero-section-bg-overlay {
+    background:
+      linear-gradient(
+        92deg,
+        hsl(var(--background) / 0.95) 0%,
+        hsl(var(--background) / 0.84) 34%,
+        hsl(var(--background) / 0.52) 54%,
+        hsl(var(--background) / 0.18) 74%,
+        transparent 100%
+      ),
+      linear-gradient(to top, hsl(var(--background) / 0.82) 0%, transparent 40%);
+  }
+
+  .hero-section-bg-mesh {
+    @apply absolute inset-0;
+    background-image:
+      radial-gradient(circle at 14% 20%, hsl(var(--primary) / 0.11) 0%, transparent 42%),
+      radial-gradient(circle at 88% 24%, hsl(var(--primary) / 0.14) 0%, transparent 45%);
   }
 
   .hero-section-surface {
-    @apply pointer-events-none absolute inset-0 border-b border-border/60 bg-muted/20;
+    @apply pointer-events-none absolute inset-0 border-b border-border/40;
+  }
+
+  .hero-section-glow {
+    @apply pointer-events-none absolute inset-0;
+    background: radial-gradient(ellipse 65% 45% at 78% 22%, hsl(var(--primary) / 0.14), transparent 62%);
   }
 
   .hero-layout-grid {
@@ -202,19 +295,21 @@
   }
 
   .hero-live-stats-bar {
-    @apply inline-flex flex-wrap items-center gap-2 rounded-full border border-primary/25 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 py-1.5 text-[11px] font-medium text-primary sm:text-xs;
+    @apply inline-flex flex-wrap items-center gap-2 rounded-full border border-primary/25 px-3 py-1.5 text-[11px] font-medium text-primary shadow-sm backdrop-blur-md sm:text-xs;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--card) / 0.88) 0%,
+      hsl(var(--primary) / 0.08) 100%
+    );
   }
 
   .hero-live-stat-sep {
     @apply text-primary/35;
   }
 
-  .hero-live-stat-link {
-    @apply inline-flex items-center gap-1 no-underline transition-colors hover:text-primary;
-  }
-
   .hero-section-glow {
-    @apply pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.12),transparent)];
+    @apply pointer-events-none absolute inset-0;
+    background: radial-gradient(ellipse 65% 45% at 78% 22%, hsl(var(--primary) / 0.14), transparent 62%);
   }
 
   .hero-headline {
@@ -238,7 +333,7 @@
   }
 
   .hero-vehicle-tabs {
-    @apply flex gap-0.5 overflow-x-auto rounded-lg border border-border/70 bg-card/40 p-0.5;
+    @apply flex gap-0.5 overflow-x-auto rounded-lg border border-border/70 bg-card/80 p-0.5 backdrop-blur-sm;
     scrollbar-width: none;
   }
 
@@ -267,7 +362,7 @@
   }
 
   .hero-search-card {
-    @apply overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[var(--shadow-card)];
+    @apply overflow-hidden rounded-2xl border border-border/75 bg-card/90 shadow-[0_12px_40px_-16px_hsl(var(--foreground)/0.15)] backdrop-blur-md;
   }
 
   .hero-search-card-float {
@@ -476,7 +571,7 @@
   }
 
   .hero-intelligence-panel {
-    @apply w-full rounded-2xl border border-border/80 bg-card p-3 shadow-[var(--shadow-card)] sm:p-4;
+    @apply w-full rounded-2xl border border-border/75 bg-card/90 p-3 shadow-[0_16px_48px_-20px_hsl(var(--foreground)/0.2)] backdrop-blur-md sm:p-4;
   }
 
   .hero-intelligence-head {
@@ -638,23 +733,45 @@
   }
 
   .nav-shell {
-    @apply sticky top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-border/70 bg-card/95 backdrop-blur-xl;
+    @apply z-50 w-full max-w-full border-b border-border/70 bg-card/90 backdrop-blur-xl;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  .nav-shell-fixed {
+    @apply fixed left-0 right-0 top-0;
+    box-shadow: 0 1px 0 hsl(var(--border) / 0.5);
+  }
+
+  .nav-shell-spacer {
+    height: var(--nav-height, 3.75rem);
+    flex-shrink: 0;
+  }
+
+  .nav-shell-scrolled {
+    @apply border-border/80 bg-card/95 shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.12)];
+    box-shadow:
+      0 1px 0 hsl(var(--primary) / 0.12),
+      0 8px 32px -12px hsl(var(--foreground) / 0.12);
+  }
+
+  .dark .nav-shell-scrolled {
+    @apply bg-background/95;
+    box-shadow:
+      0 1px 0 hsl(var(--primary) / 0.18),
+      0 12px 40px -16px rgb(0 0 0 / 0.45);
+  }
+
+  .nav-top-bar {
+    @apply overflow-visible border-b border-border/40 bg-gradient-to-b from-card/85 to-card/50;
+  }
+
+  .nav-top-bar-inner {
+    @apply flex min-h-12 items-center gap-2 overflow-visible py-1.5 sm:min-h-[3.25rem] sm:gap-3 sm:py-2;
   }
 
   .nav-shell-stacked {
     @apply flex flex-col;
-  }
-
-  .nav-shell-scrolled {
-    @apply shadow-[var(--shadow-card)];
-  }
-
-  .nav-top-bar {
-    @apply border-b border-border/40;
-  }
-
-  .nav-top-bar-inner {
-    @apply flex min-h-12 items-center gap-2 py-1.5 sm:min-h-[3.25rem] sm:gap-3 sm:py-2;
   }
 
   .nav-top-hub {
@@ -662,7 +779,7 @@
   }
 
   .nav-utilities-bar {
-    @apply ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5;
+    @apply ml-auto flex shrink-0 items-center gap-1 overflow-visible sm:gap-1.5;
   }
 
   .nav-hub-row {
@@ -687,7 +804,7 @@
   }
 
   .nav-menu-bar {
-    @apply bg-background/80;
+    @apply border-t border-border/30 bg-background/70 backdrop-blur-md;
   }
 
   .nav-menu-bar-inner {
@@ -904,7 +1021,20 @@
   }
 
   .nav-brand {
-    @apply flex shrink-0 items-center gap-2.5 text-lg font-bold text-foreground;
+    @apply flex shrink-0 items-center;
+  }
+
+  /* Official navy lockup — white plate in dark mode keeps same logo + car readable */
+  .mc-logo-plate {
+    @apply inline-flex items-center;
+  }
+
+  .dark .mc-logo-plate:not(.mc-logo-plate--always) {
+    @apply rounded-[0.65rem] bg-white px-2 py-0.5 shadow-[0_1px_6px_rgba(0,0,0,0.28)] ring-1 ring-black/5;
+  }
+
+  .mc-logo-plate--always {
+    @apply rounded-[0.65rem] bg-white px-2 py-0.5 shadow-sm ring-1 ring-border/50;
   }
 
   .nav-brand-mark {
@@ -972,7 +1102,7 @@
   }
 
   .nav-mobile {
-    @apply border-t border-border/80 bg-card/95 p-4 animate-fade-in backdrop-blur-xl;
+    @apply max-h-[calc(100dvh-3.25rem)] overflow-y-auto border-t border-border/80 bg-card/95 p-3 pb-6 animate-fade-in backdrop-blur-xl sm:p-4;
   }
 
   .nav-mobile-search {
@@ -2648,7 +2778,11 @@
   }
 
   .community-app-rail {
-    @apply sticky top-[var(--nav-height,4rem)] z-20 h-[calc(100vh-var(--nav-height,4rem))] w-[15.5rem] shrink-0 flex-col border-r border-border/80 bg-card/50 px-3 py-5 backdrop-blur-md;
+    @apply sticky top-[var(--nav-height,4rem)] z-20 flex h-[calc(100vh-var(--nav-height,4rem))] w-[15.5rem] shrink-0 flex-col overflow-hidden border-r border-border/80 bg-card/50 backdrop-blur-md;
+  }
+
+  .community-app-rail-head {
+    @apply shrink-0 px-3 pt-5;
   }
 
   .community-app-back {
@@ -2656,11 +2790,12 @@
   }
 
   .community-app-rail-title {
-    @apply mb-4 px-3 text-lg font-bold tracking-tight text-foreground;
+    @apply mb-2 px-3 text-lg font-bold tracking-tight text-foreground;
   }
 
   .community-app-nav {
-    @apply flex flex-1 flex-col gap-1;
+    @apply flex min-h-0 flex-1 flex-col gap-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-3 py-2;
+    scrollbar-gutter: stable;
   }
 
   .community-app-nav-item {
@@ -2676,15 +2811,15 @@
   }
 
   .community-app-rail-foot {
-    @apply mt-auto space-y-2 border-t border-border/70 pt-4;
+    @apply relative z-40 mt-auto shrink-0 flex-none space-y-2 border-t border-border bg-card p-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-10px_28px_-14px_rgba(0,0,0,0.28)];
   }
 
   .community-app-user-card {
-    @apply mb-2 flex items-center gap-2 rounded-xl border border-border/60 bg-background/80 p-2.5 transition-colors hover:border-primary/25;
+    @apply flex items-center gap-2 rounded-xl border border-border/60 bg-background/80 p-2.5 transition-colors hover:border-primary/25;
   }
 
   .community-app-signout {
-    @apply border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive;
+    @apply min-h-10 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive;
   }
 
   .community-app-main {
@@ -2692,15 +2827,20 @@
   }
 
   .community-app-mobile-bar {
-    @apply fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 flex items-center justify-around border-t border-border/80 bg-card/95 px-2 py-2 backdrop-blur-xl md:bottom-0;
+    @apply fixed bottom-0 left-0 right-0 z-40 grid grid-cols-4 items-center border-t border-border/80 bg-card/95 px-2 py-2 backdrop-blur-xl md:hidden;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
   }
 
   .community-app-mobile-item {
-    @apply flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors;
+    @apply flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors;
   }
 
   .community-app-mobile-item-active {
     @apply text-primary;
+  }
+
+  .site-main--community {
+    @apply pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0;
   }
 
   @media (min-width: 1024px) {
@@ -3993,22 +4133,61 @@
     @apply flex items-center gap-2 text-sm mt-2;
   }
 
-  /* Parts hub — fintech marketplace */
+  /* Parts hub — premium fintech marketplace */
   .parts-hub-page {
     @apply bg-background;
   }
 
   .parts-hub-hero {
-    background-image:
-      radial-gradient(ellipse 75% 55% at 50% -15%, hsl(var(--primary) / 0.15), transparent),
-      linear-gradient(180deg, hsl(210 40% 98%), hsl(var(--background)));
-    @apply border-b border-border/60 pb-10 pt-8 md:pb-12 md:pt-10;
+    @apply relative border-b border-border/50 pb-12 pt-10 md:pb-16 md:pt-12;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -25%, hsl(var(--primary) / 0.18), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 100% 20%, hsl(var(--primary) / 0.08), transparent 50%),
+      linear-gradient(180deg, hsl(var(--muted) / 0.35) 0%, hsl(var(--background)) 100%);
   }
 
   .dark .parts-hub-hero {
+    background:
+      radial-gradient(ellipse 85% 55% at 50% -20%, hsl(142 70% 49% / 0.14), transparent 55%),
+      radial-gradient(ellipse 45% 35% at 0% 30%, hsl(142 70% 49% / 0.06), transparent 50%),
+      linear-gradient(180deg, hsl(var(--card) / 0.6) 0%, hsl(var(--background)) 72%);
+  }
+
+  .parts-hub-hero__mesh {
+    @apply absolute inset-0 opacity-[0.35];
     background-image:
-      radial-gradient(ellipse 75% 55% at 50% -15%, hsl(var(--primary) / 0.12), transparent),
-      linear-gradient(180deg, hsl(var(--card)), hsl(var(--background)));
+      linear-gradient(hsl(var(--border) / 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.35) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 20%, transparent 75%);
+  }
+
+  .dark .parts-hub-hero__mesh {
+    @apply opacity-20;
+  }
+
+  .parts-hub-hero__orb {
+    @apply absolute rounded-full blur-3xl;
+  }
+
+  .parts-hub-hero__orb--left {
+    @apply -left-24 top-8 h-56 w-56 bg-primary/15;
+  }
+
+  .parts-hub-hero__orb--right {
+    @apply -right-16 top-24 h-48 w-48 bg-primary/10;
+  }
+
+  .parts-hub-hero__badges {
+    @apply mb-4 flex flex-wrap items-center justify-center gap-2;
+  }
+
+  .parts-hub-hero__badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary shadow-sm;
+  }
+
+  .parts-hub-hero__badge--muted {
+    @apply border-border/70 bg-card/60 text-muted-foreground;
   }
 
   .parts-hub-eyebrow {
@@ -4016,15 +4195,43 @@
   }
 
   .parts-hub-title {
-    @apply mx-auto mt-2 max-w-3xl text-center text-2xl font-bold leading-tight tracking-tight md:text-4xl;
+    @apply mx-auto max-w-4xl text-center text-[1.75rem] font-extrabold leading-[1.12] tracking-tight md:text-[2.65rem] lg:text-5xl;
+  }
+
+  .parts-hub-title-accent {
+    @apply bg-gradient-to-r from-primary via-[hsl(152_76%_42%)] to-[hsl(158_64%_52%)] bg-clip-text text-transparent;
   }
 
   .parts-hub-subtitle {
-    @apply mx-auto mt-3 max-w-2xl text-center text-sm text-muted-foreground md:text-base;
+    @apply mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground md:text-base;
+  }
+
+  .parts-hub-hero__stats {
+    @apply mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-2;
+  }
+
+  .parts-hub-hero__hub {
+    @apply mx-auto mt-8 w-full max-w-4xl px-1 sm:px-0;
+  }
+
+  .parts-hub-hero__hub-label {
+    @apply mb-3 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground sm:mb-3.5;
+  }
+
+  .parts-hub-vehicle-rail .vehicle-hub-rail {
+    @apply border-primary/15 bg-card/70 p-2.5 shadow-[0_12px_40px_-20px_hsl(var(--primary)/0.35)] sm:p-3;
+  }
+
+  .dark .parts-hub-vehicle-rail .vehicle-hub-rail {
+    @apply border-primary/20 bg-card/40;
   }
 
   .parts-hub-search {
-    @apply mx-auto mt-8 flex max-w-3xl flex-col gap-2 rounded-2xl border border-border/80 bg-card/95 p-2 shadow-[var(--shadow-card)] backdrop-blur-md ring-1 ring-black/[0.04] dark:ring-white/[0.06] sm:flex-row sm:items-stretch md:mt-10;
+    @apply mx-auto mt-8 flex max-w-3xl flex-col gap-2 rounded-2xl border border-border/60 bg-card/80 p-2 shadow-[0_20px_50px_-24px_hsl(var(--primary)/0.35)] backdrop-blur-xl ring-1 ring-white/10 dark:bg-card/50 dark:ring-white/5 sm:flex-row sm:items-stretch md:mt-10;
+  }
+
+  .parts-hub-search:focus-within {
+    @apply border-primary/35 ring-2 ring-primary/15;
   }
 
   .parts-hub-search-vehicle,
@@ -4037,7 +4244,7 @@
   }
 
   .parts-hub-search-input {
-    @apply flex-1 sm:border-l sm:border-border/60 sm:pl-4;
+    @apply flex-1 sm:border-l sm:border-border/50 sm:pl-4;
   }
 
   .parts-hub-select {
@@ -4049,35 +4256,100 @@
   }
 
   .parts-hub-stat-pill {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-sm;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-3.5 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:border-primary/25 hover:bg-card;
   }
 
   .parts-hub-stat-pill strong {
     @apply font-bold text-foreground;
   }
 
+  .parts-hub-section-head {
+    @apply flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between;
+  }
+
+  .parts-hub-section-head > .rounded-xl,
+  .parts-hub-section-head > a {
+    @apply w-full shrink-0 sm:w-auto;
+  }
+
+  .parts-hub-filter-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm;
+  }
+
+  .parts-hub-filter-chip__clear {
+    @apply inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary transition-colors hover:bg-primary/25;
+  }
+
+  .parts-empty-state {
+    @apply flex flex-col items-center rounded-2xl border border-dashed border-primary/25 bg-gradient-to-br from-primary/5 via-card/80 to-transparent px-6 py-12 text-center shadow-sm md:px-10 md:py-14;
+  }
+
+  .parts-empty-state--compact {
+    @apply py-10 md:py-12;
+  }
+
+  .parts-empty-state__icon {
+    @apply mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10;
+  }
+
+  .parts-empty-state__title {
+    @apply text-base font-bold text-foreground md:text-lg;
+  }
+
+  .parts-empty-state__desc {
+    @apply mt-2 max-w-md text-sm leading-relaxed text-muted-foreground;
+  }
+
+  .parts-empty-state__actions {
+    @apply mt-5 flex flex-wrap items-center justify-center gap-2;
+  }
+
+  .parts-hub-section-head--center {
+    @apply mb-8 items-center text-center sm:flex-col;
+  }
+
+  .parts-hub-section-eyebrow {
+    @apply text-[10px] font-bold uppercase tracking-[0.2em] text-primary;
+  }
+
   .parts-hub-section-title {
-    @apply text-xl font-bold tracking-tight md:text-2xl;
+    @apply text-xl font-bold tracking-tight md:text-2xl lg:text-[1.65rem];
+  }
+
+  .parts-hub-section-desc {
+    @apply max-w-2xl text-sm leading-relaxed text-muted-foreground;
+  }
+
+  .parts-hub-services-section {
+    @apply border-b border-border/50 bg-muted/15 py-10 md:py-12;
+  }
+
+  .dark .parts-hub-services-section {
+    @apply bg-muted/5;
   }
 
   .parts-services-grid {
-    @apply grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-9;
+    @apply flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:grid-cols-5 xl:grid-cols-9 [&::-webkit-scrollbar]:hidden;
   }
 
   .parts-service-item {
-    @apply flex flex-col items-center gap-1.5 rounded-xl border border-transparent p-2 text-center transition-all hover:border-primary/15 hover:bg-muted/40 hover:shadow-sm;
+    @apply flex min-w-[5.25rem] shrink-0 snap-start flex-col items-center gap-2 rounded-2xl border border-border/50 bg-card/60 p-3 text-center shadow-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card hover:shadow-[var(--shadow-card-hover)] sm:min-w-0;
+  }
+
+  .dark .parts-service-item {
+    @apply border-border/40 bg-card/40;
   }
 
   .parts-service-icon {
-    @apply flex h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-primary/5 shadow-sm transition-all group-hover:border-primary/40 group-hover:bg-primary/10 md:h-16 md:w-16;
+    @apply flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/15 to-primary/5 shadow-inner transition-all group-hover:border-primary/40 group-hover:from-primary/20 md:h-14 md:w-14;
   }
 
   .parts-service-label {
-    @apply text-[10px] font-bold md:text-xs;
+    @apply text-[10px] font-bold leading-tight md:text-xs;
   }
 
   .parts-service-desc {
-    @apply hidden text-[9px] text-muted-foreground sm:block;
+    @apply hidden text-[9px] leading-snug text-muted-foreground sm:block;
   }
 
   .parts-hub-category-grid {
@@ -4085,23 +4357,27 @@
   }
 
   .parts-hub-category-card {
-    @apply relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-[var(--shadow-card)];
+    @apply relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[var(--shadow-card-hover)];
+  }
+
+  .dark .parts-hub-category-card {
+    @apply bg-card/50;
   }
 
   .parts-hub-category-glow {
-    @apply pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl;
+    @apply pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-primary/15 blur-2xl transition-opacity group-hover:opacity-100;
   }
 
   .parts-hub-category-icon {
-    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/5;
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-transparent;
   }
 
   .parts-brands-row {
-    @apply flex flex-wrap items-center justify-center gap-2;
+    @apply flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden;
   }
 
   .parts-brand-tile {
-    @apply relative flex h-20 w-[5.5rem] flex-col overflow-hidden rounded-xl border border-border/60 bg-card transition-all hover:border-primary/30 hover:shadow-[var(--shadow-card)];
+    @apply relative flex h-20 w-[5.5rem] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-border/60 bg-card transition-all hover:border-primary/30 hover:shadow-[var(--shadow-card)] sm:shrink;
   }
 
   .parts-brand-tile-label {
@@ -4145,7 +4421,7 @@
   }
 
   .parts-ai-panel {
-    @apply rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5 md:p-6;
+    @apply rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card/80 to-transparent p-5 shadow-sm backdrop-blur-sm md:p-6;
   }
 
   .parts-ai-pick {
@@ -4153,11 +4429,16 @@
   }
 
   .parts-fintech-banner {
-    @apply flex flex-col gap-6 rounded-2xl border border-primary/20 bg-card p-6 shadow-sm md:flex-row md:items-center md:justify-between md:p-8;
+    @apply relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-[var(--shadow-card)] md:flex-row md:items-center md:justify-between md:p-8;
+  }
+
+  .parts-fintech-banner::before {
+    content: "";
+    @apply pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-primary/15 blur-3xl;
   }
 
   .parts-hub-footer-cta {
-    @apply rounded-2xl border border-dashed border-primary/25 bg-primary/5 px-6 py-8;
+    @apply rounded-2xl border border-dashed border-primary/30 bg-gradient-to-b from-primary/5 to-transparent px-6 py-10 text-center;
   }
 
   .parts-catalog-hero {
@@ -4172,7 +4453,48 @@
     @apply bg-background;
   }
 
-  /** Vehicle type rail — Stripe-style segmented control */
+  /** Vehicle type rail — premium icon chips + card scroll */
+  .vehicle-hub-rail-wrap {
+    @apply relative;
+  }
+
+  .vehicle-hub-rail-wrap::before,
+  .vehicle-hub-rail-wrap::after {
+    @apply pointer-events-none absolute top-0 z-[2] h-full w-6 md:hidden;
+    content: "";
+  }
+
+  .vehicle-hub-rail-wrap::before {
+    left: 0;
+    background: linear-gradient(90deg, hsl(var(--background) / 0.95), transparent);
+  }
+
+  .vehicle-hub-rail-wrap::after {
+    right: 0;
+    background: linear-gradient(270deg, hsl(var(--background) / 0.95), transparent);
+  }
+
+  .parts-hub-hero__hub .vehicle-hub-rail-wrap::before {
+    background: linear-gradient(90deg, hsl(var(--background) / 0.92), transparent);
+  }
+
+  .parts-hub-hero__hub .vehicle-hub-rail-wrap::after {
+    background: linear-gradient(270deg, hsl(var(--background) / 0.92), transparent);
+  }
+
+  .dark .parts-hub-hero__hub .vehicle-hub-rail-wrap::before {
+    background: linear-gradient(90deg, hsl(var(--background) / 0.88), transparent);
+  }
+
+  .dark .parts-hub-hero__hub .vehicle-hub-rail-wrap::after {
+    background: linear-gradient(270deg, hsl(var(--background) / 0.88), transparent);
+  }
+
+  .parts-catalog-vehicle-rail .vehicle-hub-rail-wrap::before,
+  .parts-catalog-vehicle-rail .vehicle-hub-rail-wrap::after {
+    @apply hidden;
+  }
+
   .vehicle-hub-rail {
     @apply rounded-2xl border border-border/70 p-2 shadow-sm backdrop-blur-md;
     background: linear-gradient(
@@ -4194,6 +4516,55 @@
     box-shadow:
       0 1px 0 hsl(var(--border) / 0.35),
       0 12px 40px -16px rgb(0 0 0 / 0.45);
+  }
+
+  .vehicle-hub-rail--icons {
+    @apply flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-2 md:flex-wrap md:justify-center md:overflow-visible md:pb-1 md:pt-1 [&::-webkit-scrollbar]:hidden;
+  }
+
+  .vehicle-hub-icon-pill {
+    @apply flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center gap-1.5 rounded-xl px-2 py-2 no-underline transition-all duration-200 sm:min-w-[4.75rem] sm:px-2.5 sm:py-2.5 md:min-w-[5rem];
+  }
+
+  .vehicle-hub-icon-pill__icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card/90 text-muted-foreground shadow-sm transition-all duration-200 sm:h-11 sm:w-11;
+  }
+
+  .vehicle-hub-icon-pill:hover .vehicle-hub-icon-pill__icon {
+    @apply border-primary/30 bg-primary/5 text-foreground;
+  }
+
+  .dark .vehicle-hub-icon-pill__icon {
+    @apply border-border/50 bg-card/50;
+  }
+
+  .vehicle-hub-icon-pill__label {
+    @apply max-w-[4.5rem] truncate text-center text-[10px] font-semibold leading-tight text-muted-foreground transition-colors sm:max-w-none sm:text-[11px];
+  }
+
+  .vehicle-hub-icon-pill:hover .vehicle-hub-icon-pill__label {
+    @apply text-foreground;
+  }
+
+  .vehicle-hub-icon-pill--active {
+    @apply relative;
+  }
+
+  .vehicle-hub-icon-pill--active::after {
+    @apply absolute -bottom-0.5 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-primary;
+    content: "";
+  }
+
+  .vehicle-hub-icon-pill--active .vehicle-hub-icon-pill__icon {
+    @apply border-primary/45 bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-[0_0_20px_hsl(var(--primary)/0.2)] ring-1 ring-primary/25;
+  }
+
+  .vehicle-hub-icon-pill--active .vehicle-hub-icon-pill__label {
+    @apply font-bold text-primary;
+  }
+
+  .vehicle-hub-icon-pill:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
   }
 
   .vehicle-hub-rail-item {
@@ -4776,7 +5147,15 @@
 
   /* Notifications panel */
   .notification-panel {
-    @apply absolute right-0 top-[calc(100%+0.5rem)] z-[200] w-[min(100vw-2rem,22rem)] overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[var(--shadow-card)];
+    @apply z-[200] w-[min(100vw-2rem,22rem)] overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[var(--shadow-card)] backdrop-blur-xl;
+  }
+
+  .notification-panel:not(.notification-panel--portal) {
+    @apply absolute right-0 top-[calc(100%+0.5rem)];
+  }
+
+  .notification-panel--portal {
+    @apply fixed z-[300];
   }
 
   .notification-panel-header {

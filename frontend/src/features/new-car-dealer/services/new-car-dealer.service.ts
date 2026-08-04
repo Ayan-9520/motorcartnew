@@ -2,14 +2,38 @@ import { supabase } from "@/shared/api/client";
 import { api } from "@/lib/api/axios";
 import { hasConfiguredApi } from "@/lib/api/base-url";
 import { featureFlags } from "@/config/feature-flags";
+import { realDataOnly } from "@/config/real-data";
 import { getVehicleHero } from "@/lib/media/vehicle-media-registry";
 import { buildMockNewCarDealerSnapshot, getLeadDetail } from "../data/mock-ncd-data";
 import type { NewCarDealerSnapshot, NcdInventoryItem, NcdLead, NcdLeadDetail } from "../types";
+import type { DbVehicle } from "@/types/database";
 
 function isMissingTable(err: { code?: string; message?: string } | null): boolean {
   if (!err) return false;
   const m = (err.message ?? "").toLowerCase();
   return err.code === "42P01" || err.code === "PGRST205" || m.includes("does not exist") || m.includes("unknown table");
+}
+
+function mapVehicleToNcdItem(v: DbVehicle, fallbackImage: string): NcdInventoryItem {
+  const imgs = Array.isArray(v.images) ? v.images : [];
+  const ex = v.original_price != null ? Number(v.original_price) : Number(v.price);
+  const onRoad = Number(v.price);
+  return {
+    id: v.id,
+    brand: v.brand,
+    model: v.model,
+    variant: v.variant ?? "Standard",
+    fuelType: v.fuel_type,
+    transmission: v.transmission,
+    exShowroomPrice: ex,
+    onRoadPrice: onRoad,
+    discountAmount: Math.max(0, ex - onRoad),
+    stockStatus: v.status === "available" ? "available" : "booked",
+    stockHealth: "fast_moving",
+    colors: v.color ? [v.color] : ["White"],
+    expectedDeliveryDays: 14,
+    imageUrl: typeof imgs[0] === "string" && imgs[0] ? imgs[0] : fallbackImage,
+  };
 }
 
 function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): NcdInventoryItem {
@@ -90,7 +114,21 @@ export async function fetchNewCarDealerSnapshot(
   dealerName?: string
 ): Promise<NewCarDealerSnapshot> {
   const mock = buildMockNewCarDealerSnapshot(dealerName ?? "Your showroom");
-  if (!dealerId) return mock;
+  if (!dealerId) {
+    if (realDataOnly) {
+      return {
+        ...mock,
+        inventory: [],
+        leads: [],
+        hotLeadsCount: 0,
+        showroom: { ...mock.showroom, name: dealerName ?? mock.showroom.name },
+        metrics: mock.metrics.map((m) =>
+          m.key === "leads" ? { ...m, value: 0, sublabel: "0 hot" } : { ...m, value: 0 }
+        ),
+      };
+    }
+    return mock;
+  }
 
   const fallbackImg =
     mock.inventory[0]?.imageUrl ?? getVehicleHero({ brand: "Car", model: "Sedan", bodyType: "Sedan" });
@@ -109,16 +147,41 @@ export async function fetchNewCarDealerSnapshot(
     .order("created_at", { ascending: false })
     .limit(100);
 
+  const { data: marketplaceVehicles, error: vehErr } = await supabase
+    .from("vehicles")
+    .select("*")
+    .eq("dealer_id", dealerId)
+    .eq("category", "new-cars")
+    .neq("status", "sold")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
   const hasInv = !isMissingTable(invErr) && (inv?.length ?? 0) > 0;
+  const hasMarketplace =
+    !isMissingTable(vehErr) && (marketplaceVehicles?.length ?? 0) > 0;
   const hasLeads = (leadRows?.length ?? 0) > 0;
 
-  if (!hasInv && !hasLeads) {
+  if (!hasInv && !hasMarketplace && !hasLeads) {
+    if (realDataOnly) {
+      return {
+        ...mock,
+        inventory: [],
+        leads: [],
+        hotLeadsCount: 0,
+        showroom: { ...mock.showroom, name: dealerName ?? mock.showroom.name },
+        metrics: mock.metrics.map((m) =>
+          m.key === "leads" ? { ...m, value: 0, sublabel: "0 hot" } : { ...m, value: 0 }
+        ),
+      };
+    }
     return { ...mock, showroom: { ...mock.showroom, name: dealerName ?? mock.showroom.name } };
   }
 
   const inventory = hasInv
     ? (inv as Record<string, unknown>[]).map((r) => mapInventoryRow(r, fallbackImg))
-    : [];
+    : hasMarketplace
+      ? (marketplaceVehicles as DbVehicle[]).map((v) => mapVehicleToNcdItem(v, fallbackImg))
+      : [];
   const leads = hasLeads ? (leadRows as Record<string, unknown>[]).map(mapLeadRow) : [];
 
   return snapshotFromReal(mock, inventory, leads, dealerName ?? mock.showroom.name);

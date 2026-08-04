@@ -57,7 +57,7 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
         { to: "/dashboard/super-admin/analytics", label: "Revenue", icon: BarChart3 },
         { to: "/dashboard/super-admin/transactions", label: "Transactions", icon: Landmark },
         { to: "/dashboard/super-admin/notifications", label: "Push", icon: MessageSquare },
-        { to: "/dashboard/auction", label: "Auction desk", icon: Gavel },
+        { to: "/dashboard/super-admin/auction-desk", label: "Auction desk", icon: Gavel },
       ],
     };
   }

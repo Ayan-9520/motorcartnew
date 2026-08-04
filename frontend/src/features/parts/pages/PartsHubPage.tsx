@@ -11,11 +11,12 @@ import { PartsHubCategoryCard } from "../components/PartsHubCategoryCard";
 import { PartsBrandStrip } from "../components/PartsBrandStrip";
 import { PartCard } from "../components/PartCard";
 import { PartsAiRecommendations } from "../components/PartsAiRecommendations";
-import { PART_CATEGORIES, PARTS_TRUST_STATS, partsBrowsePath } from "../data/parts-hub-data";
-import { MOCK_PARTS_CATALOG } from "../data/mock-parts-catalog";
+import { PartsCatalogEmpty } from "../components/PartsCatalogEmpty";
+import { PART_CATEGORIES, partsBrowsePath } from "../data/parts-hub-data";
 import { recommendParts } from "../lib/ai-parts";
 import { usePartsList } from "../hooks/usePartsList";
 import { parseVehicleHubParam, partMatchesVehicleHub, VEHICLE_HUB_ENTRIES } from "@/lib/vehicle-hub-catalog";
+import { X } from "lucide-react";
 
 export function PartsHubPage() {
   const [params] = useSearchParams();
@@ -23,21 +24,20 @@ export function PartsHubPage() {
   const hubSuffix = hub ? `?hub=${hub}` : "";
 
   const cartCount = usePartsCartStore((s) => s.itemCount());
-  const { parts, loading } = usePartsList(undefined, "", hub);
+  const { parts: allParts, loading } = usePartsList(undefined, "", null);
 
-  const featured = useMemo(() => {
-    let pool = MOCK_PARTS_CATALOG.filter((p) => p.isFeatured);
-    if (hub) pool = pool.filter((p) => partMatchesVehicleHub(p, hub));
-    if (pool.length < 6) {
-      const fill = MOCK_PARTS_CATALOG.filter(
-        (p) => partMatchesVehicleHub(p, hub) && !pool.some((x) => x.id === p.id)
-      );
-      pool = [...pool, ...fill].slice(0, 8);
-    }
-    return pool.slice(0, 8);
-  }, [hub]);
+  const parts = useMemo(
+    () => (hub ? allParts.filter((p) => partMatchesVehicleHub(p, hub)) : allParts),
+    [allParts, hub]
+  );
 
-  const aiPicks = useMemo(() => recommendParts(MOCK_PARTS_CATALOG, { hub }, 6), [hub]);
+  const featured = useMemo(() => parts.filter((p) => p.isFeatured).slice(0, 8), [parts]);
+
+  const aiPicks = useMemo(() => recommendParts(parts, { hub }, 6), [hub, parts]);
+
+  const displayParts = featured.length ? featured : parts.slice(0, 8);
+  const showEmpty = !loading && displayParts.length === 0;
+  const showBrands = allParts.length > 0;
 
   const hubLabel = hub ? VEHICLE_HUB_ENTRIES.find((e) => e.id === hub)?.label : null;
 
@@ -51,29 +51,36 @@ export function PartsHubPage() {
 
   return (
     <div className="parts-hub-page min-h-screen">
-      <PartsHubHero />
+      <PartsHubHero skuCount={allParts.length} />
 
-      <div className="container -mt-2 mb-6 flex flex-wrap justify-center gap-3">
-        {PARTS_TRUST_STATS.map(({ label, sub }) => (
-          <span key={sub} className="parts-hub-stat-pill">
-            <strong>{label}</strong> {sub}
+      {hubLabel ? (
+        <div className="container -mt-3 mb-1 flex justify-center px-4">
+          <span className="parts-hub-filter-chip">
+            {hubLabel} parts
+            <Link to="/parts" className="parts-hub-filter-chip__clear" aria-label="Clear vehicle filter">
+              <X className="h-3.5 w-3.5" />
+            </Link>
           </span>
-        ))}
-        {cartCount > 0 ? (
-          <Link to="/cart" className="parts-hub-stat-pill border-primary/40 bg-primary/5 text-primary">
+        </div>
+      ) : null}
+
+      {cartCount > 0 ? (
+        <div className="container -mt-4 mb-2 flex justify-center">
+          <Link to="/cart" className="parts-hub-stat-pill border-primary/40 bg-primary/10 text-primary shadow-[var(--shadow-primary)]">
             <ShoppingCart className="h-3.5 w-3.5" />
             <strong>{cartCount}</strong> in cart
           </Link>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       <PartsServicesStrip />
 
-      <section className="container pb-10">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <section className="container pb-10 pt-2">
+        <div className="parts-hub-section-head mb-6">
           <div>
+            <p className="parts-hub-section-eyebrow">Catalogue</p>
             <h2 className="parts-hub-section-title">Shop by category</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="parts-hub-section-desc mt-1">
               9 verticals · OEM &amp; aftermarket{hubLabel ? ` · filtered for ${hubLabel}` : ""}
             </p>
           </div>
@@ -90,15 +97,16 @@ export function PartsHubPage() {
         </div>
       </section>
 
-      <PartsBrandStrip />
+      {showBrands ? <PartsBrandStrip browseHref={partsBrowsePath({ hub: hub ?? undefined })} /> : null}
 
-      <section className="container border-t border-border/80 pb-10 pt-8">
+      <section className="container border-t border-border/60 pb-10 pt-10">
         <PartsAiRecommendations parts={aiPicks} title="PartsBot — AI matched for your garage" />
 
-        <div className="mt-10 mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div className="parts-hub-section-head mb-6 mt-10">
           <div>
+            <p className="parts-hub-section-eyebrow">Deals</p>
             <h2 className="parts-hub-section-title">Featured deals</h2>
-            <p className="mt-1 text-sm text-muted-foreground">GST-inclusive · bulk MOQ shown</p>
+            <p className="parts-hub-section-desc mt-1">GST-inclusive · bulk MOQ shown</p>
           </div>
           <Button className="rounded-xl shadow-[var(--shadow-primary)]" asChild>
             <Link to={partsBrowsePath({ hub: hub ?? undefined })}>
@@ -114,9 +122,11 @@ export function PartsHubPage() {
               <Skeleton key={i} className="aspect-[3/4] w-full rounded-2xl" />
             ))}
           </div>
+        ) : showEmpty ? (
+          <PartsCatalogEmpty hubLabel={hubLabel} />
         ) : (
           <div className="parts-product-grid">
-            {(featured.length ? featured : parts.slice(0, 8)).map((part, i) => (
+            {displayParts.map((part, i) => (
               <PartCard key={part.id} part={part} index={i} />
             ))}
           </div>

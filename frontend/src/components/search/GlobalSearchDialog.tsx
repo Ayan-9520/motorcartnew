@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -12,7 +13,8 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useUIStore } from "@/store/uiStore";
-import { runGlobalSearch, buildSearchPageUrl, getAISearchIntent, type GlobalSearchResult } from "@/lib/global-search";
+import { runGlobalSearch, runGlobalSearchAsync, buildSearchPageUrl, getAISearchIntent, type GlobalSearchResult } from "@/lib/global-search";
+import { realDataOnly } from "@/config/real-data";
 import { cn } from "@/lib/utils";
 import { TRENDING_SEARCHES } from "@/features/home/data/homepage-data";
 
@@ -28,7 +30,15 @@ export function GlobalSearchDialog() {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const results = useMemo(() => runGlobalSearch(query, 10), [query]);
+  const { data: asyncResults, isFetching } = useQuery({
+    queryKey: ["global-search", query, realDataOnly],
+    queryFn: () => runGlobalSearchAsync(query, 10),
+    enabled: realDataOnly && query.trim().length > 0,
+    staleTime: 30_000,
+  });
+
+  const syncResults = useMemo(() => (realDataOnly ? [] : runGlobalSearch(query, 10)), [query]);
+  const results = realDataOnly ? (query.trim() ? (asyncResults ?? []) : runGlobalSearch(query, 10)) : syncResults;
   const aiIntent = useMemo(() => getAISearchIntent(query), [query]);
 
   useEffect(() => {
@@ -128,7 +138,9 @@ export function GlobalSearchDialog() {
             </div>
           )}
 
-          {results.length === 0 ? (
+          {isFetching && query.trim() ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">Searching live inventory…</p>
+          ) : results.length === 0 ? (
             <p className="p-6 text-center text-sm text-muted-foreground">No results — try another keyword</p>
           ) : (
             <ul className="space-y-0.5">

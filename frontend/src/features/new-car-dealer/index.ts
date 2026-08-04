@@ -1,5 +1,6 @@
 export { NewCarOverviewPage } from "./pages/NewCarOverviewPage";
 export { NewCarInventoryPage } from "./pages/NewCarInventoryPage";
+export { NewCarBulkUploadPage } from "./pages/NewCarBulkUploadPage";
 export { NewCarLeadsPage } from "./pages/NewCarLeadsPage";
 export { NewCarLeadDetailPage } from "./pages/NewCarLeadDetailPage";
 export { NewCarBookingsPage } from "./pages/NewCarBookingsPage";

@@ -27,7 +27,10 @@ export class ApiQueryBuilder<T = Record<string, unknown>> {
   }
 
   select(columns = "*", options?: { count?: string; head?: boolean }) {
-    this.action = "select";
+    // Supabase: insert().select() still inserts — only plain select() starts a read.
+    if (this.action !== "insert" && this.action !== "update" && this.action !== "upsert") {
+      this.action = "select";
+    }
     this.columns = columns;
     if (options?.count) this.countMode = options.count;
     if (options?.head) this.headOnly = true;

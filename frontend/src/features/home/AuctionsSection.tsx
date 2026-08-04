@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { auctionDetailPath } from "@/features/auctions/lib/auction-utils";
 import { SectionHeader } from "./SectionHeader";
 
 function formatTimeLeft(endsAt: string): string {
@@ -90,8 +91,12 @@ export function AuctionsSection() {
                     <Button variant="default" size="sm" className="h-8 shrink-0 px-2.5 text-xs" asChild>
                       <Link
                         to={
-                          "slug" in auction && typeof auction.slug === "string"
-                            ? `/auctions/${auction.slug}`
+                          "slug" in auction || "id" in auction
+                            ? auctionDetailPath({
+                                slug: "slug" in auction ? String(auction.slug) : undefined,
+                                id: auction.id,
+                                status: "status" in auction ? String(auction.status) : "live",
+                              })
                             : "/auctions"
                         }
                       >
