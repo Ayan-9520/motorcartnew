@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Calculator, CheckCircle2, Percent } from "lucide-react";
-import { loanProducts } from "@/data/loans";
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ export function FinanceSection() {
   const { loanProducts: dynamicLoans } = useHomePage();
   const [amount, setAmount] = useState(1200000);
   const [tenure, setTenure] = useState(60);
-  const featured = (dynamicLoans.length ? dynamicLoans : loanProducts.filter((p) => p.is_featured)).slice(0, 3);
+  const featured = dynamicLoans.slice(0, 6);
 
   const emi = useMemo(() => calcEmi(amount, 9.5, tenure), [amount, tenure]);
 
@@ -86,7 +85,12 @@ export function FinanceSection() {
           </Card>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {featured.map((loan, index) => (
+            {featured.length === 0 ? (
+              <p className="col-span-full text-sm text-muted-foreground">
+                Finance partners will appear here once lenders are onboarded.
+              </p>
+            ) : (
+              featured.map((loan, index) => (
               <motion.div
                 key={loan.id}
                 initial={{ opacity: 0, y: 12 }}
@@ -134,7 +138,8 @@ export function FinanceSection() {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            ))
+            )}
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { SITE_STATS } from "@/content/site-content";
 import { HERO_STATS } from "@/features/home/data/homepage-data";
 import { useHomePage, type HomeHeroStatItem } from "@/features/home/context/HomePageContext";
+import { realDataOnly } from "@/config/real-data";
 
 function pickStat(keywords: string[], stats: ReadonlyArray<HomeHeroStatItem>) {
   return stats.find((s) => keywords.some((k) => s.label.toLowerCase().includes(k)));
@@ -10,22 +11,29 @@ function pickStat(keywords: string[], stats: ReadonlyArray<HomeHeroStatItem>) {
 
 export function HeroLiveStatsBar() {
   const { heroStats, isLoading } = useHomePage();
-  const stats: HomeHeroStatItem[] = heroStats.length ? heroStats : [...HERO_STATS];
+  const stats: HomeHeroStatItem[] = heroStats.length
+    ? heroStats
+    : realDataOnly
+      ? []
+      : [...HERO_STATS];
 
   const items = [
     pickStat(["dealer", "verified"], stats),
     pickStat(["finance", "bank", "lender", "loan"], stats),
     pickStat(["community", "post", "member", "customer", "user"], stats),
     pickStat(["auction", "live"], stats),
+    pickStat(["listing", "vehicle"], stats),
   ].filter(Boolean) as Array<{ label: string; value: string; href: string }>;
 
-  const fallback = SITE_STATS.map((s) => ({
+  const fallback = realDataOnly ? [] : SITE_STATS.map((s) => ({
     label: s.label,
     value: s.value,
     href: "#",
   }));
 
-  const pills = items.length >= 3 ? items : fallback;
+  const pills = items.length >= 2 ? items : fallback;
+
+  if (!pills.length && !isLoading) return null;
 
   return (
     <div className="hero-live-stats-bar">

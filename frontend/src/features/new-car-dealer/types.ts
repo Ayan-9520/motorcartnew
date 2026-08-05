@@ -44,6 +44,11 @@ export type NcdMetric = {
 
 export type NcdInventoryItem = {
   id: string;
+  /** Public marketplace vehicle row id when synced */
+  vehicleId?: string;
+  /** Showroom inventory row id in new_car_inventory */
+  ncdInventoryId?: string;
+  inventorySource?: "vehicle" | "ncd";
   brand: string;
   model: string;
   variant: string;

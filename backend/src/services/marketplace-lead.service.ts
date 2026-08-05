@@ -110,9 +110,31 @@ export async function createMarketplaceLead(input: MarketplaceLeadInput) {
       vehicleId,
       vehicleInterest: input.vehicle_title?.trim() || null,
       notes: input.notes?.trim() || null,
-      metadata,
+      metadata: { ...metadata, stage: "new" },
     },
   });
+
+  // Mirror into dealer_leads for legacy CRM rows (dedupe by phone same day optional — skip for simplicity)
+  try {
+    await prisma.dealerLead.create({
+      data: {
+        dealerId: dealer.id,
+        customerName: input.name.trim(),
+        name: input.name.trim(),
+        phone: normalizePhone(input.phone),
+        email: input.email?.trim() || null,
+        city: (input.metadata?.city as string | undefined) ?? null,
+        source: input.source ?? "website",
+        stage: "new",
+        status: "new",
+        preferredModel: input.vehicle_title?.trim() || null,
+        score: 60,
+        metadata,
+      },
+    });
+  } catch {
+    /* dealer_leads optional */
+  }
 
   const owner = await prisma.dealer.findUnique({
     where: { id: dealer.id },

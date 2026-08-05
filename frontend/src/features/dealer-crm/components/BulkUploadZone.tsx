@@ -46,7 +46,7 @@ export function BulkUploadZone({ dealer, sellerId, onComplete }: BulkUploadZoneP
           <FileSpreadsheet className="h-5 w-5 text-primary" />
           Bulk Excel / CSV Upload
         </CardTitle>
-        <CardDescription>Drag and drop or browse. Validates rows and inserts into Supabase.</CardDescription>
+        <CardDescription>Drag and drop or browse. Validates rows and inserts into your showroom + marketplace.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button type="button" variant="outline" size="sm" className="gap-2" onClick={downloadSampleTemplate}>

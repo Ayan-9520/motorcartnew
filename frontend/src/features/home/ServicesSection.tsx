@@ -7,45 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SectionHeader } from "./SectionHeader";
 import { homeServiceImage } from "@/lib/media/india-media-catalog";
 import { useHomePage } from "@/features/home/context/HomePageContext";
-
-const fallbackServiceCards = [
-  {
-    id: "wash",
-    title: "Premium Car Wash",
-    type: "wash",
-    description: "Doorstep foam wash & interior vacuum",
-    priceFrom: 499,
-    icon: Droplets,
-    image: homeServiceImage("wash"),
-  },
-  {
-    id: "repair",
-    title: "Repair & Maintenance",
-    type: "repair",
-    description: "Battery, tyres, and general repairs",
-    priceFrom: 599,
-    icon: Wrench,
-    image: homeServiceImage("repair"),
-  },
-  {
-    id: "detailing",
-    title: "Ceramic Detailing",
-    type: "detailing",
-    description: "Paint protection & premium detailing",
-    priceFrom: 4999,
-    icon: Car,
-    image: homeServiceImage("detailing"),
-  },
-  {
-    id: "rsa",
-    title: "24×7 Roadside Assistance",
-    type: "rsa",
-    description: "Pan-India rescue & towing support",
-    priceFrom: 999,
-    icon: Shield,
-    image: homeServiceImage("rsa"),
-  },
-];
+import { realDataOnly } from "@/config/real-data";
 
 const SERVICE_ICONS: Record<string, typeof Droplets> = {
   wash: Droplets,
@@ -71,7 +33,33 @@ export function ServicesSection() {
             image: homeServiceImage(type.includes("wash") ? "wash" : "repair"),
           };
         })
-      : fallbackServiceCards;
+      : [];
+
+  if (!serviceCards.length && realDataOnly) return null;
+
+  const cards =
+    serviceCards.length > 0
+      ? serviceCards
+      : [
+          {
+            id: "wash",
+            title: "Premium Car Wash",
+            type: "wash",
+            description: "Doorstep foam wash & interior vacuum",
+            priceFrom: 499,
+            icon: Droplets,
+            image: homeServiceImage("wash"),
+          },
+          {
+            id: "repair",
+            title: "Repair & Maintenance",
+            type: "repair",
+            description: "Battery, tyres, and general repairs",
+            priceFrom: 599,
+            icon: Wrench,
+            image: homeServiceImage("repair"),
+          },
+        ];
 
   return (
     <section className="home-section-alt">
@@ -84,7 +72,7 @@ export function ServicesSection() {
           linkLabel="All services"
         />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {serviceCards.map((service, index) => {
+          {cards.map((service, index) => {
             const Icon = service.icon;
             return (
               <motion.div

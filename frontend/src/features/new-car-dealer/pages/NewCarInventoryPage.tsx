@@ -8,10 +8,12 @@ import { NcdInventoryGrid } from "../components/NcdInventoryGrid";
 import { NewCarAddInventoryDialog } from "../components/NewCarAddInventoryDialog";
 import { NewCarDailyStockDialog } from "../components/NewCarDailyStockDialog";
 import { useNewCarDealerOS } from "../hooks/useNewCarDealerOS";
+import { useAuthStore } from "@/store/authStore";
 import { setPageMeta } from "@/utils/seo";
 
 export function NewCarInventoryPage() {
   const { data, loading, refresh, dealer } = useNewCarDealerOS();
+  const user = useAuthStore((s) => s.user);
   const [addOpen, setAddOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
 
@@ -69,7 +71,7 @@ export function NewCarInventoryPage() {
           </div>
         </div>
       ) : (
-        <NcdInventoryGrid items={data?.inventory ?? []} />
+        <NcdInventoryGrid items={data?.inventory ?? []} onChanged={() => void refresh()} />
       )}
       {dealer?.id ? (
         <>
@@ -77,6 +79,9 @@ export function NewCarInventoryPage() {
             open={addOpen}
             onOpenChange={setAddOpen}
             dealerId={dealer.id}
+            sellerId={user?.id}
+            dealerCity={dealer.city}
+            dealerState={dealer.state}
             onSaved={() => void refresh()}
           />
           <NewCarDailyStockDialog

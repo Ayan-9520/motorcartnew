@@ -12,6 +12,7 @@ import { getHeroHubConfig } from "@/features/home/data/hero-hub-config";
 import { HERO_HEADLINE_WORDS } from "@/features/home/data/homepage-data";
 import { PHASE1_ROTATING_LINES, PHASE1_TAGLINE } from "@/features/home/data/phase1-home-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
+import { realDataOnly } from "@/config/real-data";
 import { formatPrice } from "@/lib/vehicle-utils";
 import { formatCurrency } from "@/lib/utils";
 import { HUB_HERO_IMAGES, MEDIA_DEFAULTS } from "@/lib/media/india-media-catalog";
@@ -40,7 +41,11 @@ export function HeroSection() {
       dynamic.push("Inventory refreshed from live marketplace");
     }
 
-    return dynamic.length >= 3 ? dynamic : [...PHASE1_ROTATING_LINES];
+    return dynamic.length >= 1
+      ? dynamic
+      : realDataOnly
+        ? ["Live marketplace — browse dealer inventory"]
+        : [...PHASE1_ROTATING_LINES];
   }, [isHome, featuredVehicles, auctions, heroStats, data?.generated_at]);
 
   const [wordIndex, setWordIndex] = useState(0);

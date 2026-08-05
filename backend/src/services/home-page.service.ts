@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { toSnakeRow } from "@/lib/db/table-map";
 
+const HOME_VEHICLE_INCLUDE = {
+  dealer: { select: { name: true, slug: true, phone: true, rating: true, isVerified: true } },
+} as const;
+
+const HOME_LISTING_LIMIT = 200;
+
 const DEALER_ROLES = [
   "dealer",
   "used_car_dealer",
@@ -128,12 +134,10 @@ export async function getHomePageData(): Promise<HomePagePayload> {
     safe(
       () =>
         prisma.vehicle.findMany({
-          where: { deletedAt: null, status: "available", isFeatured: true },
-          orderBy: { createdAt: "desc" },
-          take: 12,
-          include: {
-            dealer: { select: { name: true, slug: true, phone: true, rating: true, isVerified: true } },
-          },
+          where: { deletedAt: null, status: "available" },
+          orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+          take: HOME_LISTING_LIMIT,
+          include: HOME_VEHICLE_INCLUDE,
         }),
       []
     ),
@@ -146,8 +150,8 @@ export async function getHomePageData(): Promise<HomePagePayload> {
             OR: [{ category: "new-cars" }, { condition: "new" }],
           },
           orderBy: { createdAt: "desc" },
-          take: 8,
-          include: { dealer: { select: { name: true, slug: true } } },
+          take: HOME_LISTING_LIMIT,
+          include: HOME_VEHICLE_INCLUDE,
         }),
       []
     ),
@@ -158,11 +162,10 @@ export async function getHomePageData(): Promise<HomePagePayload> {
             deletedAt: null,
             status: "available",
             OR: [{ category: "used-cars" }, { condition: "used" }],
-            isCertified: true,
           },
-          orderBy: { createdAt: "desc" },
-          take: 8,
-          include: { dealer: { select: { name: true, slug: true } } },
+          orderBy: [{ isCertified: "desc" }, { createdAt: "desc" }],
+          take: HOME_LISTING_LIMIT,
+          include: HOME_VEHICLE_INCLUDE,
         }),
       []
     ),
@@ -171,7 +174,7 @@ export async function getHomePageData(): Promise<HomePagePayload> {
         prisma.auction.findMany({
           where: { status: "live" },
           orderBy: { endsAt: "asc" },
-          take: 8,
+          take: 24,
         }),
       []
     ),
@@ -180,7 +183,7 @@ export async function getHomePageData(): Promise<HomePagePayload> {
         prisma.bank.findMany({
           where: { isActive: true },
           orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
-          take: 12,
+          take: 24,
         }),
       []
     ),
@@ -188,7 +191,7 @@ export async function getHomePageData(): Promise<HomePagePayload> {
       () =>
         prisma.insurancePartner.findMany({
           where: { isActive: true },
-          take: 8,
+          take: 12,
         }),
       []
     ),
@@ -197,7 +200,7 @@ export async function getHomePageData(): Promise<HomePagePayload> {
         prisma.part.findMany({
           where: { isActive: true },
           orderBy: [{ isFeatured: "desc" }, { reviewCount: "desc" }],
-          take: 8,
+          take: 24,
         }),
       []
     ),
@@ -268,20 +271,6 @@ export async function getHomePageData(): Promise<HomePagePayload> {
   };
 
   let featuredList = featuredVehicles;
-  if (featuredList.length === 0) {
-    featuredList = await safe(
-      () =>
-        prisma.vehicle.findMany({
-          where: { deletedAt: null, status: "available" },
-          orderBy: { createdAt: "desc" },
-          take: 12,
-          include: {
-            dealer: { select: { name: true, slug: true, phone: true, rating: true, isVerified: true } },
-          },
-        }),
-      []
-    );
-  }
 
   const posts =
     socialPosts.length > 0
@@ -321,7 +310,7 @@ export async function getHomePageData(): Promise<HomePagePayload> {
       rating: Math.min(5, Math.max(1, r.rating)),
     }));
 
-  const totalListings = Math.max(vehicleCount, featuredVehicles.length + newCarRows.length);
+  const totalListings = Math.max(vehicleCount, featuredList.length);
 
   return {
     generated_at: new Date().toISOString(),

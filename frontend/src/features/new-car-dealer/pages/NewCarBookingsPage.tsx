@@ -12,7 +12,10 @@ export function NewCarBookingsPage() {
   return (
     <NewCarDealerShell title="Booking management" description="Token, agreements, finance & allocation.">
       <ul className="space-y-3">
-        {(data?.bookings ?? []).map((b) => (
+        {(data?.bookings ?? []).length === 0 ? (
+          <li className="text-sm text-muted-foreground">No bookings yet — move leads to Booking stage in CRM.</li>
+        ) : (
+          (data?.bookings ?? []).map((b) => (
           <li key={b.id} className="ncd-list-row">
             <div>
               <p className="font-medium">{b.customerName}</p>
@@ -24,7 +27,8 @@ export function NewCarBookingsPage() {
               <p className="text-[10px] text-muted-foreground">Token {formatCurrency(b.tokenAmount)}</p>
             </div>
           </li>
-        ))}
+          ))
+        )}
       </ul>
     </NewCarDealerShell>
   );

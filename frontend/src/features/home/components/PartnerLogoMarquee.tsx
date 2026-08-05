@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import type { PartnerLogoItem } from "@/features/home/data/homepage-data";
 import { PARTNER_BANK_LOGOS, PARTNER_CAR_LOGOS } from "@/features/home/data/homepage-data";
+import { realDataOnly } from "@/config/real-data";
 
 function LogoTile({ item }: { item: PartnerLogoItem }) {
   return (
@@ -42,8 +43,10 @@ type PartnerLogoMarqueeProps = {
 };
 
 export function PartnerLogoMarquee({ bankLogos, carLogos }: PartnerLogoMarqueeProps) {
-  const banks = bankLogos?.length ? bankLogos : PARTNER_BANK_LOGOS;
-  const cars = carLogos?.length ? carLogos : PARTNER_CAR_LOGOS;
+  const banks = bankLogos?.length ? bankLogos : realDataOnly ? [] : PARTNER_BANK_LOGOS;
+  const cars = carLogos?.length ? carLogos : realDataOnly ? [] : PARTNER_CAR_LOGOS;
+
+  if (!banks.length && !cars.length) return null;
 
   return (
     <div className="partner-marquee">

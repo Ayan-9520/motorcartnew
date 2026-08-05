@@ -19,10 +19,13 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dealerId: string;
+  sellerId?: string;
+  dealerCity?: string;
+  dealerState?: string;
   onSaved: () => void;
 };
 
-export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, onSaved }: Props) {
+export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, sellerId, dealerCity, dealerState, onSaved }: Props) {
   const [loading, setLoading] = useState(false);
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -55,20 +58,29 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, onSaved
       return;
     }
     setLoading(true);
-    const { error } = await createNewCarInventory(dealerId, {
-      brand,
-      model,
-      variant: variant || "Standard",
-      fuelType,
-      transmission,
-      exShowroomPrice: ex,
-      waitingPeriodDays: v2 ? Number(waitingDays) || 14 : undefined,
-      brochureUrl: v2 && brochureUrl.trim() ? brochureUrl.trim() : undefined,
-      offers:
-        v2 && offerTitle.trim()
-          ? [{ title: offerTitle.trim(), validUntil: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10) }]
-          : undefined,
-    });
+    const { error } = await createNewCarInventory(
+      dealerId,
+      {
+        brand,
+        model,
+        variant: variant || "Standard",
+        fuelType,
+        transmission,
+        exShowroomPrice: ex,
+        waitingPeriodDays: v2 ? Number(waitingDays) || 14 : undefined,
+        brochureUrl: v2 && brochureUrl.trim() ? brochureUrl.trim() : undefined,
+        offers:
+          v2 && offerTitle.trim()
+            ? [{ title: offerTitle.trim(), validUntil: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10) }]
+            : undefined,
+      },
+      {
+        syncMarketplace: Boolean(sellerId && dealerCity && dealerState),
+        sellerId,
+        dealerCity,
+        dealerState,
+      }
+    );
     setLoading(false);
     if (error) {
       toast.error(error.message ?? "Could not add vehicle");
@@ -85,7 +97,7 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, onSaved
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Add new car</DialogTitle>
-          <DialogDescription>Stock appears on your showroom inventory and overview.</DialogDescription>
+          <DialogDescription>Stock appears in showroom inventory and on /buy/cars/new.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-2">

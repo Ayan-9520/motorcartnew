@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, Gavel, MapPin, Users } from "lucide-react";
-import { liveAuctions } from "@/data/mock";
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -23,13 +22,14 @@ function formatTimeLeft(endsAt: string): string {
 
 export function AuctionsSection() {
   const { auctions } = useHomePage();
-  const list = auctions.length ? auctions : liveAuctions;
   const [, setTick] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  if (!auctions.length) return null;
 
   return (
     <section className="home-section-alt">
@@ -42,7 +42,7 @@ export function AuctionsSection() {
           linkLabel="All auctions"
         />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {list.map((auction, index) => (
+          {auctions.map((auction, index) => (
             <motion.div
               key={auction.id}
               initial={{ opacity: 0, y: 12 }}

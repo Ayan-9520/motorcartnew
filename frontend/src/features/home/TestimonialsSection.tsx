@@ -1,13 +1,16 @@
 import { motion } from "framer-motion";
 import { Quote, Star } from "lucide-react";
-import { testimonials } from "@/data/mock";
 import { useHomePage } from "@/features/home/context/HomePageContext";
+import { realDataOnly } from "@/config/real-data";
+import { testimonials } from "@/data/mock";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeader } from "./SectionHeader";
 
 export function TestimonialsSection() {
   const { testimonials: dynamic } = useHomePage();
-  const items = dynamic.length ? dynamic : testimonials;
+  const items = dynamic.length ? dynamic : realDataOnly ? [] : testimonials;
+  if (!items.length) return null;
+
   return (
     <section className="home-section">
       <div className="container home-stack">

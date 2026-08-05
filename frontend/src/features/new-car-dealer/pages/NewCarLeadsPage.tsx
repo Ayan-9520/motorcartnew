@@ -24,7 +24,7 @@ export function NewCarLeadsPage() {
         </Button>
       }
     >
-      <NcdLeadPipeline leads={data?.leads ?? []} />
+      <NcdLeadPipeline leads={data?.leads ?? []} onStageChange={() => void refresh()} />
       {dealer?.id ? (
         <DealerAddLeadDialog
           open={addOpen}

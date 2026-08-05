@@ -1,4 +1,5 @@
 import { mapDbToListing } from "@/services/vehicle.service";
+import { resolveVehicleHero } from "@/lib/media/resolve-images";
 import type { DbVehicle } from "@/types/database";
 import type { VehicleListing } from "@/types/vehicle";
 import type { NewCarListing } from "@/features/new-cars/types";
@@ -99,6 +100,17 @@ function formatAuctionTimeLeft(endsAt: string): string {
 
 export { formatAuctionTimeLeft };
 
+function heroListingImage(vehicle: VehicleListing): string {
+  return resolveVehicleHero(
+    vehicle.brand,
+    vehicle.model,
+    vehicle.bodyType,
+    vehicle.images,
+    0,
+    { category: vehicle.category, fuelType: vehicle.fuelType }
+  );
+}
+
 export type HeroDashboardPool = {
   listings: HeroDashboardCard[];
   auctions: HeroDashboardCard[];
@@ -118,13 +130,13 @@ export function buildHeroDashboardPool(input: {
   communityPosts: Array<{ title: string; author: string; replies: number; href?: string }>;
   heroStats: Array<{ label: string; value: string; href?: string }>;
 }): HeroDashboardPool | null {
-  const listings: HeroDashboardCard[] = input.featuredVehicles.slice(0, 6).map((vehicle) => ({
+  const listings: HeroDashboardCard[] = input.featuredVehicles.map((vehicle) => ({
     type: "listing" as const,
     title: `${vehicle.brand} ${vehicle.model}`.trim(),
     price: vehicle.price,
     meta: `${vehicle.isCertified ? "Certified" : "Listed"} · ${vehicle.city ?? "India"}`,
     href: vehicleDetailPath(vehicle),
-    image: vehicle.images?.[0],
+    image: heroListingImage(vehicle),
     badge: vehicle.condition === "new" ? "New" : "Pre-owned",
   }));
 

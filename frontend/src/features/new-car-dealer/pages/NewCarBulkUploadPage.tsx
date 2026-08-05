@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BulkUploadZone } from "@/features/dealer-crm/components/BulkUploadZone";
@@ -12,6 +12,7 @@ import { setPageMeta } from "@/utils/seo";
 export function NewCarBulkUploadPage() {
   const { dealer, loading } = useDealer();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setPageMeta({ title: "Bulk new car upload" });
@@ -38,7 +39,11 @@ export function NewCarBulkUploadPage() {
         </Button>
       }
     >
-      <BulkUploadZone dealer={dealer} sellerId={user?.id} onComplete={() => {}} />
+      <BulkUploadZone
+        dealer={dealer}
+        sellerId={user?.id}
+        onComplete={() => navigate("/dashboard/new-car/inventory", { replace: false })}
+      />
     </NewCarDealerShell>
   );
 }

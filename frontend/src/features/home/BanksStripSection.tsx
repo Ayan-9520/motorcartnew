@@ -4,12 +4,15 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { BANK_OFFERS } from "@/features/home/data/homepage-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
+import { realDataOnly } from "@/config/real-data";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { SectionHeader } from "./SectionHeader";
 
 export function BanksStripSection() {
   const { banks } = useHomePage();
-  const offers = banks.length ? banks : BANK_OFFERS;
+  const offers = banks.length ? banks : realDataOnly ? [] : BANK_OFFERS;
+  if (!offers.length) return null;
+
   return (
     <section className="home-section-card">
       <div className="container home-stack">

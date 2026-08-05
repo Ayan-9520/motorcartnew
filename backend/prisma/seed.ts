@@ -60,6 +60,60 @@ async function main() {
     },
   });
 
+  const newCarPass = await hashPassword("Newcar@123");
+  const newCarUser = await prisma.user.upsert({
+    where: { email: "newcar@gmail.com" },
+    update: {
+      passwordHash: newCarPass,
+      emailVerified: true,
+      status: "active",
+      approvalStatus: "approved",
+      onboardingStatus: "approved",
+      kycStatus: "verified",
+      isVerified: true,
+      role: "new_car_dealer",
+      city: "Delhi",
+      state: "Delhi",
+    },
+    create: {
+      email: "newcar@gmail.com",
+      passwordHash: newCarPass,
+      fullName: "Mohammad Ayan",
+      role: "new_car_dealer",
+      status: "active",
+      approvalStatus: "approved",
+      onboardingStatus: "approved",
+      kycStatus: "verified",
+      emailVerified: true,
+      isVerified: true,
+      city: "Delhi",
+      state: "Delhi",
+    },
+  });
+
+  await prisma.dealer.upsert({
+    where: { slug: "moneymines-2d2c6c" },
+    update: {
+      ownerId: newCarUser.id,
+      name: "Mohammad Ayan Motors",
+      city: "Delhi",
+      state: "Delhi",
+      dealerType: "new_car_dealer",
+      isVerified: true,
+      verificationStatus: "verified",
+    },
+    create: {
+      ownerId: newCarUser.id,
+      name: "Mohammad Ayan Motors",
+      slug: "moneymines-2d2c6c",
+      city: "Delhi",
+      state: "Delhi",
+      dealerType: "new_car_dealer",
+      isVerified: true,
+      verificationStatus: "verified",
+    },
+  });
+
   const marketplaceDealers = [
     { slug: "automax-mumbai", name: "AutoMax Motors", city: "Mumbai", state: "Maharashtra", phone: "919876543210" },
     { slug: "premium-cars-mumbai", name: "Premium Cars Mumbai", city: "Mumbai", state: "Maharashtra", phone: "919876543211" },
@@ -200,6 +254,7 @@ async function main() {
   console.log("  admin@motorcart.in / Admin@12345");
   console.log("  customer@motorcart.in / Customer@123");
   console.log("  dealer@gmail.com / Dealer@123");
+  console.log("  newcar@gmail.com / Newcar@123");
 }
 
 main()

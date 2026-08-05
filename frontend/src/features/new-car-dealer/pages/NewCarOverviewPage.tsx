@@ -10,7 +10,7 @@ import { useNewCarDealerOS } from "../hooks/useNewCarDealerOS";
 import { setPageMeta } from "@/utils/seo";
 
 export function NewCarOverviewPage() {
-  const { data, loading, userName } = useNewCarDealerOS();
+  const { data, loading, refresh, userName } = useNewCarDealerOS();
 
   useEffect(() => {
     setPageMeta({ title: "New Car Dealer OS", description: "Showroom command center." });
@@ -75,7 +75,7 @@ export function NewCarOverviewPage() {
             <Link to="/dashboard/new-car/leads">Full CRM</Link>
           </Button>
         </div>
-        <NcdLeadPipeline leads={data?.leads ?? []} compact />
+        <NcdLeadPipeline leads={data?.leads ?? []} compact onStageChange={() => void refresh()} />
       </section>
 
       {data?.insights.length ? (

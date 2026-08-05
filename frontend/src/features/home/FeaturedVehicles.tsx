@@ -11,12 +11,9 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
-import { realDataOnly } from "@/config/real-data";
 import {
   formatPrice,
   getVehicleEmi,
-  sortVehicles,
   vehicleDetailPath,
 } from "@/lib/vehicle-utils";
 import type { VehicleListing } from "@/types/vehicle";
@@ -28,31 +25,25 @@ import { SectionHeader } from "./SectionHeader";
 import { VehicleImage } from "@/features/vehicles/components/VehicleImage";
 import toast from "react-hot-toast";
 
-const mockFeatured = realDataOnly
-  ? []
-  : sortVehicles(
-  MOCK_VEHICLES.filter((v) => v.isFeatured && v.status === "available"),
-  "ai-score"
-).slice(0, 12);
-
 export function FeaturedVehicles() {
-  const { featuredVehicles, isLoading } = useHomePage();
-  const list = featuredVehicles.length ? featuredVehicles : mockFeatured;
+  const { featuredVehicles, isLoading, data } = useHomePage();
+  const count = data?.stats?.vehicles ?? featuredVehicles.length;
+
   return (
     <section className="home-section">
       <div className="container home-stack">
         <SectionHeader
           eyebrow="Marketplace"
-          title="Featured vehicles"
-          description="AI-verified listings with transparent pricing, EMI estimates, and dealer trust scores."
+          title={count > 0 ? `Live inventory (${count})` : "Live inventory"}
+          description="Real dealer listings synced from the marketplace — pricing, EMI, and trust scores update automatically."
           href="/buy"
           linkLabel="View all vehicles"
         />
         <div className="home-featured-carousel px-1">
-          {isLoading && list.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Loading featured vehicles…</p>
+          {isLoading && featuredVehicles.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Loading live inventory…</p>
           ) : null}
-          {!isLoading && list.length === 0 ? (
+          {!isLoading && featuredVehicles.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
               <p className="text-sm font-semibold text-foreground">No vehicles listed yet</p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -68,7 +59,7 @@ export function FeaturedVehicles() {
               </p>
             </div>
           ) : null}
-          {list.map((vehicle, index) => (
+          {featuredVehicles.map((vehicle, index) => (
             <FeaturedVehicleCard key={vehicle.id} vehicle={vehicle} index={index} />
           ))}
         </div>

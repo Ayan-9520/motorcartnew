@@ -180,8 +180,16 @@ export type VehicleFormData = {
   metadata?: VehicleListing["metadata"];
 };
 
+function resolveStoredVehicleImages(data: Pick<VehicleFormData, "brand" | "model" | "bodyType" | "category" | "fuelType" | "images">) {
+  return resolveVehicleGallery(data.brand, data.model, data.bodyType, data.images ?? [], 0, {
+    category: data.category,
+    fuelType: data.fuelType,
+  });
+}
+
 export async function createVehicle(data: VehicleFormData, sellerId: string, dealerId?: string) {
   const slug = slugify(`${data.year}-${data.brand}-${data.model}-${data.city}-${Date.now()}`);
+  const images = resolveStoredVehicleImages(data);
   return supabase.from("vehicles").insert({
     slug,
     title: data.title,
@@ -202,7 +210,7 @@ export async function createVehicle(data: VehicleFormData, sellerId: string, dea
     state: data.state,
     description: data.description,
     features: data.features ?? [],
-    images: data.images ?? [],
+    images,
     condition: data.condition,
     seller_id: sellerId,
     dealer_id: dealerId,
@@ -219,6 +227,16 @@ export async function updateVehicle(id: string, data: Partial<VehicleFormData> &
   if (data.bodyType) payload.body_type = data.bodyType;
   if (data.kmsDriven != null) payload.kms_driven = data.kmsDriven;
   if (data.originalPrice != null) payload.original_price = data.originalPrice;
+  if (data.images) {
+    payload.images = resolveVehicleGallery(
+      data.brand ?? "",
+      data.model ?? "",
+      data.bodyType ?? "",
+      data.images,
+      0,
+      { category: data.category, fuelType: data.fuelType }
+    );
+  }
   delete payload.fuelType;
   delete payload.bodyType;
   delete payload.kmsDriven;

@@ -4,11 +4,14 @@ import { MessageCircle, Play, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { COMMUNITY_POSTS, SOCIAL_LINKS } from "@/features/home/data/homepage-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
+import { realDataOnly } from "@/config/real-data";
 import { SectionHeader } from "./SectionHeader";
 
 export function CommunitySection() {
   const { communityPosts } = useHomePage();
-  const posts = communityPosts.length ? communityPosts : COMMUNITY_POSTS;
+  const posts = communityPosts.length ? communityPosts : realDataOnly ? [] : COMMUNITY_POSTS;
+  if (!posts.length) return null;
+
   return (
     <section className="home-section-alt">
       <div className="container home-stack">

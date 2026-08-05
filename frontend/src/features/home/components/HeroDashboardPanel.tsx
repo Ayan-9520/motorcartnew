@@ -17,6 +17,7 @@ import { getHeroHubConfig, getHomeHeroDashboard, type HeroDashboardCard } from "
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { buildHeroDashboardPool } from "@/features/home/lib/map-home-data";
 import { useAuctionCountdown } from "@/features/home/hooks/useAuctionCountdown";
+import { SEGMENT_DEFAULTS } from "@/lib/media/vehicle-media-registry";
 
 const fade = (delay: number) => ({
   initial: { opacity: 0, y: 14 },
@@ -30,6 +31,32 @@ function AuctionCardMeta({ card }: { card: HeroDashboardCard }) {
     ? `${countdown || "Ending soon"} · ${card.bidCount ?? 0} bids`
     : card.meta;
   return <p className="hero-dash-meta">{meta}</p>;
+}
+
+function ListingCardImage({ src, alt }: { src?: string; alt: string }) {
+  const [currentSrc, setCurrentSrc] = useState(src ?? "");
+  const fallback = SEGMENT_DEFAULTS.cars;
+
+  useEffect(() => {
+    setCurrentSrc(src ?? "");
+  }, [src]);
+
+  if (!currentSrc) {
+    return <div className="hero-dash-listing-img bg-muted" aria-hidden />;
+  }
+
+  return (
+    <img
+      src={currentSrc}
+      alt={alt}
+      className="hero-dash-listing-img"
+      referrerPolicy="no-referrer"
+      loading="lazy"
+      onError={() => {
+        if (currentSrc !== fallback) setCurrentSrc(fallback);
+      }}
+    />
+  );
 }
 
 function DashboardCard({ card, delay }: { card: HeroDashboardCard; delay: number }) {
@@ -65,11 +92,7 @@ function DashboardCard({ card, delay }: { card: HeroDashboardCard; delay: number
     return (
       <motion.div {...fade(delay)} className="hero-dash-card hero-dash-card-listing overflow-hidden p-0">
         <Link to={card.href} className="flex h-full flex-col">
-          {card.image ? (
-            <img src={card.image} alt="" className="hero-dash-listing-img" referrerPolicy="no-referrer" loading="lazy" />
-          ) : (
-            <div className="hero-dash-listing-img bg-muted" />
-          )}
+          <ListingCardImage src={card.image} alt={card.title} />
           <div className="flex flex-1 flex-col p-2.5 sm:p-3">
             <p className="hero-dash-kpi-label">{card.badge ?? "Listed"}</p>
             <p className="hero-dash-card-title">{card.title}</p>

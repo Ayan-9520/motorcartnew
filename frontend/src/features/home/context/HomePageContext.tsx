@@ -107,7 +107,8 @@ export function HomePageProvider({ children }: { children: ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: ["home-page"],
     queryFn: fetchHomePageApi,
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
     retry: 0,
     gcTime: 120_000,
   });
@@ -145,7 +146,7 @@ export function HomePageProvider({ children }: { children: ReactNode }) {
       auctions: data.auctions.length ? data.auctions.map(mapHomeAuctionToCard) : realDataOnly ? [] : fb.auctions,
       banks: data.banks.length ? data.banks.map(mapHomeBankToOffer) : realDataOnly ? [] : fb.banks,
       loanProducts: data.banks.length
-        ? data.banks.filter((b) => b.is_featured).slice(0, 3).map(mapHomeBankToLoanProduct)
+        ? data.banks.slice(0, 6).map(mapHomeBankToLoanProduct)
         : realDataOnly ? [] : fb.loanProducts,
       parts: data.parts.length ? data.parts.map(mapHomePartToCard) : realDataOnly ? [] : fb.parts,
       communityPosts: data.community_posts.length

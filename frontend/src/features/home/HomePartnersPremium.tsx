@@ -9,11 +9,10 @@ import { mapBanksToPartnerLogos, mapBrandsToPartnerLogos } from "@/features/home
 
 export function HomePartnersPremium() {
   const { banks, data } = useHomePage();
-  const bankLogos = banks.length >= 4 ? mapBanksToPartnerLogos(banks) : undefined;
-  const carLogos =
-    data?.brands?.length && data.brands.length >= 4
-      ? mapBrandsToPartnerLogos(data.brands)
-      : undefined;
+  const bankLogos = banks.length ? mapBanksToPartnerLogos(banks) : undefined;
+  const carLogos = data?.brands?.length ? mapBrandsToPartnerLogos(data.brands) : undefined;
+
+  if (!bankLogos?.length && !carLogos?.length) return null;
 
   return (
     <section className="home-partners-premium home-section-alt">

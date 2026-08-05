@@ -10,7 +10,10 @@ export function NewCarDeliveriesPage() {
   return (
     <NewCarDealerShell title="Delivery management" description="PDI, RC, accessories & handover checklist.">
       <ul className="space-y-3">
-        {(data?.deliveries ?? []).map((d) => (
+        {(data?.deliveries ?? []).length === 0 ? (
+          <li className="text-sm text-muted-foreground">No deliveries yet — mark leads as Delivered in CRM.</li>
+        ) : (
+          (data?.deliveries ?? []).map((d) => (
           <li key={d.id} className="ncd-list-row">
             <div>
               <p className="font-medium">{d.customerName}</p>
@@ -22,7 +25,8 @@ export function NewCarDeliveriesPage() {
               {d.deliveryDate ? <p>{d.deliveryDate}</p> : null}
             </div>
           </li>
-        ))}
+          ))
+        )}
       </ul>
     </NewCarDealerShell>
   );
