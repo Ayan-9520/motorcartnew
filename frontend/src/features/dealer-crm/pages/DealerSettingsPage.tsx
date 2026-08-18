@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Crown, Shield, Store } from "lucide-react";
+import { Crown, Shield, Store, Building2 } from "lucide-react";
 import { DealerConsoleShell } from "../components/DealerConsoleShell";
 import { WorkspaceAccountProfile } from "@/dashboards/components/WorkspaceAccountProfile";
 import { useDealer } from "../hooks/useDealer";
@@ -7,6 +7,7 @@ import { setPageMeta } from "@/utils/seo";
 import { useEffect } from "react";
 
 const LINKS = [
+  { href: "/dashboard/dealer/organization", label: "Organization", icon: Building2, desc: "Profile, branches, team roles & plan features" },
   { href: "/dashboard/dealer/storefront", label: "Public storefront", icon: Store, desc: "SEO, contact & visibility" },
   { href: "/dashboard/dealer/verification", label: "Verification & KYC", icon: Shield, desc: "GST, PAN, documents" },
   { href: "/dashboard/dealer/subscription", label: "Subscription plans", icon: Crown, desc: "Free, Premium, Enterprise" },

@@ -1,0 +1,5 @@
+Manufacturer,Model Name,Trim,Fuel Type,Gearbox,Model Year,Body Type,Color,Ex Showroom Price,On Road Price,City,State,Image URL,Brochure URL,Description,Features,Internal Notes
+Maruti Suzuki,Swift,VXI,Petrol,Manual,2025,Hatchback,White,"6,50,000","7,20,000",Mumbai,Maharashtra,https://example.com/swift.jpg,https://example.com/swift.pdf,Popular hatchback,"ABS|Airbags",dealer-a
+Hyundai Motor India,Creta,"SX(O) 1.5 Diesel Automatic",Diesel,Automatic,2025,SUV,Red,1490000,1650000,Delhi,Delhi,https://example.com/creta.jpg,,Premium SUV,"Sunroof|ADAS",dealer-b
+Tata Motors,Nexon,XZ Plus,Petrol + CNG,Manual,2025,SUV,Blue,950000,,Bangalore,Karnataka,https://example.com/nexon.jpg,https://example.com/nexon.pdf,Compact SUV,"Connected car",dealer-c
+Incomplete Brand,,Base,Petrol,Manual,2025,,,,,,,,,,

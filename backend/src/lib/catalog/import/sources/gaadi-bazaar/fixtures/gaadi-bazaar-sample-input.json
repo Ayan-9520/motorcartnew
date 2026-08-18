@@ -1,0 +1,39 @@
+{
+  "source": "gaadi_bazaar",
+  "scrapedAt": "2026-07-23T10:00:00.000Z",
+  "vehicles": [
+    {
+      "vehicleTitle": "2025 Hyundai Creta SX(O) 1.5 Diesel Automatic",
+      "brand": "Hyundai",
+      "model": "Creta",
+      "variant": "SX(O) 1.5 Diesel Automatic",
+      "fuel": "Diesel",
+      "transmission": "Automatic",
+      "price": "1490000",
+      "year": 2025,
+      "city": "Delhi",
+      "state": "Delhi",
+      "imageUrls": [
+        "https://cdn.example.com/gaadi/creta-front.jpg",
+        "https://cdn.example.com/gaadi/creta-side.jpg"
+      ],
+      "brochureUrl": "https://cdn.example.com/gaadi/creta-brochure.pdf",
+      "vehicleUrl": "https://www.gaadibazaar.example/vehicles/hyundai-creta-sx-12345",
+      "sourceId": "gb-creta-12345"
+    },
+    {
+      "vehicleTitle": "2025 Maruti Suzuki Swift VXI",
+      "brand": "Maruti Suzuki",
+      "model": "Swift",
+      "variant": "VXI",
+      "fuel": "Petrol",
+      "transmission": "Manual",
+      "price": 650000,
+      "year": 2025,
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "imageUrl": "https://cdn.example.com/gaadi/swift.jpg",
+      "vehicleUrl": "https://www.gaadibazaar.example/vehicles/swift-vxi-67890"
+    }
+  ]
+}

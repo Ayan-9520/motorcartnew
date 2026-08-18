@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
+import { seedCatalog } from "./seeds/catalog-seed";
 
 const prisma = new PrismaClient();
 
@@ -255,6 +256,8 @@ async function main() {
   console.log("  customer@motorcart.in / Customer@123");
   console.log("  dealer@gmail.com / Dealer@123");
   console.log("  newcar@gmail.com / Newcar@123");
+
+  await seedCatalog(prisma);
 }
 
 main()

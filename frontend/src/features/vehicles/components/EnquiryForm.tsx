@@ -14,13 +14,20 @@ export function EnquiryForm({ vehicle }: { vehicle: VehicleListing }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState(`I'm interested in ${vehicle.title}`);
+  const [consent, setConsent] = useState(false);
+  const [preferredContact, setPreferredContact] = useState<"phone" | "email" | "whatsapp">("phone");
   const [sent, setSent] = useState(false);
+  const [assignment, setAssignment] = useState<"assigned" | "unassigned" | undefined>();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) {
+      toast.error("Please confirm we may contact you about this enquiry.");
+      return;
+    }
     setLoading(true);
     try {
-      const { error } = await submitVehicleEnquiry({
+      const result = await submitVehicleEnquiry({
         vehicleId: vehicle.id,
         vehicleTitle: vehicle.title,
         vehicleSlug: vehicle.slug,
@@ -30,17 +37,33 @@ export function EnquiryForm({ vehicle }: { vehicle: VehicleListing }) {
         phone,
         email: email || undefined,
         message,
+        location: vehicle.location || vehicle.city,
+        category: vehicle.category,
+        consent: true,
+        preferredContact,
       });
-      if (error) {
-        toast.error(error);
+      if (result.error) {
+        toast.error(result.error);
         return;
       }
+      setAssignment(result.assignment);
       setSent(true);
-      toast.success("Enquiry sent! The dealer will contact you shortly.");
+      if (result.duplicate) {
+        toast.success("We already have this enquiry. A partner will follow up.");
+      } else if (result.assignment === "unassigned") {
+        toast.success("Enquiry received. We'll assign a partner shortly.");
+      } else {
+        toast.success("Enquiry sent! The dealer will contact you shortly.");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const successCopy =
+    assignment === "unassigned" || !vehicle.dealerName
+      ? `Thanks, ${name || "there"}! Your interest in ${vehicle.title} was recorded. A MotorCart partner will follow up on ${phone}.`
+      : `Thanks, ${name || "there"}! Your interest in ${vehicle.title} was shared with ${vehicle.dealerName}. Expect a call on ${phone}.`;
 
   return (
     <Card>
@@ -53,8 +76,7 @@ export function EnquiryForm({ vehicle }: { vehicle: VehicleListing }) {
       <CardContent>
         {sent ? (
           <p className="rounded-xl border border-primary/30 bg-primary/10 p-4 text-sm text-foreground">
-            Thanks, {name || "there"}! Your interest in <strong>{vehicle.title}</strong> was shared with{" "}
-            {vehicle.dealerName ?? "the dealer"}. Expect a call on {phone}.
+            {successCopy}
           </p>
         ) : (
           <form onSubmit={submit} className="space-y-3">
@@ -71,6 +93,18 @@ export function EnquiryForm({ vehicle }: { vehicle: VehicleListing }) {
               <Input type="email" className="mt-1" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
+              <Label>Preferred contact</Label>
+              <select
+                className="mt-1 flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                value={preferredContact}
+                onChange={(e) => setPreferredContact(e.target.value as "phone" | "email" | "whatsapp")}
+              >
+                <option value="phone">Phone</option>
+                <option value="email">Email</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+            </div>
+            <div>
               <Label>Message</Label>
               <textarea
                 className="mt-1 flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
@@ -78,6 +112,16 @@ export function EnquiryForm({ vehicle }: { vehicle: VehicleListing }) {
                 onChange={(e) => setMessage(e.target.value)}
               />
             </div>
+            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                required
+              />
+              I agree to be contacted about this vehicle enquiry.
+            </label>
             <Button type="submit" variant="default" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Enquiry"}
             </Button>

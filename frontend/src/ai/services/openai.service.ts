@@ -1,69 +1,35 @@
+import { api } from "@/lib/api/axios";
 import { OPENAI_MODEL } from "../constants";
 import type { AICompletionRequest, AICompletionResult } from "../types";
 
-const API_KEY = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
+let backendConfigured = false;
 
-/** Client OpenAI is disabled in production unless explicitly allowed — use Edge Functions in prod. */
+/** Client never holds an OpenAI key. Completions go through the backend proxy. */
 export function isOpenAIConfigured(): boolean {
-  if (import.meta.env.PROD && import.meta.env.VITE_ALLOW_CLIENT_OPENAI !== "true") {
-    return false;
-  }
-  return Boolean(API_KEY && API_KEY.length > 10 && !API_KEY.startsWith("sk-your"));
+  return backendConfigured;
 }
 
 export async function completeWithOpenAI(req: AICompletionRequest): Promise<AICompletionResult> {
-  if (!isOpenAIConfigured()) {
-    return { text: "", source: "rules" };
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25_000);
-
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [
-          { role: "system", content: req.system },
-          { role: "user", content: req.user },
-        ],
-        max_tokens: req.maxTokens ?? 512,
-        temperature: req.temperature ?? 0.4,
-      }),
-      signal: controller.signal,
+    const { data } = await api.post<AICompletionResult>("/api/ai/complete", {
+      system: req.system,
+      user: req.user,
+      maxTokens: req.maxTokens ?? 512,
+      temperature: req.temperature ?? 0.4,
+      model: OPENAI_MODEL,
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.warn("[OpenAI]", res.status, err);
-      return { text: "", source: "rules" };
-    }
-
-    const json = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-      usage?: { total_tokens?: number };
-    };
-
-    const text = json.choices?.[0]?.message?.content?.trim() ?? "";
+    backendConfigured = data?.source === "openai";
     return {
-      text,
-      source: text ? "openai" : "rules",
-      tokensUsed: json.usage?.total_tokens,
+      text: data?.text ?? "",
+      source: data?.source === "openai" ? "openai" : "rules",
+      tokensUsed: data?.tokensUsed,
     };
-  } catch (e) {
-    console.warn("[OpenAI] request failed", e);
+  } catch {
+    backendConfigured = false;
     return { text: "", source: "rules" };
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
-/** Retry once on failure */
 export async function completeWithRetry(req: AICompletionRequest): Promise<AICompletionResult> {
   const first = await completeWithOpenAI(req);
   if (first.text) return first;

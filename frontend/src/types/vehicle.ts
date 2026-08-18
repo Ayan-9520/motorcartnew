@@ -156,4 +156,9 @@ export interface VehicleEnquiry {
   phone: string;
   email?: string;
   message?: string;
+  location?: string;
+  category?: string;
+  source?: string;
+  consent?: boolean;
+  preferredContact?: "phone" | "email" | "whatsapp";
 }

@@ -1,0 +1,18 @@
+{
+  "source": "local_catalog_master_mock",
+  "vehicles": [
+    {
+      "brand": "Maruti Suzuki",
+      "model": "Swift",
+      "variant": "VXI",
+      "fuel": "Petrol",
+      "transmission": "Manual",
+      "year": 2025,
+      "KM Driven": 0,
+      "Ownership": 1,
+      "Dealer Price": 879000,
+      "Discount": 2,
+      "Registration State": "Maharashtra"
+    }
+  ]
+}

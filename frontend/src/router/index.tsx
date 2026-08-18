@@ -99,6 +99,7 @@ import {
   DealerStorefrontPage,
   DealerSettingsPage,
   DealerCallsPage,
+  OrganizationFoundationPage,
 } from "@/router/lazy-pages";
 import { AuctionHubPage } from "@/features/auctions/pages/AuctionHubPage";
 import { AuctionListingPage } from "@/features/auctions/pages/AuctionListingPage";
@@ -210,6 +211,8 @@ import {
   FounderDashboardPage,
   LeadRouterPage,
   MarketplaceLeadsPage,
+  CatalogImportPage,
+  CatalogImportPreviewPage,
   CommunityModerationPage,
   AuctionAdminPage,
   AuctionDeskGate,
@@ -452,6 +455,7 @@ export const router = createBrowserRouter([
       { path: "dashboard/dealer/analytics", element: <DealerAnalyticsPage /> },
       { path: "dashboard/dealer/team", element: <DealerTeamPage /> },
       { path: "dashboard/dealer/settings", element: <DealerSettingsPage /> },
+      { path: "dashboard/dealer/organization", element: <OrganizationFoundationPage /> },
     ],
   },
   {
@@ -939,6 +943,11 @@ export const router = createBrowserRouter([
       { path: "dashboard/super-admin/founder", element: <FounderDashboardPage /> },
       { path: "dashboard/super-admin/lead-router", element: <LeadRouterPage /> },
       { path: "dashboard/super-admin/marketplace-leads", element: <MarketplaceLeadsPage /> },
+      { path: "dashboard/super-admin/catalog/import", element: <CatalogImportPage /> },
+      {
+        path: "dashboard/super-admin/catalog/import/:jobId/preview",
+        element: <CatalogImportPreviewPage />,
+      },
       { path: "dashboard/founder", element: <FounderDashboardPage /> },
     ],
   },

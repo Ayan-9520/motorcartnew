@@ -25,6 +25,10 @@ export const DealerAuctionsPage = lazyNamed(() => import("@/features/dealer-crm/
 export const DealerStorefrontPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerStorefrontPage"), "DealerStorefrontPage");
 export const DealerSettingsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerSettingsPage"), "DealerSettingsPage");
 export const DealerCallsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerCallsPage"), "DealerCallsPage");
+export const OrganizationFoundationPage = lazyNamed(
+  () => import("@/features/organization/pages/OrganizationFoundationPage"),
+  "OrganizationFoundationPage",
+);
 
 // Finance desks
 export const FinanceManagerDashboardPage = lazyNamed(() => import("@/features/finance/pages/FinanceManagerDashboardPage"), "FinanceManagerDashboardPage");

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { toSnakeRow } from "@/lib/db/table-map";
+import { getVehicleDetail, toLegacyListingPayload } from "@/lib/vehicles/vehicle-detail.service";
 
 export type UnifiedVehicleResponse = {
   vehicle: Record<string, unknown>;
@@ -8,8 +9,11 @@ export type UnifiedVehicleResponse = {
 };
 
 export async function fetchVehicleWithDealerBySlug(
-  slug: string
+  slug: string,
 ): Promise<UnifiedVehicleResponse | null> {
+  const detail = await getVehicleDetail(slug);
+  if (detail) return toLegacyListingPayload(detail);
+
   const vehicle = await prisma.vehicle.findFirst({
     where: { slug, deletedAt: null },
     include: {

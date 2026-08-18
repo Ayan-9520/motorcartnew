@@ -24,6 +24,7 @@ import {
   BadgeIndianRupee,
   LineChart,
   Route,
+  Upload,
 } from "lucide-react";
 
 export type AdminErpNavItem = {
@@ -76,6 +77,10 @@ export const ADMIN_ERP_NAV: AdminErpNavGroup[] = [
       },
       { to: "/dashboard/super-admin/auctions", label: "Auction approvals", icon: Gavel },
     ],
+  },
+  {
+    label: "Catalog",
+    items: [{ to: "/dashboard/super-admin/catalog/import", label: "Import", icon: Upload }],
   },
   {
     label: "Risk & compliance",

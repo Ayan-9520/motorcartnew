@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>GaadiBazaar — Vehicle Detail (Mock Fixture)</title>
+  </head>
+  <body>
+    <nav
+      data-gb="vehicle-breadcrumb"
+      data-source-url="mock://gaadi-bazaar/vehicle/gb-creta-12345"
+      data-vehicle-url="https://www.gaadibazaar.example/vehicles/hyundai-creta-sx-12345"
+    >
+      Home / Delhi / Hyundai Creta
+    </nav>
+    <h1
+      data-gb="vehicle-title"
+      data-brand="Hyundai"
+      data-model="Creta"
+      data-variant="SX(O) 1.5 Diesel Automatic"
+    >
+      2025 Hyundai Creta SX(O) 1.5 Diesel Automatic
+    </h1>
+    <p data-gb="vehicle-price">₹14,90,000</p>
+    <p data-gb="vehicle-location">Delhi, Delhi</p>
+    <a data-gb="vehicle-brochure-link" href="https://cdn.example.com/gaadi/creta-brochure.pdf">Brochure</a>
+    <section data-gb="vehicle-image-gallery" data-image="https://cdn.example.com/gaadi/creta-front.jpg">
+      <img data-gb="vehicle-image-item" data-src="https://cdn.example.com/gaadi/creta-front.jpg" alt="Front" />
+      <img data-gb="vehicle-image-item" data-src="https://cdn.example.com/gaadi/creta-side.jpg" alt="Side" />
+    </section>
+    <table data-gb="vehicle-specifications">
+      <tr data-gb="vehicle-spec-row" data-label="Fuel" data-value="Diesel">
+        <th data-gb="vehicle-spec-label">Fuel</th>
+        <td data-gb="vehicle-spec-value">Diesel</td>
+      </tr>
+      <tr data-gb="vehicle-spec-row" data-label="Transmission" data-value="Automatic">
+        <th data-gb="vehicle-spec-label">Transmission</th>
+        <td data-gb="vehicle-spec-value">Automatic</td>
+      </tr>
+      <tr data-gb="vehicle-spec-row" data-label="Year" data-value="2025">
+        <th data-gb="vehicle-spec-label">Year</th>
+        <td data-gb="vehicle-spec-value">2025</td>
+      </tr>
+    </table>
+  </body>
+</html>

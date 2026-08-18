@@ -1,0 +1,23 @@
+{
+  "source": "local_catalog_master_mock",
+  "segment": "car",
+  "vehicles": [
+    {
+      "brand": "UnknownBrandXYZ",
+      "model": "Phantom",
+      "variant": "Base",
+      "fuel": "Water",
+      "transmission": "Magic",
+      "year": 1800,
+      "segment": "car"
+    },
+    {
+      "brand": "Tata",
+      "model": "",
+      "variant": "XZ",
+      "fuel": "Petrol",
+      "transmission": "Manual",
+      "year": 2025
+    }
+  ]
+}

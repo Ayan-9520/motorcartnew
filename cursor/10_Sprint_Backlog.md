@@ -15,9 +15,9 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 | P0-01 | DevOps | Production env checklist (CORS, API URL, secrets) | 🔴 | |
 | P0-02 | Backend | Fix `/api/db/query` 500s — community tables (`social_posts`, `user_follows`) | 🔴 | |
 | P0-03 | Backend | Fix admin query 500s (`support_tickets`, `platform_fraud_alerts`) | 🔴 | |
-| P0-04 | Backend | Role-based table allowlist on `db/query` (SEC-001) | 🔴 | |
+| P0-04 | Backend | Role-based table allowlist on `db/query` (SEC-001) | 🟢 | Phase 2 |
 | P0-05 | Backend | Rate limit `POST /api/leads` + auth endpoints | 🔴 | |
-| P0-06 | Commerce | Enquiry → dealer CRM end-to-end (real leads visible) | 🔴 | |
+| P0-06 | Commerce | Enquiry → dealer CRM end-to-end (real leads visible) | 🟢 | Phase 2 |
 | P0-07 | Customer | Wishlist fully DB-backed for logged-in users | 🔴 | |
 | P0-08 | Customer | Notifications per-user (not guest-only) | 🔴 | |
 
@@ -27,7 +27,8 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | ID | Area | Task | Status |
 |----|------|------|--------|
-| P1-01 | Backend | Vehicle detail API with embedded dealer join | 🔴 |
+| P1-01 | Backend | Vehicle detail API with embedded dealer join | 🟢 |
+| P1-11 | Platform | Organization / partner tenant foundation (Phase 3) | 🟢 |
 | P1-02 | Marketplace | Listing `sale_mode` metadata (owner/broker/dealer/auction) | ⚪ |
 | P1-03 | New car | Brochure URL, waiting_days, offers JSON on inventory | ⚪ |
 | P1-04 | Parts | Compatibility table + search API | ⚪ |

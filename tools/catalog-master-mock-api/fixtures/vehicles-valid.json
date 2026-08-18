@@ -1,0 +1,79 @@
+{
+  "source": "local_catalog_master_mock",
+  "segment": "car",
+  "fetchedAt": "2026-08-13T00:00:00.000Z",
+  "vehicles": [
+    {
+      "brand": "Maruti Suzuki",
+      "model": "Swift",
+      "variant": "VXI",
+      "fuel": "Petrol",
+      "transmission": "Manual",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "Hatchback",
+      "exShowroomPrice": 649000,
+      "city": "Delhi",
+      "state": "Delhi",
+      "features": ["ABS", "Dual Airbags", "Apple CarPlay"],
+      "externalId": "mock-maruti-swift-vxi-2025"
+    },
+    {
+      "brand": "Maruti Suzuki",
+      "model": "Baleno",
+      "variant": "Alpha",
+      "fuel": "Petrol",
+      "transmission": "Automatic",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "Hatchback",
+      "exShowroomPrice": 899000,
+      "city": "Delhi",
+      "state": "Delhi",
+      "externalId": "mock-maruti-baleno-alpha-2025"
+    },
+    {
+      "brand": "Hyundai",
+      "model": "Creta",
+      "variant": "SX(O) 1.5 Diesel Automatic",
+      "fuel": "Diesel",
+      "transmission": "Automatic",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "SUV",
+      "exShowroomPrice": 1899000,
+      "city": "Delhi",
+      "state": "Delhi",
+      "features": ["Sunroof", "ADAS", "Ventilated Seats"],
+      "externalId": "mock-hyundai-creta-sxo-diesel-at-2025"
+    },
+    {
+      "brand": "Tata",
+      "model": "Nexon",
+      "variant": "XZ Plus",
+      "fuel": "Petrol",
+      "transmission": "Manual",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "SUV",
+      "exShowroomPrice": 995000,
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "externalId": "mock-tata-nexon-xz-plus-2025"
+    },
+    {
+      "brand": "Honda",
+      "model": "City",
+      "variant": "VX CVT",
+      "fuel": "Petrol",
+      "transmission": "Automatic",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "Sedan",
+      "exShowroomPrice": 1499000,
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "externalId": "mock-honda-city-vx-cvt-2025"
+    }
+  ]
+}

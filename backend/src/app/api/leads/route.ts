@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth/middleware";
 import { ok, err, unauthorized, forbidden } from "@/lib/api-response";
 import { toSnakeRow } from "@/lib/db/table-map";
-import { createMarketplaceLead } from "@/services/marketplace-lead.service";
+import { createCustomerEnquiry, EnquiryError } from "@/lib/leads/enquiry.service";
+import { mapLeadToPipelineStatus } from "@/lib/leads/enquiry.types";
 
 const ADMIN_ROLES = new Set(["super_admin", "admin"]);
 const DEALER_ROLES = new Set(["dealer", "used_car_dealer", "new_car_dealer", "bike_dealer", "truck_dealer"]);
@@ -43,13 +44,16 @@ export async function GET(req: NextRequest) {
     data: leads.map((l) => {
       const row = toSnakeRow(l as unknown as Record<string, unknown>);
       delete row.dealer;
+      const meta = (l.metadata ?? {}) as Record<string, unknown>;
       return {
         ...row,
         dealer_name: l.dealer?.name ?? null,
         dealer_slug: l.dealer?.slug ?? null,
+        assignment: meta.assignment ?? null,
+        pipeline_status: mapLeadToPipelineStatus(l.status, meta),
         vehicle_title:
           (row.vehicle_interest as string | null) ??
-          ((l.metadata as { vehicle_title?: string })?.vehicle_title ?? null),
+          ((meta.vehicle_title as string | undefined) ?? null),
       };
     }),
   });
@@ -62,7 +66,7 @@ export async function POST(req: NextRequest) {
       return err("Name and phone are required", 400);
     }
 
-    const lead = await createMarketplaceLead({
+    const result = await createCustomerEnquiry({
       dealer_id: body.dealer_id as string | undefined,
       dealer_slug: body.dealer_slug as string | undefined,
       name: String(body.name),
@@ -70,15 +74,25 @@ export async function POST(req: NextRequest) {
       email: body.email as string | undefined,
       source: (body.source as string) ?? "website",
       notes: body.notes as string | undefined,
+      message: (body.message as string | undefined) ?? (body.notes as string | undefined),
       vehicle_id: body.vehicle_id as string | undefined,
       vehicle_title: body.vehicle_title as string | undefined,
       vehicle_slug: body.vehicle_slug as string | undefined,
+      category: body.category as string | undefined,
+      location: body.location as string | undefined,
+      preferred_contact: body.preferred_contact as string | undefined,
+      consent: body.consent as boolean | undefined,
       metadata: (body.metadata as Record<string, unknown>) ?? {},
     });
 
-    return ok({ data: toSnakeRow(lead as unknown as Record<string, unknown>) });
+    return ok({
+      data: toSnakeRow(result.lead as unknown as Record<string, unknown>),
+      assignment: result.assignment,
+      duplicate: result.duplicate,
+      pipeline_status: result.pipelineStatus,
+    });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not save enquiry";
-    return err(msg, 400);
+    if (e instanceof EnquiryError) return err(e.message, e.status);
+    return err("Could not save enquiry", 400);
   }
 }

@@ -74,7 +74,7 @@ export function mapDbToListing(v: DbVehicle, dealer?: DbDealer | null): VehicleL
     status: v.status,
     aiPriceScore: v.ai_price_score ?? undefined,
     dealerId: v.dealer_id ?? undefined,
-    dealerName: dealer?.name ?? meta.dealerName ?? "Motorcart Dealer",
+    dealerName: dealer?.name ?? meta.dealerName ?? (v.dealer_id ? "Motorcart Dealer" : ""),
     dealerSlug: dealer?.slug ?? meta.dealerSlug,
     dealerPhone: dealer?.phone ?? meta.dealerPhone,
     dealerRating: dealer ? Number(dealer.rating) : meta.dealerRating,

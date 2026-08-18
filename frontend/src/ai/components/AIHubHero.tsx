@@ -83,8 +83,7 @@ export function AIHubHero({
             <div className="mt-5 flex items-center gap-2 rounded-xl border border-border/60 bg-muted/25 px-3 py-2.5 text-xs text-muted-foreground">
               <Cpu className="h-4 w-4 shrink-0 text-primary" />
               <span>
-                Set <code className="rounded bg-background px-1 font-mono text-[10px]">VITE_OPENAI_API_KEY</code> for
-                GPT responses
+                Set <code className="rounded bg-background px-1 font-mono text-[10px]">OPENAI_API_KEY</code> on the backend for GPT responses
               </span>
             </div>
           </div>

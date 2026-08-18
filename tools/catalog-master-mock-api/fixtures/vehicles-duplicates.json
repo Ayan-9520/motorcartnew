@@ -1,0 +1,42 @@
+{
+  "source": "local_catalog_master_mock",
+  "segment": "car",
+  "vehicles": [
+    {
+      "brand": "Honda",
+      "model": "City",
+      "variant": "VX CVT",
+      "fuel": "Petrol",
+      "transmission": "Automatic",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "Sedan",
+      "exShowroomPrice": 1499000,
+      "externalId": "mock-honda-city-vx-cvt-dup-a"
+    },
+    {
+      "brand": "Honda",
+      "model": "City",
+      "variant": "VX CVT",
+      "fuel": "Petrol",
+      "transmission": "Automatic",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "Sedan",
+      "exShowroomPrice": 1499000,
+      "externalId": "mock-honda-city-vx-cvt-dup-b"
+    },
+    {
+      "brand": "Kia",
+      "model": "Seltos",
+      "variant": "HTX",
+      "fuel": "Petrol",
+      "transmission": "Manual",
+      "year": 2025,
+      "segment": "car",
+      "bodyType": "SUV",
+      "exShowroomPrice": 1399000,
+      "externalId": "mock-kia-seltos-htx-2025"
+    }
+  ]
+}

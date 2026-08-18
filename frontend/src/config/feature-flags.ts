@@ -63,6 +63,9 @@ export const featureFlags = {
   unifiedSearch: viteFlag("VITE_FEATURE_M5_UNIFIED_SEARCH", ecosystemOn),
   /** Phase N2.1 — billing MVP */
   billingV2: viteFlag("VITE_FEATURE_BILLING_V2", ecosystemOn),
+  /** Phase 5B — catalog import admin (dry-run) */
+  catalogAdmin: viteFlag("VITE_FEATURE_CATALOG_ADMIN", false),
+  organizationLayer: viteFlag("VITE_FEATURE_ORGANIZATION_LAYER", true),
 } as const;
 
 export function isGrowthUiEnabled(): boolean {

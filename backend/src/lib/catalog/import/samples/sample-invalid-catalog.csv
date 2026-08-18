@@ -1,0 +1,7 @@
+Brand,Model,Variant,Fuel,Transmission,Year,Ex Showroom Price,On Road Price,City,State,Image URL,Brochure URL
+Hyundai,Creta,SX,Diesel,Automatic,2025,1490000,1650000,Mumbai,Maharashtra,https://example.com/creta.jpg,https://example.com/creta.pdf
+UnknownOEM,X1,Base,Petrol,Manual,2025,500000,550000,Mumbai,Maharashtra,,
+Mystery Motors,Bad Model!!,V1,Unobtanium,Flux,1800,-100,0,Fakeville,Nowhere,not-a-url,ftp://bad.url
+Maruti,Swift,,Petrol,Manual,2025,650000,,Mumbai,Maharashtra,,
+Tata,Nexon,XZ,Petrol,Manual,2035,900000,,Mumbai,Maharashtra,,
+Hyundai,Creta,SX,Diesel,Automatic,2025,1000000,,Unknown City,Unknown State,,

@@ -57,4 +57,10 @@ export const featureFlags = {
   unifiedNotifications: envFlag("FEATURE_M4_NOTIFICATIONS", ecosystemOn),
   unifiedSearch: envFlag("FEATURE_M5_UNIFIED_SEARCH", ecosystemOn),
   billingV2: envFlag("FEATURE_BILLING_V2", ecosystemOn),
+  /** Phase Catalog 1 — master catalog tables (default OFF until Phase 2+) */
+  catalogLayer: envFlag("FEATURE_CATALOG_LAYER", false),
+  catalogPublicApi: envFlag("FEATURE_CATALOG_PUBLIC_API", false),
+  catalogAdmin: envFlag("FEATURE_CATALOG_ADMIN", false),
+  /** Phase 3 organization / partner foundation */
+  organizationLayer: envFlag("FEATURE_ORGANIZATION_LAYER", true),
 } as const;

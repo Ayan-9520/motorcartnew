@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 /** Maps frontend Supabase table names → Prisma delegates */
+/** Tables the generic query handler knows how to reach. Access is still gated by query-allowlist. */
 export const tableDelegates: Record<string, keyof typeof prisma> = {
   users: "user",
   dealers: "dealer",
@@ -105,6 +106,8 @@ export const tableDelegates: Record<string, keyof typeof prisma> = {
   uploaded_files: "uploadedFile",
   analytics: "activityLog",
 };
+
+export const KNOWN_QUERY_TABLES = new Set(Object.keys(tableDelegates));
 
 /** Only these tables have `deleted_at` in Prisma — do not filter others. */
 const TABLES_WITH_SOFT_DELETE = new Set([

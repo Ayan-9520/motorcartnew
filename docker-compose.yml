@@ -33,6 +33,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # LOCAL-ONLY fixture JSON API for catalog master dry-run (not a real vehicle provider)
+  catalog-master-mock:
+    build:
+      context: ./tools/catalog-master-mock-api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 3099
+      CATALOG_MASTER_API_KEY: ${CATALOG_MASTER_API_KEY:-local-dev-mock-key}
+    ports:
+      - "${CATALOG_MASTER_MOCK_PORT:-3099}:3099"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3099/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
   backend:
     build:
       context: ./backend
@@ -51,12 +69,18 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       FEATURE_FULL_ECOSYSTEM: ${FEATURE_FULL_ECOSYSTEM:-true}
+      CATALOG_MASTER_SOURCE: ${CATALOG_MASTER_SOURCE:-json_api}
+      CATALOG_MASTER_SOURCE_URL: ${CATALOG_MASTER_SOURCE_URL:-http://catalog-master-mock:3099/v1/vehicles}
+      CATALOG_MASTER_API_KEY: ${CATALOG_MASTER_API_KEY:-local-dev-mock-key}
     volumes:
       - backend_uploads:/app/uploads
+      - ./backend/reports:/app/reports
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      catalog-master-mock:
         condition: service_healthy
     expose:
       - "3001"

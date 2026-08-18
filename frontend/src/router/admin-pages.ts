@@ -25,6 +25,8 @@ export { TransactionsPage } from "@/features/platform-admin/pages/TransactionsPa
 export { DirectoryMonetizationPage } from "@/features/platform-admin/pages/DirectoryMonetizationPage";
 export { LeadRouterPage } from "@/features/platform-admin/pages/LeadRouterPage";
 export { MarketplaceLeadsPage } from "@/features/platform-admin/pages/MarketplaceLeadsPage";
+export { CatalogImportPage } from "@/features/platform-admin/pages/CatalogImportPage";
+export { CatalogImportPreviewPage } from "@/features/platform-admin/pages/CatalogImportPreviewPage";
 export { FounderDashboardPage } from "@/features/founder-dashboard/pages/FounderDashboardPage";
 export { CommunityModerationPage } from "@/features/community/pages/CommunityModerationPage";
 export { AuctionAdminPage } from "@/features/auctions/pages/AuctionAdminPage";

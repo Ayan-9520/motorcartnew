@@ -28,10 +28,11 @@ COPY --from=builder /app/server.ts ./server.ts
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/scripts ./scripts
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
   && chmod +x /usr/local/bin/docker-entrypoint.sh \
-  && mkdir -p uploads \
+  && mkdir -p uploads reports \
   && npx prisma generate
 
 EXPOSE 3001

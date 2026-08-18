@@ -89,3 +89,19 @@ Events:
 `part-images`, `community-media`
 
 Files served at: `/uploads/{bucket}/{path}`
+
+## Admin — Catalog Import (Phase 5A, dry-run)
+
+Requires `FEATURE_CATALOG_ADMIN=true` and `admin` / `super_admin` JWT.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/admin/catalog/import/start` | Start dry-run import job |
+| GET | `/api/admin/catalog/import/:jobId` | Job status, progress, timings, errors |
+| GET | `/api/admin/catalog/import/:jobId/report` | Full execution report + read-only `preview` (Phase 5C/5D) |
+| POST | `/api/admin/catalog/import/:jobId/approve` | Approve selected preview records (dry-run) |
+| POST | `/api/admin/catalog/import/:jobId/reject` | Reject selected preview records (dry-run) |
+| GET | `/api/admin/catalog/import/:jobId/approval-audit` | Approval audit trail |
+| POST | `/api/admin/catalog/import/:jobId/publish` | Publish APPROVED records to catalog DB (Phase 5E) |
+
+Preview UI: `/dashboard/super-admin/catalog/import/:jobId/preview` · Docs: `docs/catalog-import-preview.md`, `docs/catalog-import-approval.md`, `docs/catalog-import-publish.md`

@@ -1,0 +1,387 @@
+openapi: 3.0.3
+info:
+  title: Motorcart Admin Catalog Import API
+  version: 1.0.0
+  description: |
+    Admin-only dry-run catalog import endpoints (Phase 5A).
+    Requires `FEATURE_CATALOG_ADMIN=true` and platform admin JWT (`admin` or `super_admin`).
+    No database publish — preview/dry-run only.
+
+servers:
+  - url: http://localhost:3001
+    description: Local backend
+
+tags:
+  - name: Admin Catalog Import
+    description: Catalog import job orchestration (dry-run)
+
+paths:
+  /api/admin/catalog/import/start:
+    post:
+      tags: [Admin Catalog Import]
+      summary: Start catalog import job
+      description: Queues an in-memory dry-run import job using `runCatalogImportJob()`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogImportStartRequest"
+            example:
+              source: gaadi_bazaar
+              city: Delhi
+              search: maruti
+              pages: 5
+      responses:
+        "202":
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogImportStartResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Feature disabled (`FEATURE_CATALOG_ADMIN=false`)
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/admin/catalog/import/{jobId}:
+    get:
+      tags: [Admin Catalog Import]
+      summary: Get import job status
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Current job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogImportJobStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Job not found or feature disabled
+
+  /api/admin/catalog/import/{jobId}/report:
+    get:
+      tags: [Admin Catalog Import]
+      summary: Get full import job report
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Full execution report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogImportJobReportResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Job not found or feature disabled
+        "409":
+          description: Report not ready — job still running
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9_-]+$'
+        minLength: 8
+        maxLength: 128
+      example: catalog-import-550e8400-e29b-41d4-a716-446655440000
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+    Forbidden:
+      description: Non-admin role
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+    ServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+
+  schemas:
+    ErrorMessage:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    CatalogImportStartRequest:
+      type: object
+      required: [source]
+      properties:
+        source:
+          type: string
+          enum: [gaadi_bazaar]
+        city:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: Delhi
+        search:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: maruti
+        pages:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 1
+        segment:
+          type: string
+          minLength: 1
+          maxLength: 80
+
+    CatalogImportStartResponse:
+      type: object
+      required: [jobId, status]
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [started]
+
+    CatalogImportJobStatusResponse:
+      type: object
+      required:
+        - jobId
+        - status
+        - currentStage
+        - progress
+        - timings
+        - errors
+        - startedAt
+        - finishedAt
+        - dryRun
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [started, running, completed, failed]
+        currentStage:
+          type: string
+          nullable: true
+        progress:
+          $ref: "#/components/schemas/CatalogImportJobProgress"
+        timings:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogImportJobStageTiming"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogImportJobErrorItem"
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        dryRun:
+          type: boolean
+          enum: [true]
+
+    CatalogImportJobProgress:
+      type: object
+      required: [recordsProcessed, stagesCompleted, stagesTotal, percentComplete]
+      properties:
+        recordsProcessed:
+          type: integer
+        stagesCompleted:
+          type: integer
+        stagesTotal:
+          type: integer
+        percentComplete:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    CatalogImportJobStageTiming:
+      type: object
+      required: [stage, label, success, startedAt, finishedAt, durationMs]
+      properties:
+        stage:
+          type: string
+        label:
+          type: string
+        success:
+          type: boolean
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+        message:
+          type: string
+
+    CatalogImportJobErrorItem:
+      type: object
+      required: [code, message, stage]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        stage:
+          type: string
+
+    CatalogImportJobReportResponse:
+      type: object
+      required: [report, dryRun]
+      properties:
+        dryRun:
+          type: boolean
+          enum: [true]
+        report:
+          $ref: "#/components/schemas/CatalogImportJobExecutionReport"
+        preview:
+          $ref: "#/components/schemas/CatalogImportPreviewPayload"
+          nullable: true
+          description: Phase 5C read-only per-record preview projection
+
+    CatalogImportPreviewPayload:
+      type: object
+      required: [dryRun, published, jobId, generatedAt, summary, records]
+      properties:
+        dryRun:
+          type: boolean
+          enum: [true]
+        published:
+          type: boolean
+          enum: [false]
+        jobId:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        summary:
+          type: object
+          required: [totalRecords, valid, duplicate, needReview, rejected]
+          properties:
+            totalRecords: { type: integer }
+            valid: { type: integer }
+            duplicate: { type: integer }
+            needReview: { type: integer }
+            rejected: { type: integer }
+        records:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - rowNumber
+              - status
+              - brand
+              - model
+              - variant
+              - fuel
+              - transmission
+              - city
+              - validationErrors
+            properties:
+              id: { type: string }
+              rowNumber: { type: integer }
+              status:
+                type: string
+                enum: [valid, duplicate, need_review, rejected]
+              imageUrl: { type: string, nullable: true }
+              brand: { type: string }
+              model: { type: string }
+              variant: { type: string }
+              fuel: { type: string }
+              transmission: { type: string }
+              price: { type: string, nullable: true }
+              city: { type: string }
+              matchConfidence: { type: number, nullable: true }
+              matchMethod: { type: string, nullable: true }
+              duplicateReason: { type: string, nullable: true }
+              validationErrors:
+                type: array
+                items: { type: string }
+
+    CatalogImportJobExecutionReport:
+      type: object
+      required:
+        - generatedAt
+        - dryRun
+        - input
+        - stages
+        - importSummary
+        - errorSummary
+        - performance
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        dryRun:
+          type: boolean
+          enum: [true]
+        input:
+          $ref: "#/components/schemas/CatalogImportStartRequest"
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogImportJobStageTiming"
+        scrapeStats:
+          type: object
+          nullable: true
+        importSummary:
+          type: object
+        errorSummary:
+          type: object
+        performance:
+          type: object

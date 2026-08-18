@@ -1,22 +1,27 @@
 import { NextRequest } from "next/server";
-import { featureFlags } from "@/config/feature-flags";
-import { fetchVehicleWithDealerBySlug } from "@/services/vehicle-unified.service";
-import { err, ok } from "@/lib/api-response";
+import { ok, err } from "@/lib/api-response";
+import { getVehicleDetail, toLegacyListingPayload } from "@/lib/vehicles/vehicle-detail.service";
 
-/** Unified vehicle + dealer + specs by slug (replaces broken join on generic db query). */
+/** Unified vehicle + dealer by slug or id. Catalog-only records are not purchasable. */
 export async function GET(
   _req: NextRequest,
-  ctx: { params: Promise<{ slug: string }> }
+  ctx: { params: Promise<{ slug: string }> },
 ) {
-  if (!featureFlags.unifiedVehicleApi) {
-    return err("FEATURE_DISABLED", 404);
-  }
-
   const { slug } = await ctx.params;
   if (!slug?.trim()) return err("INVALID_SLUG", 400);
 
-  const result = await fetchVehicleWithDealerBySlug(slug.trim());
-  if (!result) return err("NOT_FOUND", 404);
+  const detail = await getVehicleDetail(slug.trim());
+  if (!detail) return err("NOT_FOUND", 404);
 
-  return ok(result);
+  const legacy = toLegacyListingPayload(detail);
+  return ok({
+    vehicle: legacy.vehicle,
+    dealer: legacy.dealer,
+    specs: legacy.specs,
+    source_type: detail.source_type,
+    purchasable: detail.purchasable,
+    enquiry_allowed: detail.enquiry_allowed,
+    availability: detail.availability,
+    detail,
+  });
 }
