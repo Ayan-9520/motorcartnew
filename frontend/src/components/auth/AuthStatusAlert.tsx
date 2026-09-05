@@ -8,6 +8,7 @@ type AuthStatusAlertProps = {
   error: AuthErrorUI;
   email?: string;
   onResendVerification?: () => void;
+  onEnterVerificationCode?: () => void;
   resending?: boolean;
   className?: string;
 };
@@ -34,10 +35,14 @@ export function AuthStatusAlert({
   error,
   email,
   onResendVerification,
+  onEnterVerificationCode,
   resending,
   className,
 }: AuthStatusAlertProps) {
   const Icon = variantIcons[error.variant];
+  const verifyHref = email
+    ? `/verify-email?email=${encodeURIComponent(email)}`
+    : "/verify-email";
 
   return (
     <div
@@ -67,6 +72,22 @@ export function AuthStatusAlert({
       )}
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        {error.showEnterVerificationCode && (
+          onEnterVerificationCode ? (
+            <Button
+              type="button"
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={onEnterVerificationCode}
+            >
+              Enter email OTP
+            </Button>
+          ) : (
+            <Button type="button" size="sm" className="w-full sm:w-auto" asChild>
+              <Link to={verifyHref}>Enter email OTP</Link>
+            </Button>
+          )
+        )}
         {error.showResendVerification && onResendVerification && (
           <Button
             type="button"

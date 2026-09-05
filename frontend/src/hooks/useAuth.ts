@@ -9,6 +9,9 @@ import {
   requiresEmailConfirmation,
   signInWithPhoneOtp,
   verifyPhoneOtp,
+  sendEmailLoginOtp,
+  verifyEmailLoginOtp,
+  verifySignupEmail,
   signInWithGoogle,
   resetPassword,
   signOut as authSignOut,
@@ -155,7 +158,7 @@ export function useAuth() {
       return { data, error: null, errorCode: null, errorUI: null, needsEmailConfirmation: false };
     }
 
-    toast.success("Verification link sent — check your email (including spam)");
+    toast.success("Verification email sent — check inbox (code valid 48 hours)");
     return { data, error: null, errorCode: null, errorUI: null, needsEmailConfirmation: true };
   }, [loadProfile]);
 
@@ -195,6 +198,50 @@ export function useAuth() {
       void logAuthActivity("phone_otp", {});
     }
     toast.success("Phone verified — welcome!");
+    return { error: null };
+  }, [loadProfile]);
+
+  const sendEmailOtp = useCallback(async (email: string) => {
+    const normalized = normalizeAuthEmail(email);
+    const { error } = await sendEmailLoginOtp(normalized);
+    if (error) {
+      const errorCode = classifyAuthError(error.message);
+      toast.error(getAuthErrorToast(errorCode));
+      return { error };
+    }
+    toast.success("Login code sent — check your email (valid 10 minutes)");
+    return { error: null };
+  }, []);
+
+  const verifyEmailOtp = useCallback(async (email: string, code: string) => {
+    const { data, error } = await verifyEmailLoginOtp(normalizeAuthEmail(email), code);
+    if (error) {
+      const errorCode = classifyAuthError(error.message);
+      toast.error(getAuthErrorToast(errorCode));
+      return { error };
+    }
+    if (data.session?.user) {
+      await loadProfile(data.session.user.id, data.session.user as Parameters<typeof loadProfile>[1]);
+      void registerDeviceTouch();
+      void logAuthActivity("email_otp", {});
+    }
+    toast.success("Signed in with email code");
+    return { error: null };
+  }, [loadProfile]);
+
+  const confirmSignupEmail = useCallback(async (email: string, code: string) => {
+    const { data, error } = await verifySignupEmail(normalizeAuthEmail(email), code);
+    if (error) {
+      const errorCode = classifyAuthError(error.message);
+      toast.error(getAuthErrorToast(errorCode));
+      return { error };
+    }
+    if (data.session?.user) {
+      await loadProfile(data.session.user.id, data.session.user as Parameters<typeof loadProfile>[1]);
+      void registerDeviceTouch();
+      void logAuthActivity("email_verify", {});
+    }
+    toast.success("Email verified — welcome!");
     return { error: null };
   }, [loadProfile]);
 
@@ -244,6 +291,9 @@ export function useAuth() {
     resendEmailConfirmation,
     sendOtp,
     verifyOtp,
+    sendEmailOtp,
+    verifyEmailOtp,
+    confirmSignupEmail,
     loginGoogle,
     forgotPassword,
     signOut,

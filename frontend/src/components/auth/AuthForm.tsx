@@ -48,6 +48,9 @@ export function AuthForm({
     loginEmail,
     sendOtp,
     verifyOtp,
+    sendEmailOtp,
+    verifyEmailOtp,
+    confirmSignupEmail,
     loginGoogle,
     resendEmailConfirmation,
     isLoading,
@@ -58,6 +61,13 @@ export function AuthForm({
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [formattedPhone, setFormattedPhone] = useState("");
+  const [emailOtpMode, setEmailOtpMode] = useState(false);
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailForOtp, setEmailForOtp] = useState("");
+  const [emailOtpCode, setEmailOtpCode] = useState("");
+  /** First-time signup verification (48h code) — separate from passwordless Email OTP login. */
+  const [signupVerifyMode, setSignupVerifyMode] = useState(false);
+  const [signupVerifyCode, setSignupVerifyCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const [loginError, setLoginError] = useState<AuthErrorUI | null>(null);
@@ -66,6 +76,7 @@ export function AuthForm({
     phone: boolean;
     google: boolean;
     needsEmailConfirm: boolean;
+    emailOtpEnabled: boolean;
   } | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
@@ -85,6 +96,7 @@ export function AuthForm({
           phone: s.phoneEnabled,
           google: s.googleEnabled,
           needsEmailConfirm: !s.mailerAutoconfirm,
+          emailOtpEnabled: s.emailOtpEnabled ?? true,
         });
       })
       .finally(() => setSettingsLoading(false));
@@ -93,6 +105,7 @@ export function AuthForm({
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<EmailForm>({
     resolver: zodResolver(emailSchema),
@@ -100,6 +113,15 @@ export function AuthForm({
   });
 
   const clearLoginError = () => setLoginError(null);
+
+  const openSignupVerify = (email?: string) => {
+    const resolved = normalizeAuthEmail(email || attemptedEmail || getValues("email") || "");
+    if (resolved.includes("@")) setAttemptedEmail(resolved);
+    setSignupVerifyMode(true);
+    setEmailOtpMode(false);
+    setSignupVerifyCode("");
+    setLoginError(null);
+  };
 
   const goToWorkspace = async () => {
     const u = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
@@ -119,6 +141,13 @@ export function AuthForm({
 
     if (!result.success) {
       if (result.errorUI) setLoginError(result.errorUI);
+      if (
+        result.errorCode === "email_not_verified" ||
+        (result.errorCode === "sign_in_blocked" && providers?.needsEmailConfirm)
+      ) {
+        setSignupVerifyMode(true);
+        setEmailOtpMode(false);
+      }
       return;
     }
 
@@ -138,13 +167,37 @@ export function AuthForm({
     const { errorUI } = await resendEmailConfirmation(attemptedEmail);
     setResending(false);
     if (!errorUI) {
+      setSignupVerifyMode(true);
       setLoginError({
         code: "email_not_verified",
         title: "Verification email sent",
-        description: "Open the new link we sent, then return here to sign in.",
+        description: "Enter the new 6-digit code below (valid 48 hours), then you can use password next time.",
         variant: "info",
         showResendVerification: true,
+        showEnterVerificationCode: true,
       });
+    }
+  };
+
+  const onConfirmSignupCode = async () => {
+    const email = normalizeAuthEmail(attemptedEmail || getValues("email") || "");
+    if (!email.includes("@")) {
+      setLoginError({
+        code: "unknown",
+        title: "Email required",
+        description: "Enter the same email you used at signup.",
+        variant: "info",
+      });
+      return;
+    }
+    setSubmitting(true);
+    setAttemptedEmail(email);
+    const { error } = await confirmSignupEmail(email, signupVerifyCode.trim());
+    setSubmitting(false);
+    if (!error) {
+      setSignupVerifyMode(false);
+      onSuccess?.();
+      await goToWorkspace();
     }
   };
 
@@ -168,6 +221,38 @@ export function AuthForm({
     }
   };
 
+  const onSendEmailOtp = async () => {
+    const email = normalizeAuthEmail(emailForOtp || attemptedEmail);
+    if (!email.includes("@")) {
+      setLoginError({
+        code: "unknown",
+        title: "Email required",
+        description: "Enter your email address to receive a login code.",
+        variant: "info",
+      });
+      return;
+    }
+    setSubmitting(true);
+    setAttemptedEmail(email);
+    const { error } = await sendEmailOtp(email);
+    setSubmitting(false);
+    if (!error) {
+      setEmailForOtp(email);
+      setEmailOtpSent(true);
+      setLoginError(null);
+    }
+  };
+
+  const onVerifyEmailOtp = async () => {
+    setSubmitting(true);
+    const { error } = await verifyEmailOtp(normalizeAuthEmail(emailForOtp), emailOtpCode.trim());
+    setSubmitting(false);
+    if (!error) {
+      onSuccess?.();
+      await goToWorkspace();
+    }
+  };
+
   const busy = submitting || isLoading;
   const signedInUser = useAuthStore((s) => s.user);
   const dashboardHref = signedInUser ? getWorkspaceHomePath(signedInUser) : "/dashboard/customer";
@@ -182,7 +267,10 @@ export function AuthForm({
       ) : (
         providers?.needsEmailConfirm && (
           <p className="auth-form__notice mb-3 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-            Email verification is required before you can sign in. Check spam if you don&apos;t see our email.
+            First sign-in needs the 6-digit code from your email (valid 48 hours). After that, use email + password.{" "}
+            <button type="button" className="font-medium text-primary hover:underline" onClick={() => openSignupVerify()}>
+              Enter code here
+            </button>
           </p>
         )
       )}
@@ -204,6 +292,7 @@ export function AuthForm({
             error={loginError}
             email={attemptedEmail}
             onResendVerification={onResendVerification}
+            onEnterVerificationCode={() => openSignupVerify()}
             resending={resending}
           />
         )}
@@ -217,52 +306,199 @@ export function AuthForm({
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onEmailSubmit)} className="auth-form__fields space-y-3" noValidate>
-          <AuthFormField
-            id="login-email"
-            label="Email address"
-            type="email"
-            autoComplete="email"
-            disabled={busy}
-            icon={<Mail className="h-4 w-4" />}
-            error={errors.email?.message}
-            {...register("email", { onChange: clearLoginError })}
-          />
-          <AuthFormField
-            id="login-password"
-            label="Password"
-            type="password"
-            autoComplete="current-password"
-            disabled={busy}
-            icon={<Lock className="h-4 w-4" />}
-            error={errors.password?.message}
-            {...register("password", { onChange: clearLoginError })}
-          />
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-border accent-primary"
+        {signupVerifyMode ? (
+          <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+            <p className="text-sm font-medium text-foreground">Enter signup email OTP</p>
+            <p className="text-xs text-muted-foreground">
+              Use the 6-digit code from MotorCart (not the Password / Email OTP login toggle below). Sent to{" "}
+              <strong className="text-foreground">{attemptedEmail || "your inbox"}</strong>.
+            </p>
+            <AuthFormField
+              id="login-signup-email"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              disabled={busy}
+              icon={<Mail className="h-4 w-4" />}
+              value={attemptedEmail}
+              onChange={(e) => setAttemptedEmail(normalizeAuthEmail(e.target.value))}
             />
-            Remember me on this device
-          </label>
-          <Button type="submit" className="auth-cta w-full" disabled={busy}>
-            {busy ? (
+            <div className="auth-field">
+              <Label htmlFor="signup-verify-code" className="auth-field__label">
+                6-digit code from email
+              </Label>
+              <Input
+                id="signup-verify-code"
+                className="mt-1.5 h-11 rounded-xl tracking-widest"
+                value={signupVerifyCode}
+                onChange={(e) => setSignupVerifyCode(e.target.value)}
+                inputMode="numeric"
+                disabled={busy}
+                placeholder="e.g. 973911"
+                autoFocus
+              />
+            </div>
+            <Button
+              type="button"
+              className="auth-cta w-full"
+              disabled={busy || signupVerifyCode.trim().length < 4}
+              onClick={() => void onConfirmSignupCode()}
+            >
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Verify OTP & continue
+            </Button>
+            <div className="flex flex-col gap-1 sm:flex-row">
+              <Button type="button" variant="outline" className="w-full text-sm" disabled={busy || resending} onClick={() => void onResendVerification()}>
+                {resending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Resend code
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-sm"
+                disabled={busy}
+                onClick={() => {
+                  setSignupVerifyMode(false);
+                  setSignupVerifyCode("");
+                }}
+              >
+                Back to password
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {!signupVerifyMode && providers?.emailOtpEnabled !== false && (
+          <div className="flex gap-2 text-xs">
+            <button
+              type="button"
+              className={cn(
+                "rounded-lg px-2.5 py-1.5 font-medium",
+                !emailOtpMode ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => {
+                setEmailOtpMode(false);
+                setEmailOtpSent(false);
+              }}
+            >
+              Password
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "rounded-lg px-2.5 py-1.5 font-medium",
+                emailOtpMode ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => setEmailOtpMode(true)}
+            >
+              Email OTP
+            </button>
+          </div>
+        )}
+
+        {!signupVerifyMode && emailOtpMode ? (
+          <div className="space-y-3">
+            {!emailOtpSent ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in…
+                <AuthFormField
+                  id="login-email-otp"
+                  label="Email address"
+                  type="email"
+                  autoComplete="email"
+                  disabled={busy}
+                  icon={<Mail className="h-4 w-4" />}
+                  value={emailForOtp}
+                  onChange={(e) => setEmailForOtp(e.target.value)}
+                />
+                <Button type="button" className="auth-cta w-full" disabled={busy} onClick={onSendEmailOtp}>
+                  {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Send login code
+                </Button>
               </>
             ) : (
-              "Sign in"
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Code sent to <strong className="text-foreground">{emailForOtp}</strong> (10 minutes)
+                </p>
+                <div className="auth-field">
+                  <Label htmlFor="email-otp-code" className="auth-field__label">
+                    Enter code
+                  </Label>
+                  <Input
+                    id="email-otp-code"
+                    className="mt-1.5 h-11 rounded-xl tracking-widest"
+                    value={emailOtpCode}
+                    onChange={(e) => setEmailOtpCode(e.target.value)}
+                    inputMode="numeric"
+                    disabled={busy}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  className="auth-cta w-full"
+                  disabled={busy || emailOtpCode.trim().length < 4}
+                  onClick={onVerifyEmailOtp}
+                >
+                  Verify & sign in
+                </Button>
+                <Button type="button" variant="ghost" className="w-full text-sm" disabled={busy} onClick={onSendEmailOtp}>
+                  Resend code
+                </Button>
+              </>
             )}
-          </Button>
-        </form>
+          </div>
+        ) : !signupVerifyMode ? (
+          <form onSubmit={handleSubmit(onEmailSubmit)} className="auth-form__fields space-y-3" noValidate>
+            <AuthFormField
+              id="login-email"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              disabled={busy}
+              icon={<Mail className="h-4 w-4" />}
+              error={errors.email?.message}
+              {...register("email", { onChange: clearLoginError })}
+            />
+            <AuthFormField
+              id="login-password"
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              disabled={busy}
+              icon={<Lock className="h-4 w-4" />}
+              error={errors.password?.message}
+              {...register("password", { onChange: clearLoginError })}
+            />
+            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              Remember me on this device
+            </label>
+            <Button type="submit" className="auth-cta w-full" disabled={busy}>
+              {busy ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </Button>
+          </form>
+        ) : null}
 
         <p className="text-center text-sm">
           <Link to="/forgot-password" className="font-medium text-primary hover:underline">
             Forgot password?
           </Link>
+          {" · "}
+          <button type="button" className="font-medium text-primary hover:underline" onClick={() => openSignupVerify()}>
+            Verify email OTP
+          </button>
         </p>
       </TabsContent>
 

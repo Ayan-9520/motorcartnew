@@ -22,6 +22,8 @@ export type AuthErrorUI = {
   showResendVerification?: boolean;
   showSignupLink?: boolean;
   showForgotPassword?: boolean;
+  /** Jump to signup verification code entry (not passwordless Email OTP login). */
+  showEnterVerificationCode?: boolean;
   hints?: string[];
 };
 
@@ -105,12 +107,13 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
     case "email_not_verified":
       return {
         code,
-        title: "Email not verified",
+        title: "Enter the email OTP first",
         description:
-          "Your account exists but the email address is not confirmed yet. Open the link we sent you, then sign in again.",
+          "Admin approval does not unlock login. Enter the 6-digit code from your inbox once, then you can sign in with email and password anytime.",
         variant: "warning",
         showResendVerification: true,
         showForgotPassword: false,
+        showEnterVerificationCode: true,
       };
     case "wrong_password":
       return {
@@ -140,8 +143,9 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
         showResendVerification: true,
         showSignupLink: true,
         showForgotPassword: true,
+        showEnterVerificationCode: true,
         hints: [
-          "Email not verified — click the confirmation link in your inbox (check spam).",
+          "First login needs the 6-digit email OTP (or the Verify email button in that mail).",
           "Wrong password — use Forgot password to set a new one.",
           "No account yet — use Sign up to register first.",
         ],

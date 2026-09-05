@@ -290,6 +290,43 @@ export async function updateAdminUser(
   return { ok: true };
 }
 
+/** Soft-delete user so they leave the admin directory and email/phone can be reused. */
+export async function deleteAdminUser(userId: string, actorUserId: string) {
+  if (userId === actorUserId) throw new Error("CANNOT_DELETE_SELF");
+
+  const user = await prisma.user.findFirst({ where: { id: userId, deletedAt: null } });
+  if (!user) throw new Error("USER_NOT_FOUND");
+
+  if (user.role === "super_admin" || user.role === "admin") {
+    const otherAdmins = await prisma.user.count({
+      where: {
+        deletedAt: null,
+        id: { not: userId },
+        role: { in: ["super_admin", "admin"] },
+        status: { not: "closed" },
+      },
+    });
+    if (otherAdmins === 0) throw new Error("CANNOT_DELETE_LAST_ADMIN");
+  }
+
+  const stamp = Date.now().toString(36);
+  await prisma.$transaction(async (tx) => {
+    await tx.refreshToken.deleteMany({ where: { userId } });
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        deletedAt: new Date(),
+        status: "closed",
+        email: user.email ? `deleted+${userId.slice(0, 8)}.${stamp}@deleted.local` : null,
+        phone: user.phone ? `del_${userId.slice(0, 8)}_${stamp}` : null,
+        communityHandle: null,
+      },
+    });
+  });
+
+  return { ok: true };
+}
+
 export async function reviewKyc(userId: string, kycStatus: "verified" | "rejected") {
   const user = await prisma.user.findFirst({ where: { id: userId, deletedAt: null } });
   if (!user) throw new Error("USER_NOT_FOUND");
@@ -325,7 +362,7 @@ export async function approveBusinessAccount(userId: string) {
         status: "active",
         approvalStatus: "approved",
         onboardingStatus: "approved",
-        isVerified: true,
+        isVerified: true, // business KYC/approval flag — does NOT set emailVerified
         kycStatus: user.kycStatus === "pending" ? "verified" : user.kycStatus,
         profileCompletion: Math.max(user.profileCompletion, 85),
         metadata: {

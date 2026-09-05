@@ -12,6 +12,7 @@ import { BusinessSignupPage } from "@/pages/auth/BusinessSignupPage";
 import { PendingApprovalPage } from "@/pages/PendingApprovalPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { KycPage } from "@/pages/KycPage";
 import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
@@ -463,6 +464,7 @@ export const router = createBrowserRouter([
       { path: "signup/customer", element: <CustomerSignupPage /> },
       { path: "signup/business", element: <BusinessSignupPage /> },
       { path: "forgot-password", element: <ForgotPasswordPage /> },
+      { path: "verify-email", element: <VerifyEmailPage /> },
       { path: "reset-password", element: <ResetPasswordPage /> },
       { path: "auth/callback", element: <AuthCallbackPage /> },
     ],

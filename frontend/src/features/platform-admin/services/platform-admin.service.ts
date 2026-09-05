@@ -8,6 +8,7 @@ import {
   fetchPendingBusinessAccountsApi,
   fetchPendingDealersApi,
   isAdminBusinessRole,
+  deleteAdminUserApi,
   patchAdminUserApi,
   rejectBusinessAccountApi,
   reviewKycApi,
@@ -297,6 +298,15 @@ export async function updateAdminUser(
   }
   const { error } = await supabase.from("users").update(patch).eq("id", id);
   return { error: error?.message ?? null };
+}
+
+export async function deleteAdminUser(id: string): Promise<{ error: string | null }> {
+  try {
+    await deleteAdminUserApi(id);
+    return { error: null };
+  } catch (e) {
+    return { error: apiErrorMessage(e) ?? "Delete failed" };
+  }
 }
 
 export async function fetchPendingDealers(): Promise<AdminDealerRow[]> {

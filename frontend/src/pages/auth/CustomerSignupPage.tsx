@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,10 +31,8 @@ type FormData = z.infer<typeof schema>;
 
 export function CustomerSignupPage() {
   const navigate = useNavigate();
-  const { register: registerUser, resendEmailConfirmation } = useAuth();
+  const { register: registerUser } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
-  const [resending, setResending] = useState(false);
   const [signupError, setSignupError] = useState<AuthErrorUI | null>(null);
 
   const {
@@ -73,7 +71,7 @@ export function CustomerSignupPage() {
       }
 
       if (needsEmailConfirmation) {
-        setVerifyEmail(email);
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
         return;
       }
 
@@ -82,48 +80,6 @@ export function CustomerSignupPage() {
       setLoading(false);
     }
   };
-
-  if (verifyEmail) {
-    return (
-      <AuthPageChrome
-        eyebrow="Almost there"
-        title="Verify your email"
-        description={
-          <>
-            We sent a confirmation link to <strong className="text-foreground">{verifyEmail}</strong>. After
-            verifying, sign in to open your personal dashboard.
-          </>
-        }
-      >
-        <div className="rounded-xl border border-border/70 bg-muted/30 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-          Links expire in 24 hours. Check spam or resend below.
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 h-11 w-full rounded-xl"
-          disabled={resending}
-          onClick={async () => {
-            setResending(true);
-            await resendEmailConfirmation(verifyEmail);
-            setResending(false);
-          }}
-        >
-          {resending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending…
-            </>
-          ) : (
-            "Resend verification email"
-          )}
-        </Button>
-        <Button type="button" className="auth-cta mt-2 w-full" asChild>
-          <Link to="/login">Go to sign in</Link>
-        </Button>
-      </AuthPageChrome>
-    );
-  }
 
   return (
     <AuthPageChrome

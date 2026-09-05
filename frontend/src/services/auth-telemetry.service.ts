@@ -8,7 +8,9 @@ export type AuthActivityAction =
   | "password_reset_requested"
   | "password_updated"
   | "oauth_callback"
-  | "phone_otp";
+  | "phone_otp"
+  | "email_otp"
+  | "email_verify";
 
 let deviceSessionUsesRpc = true;
 

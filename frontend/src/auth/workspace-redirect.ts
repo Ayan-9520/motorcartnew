@@ -14,6 +14,7 @@ const AUTH_PATHS = new Set([
   "/signup/customer",
   "/signup/business",
   "/forgot-password",
+  "/verify-email",
   "/reset-password",
   "/auth/callback",
 ]);

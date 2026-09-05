@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Mail, Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,10 +72,8 @@ type FormData = z.infer<typeof schema>;
 
 export function BusinessSignupPage() {
   const navigate = useNavigate();
-  const { register: registerUser, resendEmailConfirmation } = useAuth();
+  const { register: registerUser } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
-  const [resending, setResending] = useState(false);
   const [signupError, setSignupError] = useState<AuthErrorUI | null>(null);
   const [docNames, setDocNames] = useState<string[]>([]);
 
@@ -162,7 +160,7 @@ export function BusinessSignupPage() {
       }
 
       if (needsEmailConfirmation) {
-        setVerifyEmail(email);
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
         return;
       }
 
@@ -171,50 +169,6 @@ export function BusinessSignupPage() {
       setLoading(false);
     }
   };
-
-  if (verifyEmail) {
-    return (
-      <AuthPageChrome
-        eyebrow="Application received"
-        title="Verify your business email"
-        description={
-          <>
-            We sent a link to <strong className="text-foreground">{verifyEmail}</strong>. After verification, sign
-            in — your application enters the admin approval queue (typically 24–48 business hours).
-          </>
-        }
-      >
-        <div className="flex justify-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Mail className="h-6 w-6 text-primary" />
-          </span>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 h-11 w-full rounded-xl"
-          disabled={resending}
-          onClick={async () => {
-            setResending(true);
-            await resendEmailConfirmation(verifyEmail);
-            setResending(false);
-          }}
-        >
-          {resending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending…
-            </>
-          ) : (
-            "Resend verification email"
-          )}
-        </Button>
-        <Button type="button" className="auth-cta mt-2 w-full" asChild>
-          <Link to="/login">Go to sign in</Link>
-        </Button>
-      </AuthPageChrome>
-    );
-  }
 
   return (
     <AuthPageChrome

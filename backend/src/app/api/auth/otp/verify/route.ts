@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
 import { ok, err } from "@/lib/api-response";
-import { createHash } from "crypto";
+import { issueSessionTokens } from "@/lib/auth/otp-helpers";
 
 export async function POST(req: NextRequest) {
   const { phone, otp } = (await req.json()) as { phone?: string; otp?: string };
@@ -10,40 +9,36 @@ export async function POST(req: NextRequest) {
 
   const normalized = phone.replace(/\D/g, "").slice(-10);
   const record = await prisma.otpCode.findFirst({
-    where: { phone: normalized, code: otp, used: false, expiresAt: { gt: new Date() } },
+    where: {
+      phone: normalized,
+      purpose: "phone_login",
+      code: otp,
+      used: false,
+      expiresAt: { gt: new Date() },
+    },
     orderBy: { createdAt: "desc" },
   });
   if (!record) return err("Invalid OTP", 401);
 
   await prisma.otpCode.update({ where: { id: record.id }, data: { used: true } });
 
-  let user = await prisma.user.findFirst({ where: { phone: normalized } });
+  let user = await prisma.user.findFirst({ where: { phone: normalized, deletedAt: null } });
   if (!user) {
     user = await prisma.user.create({
-      data: { phone: normalized, fullName: "User", role: "customer" },
+      data: {
+        phone: normalized,
+        fullName: "User",
+        role: "customer",
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      },
     });
   }
 
-  const accessToken = signAccessToken({ sub: user.id, role: user.role });
-  const refreshToken = signRefreshToken({ sub: user.id });
-  await prisma.refreshToken.create({
-    data: {
-      userId: user.id,
-      tokenHash: createHash("sha256").update(refreshToken).digest("hex"),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-  });
+  if (user.status === "suspended" || user.status === "closed") {
+    return err("Account suspended", 403);
+  }
 
-  return ok({
-    accessToken,
-    refreshToken,
-    user: {
-      id: user.id,
-      phone: user.phone,
-      fullName: user.fullName,
-      role: user.role,
-      createdAt: user.createdAt.toISOString(),
-      metadata: {},
-    },
-  });
+  const session = await issueSessionTokens(user);
+  return ok(session);
 }

@@ -268,13 +268,17 @@ model RefreshToken {
 
 model OtpCode {
   id        String   @id @default(uuid())
-  phone     String
+  phone     String?
+  email     String?
+  purpose   String   @default("phone_login")
   code      String
   expiresAt DateTime @map("expires_at")
   used      Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([phone])
+  @@index([email])
+  @@index([purpose])
   @@map("otp_codes")
 }
 

@@ -143,6 +143,10 @@ export async function patchAdminUserApi(
   await api.patch(`/api/admin/users/${userId}`, patch);
 }
 
+export async function deleteAdminUserApi(userId: string): Promise<void> {
+  await api.delete(`/api/admin/users/${userId}`);
+}
+
 export async function reviewKycApi(userId: string, action: "verified" | "rejected"): Promise<void> {
   await api.post(`/api/admin/users/${userId}/kyc`, { action });
 }

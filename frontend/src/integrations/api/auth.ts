@@ -171,6 +171,56 @@ export const apiAuth = {
     }
   },
 
+  async sendEmailOtp(email: string) {
+    try {
+      await api.post("/api/auth/email-otp/send", { email });
+      return { data: { sent: true }, error: null };
+    } catch (err) {
+      return { data: { sent: false }, error: toError(err) };
+    }
+  },
+
+  async verifyEmailOtp(email: string, code: string) {
+    try {
+      const { data } = await api.post<{
+        accessToken: string;
+        refreshToken: string;
+        user: Record<string, unknown>;
+      }>("/api/auth/email-otp/verify", { email, code });
+      setTokens(data.accessToken, data.refreshToken);
+      emitAuthStateChange("SIGNED_IN");
+      const session: ApiSession = {
+        access_token: data.accessToken,
+        refresh_token: data.refreshToken,
+        user: mapUser(data.user),
+      };
+      return { data: { user: session.user, session }, error: null };
+    } catch (err) {
+      return { data: { user: null, session: null }, error: toError(err) };
+    }
+  },
+
+  async verifyEmail(email: string, code: string) {
+    try {
+      const { data } = await api.post<{
+        accessToken: string;
+        refreshToken: string;
+        user: Record<string, unknown>;
+        verified?: boolean;
+      }>("/api/auth/verify-email", { email, code });
+      setTokens(data.accessToken, data.refreshToken);
+      emitAuthStateChange("SIGNED_IN");
+      const session: ApiSession = {
+        access_token: data.accessToken,
+        refresh_token: data.refreshToken,
+        user: mapUser(data.user),
+      };
+      return { data: { user: session.user, session, verified: true }, error: null };
+    } catch (err) {
+      return { data: { user: null, session: null, verified: false }, error: toError(err) };
+    }
+  },
+
   async signInWithOAuth(body: { provider: string; options?: { redirectTo?: string } }) {
     try {
       const { data } = await api.post<{ url: string }>("/api/auth/oauth", body);

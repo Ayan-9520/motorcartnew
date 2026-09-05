@@ -7,6 +7,9 @@ import { formatAuthUser } from "@/lib/auth/format-user";
 import { z } from "zod";
 import { Prisma, type AppRole } from "@prisma/client";
 import { createHash } from "crypto";
+import { generateOtpCode, invalidateOtps, siteBaseUrl } from "@/lib/auth/otp-helpers";
+import { sendMail } from "@/lib/mail/mail.service";
+import { signupVerifyEmail } from "@/lib/mail/templates";
 import { createBrokerStubForOwner } from "@/services/broker-profile.service";
 
 const schema = z.object({
@@ -187,6 +190,29 @@ export async function POST(req: NextRequest) {
 
     const needsEmailConfirmation = !autoConfirm;
     if (needsEmailConfirmation) {
+      const code = generateOtpCode(6);
+      await invalidateOtps({ purpose: "signup_verify", email });
+      await prisma.otpCode.create({
+        data: {
+          email,
+          purpose: "signup_verify",
+          code,
+          expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        },
+      });
+
+      const verifyUrl = `${siteBaseUrl()}/verify-email?email=${encodeURIComponent(email)}&code=${code}`;
+      const tpl = signupVerifyEmail({
+        fullName: user.fullName,
+        code,
+        verifyUrl,
+        business,
+      });
+      await sendMail({ to: email, subject: tpl.subject, html: tpl.html, text: tpl.text }).catch((mailErr) => {
+        console.error("[register] verification email failed", mailErr);
+      });
+
+      // Account is created even if mail fails — client must open /verify-email and can resend.
       return ok({ user: formatAuthUser(user), needsEmailConfirmation: true });
     }
 

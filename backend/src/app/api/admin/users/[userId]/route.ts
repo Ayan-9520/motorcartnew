@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requirePlatformAdmin } from "@/lib/auth/require-platform-admin";
 import { ok, err, unauthorized, forbidden } from "@/lib/api-response";
-import { updateAdminUser } from "@/services/platform-admin.service";
+import { deleteAdminUser, updateAdminUser } from "@/services/platform-admin.service";
 
 type Ctx = { params: Promise<{ userId: string }> };
 
@@ -28,6 +28,23 @@ export async function PATCH(req: NextRequest, context: Ctx) {
     if (msg === "UNAUTHORIZED") return unauthorized();
     if (msg === "FORBIDDEN") return forbidden();
     if (msg === "USER_NOT_FOUND") return err("User not found", 404);
+    return err(msg, 400);
+  }
+}
+
+export async function DELETE(req: NextRequest, context: Ctx) {
+  try {
+    const actor = requirePlatformAdmin(req);
+    const { userId } = await context.params;
+    await deleteAdminUser(userId, actor.sub);
+    return ok({ ok: true });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Delete failed";
+    if (msg === "UNAUTHORIZED") return unauthorized();
+    if (msg === "FORBIDDEN") return forbidden();
+    if (msg === "USER_NOT_FOUND") return err("User not found", 404);
+    if (msg === "CANNOT_DELETE_SELF") return err("You cannot delete your own account", 400);
+    if (msg === "CANNOT_DELETE_LAST_ADMIN") return err("Cannot delete the last platform admin", 400);
     return err(msg, 400);
   }
 }

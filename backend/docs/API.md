@@ -9,8 +9,12 @@ Frontend uses a Supabase-compatible client that calls these endpoints automatica
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/auth/login` | Email + password login |
-| POST | `/api/auth/register` | Signup |
+| POST | `/api/auth/login` | Email + password (requires verified email) |
+| POST | `/api/auth/register` | Signup; sends 48h verification email when SMTP set |
+| POST | `/api/auth/verify-email` | Confirm signup `{ email, code }` |
+| POST | `/api/auth/resend-verification` | Resend 48h verification email |
+| POST | `/api/auth/email-otp/send` | Email login OTP (10 min) |
+| POST | `/api/auth/email-otp/verify` | Verify email OTP → session |
 | POST | `/api/auth/refresh` | Refresh access token |
 | POST | `/api/auth/logout` | Logout |
 | GET | `/api/auth/me` | Current user |
@@ -18,8 +22,8 @@ Frontend uses a Supabase-compatible client that calls these endpoints automatica
 | GET | `/api/auth/settings` | Auth provider settings |
 | POST | `/api/auth/forgot-password` | Request reset email |
 | POST | `/api/auth/reset-password` | Reset password |
-| POST | `/api/auth/otp/send` | Send phone OTP |
-| POST | `/api/auth/otp/verify` | Verify OTP |
+| POST | `/api/auth/otp/send` | Send phone OTP (SMS when configured) |
+| POST | `/api/auth/otp/verify` | Verify phone OTP |
 | POST | `/api/auth/oauth` | Google OAuth URL |
 | POST | `/api/auth/oauth/callback` | Exchange OAuth code |
 

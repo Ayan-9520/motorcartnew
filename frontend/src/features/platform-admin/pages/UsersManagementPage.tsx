@@ -9,6 +9,7 @@ import { ROLE_DISPLAY_NAMES } from "@/auth/ecosystem-roles";
 import type { AppRole } from "@/types/database";
 import {
   approveBusinessAccount,
+  deleteAdminUser,
   fetchAdminUsers,
   isAdminBusinessRole,
   rejectBusinessAccount,
@@ -38,6 +39,19 @@ export function UsersManagementPage() {
     if (error) toast.error(error);
     else {
       toast.success("User updated");
+      void load();
+    }
+  };
+
+  const removeUser = async (row: AdminUserRow) => {
+    const label = row.email || row.fullName || "this user";
+    if (!window.confirm(`Delete ${label}? They will be removed from the directory and cannot log in.`)) {
+      return;
+    }
+    const { error } = await deleteAdminUser(row.id);
+    if (error) toast.error(error);
+    else {
+      toast.success("User deleted");
       void load();
     }
   };
@@ -104,6 +118,13 @@ export function UsersManagementPage() {
                 Activate
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => void removeUser(row.original)}
+            >
+              Delete
+            </Button>
           </div>
         );
       },

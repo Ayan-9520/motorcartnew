@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { apiAuth } from "@/integrations/api/auth";
 import { joinApiUrl } from "@/lib/api/base-url";
 import { fetchWithTimeout } from "@/lib/api/with-timeout";
 import type { AppRole } from "@/types/database";
@@ -10,6 +11,8 @@ export type AuthProviderSettings = {
   googleEnabled: boolean;
   signupDisabled: boolean;
   mailerAutoconfirm: boolean;
+  emailOtpEnabled: boolean;
+  smsConfigured: boolean;
 };
 
 /** Trim + lowercase — avoids false "invalid credentials" from stray spaces/caps */
@@ -45,6 +48,8 @@ export async function fetchAuthProviderSettings(): Promise<AuthProviderSettings 
       googleEnabled?: boolean;
       signupDisabled?: boolean;
       mailerAutoconfirm?: boolean;
+      emailOtpEnabled?: boolean;
+      smsConfigured?: boolean;
     };
     return {
       emailEnabled: data.emailEnabled ?? true,
@@ -52,6 +57,8 @@ export async function fetchAuthProviderSettings(): Promise<AuthProviderSettings 
       googleEnabled: data.googleEnabled ?? false,
       signupDisabled: data.signupDisabled ?? false,
       mailerAutoconfirm: data.mailerAutoconfirm ?? true,
+      emailOtpEnabled: data.emailOtpEnabled ?? false,
+      smsConfigured: data.smsConfigured ?? false,
     };
   } catch {
     return null;
@@ -138,7 +145,12 @@ const authRedirectUrl = () =>
 
 export function isEmailNotConfirmedError(message: string): boolean {
   const m = message.toLowerCase();
-  return m.includes("email not confirmed") || m.includes("email_not_confirmed");
+  return (
+    m.includes("email not confirmed") ||
+    m.includes("email_not_confirmed") ||
+    m.includes("email not verified") ||
+    m.includes("not verified")
+  );
 }
 
 export async function signInWithEmail(email: string, password: string) {
@@ -197,6 +209,18 @@ export async function verifyPhoneOtp(phone: string, token: string) {
     token,
     type: "sms",
   });
+}
+
+export async function sendEmailLoginOtp(email: string) {
+  return apiAuth.sendEmailOtp(normalizeAuthEmail(email));
+}
+
+export async function verifyEmailLoginOtp(email: string, code: string) {
+  return apiAuth.verifyEmailOtp(normalizeAuthEmail(email), code.trim());
+}
+
+export async function verifySignupEmail(email: string, code: string) {
+  return apiAuth.verifyEmail(normalizeAuthEmail(email), code.trim());
 }
 
 export async function signInWithGoogle() {

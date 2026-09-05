@@ -1,11 +1,9 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
-import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
 import { ok, err } from "@/lib/api-response";
-import { formatAuthUser } from "@/lib/auth/format-user";
 import { z } from "zod";
-import { createHash } from "crypto";
+import { issueSessionTokens } from "@/lib/auth/otp-helpers";
 
 const schema = z.object({
   email: z.string().email(),
@@ -29,7 +27,12 @@ export async function POST(req: NextRequest) {
       return err("Account suspended", 403);
     }
 
-    if (!user.emailVerified && process.env.NODE_ENV !== "production") {
+    const autoConfirm = process.env.MAILER_AUTOCONFIRM === "true";
+    if (!user.emailVerified && !autoConfirm) {
+      return err("Email not verified. Check your inbox for the 48-hour verification code, or resend it.", 403);
+    }
+
+    if (!user.emailVerified && autoConfirm) {
       await prisma.user.update({
         where: { id: user.id },
         data: { emailVerified: true, emailVerifiedAt: new Date() },
@@ -37,29 +40,8 @@ export async function POST(req: NextRequest) {
       user.emailVerified = true;
     }
 
-    const accessToken = signAccessToken({ sub: user.id, role: user.role, email: user.email });
-    const refreshToken = signRefreshToken({ sub: user.id });
-
-    try {
-      await prisma.refreshToken.create({
-        data: {
-          userId: user.id,
-          tokenHash: createHash("sha256").update(refreshToken).digest("hex"),
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-      });
-    } catch (tokenErr) {
-      console.error("[auth/login] refresh token", tokenErr);
-      if (process.env.NODE_ENV === "production") {
-        return err("Login failed — session storage error", 500);
-      }
-    }
-
-    return ok({
-      accessToken,
-      refreshToken,
-      user: formatAuthUser(user),
-    });
+    const session = await issueSessionTokens(user);
+    return ok(session);
   } catch (e) {
     if (e instanceof z.ZodError) return err(e.errors[0]?.message ?? "Invalid input");
     console.error("[auth/login]", e);
