@@ -104,11 +104,17 @@ export function CommunityProfilePage() {
               {profile.handle && (
                 <p className="text-sm text-muted-foreground">@{profile.handle}</p>
               )}
+              {profile.headline && (
+                <p className="mt-1 text-sm text-muted-foreground">{profile.headline}</p>
+              )}
               {profile.bio && (
                 <p className="mt-2 text-sm leading-relaxed text-foreground">{profile.bio}</p>
               )}
               <p className="mt-1 text-xs capitalize text-muted-foreground">
-                {profile.role.replace(/_/g, " ")}
+                {(profile.profileType ?? profile.role).replace(/_/g, " ").toLowerCase()}
+                {profile.city || profile.state
+                  ? ` · ${[profile.city, profile.state].filter(Boolean).join(", ")}`
+                  : ""}
                 {profile.isVerified ? " · Verified" : ""}
               </p>
             </div>
@@ -169,7 +175,9 @@ export function CommunityProfilePage() {
                 </li>
               ))}
               {listUsers.length === 0 && (
-                <li className="text-sm text-muted-foreground">No users yet.</li>
+                <li className="text-sm text-muted-foreground">
+                  {listMode === "followers" ? "No followers yet." : "No following yet."}
+                </li>
               )}
             </ul>
           </div>
@@ -179,9 +187,13 @@ export function CommunityProfilePage() {
           <PostComposer
             disabled={!user}
             onSubmit={async (body, opts) => {
-              await feed.createPost(body, opts);
-              refreshProfile();
-              toast.success("Posted to your profile");
+              try {
+                await feed.createPost(body, opts);
+                refreshProfile();
+                toast.success("Post published.");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Could not publish post");
+              }
             }}
           />
         </div>

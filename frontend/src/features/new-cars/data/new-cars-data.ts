@@ -72,8 +72,8 @@ export const NEW_CAR_COLLECTIONS: NewCarCollection[] = [
 ];
 
 export const NEW_CAR_STATS = [
-  { label: "New models", value: "450+" },
-  { label: "OEM dealers", value: "3.2K+" },
-  { label: "Cities", value: "180+" },
-  { label: "Avg. approval", value: "4 hrs" },
+  { label: "New models", value: "Catalog" },
+  { label: "OEM dealers", value: "Verified network" },
+  { label: "Cities", value: "Pan-India" },
+  { label: "Loan offers", value: "Eligibility check" },
 ] as const;

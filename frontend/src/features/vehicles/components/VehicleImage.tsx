@@ -1,37 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { Car, Bike, Bus, Truck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getVehicleHero, inferVehicleSegment, SEGMENT_DEFAULTS } from "@/lib/media/vehicle-media-registry";
-import { resolveVehicleGalleryFromListing, type VehicleResolveInput } from "@/lib/media/resolve-images";
+import { inferVehicleSegment, type VehicleSegment } from "@/lib/media/vehicle-media-registry";
+import type { VehicleResolveInput } from "@/lib/media/resolve-images";
 import { VehicleImageSkeleton } from "./VehicleImageSkeleton";
 
 export type VehicleImageMeta = VehicleResolveInput;
 
-export const VEHICLE_IMAGE_FALLBACK = SEGMENT_DEFAULTS.cars;
-
-/** Card/detail hero — segment + brand/model correct; safe uploads first */
-export function vehicleImageSrc(images?: string[] | null, meta?: VehicleImageMeta, seed = 0): string {
-  if (!meta) {
-    return images?.[0] && images[0].length > 20 ? images[0] : VEHICLE_IMAGE_FALLBACK;
+/** Prefer first real http(s) /uploads URL only — never invent stock brand photos. */
+export function vehicleImageSrc(images?: string[] | null, _meta?: VehicleImageMeta, _seed = 0): string | null {
+  const list = Array.isArray(images) ? images : [];
+  for (const raw of list) {
+    const u = String(raw ?? "").trim();
+    if (!u) continue;
+    if (u.startsWith("http://") || u.startsWith("https://") || u.includes("/uploads/") || u.startsWith("/media/")) {
+      return u;
+    }
   }
-  const gallery = resolveVehicleGalleryFromListing({
-    ...meta,
-    images,
-    seed,
-  });
-  return gallery[0] ?? getVehicleHero({
-    brand: meta.brand,
-    model: meta.model,
-    bodyType: meta.bodyType,
-    category: meta.category,
-    fuelType: meta.fuelType,
-    seed,
-  });
+  return null;
 }
 
 function segmentIcon(meta?: VehicleImageMeta) {
   if (!meta) return Car;
-  const seg = inferVehicleSegment(meta);
+  const seg: VehicleSegment = inferVehicleSegment(meta);
   if (seg === "bikes") return Bike;
   if (seg === "trucks" || seg === "equipment") return Truck;
   if (seg === "buses") return Bus;
@@ -56,19 +47,15 @@ export function VehicleImage({
   images,
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
 }: VehicleImageProps) {
-  const resolved = meta ? vehicleImageSrc(images, meta) : src && src.length > 20 ? src : VEHICLE_IMAGE_FALLBACK;
+  const fromList = vehicleImageSrc(images, meta);
+  const fromSrc =
+    src &&
+    (src.startsWith("http://") || src.startsWith("https://") || src.includes("/uploads/") || src.startsWith("/media/"))
+      ? src
+      : null;
+  const resolved = fromList || fromSrc;
 
-  const fallback = meta
-    ? getVehicleHero({
-        brand: meta.brand,
-        model: meta.model,
-        bodyType: meta.bodyType,
-        category: meta.category,
-        fuelType: meta.fuelType,
-      })
-    : VEHICLE_IMAGE_FALLBACK;
-
-  const [current, setCurrent] = useState(resolved);
+  const [current, setCurrent] = useState<string | null>(resolved);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -88,44 +75,42 @@ export function VehicleImage({
 
   const PlaceholderIcon = segmentIcon(meta);
 
+  if (!current || failed) {
+    return (
+      <div
+        className={cn(
+          "flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted via-muted/80 to-primary/5 text-muted-foreground",
+          className
+        )}
+      >
+        <PlaceholderIcon className="h-10 w-10 opacity-35" strokeWidth={1.25} />
+        <span className="text-[10px] font-medium">No image</span>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-muted">
-      {!loaded && !failed && <VehicleImageSkeleton />}
-      {!failed ? (
-        <img
-          ref={imgRef}
-          src={current}
-          alt={alt}
-          sizes={sizes}
-          referrerPolicy="no-referrer"
-          className={cn(
-            "h-full w-full object-cover object-center transition-opacity duration-300",
-            loaded ? "opacity-100" : "opacity-0",
-            className
-          )}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-          onError={() => {
-            if (current !== fallback) {
-              setCurrent(fallback);
-              setLoaded(false);
-            } else {
-              setFailed(true);
-            }
-          }}
-        />
-      ) : (
-        <div
-          className={cn(
-            "flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted via-muted/80 to-primary/5 text-muted-foreground",
-            className
-          )}
-        >
-          <PlaceholderIcon className="h-10 w-10 opacity-35" strokeWidth={1.25} />
-          <span className="text-[10px] font-medium">No image</span>
-        </div>
-      )}
+      {!loaded && <VehicleImageSkeleton />}
+      <img
+        ref={imgRef}
+        src={current}
+        alt={alt}
+        sizes={sizes}
+        referrerPolicy="no-referrer"
+        className={cn(
+          "h-full w-full object-cover object-center transition-opacity duration-300",
+          loaded ? "opacity-100" : "opacity-0",
+          className
+        )}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setFailed(true);
+          setLoaded(false);
+        }}
+      />
     </div>
   );
 }

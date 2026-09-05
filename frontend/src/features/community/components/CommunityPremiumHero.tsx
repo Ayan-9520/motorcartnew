@@ -47,13 +47,13 @@ export function CommunityPremiumHero() {
             </div>
             <ul className="community-premium-hero-card-list">
               <li>
-                <strong>2.4K</strong> new posts in the last 24h
+                <strong>0</strong> new posts in the last 24h
               </li>
               <li>
-                <strong>340</strong> dealer promotions live
+                <strong>0</strong> dealer promotions live
               </li>
               <li>
-                <strong>89</strong> expert reviews published
+                <strong>0</strong> expert reviews published
               </li>
             </ul>
             <p className="community-premium-hero-card-foot">

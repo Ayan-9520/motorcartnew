@@ -341,16 +341,25 @@ export function buildAnalyticsFromData(
     leadsByStatus[l.status] = (leadsByStatus[l.status] ?? 0) + 1;
   });
 
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-  const monthlyLeads = months.map((month, i) => ({
-    month,
-    leads: Math.max(0, Math.round(leads.length / 6) + (i % 3) * 2),
-  }));
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const now = new Date();
+  const monthlyLeads = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    const count = leads.filter((l) => {
+      const c = new Date(l.created_at);
+      return `${c.getFullYear()}-${c.getMonth()}` === key;
+    }).length;
+    return { month: monthNames[d.getMonth()]!, leads: count };
+  });
 
-  const monthlyRevenue = months.map((month, i) => ({
-    month,
-    revenue: Math.round((soldVehicles.reduce((s, v) => s + v.price, 0) / 6 / 100000) * (0.8 + i * 0.05)) || 12 + i * 4,
-  }));
+  const monthlyRevenue = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    return {
+      month: monthNames[d.getMonth()]!,
+      revenue: 0,
+    };
+  });
 
   return {
     leadsByStatus,

@@ -7,11 +7,7 @@ export const MOCK_TEAM: TeamMember[] = [
   { id: "t4", name: "Sneha Reddy", email: "sneha@dealer.com", role: "support", isActive: false },
 ];
 
-export const MOCK_CALLS: CallLogEntry[] = [
-  { id: "c1", leadName: "Arjun Mehta", phone: "9988776655", duration: 245, outcome: "answered", createdAt: new Date(Date.now() - 3600000).toISOString() },
-  { id: "c2", leadName: "Unknown", phone: "9123456789", duration: 0, outcome: "missed", createdAt: new Date(Date.now() - 7200000).toISOString() },
-  { id: "c3", leadName: "Kavita Singh", phone: "9876512345", duration: 180, outcome: "answered", createdAt: new Date(Date.now() - 86400000).toISOString() },
-];
+export const MOCK_CALLS: CallLogEntry[] = [];
 
 export function mockListingPerformance(vehicles: { id: string; title: string; status: string }[]): ListingPerformance[] {
   return vehicles.slice(0, 8).map((v, i) => ({

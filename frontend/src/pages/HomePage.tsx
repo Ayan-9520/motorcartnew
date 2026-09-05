@@ -45,7 +45,7 @@ export function HomePage() {
   return (
     <MarketingHomeGate>
       <HomePageProvider>
-        <div className="home-page min-w-0 overflow-x-hidden bg-background">
+        <div className="home-page home-page--premium min-w-0 overflow-x-clip bg-background">
           <HeroSearchProvider>
           <HeroSection />
           <QuickAccessSection />

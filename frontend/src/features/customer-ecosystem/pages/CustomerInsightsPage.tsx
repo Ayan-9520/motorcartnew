@@ -8,11 +8,11 @@ export function CustomerInsightsPage() {
   const { data } = useCustomerEcosystem();
 
   useEffect(() => {
-    setPageMeta({ title: "AI Insights" });
+    setPageMeta({ title: "Ownership alerts" });
   }, []);
 
   return (
-    <CustomerEcosystemPage title="AI Insights" description="Intelligent reminders for insurance, service, resale & finance.">
+    <CustomerEcosystemPage title="Ownership alerts" description="Deterministic alerts from insurance, quotations, test drives, finance, and sell requests. Not AI.">
       <CustomerAiInsightList insights={data?.insights ?? []} />
     </CustomerEcosystemPage>
   );

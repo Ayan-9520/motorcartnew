@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, ArrowRight, Car } from "lucide-react";
 import { VehicleCard } from "@/features/vehicles/components/VehicleCard";
-import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
+import { getVehiclePool } from "@/services/vehicle.service";
 import type { VehicleListing } from "@/types/vehicle";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
@@ -24,8 +24,14 @@ export function CustomerDashboardPage() {
   const user = useAuthStore((s) => s.user);
   const { data, loading } = useCustomerEcosystem();
   const recentlyViewed = useVehicleMarketStore((s) => s.recentlyViewed);
+  const [pool, setPool] = useState<VehicleListing[]>([]);
+
+  useEffect(() => {
+    void getVehiclePool().then(setPool);
+  }, []);
+
   const recentListings = recentlyViewed
-    .map((id) => MOCK_VEHICLES.find((v) => v.id === id))
+    .map((id) => pool.find((v) => v.id === id))
     .filter((v): v is VehicleListing => Boolean(v))
     .slice(0, 3);
 
@@ -51,7 +57,7 @@ export function CustomerDashboardPage() {
   useEffect(() => {
     setPageMeta({
       title: "My Motorcart",
-      description: "Premium ownership hub — garage, insurance, finance & AI insights.",
+      description: "Ownership hub — garage, insurance, finance, MotorCart One, and real alerts.",
     });
   }, []);
 
@@ -109,6 +115,14 @@ export function CustomerDashboardPage() {
       ) : null}
 
       <CustomerAiInsightList insights={data?.insights ?? []} compact />
+
+      <section className="rounded-xl border p-4">
+        <h2 className="cos-section-title">MotorCart One</h2>
+        <p className="text-sm text-muted-foreground">Membership identity card — not a payment card or FASTag.</p>
+        <Button variant="outline" size="sm" className="mt-2 rounded-lg" asChild>
+          <Link to="/dashboard/customer/one">View card</Link>
+        </Button>
+      </section>
 
       {recentListings.length > 0 && (
         <section className="space-y-3">

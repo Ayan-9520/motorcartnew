@@ -14,6 +14,8 @@ import {
 import { aiAgents } from "@/data/mock";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "./SectionHeader";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api/axios";
 
 const agentIcons = [
   Brain,
@@ -29,6 +31,13 @@ const agentIcons = [
 
 export function AIFeaturesSection() {
   const agents = aiAgents.slice(0, 9);
+  const readyQ = useQuery({
+    queryKey: ["api-ready"],
+    queryFn: async () => (await api.get("/api/ready")).data,
+    staleTime: 60_000,
+    retry: 0,
+  });
+  const aiConfigured = readyQ.data?.checks?.aiKeyConfigured === true;
 
   return (
     <section className="home-section-alt relative overflow-hidden">
@@ -59,7 +68,8 @@ export function AIFeaturesSection() {
                 <h3 className="text-sm font-semibold text-foreground">{agent.name}</h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{agent.desc}</p>
                 <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
-                  <span className="ai-pulse" /> Active
+                  {aiConfigured ? <span className="ai-pulse" /> : null}
+                  {aiConfigured ? "Configured" : "Not configured"}
                 </span>
               </motion.div>
             );

@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 24" fill="none" role="img"><title>Isuzu</title><text x="60" y="16" text-anchor="middle" fill="#E2231A" font-family="system-ui,-apple-system,Segoe UI,Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="-0.02em">Isuzu</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+  <title>Isuzu</title>
+  <rect width="64" height="64" rx="12" fill="#ED1C24"/>
+  <!-- Twin pillars + wordmark so it doesn't look like an X at small size -->
+  <path fill="#fff" d="M14 18h8v28h-8V18zm28 0h8v28h-8V18z"/>
+  <text x="32" y="56" text-anchor="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="7" font-weight="800" letter-spacing="0.14em">ISUZU</text>
+</svg>

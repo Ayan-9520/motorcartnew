@@ -54,8 +54,8 @@ export const featureFlags = {
   unifiedIdentity: envFlag("FEATURE_M1_UNIFIED_IDENTITY", ecosystemOn),
   unifiedBusiness: envFlag("FEATURE_M2_UNIFIED_BUSINESS", ecosystemOn),
   leadRouter: envFlag("FEATURE_M3_LEAD_ROUTER", ecosystemOn),
-  unifiedNotifications: envFlag("FEATURE_M4_NOTIFICATIONS", ecosystemOn),
-  unifiedSearch: envFlag("FEATURE_M5_UNIFIED_SEARCH", ecosystemOn),
+  unifiedNotifications: envFlag("FEATURE_M4_NOTIFICATIONS", true),
+  unifiedSearch: envFlag("FEATURE_M5_UNIFIED_SEARCH", true),
   billingV2: envFlag("FEATURE_BILLING_V2", ecosystemOn),
   /** Phase Catalog 1 — master catalog tables (default OFF until Phase 2+) */
   catalogLayer: envFlag("FEATURE_CATALOG_LAYER", false),
@@ -63,4 +63,18 @@ export const featureFlags = {
   catalogAdmin: envFlag("FEATURE_CATALOG_ADMIN", false),
   /** Phase 3 organization / partner foundation */
   organizationLayer: envFlag("FEATURE_ORGANIZATION_LAYER", true),
+  /** Phase C — finance marketplace REST (default on in dev; set false to keep RPC/mock) */
+  financeMarketplace: envFlag("FEATURE_FINANCE_MARKETPLACE"),
+  financeEligibilityApi: envFlag("FEATURE_FINANCE_ELIGIBILITY_API"),
+  financeCompareApi: envFlag("FEATURE_FINANCE_COMPARE_API"),
+  financeSoftApproval: envFlag("FEATURE_FINANCE_SOFT_APPROVAL"),
+  financeDocumentsApi: envFlag("FEATURE_FINANCE_DOCUMENTS_API"),
+  salesOs: envFlag("FEATURE_SALES_OS"),
+  leadBoard: envFlag("FEATURE_LEAD_BOARD", false),
+  paidLeads: envFlag("FEATURE_PAID_LEADS", false),
+  commercialEngine: envFlag("FEATURE_COMMERCIAL_ENGINE"),
+  paymentGateway: envFlag("FEATURE_PAYMENT_GATEWAY", false),
+  communications: envFlag("FEATURE_COMMUNICATIONS", true),
+  dialer: envFlag("FEATURE_DIALER", false),
+  aiCalling: envFlag("FEATURE_AI_CALLING", false),
 } as const;

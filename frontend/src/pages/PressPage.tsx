@@ -57,9 +57,9 @@ export function PressPage() {
 
       <DocSection title="Recent highlights">
         <ul className="list-disc space-y-2 pl-5">
-          <li>8,500+ dealer partners across 240+ cities</li>
-          <li>14+ lender integrations for vehicle finance</li>
-          <li>128K+ members in Motorcart Community</li>
+          <li>Verified dealer partners across multiple cities</li>
+          <li>Lender integrations for vehicle finance</li>
+          <li>Motorcart Community — active member network</li>
         </ul>
       </DocSection>
     </ContentDocPage>

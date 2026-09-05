@@ -1,10 +1,11 @@
-import { useEffect, useMemo } from "react";
-import { MessageCircle, ExternalLink, CheckCircle2, Copy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { MessageCircle, ExternalLink, CheckCircle2, Copy, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DealerConsoleShell } from "../components/DealerConsoleShell";
 import { StatCard } from "../components/StatCard";
 import { useDealerCRM } from "../hooks/useDealerCRM";
+import { fetchCommunicationProviders } from "../services/commos.service";
 import { setPageMeta } from "@/utils/seo";
 import toast from "react-hot-toast";
 
@@ -16,9 +17,13 @@ const QUICK_REPLIES = [
 
 export function DealerWhatsAppPage() {
   const { dealer, stats, leads } = useDealerCRM();
+  const [waConfigured, setWaConfigured] = useState<boolean | null>(null);
 
   useEffect(() => {
     setPageMeta({ title: "WhatsApp desk" });
+    void fetchCommunicationProviders()
+      .then((rows) => setWaConfigured(rows.some((r) => r.channel === "WHATSAPP" && r.configured && r.status === "ACTIVE")))
+      .catch(() => setWaConfigured(false));
   }, []);
 
   const waNumber = dealer?.phone?.replace(/\D/g, "") ?? "919876543210";
@@ -57,14 +62,20 @@ export function DealerWhatsAppPage() {
         <div className="dealer-os-card border-[#25D366]/30">
           <h2 className="font-semibold">Connection status</h2>
           <div className="mt-3 flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-[#25D366]" />
-            <span className="font-medium">Connected</span>
-            <Badge className="bg-[#25D366]/15 text-[#128C7E] border-0">Active</Badge>
+            {waConfigured ? (
+              <CheckCircle2 className="h-5 w-5 text-[#25D366]" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-muted-foreground" />
+            )}
+            <span className="font-medium">{waConfigured ? "Connected" : "Provider not configured"}</span>
+            <Badge className={waConfigured ? "bg-[#25D366]/15 text-[#128C7E] border-0" : "border-0"} variant="outline">
+              {waConfigured ? "Active" : "Disabled"}
+            </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-2">Business number: +{waNumber}</p>
           <p className="text-xs text-muted-foreground mt-4">
-            Motorcart routes enquiry WhatsApp buttons to your business line. Full API webhook rollout connects
-            `conversations` table for inbox sync.
+            WhatsApp delivery uses the shared Communication OS. Messages stay SENT until the provider webhook confirms
+            DELIVERED. This is not the telephony dialer.
           </p>
         </div>
 

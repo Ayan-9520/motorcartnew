@@ -1,11 +1,28 @@
-/** End-to-end catalog import job types (Phase 4F). */
+/** End-to-end catalog import job types. */
 
-import type { GaadiBazaarScrapeError, GaadiBazaarScrapeStats } from "../../scraper/gaadi-bazaar/scraper/scraper-types";
 import type { GaadiBazaarScraperPayload } from "./sources/gaadi-bazaar/gaadi-bazaar-types";
 import type { ImportPipelineRunResult } from "./import-pipeline";
 import type { ImportPipelineStage } from "./import-types";
 
-/** gaadi_bazaar = listing scrape only; json_api = catalog master feed (never listings). */
+/** Lightweight scrape stats (legacy shape kept for job reports). */
+export type GaadiBazaarScrapeStats = {
+  listingPagesVisited?: number;
+  vehicleCardsSeen?: number;
+  vehiclesExtracted?: number;
+  listingPages?: number;
+  cardsSeen?: number;
+  vehiclesScraped?: number;
+  errors?: number;
+  durationMs?: number;
+};
+
+export type GaadiBazaarScrapeError = {
+  code: string;
+  message: string;
+  retryable?: boolean;
+};
+
+/** gaadi_bazaar = legacy (disabled); json_api = catalog master feed. */
 export const CATALOG_IMPORT_JOB_SOURCES = ["gaadi_bazaar", "json_api"] as const;
 
 export type CatalogImportJobSource = (typeof CATALOG_IMPORT_JOB_SOURCES)[number];
@@ -15,22 +32,14 @@ export type CatalogImportJobInput = {
   city?: string;
   search?: string;
   pages?: number;
-  /** Cap scraped vehicles (live controlled test default 100). */
   maxVehicles?: number;
   segment?: string;
   jobId?: string;
   catalogVariants?: import("../types").CatalogVariantRecord[];
-  /** When true (default), scraper navigation uses PlaywrightWorker. */
+  /** @deprecated Live scrape removed — ignored. */
   usePlaywrightWorker?: boolean;
-  /**
-   * Phase 5F controlled live scrape against www.gaadibazaar.in.
-   * Uses PlaywrightBrowserDriver + host allow-list. Dry-run only — never publish.
-   */
+  /** @deprecated Live scrape removed — ignored. */
   useRealBrowser?: boolean;
-  /**
-   * Phase 5G — process real media URLs through the existing media pipeline.
-   * Requires a non-local StorageProvider (injected via job options). Never auto-publishes.
-   */
   processMedia?: boolean;
 };
 

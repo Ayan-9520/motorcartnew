@@ -8,6 +8,7 @@ export type UnifiedSearchResultDto = {
   url: string;
   source: string;
   score: number;
+  metadata?: { id?: string; slug?: string; category?: string };
 };
 
 export type FederatedSearchResponse = {
@@ -37,10 +38,11 @@ export function isUnifiedSearchEnabled() {
   return enabled();
 }
 
-export function fetchFederatedSearch(params: { q: string; category?: string; limit?: number }) {
+export function fetchFederatedSearch(params: { q: string; category?: string; type?: string; limit?: number }) {
   const sp = new URLSearchParams();
   if (params.q) sp.set("q", params.q);
   if (params.category) sp.set("category", params.category);
+  if (params.type) sp.set("type", params.type);
   if (params.limit != null) sp.set("limit", String(params.limit));
   return searchFetch<FederatedSearchResponse>(`/api/search?${sp}`);
 }

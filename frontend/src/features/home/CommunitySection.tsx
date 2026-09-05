@@ -2,14 +2,12 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MessageCircle, Play, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { COMMUNITY_POSTS, SOCIAL_LINKS } from "@/features/home/data/homepage-data";
+import { SOCIAL_LINKS } from "@/features/home/data/homepage-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
-import { realDataOnly } from "@/config/real-data";
 import { SectionHeader } from "./SectionHeader";
 
 export function CommunitySection() {
-  const { communityPosts } = useHomePage();
-  const posts = communityPosts.length ? communityPosts : realDataOnly ? [] : COMMUNITY_POSTS;
+  const { communityPosts: posts } = useHomePage();
   if (!posts.length) return null;
 
   return (

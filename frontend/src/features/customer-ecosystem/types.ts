@@ -102,6 +102,7 @@ export type InsuranceWalletEntry = {
 
 export type ServiceRecord = {
   id: string;
+  vehicleId?: string;
   vehicleLabel: string;
   serviceType: string;
   serviceCenter?: string;
@@ -140,6 +141,33 @@ export type CustomerPreferences = {
   profileCompletion: number;
   loyaltyTier: string;
   rewardPointsBalance: number;
+  notifyInsurance?: boolean;
+  notifyService?: boolean;
+};
+
+export type CustomerEnquirySummary = {
+  id: string;
+  dealerName: string | null;
+  status: string;
+  vehicleInterest: string | null;
+  createdAt: string;
+};
+
+export type CustomerFinanceSummary = {
+  id: string;
+  status: string;
+  loanAmount: number | null;
+  bankName: string | null;
+  createdAt: string;
+};
+
+export type CustomerAvailability = {
+  rewardsLedger: boolean;
+  insuranceClaims: boolean;
+  aiInsights: boolean;
+  fastagProvider: boolean;
+  savedSearches: boolean;
+  documentScan: boolean;
 };
 
 export type DashboardWidget = {
@@ -166,4 +194,8 @@ export type CustomerEcosystemSnapshot = {
   timeline: OwnershipTimelineEvent[];
   campaigns: EngagementCampaign[];
   unreadNotifications: number;
+  enquiries: CustomerEnquirySummary[];
+  wishlistVehicleIds: string[];
+  financeApplications: CustomerFinanceSummary[];
+  availability: CustomerAvailability;
 };

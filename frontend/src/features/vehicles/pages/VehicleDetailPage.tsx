@@ -45,7 +45,7 @@ export function VehicleDetailPage() {
       setPageMeta({
         title: `${vehicle.year} ${vehicle.brand} ${vehicle.model} — ${formatCurrency(vehicle.price)}`,
         description: `Buy ${vehicle.title} in ${vehicle.city}. EMI from ${formatCurrency(getVehicleEmi(vehicle))}/mo. Specs, inspection, finance & dealer on Motorcart.in`,
-        ogImage: resolveVehicleHero(vehicle.brand, vehicle.model, vehicle.bodyType, vehicle.images),
+        ogImage: resolveVehicleHero(vehicle.brand, vehicle.model, vehicle.bodyType, vehicle.images) || undefined,
       });
     }
   }, [vehicle]);
@@ -75,7 +75,11 @@ export function VehicleDetailPage() {
   }
 
   const price = getDiscountedPrice(vehicle);
-  const emi = getVehicleEmi(vehicle);
+  const priceOnRequest =
+    Boolean(vehicle.metadata.priceOnRequest) ||
+    vehicle.metadata.priceDisplay === "Price on request" ||
+    !(price > 0);
+  const emi = priceOnRequest ? 0 : getVehicleEmi(vehicle);
   const { hub, condition } = inferBuyHubFromVehicle(vehicle);
   const listingPath = vehicleListingPath(vehicle);
   const hubLabel = hubCategoryLabel(hub);
@@ -88,7 +92,6 @@ export function VehicleDetailPage() {
     category: vehicle.category,
     fuelType: vehicle.fuelType,
     images: vehicle.images,
-    seed: Math.abs(vehicle.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)),
   });
 
   return (
@@ -136,14 +139,29 @@ export function VehicleDetailPage() {
                 ) : null}
               </div>
               <h1 className="mt-3 text-xl font-bold leading-snug md:text-2xl">{vehicle.title}</h1>
-              <p className="mt-2 text-3xl font-bold text-primary">{formatCurrency(price)}</p>
-              {vehicle.originalPrice && vehicle.originalPrice > price && (
+              {priceOnRequest ? (
+                <p className="mt-2 text-3xl font-bold text-primary">Price on request</p>
+              ) : (
+                <p className="mt-2 text-3xl font-bold text-primary">{formatCurrency(price)}</p>
+              )}
+              {!priceOnRequest && vehicle.originalPrice && vehicle.originalPrice > price && (
                 <p className="text-sm text-muted-foreground line-through">{formatCurrency(vehicle.originalPrice)}</p>
               )}
-              <p className="mt-1 text-sm text-muted-foreground">
-                EMI from <strong className="text-foreground">{formatCurrency(emi)}/mo</strong>
-                <span className="text-muted-foreground"> · {vehicle.city}</span>
-              </p>
+              {priceOnRequest ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {vehicle.metadata.priceSourceText || "Ask dealer for exact price"}
+                  <span className="text-muted-foreground"> · {vehicle.city}</span>
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {emi > 0 ? (
+                    <>
+                      EMI from <strong className="text-foreground">{formatCurrency(emi)}/mo</strong>
+                    </>
+                  ) : null}
+                  <span className="text-muted-foreground"> · {vehicle.city}</span>
+                </p>
+              )}
 
               <MarketplaceVehicleTools
                 variant="sidebar"

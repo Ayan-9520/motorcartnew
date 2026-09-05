@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Calendar, MessageCircle, Phone, StickyNote, User } from "lucide-react";
+import { Calendar, FileText, MessageCircle, Phone, StickyNote, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +12,7 @@ import {
   type LeadNote,
 } from "../services/dealer-enterprise.service";
 import { createCrmTask, fetchCrmTasks } from "../services/crm.service";
+import { fetchLeadTimeline } from "../services/commos.service";
 import { useAuth } from "@/hooks/useAuth";
 import toast from "react-hot-toast";
 import { AILeadScore, AIDealerAssistant } from "@/ai/ecosystem";
@@ -29,13 +31,17 @@ export function LeadDetailPanel({ lead, dealerId, team, onUpdated }: LeadDetailP
   const [reminderAt, setReminderAt] = useState("");
   const [assignee, setAssignee] = useState("");
 
+  const [timeline, setTimeline] = useState<Record<string, unknown> | null>(null);
+
   useEffect(() => {
     if (!lead) {
       setNotes([]);
+      setTimeline(null);
       return;
     }
     void fetchLeadNotes(lead.id).then(setNotes);
     void fetchCrmTasks(dealerId);
+    void fetchLeadTimeline(lead.id).then(setTimeline).catch(() => setTimeline(null));
   }, [lead?.id, dealerId]);
 
   if (!lead) {
@@ -98,6 +104,16 @@ export function LeadDetailPanel({ lead, dealerId, team, onUpdated }: LeadDetailP
         <p className="text-xs text-muted-foreground capitalize">{lead.type.replace("_", " ")} · {lead.source}</p>
       </div>
 
+      {timeline ? (
+        <p className="px-3 text-xs text-muted-foreground">
+          Unified timeline: {(timeline.messages as unknown[] | undefined)?.length ?? 0} messages ·{" "}
+          {(timeline.calls as unknown[] | undefined)?.length ?? 0} calls ·{" "}
+          {(timeline.activities as unknown[] | undefined)?.length ?? 0} CRM ·{" "}
+          {(timeline.quotations as unknown[] | undefined)?.length ?? 0} quotes ·{" "}
+          {(timeline.testDrives as unknown[] | undefined)?.length ?? 0} test drives
+        </p>
+      ) : null}
+
       <div className="dealer-lead-panel-ai space-y-3">
         <AILeadScore
           lead={{
@@ -123,6 +139,11 @@ export function LeadDetailPanel({ lead, dealerId, team, onUpdated }: LeadDetailP
           <a href={`https://wa.me/91${lead.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
             <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
           </a>
+        </Button>
+        <Button size="sm" variant="secondary" className="flex-1" asChild>
+          <Link to={`/dashboard/dealer/quotations/new?phone=${encodeURIComponent(lead.phone)}&leadId=${encodeURIComponent(lead.id)}`}>
+            <FileText className="h-4 w-4 mr-1" /> Quote
+          </Link>
         </Button>
       </div>
 

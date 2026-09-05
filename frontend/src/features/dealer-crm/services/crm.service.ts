@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { LeadStatus } from "@/types/database";
+import { api } from "@/lib/api/axios";
 
 export interface LeadCall {
   id: string;
@@ -27,21 +28,24 @@ export interface CrmTask {
   updated_at: string;
 }
 
-export async function fetchLeadCalls(dealerId: string, leadId?: string) {
-  let q = supabase
-    .from("lead_calls")
-    .select("*")
-    .eq("dealer_id", dealerId)
-    .order("created_at", { ascending: false });
-
-  if (leadId) q = q.eq("lead_id", leadId);
-
-  const { data, error } = await q;
-  if (error) {
-    console.warn("[crm] lead_calls", error.message);
+export async function fetchLeadCalls(_dealerId: string, leadId?: string) {
+  try {
+    const q = leadId ? `?leadId=${encodeURIComponent(leadId)}` : "";
+    const { data } = await api.get<{ data?: Array<Record<string, unknown>> }>(`/api/crm/calls${q}`);
+    return (data?.data ?? []).map((c) => ({
+      id: String(c.id),
+      lead_id: String(c.leadId ?? ""),
+      dealer_id: String(c.dealerId ?? ""),
+      called_by: c.calledBy ? String(c.calledBy) : null,
+      direction: String(c.direction ?? "outbound"),
+      duration_seconds: typeof c.durationSeconds === "number" ? c.durationSeconds : null,
+      outcome: c.outcome ? String(c.outcome) : null,
+      notes: c.notes ? String(c.notes) : null,
+      created_at: String(c.createdAt ?? new Date().toISOString()),
+    })) as LeadCall[];
+  } catch {
     return [] as LeadCall[];
   }
-  return (data ?? []) as LeadCall[];
 }
 
 export async function logLeadCall(input: {
@@ -53,36 +57,35 @@ export async function logLeadCall(input: {
   outcome?: string;
   notes?: string;
 }) {
-  const { data, error } = await supabase
-    .from("lead_calls")
-    .insert({
-      lead_id: input.leadId,
-      dealer_id: input.dealerId,
-      called_by: input.calledBy ?? null,
-      direction: input.direction ?? "outbound",
-      duration_seconds: input.durationSeconds ?? null,
-      outcome: input.outcome ?? null,
-      notes: input.notes ?? null,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as LeadCall;
+  const { data } = await api.post<{ data?: Record<string, unknown> }>("/api/crm/calls", {
+    leadId: input.leadId,
+    dealerId: input.dealerId,
+    disposition: input.outcome ?? "CONNECTED",
+    notes: input.notes,
+    durationSeconds: input.durationSeconds,
+  });
+  return (data?.data ?? {}) as unknown as LeadCall;
 }
 
-export async function fetchCrmTasks(dealerId: string) {
-  const { data, error } = await supabase
-    .from("crm_tasks")
-    .select("*")
-    .eq("dealer_id", dealerId)
-    .order("due_at", { ascending: true, nullsFirst: false });
-
-  if (error) {
-    console.warn("[crm] crm_tasks", error.message);
+export async function fetchCrmTasks(_dealerId: string) {
+  try {
+    const { data } = await api.get<{ data?: Array<Record<string, unknown>> }>("/api/crm/tasks");
+    return (data?.data ?? []).map((t) => ({
+      id: String(t.id),
+      dealer_id: String(t.dealerId ?? ""),
+      lead_id: t.leadId ? String(t.leadId) : null,
+      assigned_to: t.assignedTo ? String(t.assignedTo) : null,
+      title: String(t.title ?? ""),
+      description: t.description ? String(t.description) : null,
+      due_at: t.dueAt ? String(t.dueAt) : null,
+      status: String(t.status ?? "pending"),
+      priority: String(t.priority ?? "normal"),
+      created_at: String(t.createdAt ?? ""),
+      updated_at: String(t.updatedAt ?? ""),
+    })) as CrmTask[];
+  } catch {
     return [] as CrmTask[];
   }
-  return (data ?? []) as CrmTask[];
 }
 
 export async function createCrmTask(input: {
@@ -94,22 +97,14 @@ export async function createCrmTask(input: {
   dueAt?: string;
   priority?: string;
 }) {
-  const { data, error } = await supabase
-    .from("crm_tasks")
-    .insert({
-      dealer_id: input.dealerId,
-      lead_id: input.leadId ?? null,
-      assigned_to: input.assignedTo ?? null,
-      title: input.title,
-      description: input.description ?? null,
-      due_at: input.dueAt ?? null,
-      priority: input.priority ?? "normal",
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as CrmTask;
+  const { data } = await api.post("/api/crm/tasks", {
+    leadId: input.leadId,
+    assignedTo: input.assignedTo,
+    title: input.title,
+    description: input.description,
+    dueAt: input.dueAt,
+  });
+  return data;
 }
 
 export async function createDealerLead(input: {

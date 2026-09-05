@@ -42,7 +42,7 @@ export function AIRecommendationsHomeSection() {
           eyebrow="AI recommendations"
           title="AI picks for you"
           description="Personalized inventory, finance, and auction opportunities — updated in real time."
-          href="/vehicles"
+          href="/buy"
           linkLabel="See all picks"
         />
         <div className="home-ai-rec-grid">

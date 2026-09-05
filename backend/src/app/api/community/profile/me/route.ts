@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { ok, err } from "@/lib/api-response";
+import { ok } from "@/lib/api-response";
+import { handleCommunityError } from "@/lib/community/http";
 import { requireCommunityAuth } from "@/lib/community/guard";
 import { mapUserProfile } from "@/lib/community/map-profile";
 import {
@@ -43,11 +44,26 @@ export async function PATCH(req: NextRequest) {
             ? null
             : String(body.location_city)
           : undefined,
+      location_state:
+        body.location_state !== undefined
+          ? body.location_state == null
+            ? null
+            : String(body.location_state)
+          : undefined,
+      headline:
+        body.headline !== undefined
+          ? body.headline == null
+            ? null
+            : String(body.headline)
+          : undefined,
+      profile_type: body.profile_type != null ? String(body.profile_type) : undefined,
+      dealer_id: body.dealer_id != null ? String(body.dealer_id) : undefined,
+      organization_id: body.organization_id != null ? String(body.organization_id) : undefined,
       is_private:
         body.is_private !== undefined ? Boolean(body.is_private) : undefined,
     });
     return ok({ data: mapUserProfile(updated) });
-  } catch {
-    return err("Could not update profile", 400);
+  } catch (e) {
+    return handleCommunityError(e);
   }
 }

@@ -16,25 +16,25 @@
 | `bike_dealer` | `/dashboard/dealer` | Bike dealer |
 | `truck_dealer` | `/dashboard/dealer` | Truck/commercial |
 | `dsa_agent` | `/dashboard/dsa` | DSA desk |
-| `bank_nbfc` | `/dashboard/lender` | Lender portal |
+| `bank_nbfc` | `/dashboard/finance` | Lender portal (BANK vs NBFC is Organization.type) |
 | `finance_manager` | `/dashboard/finance-manager` | Finance manager |
-| `service_center` | `/dashboard/service-partner` | Service ERP |
-| `service_technician` | `/dashboard/service-partner` | Service ERP (limited) |
-| `service_partner` | `/dashboard/service-partner` | Legacy → service_center |
-| `parts_seller` | `/dashboard/parts-supplier` | Parts ERP |
-| `broker` | `/dashboard/broker` | Broker CRM |
+| `service_center` | `/dashboard/service` | Service ERP |
+| `service_technician` | `/dashboard/technician` | Technician jobs |
+| `service_partner` | `/dashboard/service` | Legacy → service_center |
+| `parts_seller` | `/dashboard/parts` | Parts ERP |
+| `broker` | `/dashboard/broker` + `/dashboard/insurance` | Broker CRM; insurer console when org type is insurance |
 | `auction_partner` | `/dashboard/auctions` | Auction admin |
 | `admin` | `/dashboard/admin` | Platform admin |
 | `super_admin` | `/dashboard/super-admin` | Full ERP |
 
 ---
 
-## Vision roles (not first-class yet)
+## Vision roles (not first-class AppRole)
 
-Add via **additive** migration + new dashboard shells only:
+OEM and insurance **organizations** use existing membership + `/dashboard/oem` (dealer/admin) and `/dashboard/insurance` (broker/admin). Do not split `bank_nbfc`.
 
-- OEM partner
-- Insurance company (distinct from bank_nbfc)
+Still not first-class AppRole:
+
 - Fleet owner
 - Equipment dealer
 - Auction buyer / seller (split from auction_partner)
@@ -105,6 +105,8 @@ When adding tables:
 4. Add workspace route + sidebar in appropriate `*Sidebar.tsx`
 5. Backend: guard routes and query allowlist
 6. Update this document
+
+Batch 10: dialer and AI calling stay out of plan math (`PHASE_LOCKED_FEATURES`). Runtime grant is `OrganizationEntitlement` + env flag + provider.
 
 ---
 

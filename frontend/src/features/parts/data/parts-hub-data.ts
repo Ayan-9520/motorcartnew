@@ -56,10 +56,10 @@ export const PARTS_CATEGORY_ICONS: Record<PartCategorySlug, LucideIcon> = {
 export { PARTS_BRAND_TILES as PARTS_HUB_BRANDS } from "@/lib/media/india-media-catalog";
 
 export const PARTS_TRUST_STATS = [
-  { label: "50K+", sub: "SKUs live" },
-  { label: "2,400+", sub: "Verified sellers" },
+  { label: "Catalog", sub: "Parts SKUs" },
+  { label: "Sellers", sub: "Verified sellers" },
   { label: "18%", sub: "GST on parts" },
-  { label: "4.8★", sub: "Avg rating" },
+  { label: "Ratings", sub: "Buyer feedback" },
 ];
 
 /** Hero pills — live counts when real-data mode, demo stats otherwise */

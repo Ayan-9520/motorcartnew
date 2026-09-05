@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ChevronRight, Sparkles, ShieldCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -60,19 +59,28 @@ export function BuyCategoryListingPage() {
   const hubLabel = hubCategoryLabel(hub);
 
   const segmentLabel = VEHICLE_SEGMENT_LABELS[hub as VehicleSegment] ?? hubLabel;
+  const brandQ = searchParams.get("brand");
+  const modelQ = searchParams.get("model");
+  const variantQ = searchParams.get("variant");
 
   return (
     <div className="marketplace-listing-page min-h-screen">
       <div className="marketplace-listing-hero-band">
         <div className="container py-8 md:py-10">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">{segmentLabel}</p>
-          <h1 className="marketplace-listing-hero-title mt-1">{title}</h1>
+          <h1 className="marketplace-listing-hero-title mt-1">
+            {brandQ && modelQ
+              ? `${brandQ} ${modelQ}${variantQ ? ` ${variantQ}` : ""}`
+              : brandQ
+                ? `${brandQ} ${title}`
+                : title}
+          </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
             {total}+ listings · verified dealers · filters for brand, budget, fuel, EMI & city
           </p>
         </div>
       </div>
-      <motion.div className="container py-6 md:py-8">
+      <div className="container py-6 md:py-8">
         <nav className="marketplace-breadcrumb mb-4 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
           <Link to="/buy" className="hover:text-primary">
             Buy
@@ -83,6 +91,29 @@ export function BuyCategoryListingPage() {
           </Link>
           <ChevronRight className="h-3 w-3" />
           <span className="font-medium text-foreground">{condition === "new" ? "New" : "Pre-Owned"}</span>
+          {brandQ ? (
+            <>
+              <ChevronRight className="h-3 w-3" />
+              <Link
+                to={`/buy/${hub}/${condition}/brand/${encodeURIComponent(brandQ.toLowerCase().replace(/\s+/g, "-"))}`}
+                className="hover:text-primary"
+              >
+                {brandQ}
+              </Link>
+            </>
+          ) : null}
+          {modelQ ? (
+            <>
+              <ChevronRight className="h-3 w-3" />
+              <span className="font-medium text-foreground">{modelQ}</span>
+            </>
+          ) : null}
+          {variantQ ? (
+            <>
+              <ChevronRight className="h-3 w-3" />
+              <span className="font-medium text-foreground">{variantQ}</span>
+            </>
+          ) : null}
         </nav>
 
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -137,11 +168,12 @@ export function BuyCategoryListingPage() {
           <AdvancedSearchBar onToggleFilters={() => setShowMobileFilters((s) => !s)} />
         </div>
 
-        <div className="mt-6 flex gap-6 lg:gap-8">
+        <div className="marketplace-listing-body mt-6 flex items-start gap-6 lg:gap-8">
           <aside
             className={cn(
-              "hidden w-64 shrink-0 lg:block xl:w-72",
-              showMobileFilters && "fixed inset-0 z-50 block overflow-y-auto bg-background/98 p-4 lg:static lg:bg-transparent lg:p-0"
+              "marketplace-filters-rail hidden w-64 shrink-0 lg:block xl:w-72",
+              showMobileFilters &&
+                "fixed inset-0 z-50 !block overflow-y-auto bg-background/98 p-4 lg:!static lg:overflow-visible lg:bg-transparent lg:p-0"
             )}
           >
             {showMobileFilters && (
@@ -215,7 +247,7 @@ export function BuyCategoryListingPage() {
             <AIRecommendations pool={vehicles} />
           </div>
         </div>
-      </motion.div>
+      </div>
       <CompareFloatingBar />
     </div>
   );

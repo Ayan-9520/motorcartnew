@@ -12,6 +12,6 @@ export async function GET(req: NextRequest) {
     const msg = e instanceof Error ? e.message : "Failed";
     if (msg === "UNAUTHORIZED") return unauthorized();
     if (msg === "FORBIDDEN") return forbidden();
-    return err(msg, 500);
+    return err("Overview unavailable", 500);
   }
 }

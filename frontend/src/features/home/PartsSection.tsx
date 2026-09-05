@@ -10,10 +10,9 @@ import { SectionHeader } from "./SectionHeader";
 
 export function PartsSection() {
   const { parts } = useHomePage();
-  if (!parts.length) return null;
 
   return (
-    <section className="section-padding">
+    <section className="home-section">
       <div className="container home-stack">
         <SectionHeader
           eyebrow="Auto parts"
@@ -22,6 +21,15 @@ export function PartsSection() {
           href="/parts"
           linkLabel="Shop all parts"
         />
+        {!parts.length ? (
+          <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
+            <p className="text-sm font-semibold">Parts catalog updating</p>
+            <p className="mt-1 text-sm text-muted-foreground">Browse the full parts marketplace meanwhile.</p>
+            <Button size="sm" className="mt-4 rounded-xl" asChild>
+              <Link to="/parts">Shop parts</Link>
+            </Button>
+          </div>
+        ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {parts.map((part, index) => (
             <motion.div
@@ -67,6 +75,7 @@ export function PartsSection() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

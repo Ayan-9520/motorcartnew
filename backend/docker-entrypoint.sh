@@ -24,7 +24,11 @@ else
   exit 1
 fi
 
-echo "[entrypoint] Seeding…"
-npm run db:seed || true
+if [ "${RUN_DB_SEED:-false}" = "true" ]; then
+  echo "[entrypoint] Seeding (RUN_DB_SEED=true)…"
+  npm run db:seed || true
+else
+  echo "[entrypoint] Skipping seed (set RUN_DB_SEED=true to enable on boot)."
+fi
 
 exec "$@"

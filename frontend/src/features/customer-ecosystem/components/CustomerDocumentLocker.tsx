@@ -2,6 +2,7 @@ import { FileText, QrCode, ScanLine, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "@/shared/notifications/app-toast";
 import type { VehicleDocument } from "../types";
 
 const DOC_LABELS: Record<VehicleDocument["docType"], string> = {
@@ -24,26 +25,43 @@ export function CustomerDocumentLocker({ documents, showUploadActions = true }: 
     <div className="space-y-4">
       {showUploadActions ? (
         <div className="cos-doc-upload">
-          <Button variant="outline" className="rounded-xl gap-2">
+          <Button
+            variant="outline"
+            className="rounded-xl gap-2"
+            type="button"
+            onClick={() => toast("Document scan is not available yet.")}
+          >
             <ScanLine className="h-4 w-4" />
             Scan / OCR
           </Button>
-          <Button variant="outline" className="rounded-xl gap-2">
+          <Button
+            variant="outline"
+            className="rounded-xl gap-2"
+            type="button"
+            onClick={() => toast("QR scan is not available yet.")}
+          >
             <QrCode className="h-4 w-4" />
             QR scan
           </Button>
-          <Button className="rounded-xl">Upload document</Button>
+          <Button
+            className="rounded-xl"
+            type="button"
+            onClick={() => toast("Document upload is not available yet.")}
+          >
+            Upload document
+          </Button>
         </div>
       ) : null}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {documents.map((doc) => (
-          <article
-            key={doc.id}
-            className={cn(
-              "cos-doc-card",
-              doc.daysUntilExpiry != null && doc.daysUntilExpiry <= 30 && "cos-doc-card--expiring"
-            )}
-          >
+      {documents.length ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {documents.map((doc) => (
+            <article
+              key={doc.id}
+              className={cn(
+                "cos-doc-card",
+                doc.daysUntilExpiry != null && doc.daysUntilExpiry <= 30 && "cos-doc-card--expiring"
+              )}
+            >
             <div className="cos-doc-card__icon">
               <FileText className="h-5 w-5" />
             </div>
@@ -72,6 +90,11 @@ export function CustomerDocumentLocker({ documents, showUploadActions = true }: 
           </article>
         ))}
       </div>
+      ) : (
+        <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+          No documents on file yet.
+        </p>
+      )}
     </div>
   );
 }

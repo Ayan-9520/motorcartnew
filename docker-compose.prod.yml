@@ -16,6 +16,7 @@ services:
     environment:
       NODE_ENV: production
       STRICT_DB_QUERY: ${STRICT_DB_QUERY:-true}
+      RUN_DB_SEED: ${RUN_DB_SEED:-false}
 
   frontend:
     build:
@@ -24,6 +25,8 @@ services:
         VITE_FEATURE_WISHLIST_DB: ${VITE_FEATURE_WISHLIST_DB:-true}
         VITE_FEATURE_UNIFIED_VEHICLE_API: ${VITE_FEATURE_UNIFIED_VEHICLE_API:-true}
         VITE_FEATURE_M4_NOTIFICATIONS: ${VITE_FEATURE_M4_NOTIFICATIONS:-true}
+        VITE_REAL_DATA_ONLY: ${VITE_REAL_DATA_ONLY:-true}
+        VITE_ADMIN_DEMO_FALLBACK: ${VITE_ADMIN_DEMO_FALLBACK:-false}
 
   nginx:
     ports:

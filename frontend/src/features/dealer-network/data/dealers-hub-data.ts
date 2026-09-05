@@ -33,10 +33,10 @@ export interface DealerCategory {
 }
 
 export const DEALERS_TRUST_STATS = [
-  { label: "8,500+", sub: "Verified dealers" },
-  { label: "1.2M+", sub: "Listings live" },
-  { label: "4.7★", sub: "Avg rating" },
-  { label: "48 cities", sub: "Pan-India" },
+  { label: "Verified dealers", sub: "KYC-verified network" },
+  { label: "Listings", sub: "Marketplace inventory" },
+  { label: "Ratings", sub: "Buyer feedback" },
+  { label: "Cities", sub: "Pan-India coverage" },
 ] as const;
 
 export const DEALER_HUB_SERVICES: DealerHubService[] = [
@@ -57,7 +57,7 @@ export const DEALER_CATEGORIES: DealerCategory[] = [
     description: "Certified pre-owned",
     icon: Car,
     href: "/dealers/browse?vertical=used-cars",
-    count: "4.2K+",
+    count: "Browse",
   },
   {
     slug: "new-cars",
@@ -65,7 +65,7 @@ export const DEALER_CATEGORIES: DealerCategory[] = [
     description: "OEM & authorized",
     icon: Store,
     href: "/dealers/browse?vertical=new-cars",
-    count: "2.1K+",
+    count: "Browse",
   },
   {
     slug: "bikes",
@@ -73,7 +73,7 @@ export const DEALER_CATEGORIES: DealerCategory[] = [
     description: "2-wheeler dealers",
     icon: Bike,
     href: "/dealers/browse?vertical=bikes",
-    count: "1.4K+",
+    count: "Browse",
   },
   {
     slug: "commercial",
@@ -81,7 +81,7 @@ export const DEALER_CATEGORIES: DealerCategory[] = [
     description: "Fleet & CV",
     icon: Truck,
     href: "/dealers/browse?vertical=commercial",
-    count: "620+",
+    count: "Browse",
   },
   {
     slug: "ev",
@@ -89,7 +89,7 @@ export const DEALER_CATEGORIES: DealerCategory[] = [
     description: "Electric first",
     icon: Zap,
     href: "/dealers/browse?vertical=ev",
-    count: "380+",
+    count: "Browse",
   },
   {
     slug: "multi-brand",
@@ -97,7 +97,7 @@ export const DEALER_CATEGORIES: DealerCategory[] = [
     description: "All under one roof",
     icon: Users,
     href: "/dealers/browse?vertical=multi-brand",
-    count: "890+",
+    count: "Browse",
   },
 ];
 

@@ -36,7 +36,11 @@ export function NcdInventoryGrid({ items, onChanged }: Props) {
     if (!window.confirm(`Remove ${item.brand} ${item.model} from stock and public listing?`)) return;
     setDeletingId(item.id);
     try {
-      await removeNewCarInventory(item);
+      const { error } = await removeNewCarInventory(item);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
       toast.success("Removed from stock");
       onChanged?.();
     } catch (e) {
@@ -75,11 +79,19 @@ export function NcdInventoryGrid({ items, onChanged }: Props) {
                   </Badge>
                 ) : null}
               </div>
-              <p className="mt-2 text-lg font-bold text-primary">{formatCurrency(v.onRoadPrice)}</p>
-              <p className="text-xs text-muted-foreground">
-                Ex-showroom {formatCurrency(v.exShowroomPrice)}
-                {v.discountAmount > 0 ? ` · Save ${formatCurrency(v.discountAmount)}` : ""}
+              <p className="mt-2 text-lg font-bold text-primary">
+                {v.exShowroomPrice > 0 || v.onRoadPrice > 0
+                  ? formatCurrency(v.onRoadPrice > 0 ? v.onRoadPrice : v.exShowroomPrice)
+                  : "Price on request"}
               </p>
+              {v.exShowroomPrice > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Ex-showroom {formatCurrency(v.exShowroomPrice)}
+                  {v.discountAmount > 0 ? ` · Save ${formatCurrency(v.discountAmount)}` : ""}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">No numeric price on file</p>
+              )}
               {v.expectedDeliveryDays != null ? (
                 <p className="mt-1 text-[10px] text-muted-foreground">Delivery ~{v.expectedDeliveryDays} days</p>
               ) : null}

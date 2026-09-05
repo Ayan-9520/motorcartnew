@@ -10,6 +10,7 @@ import {
   Film,
   MoreHorizontal,
   Trash2,
+  Bookmark,
 } from "lucide-react";
 import { SocialAvatar } from "./SocialAvatar";
 import { Button } from "@/components/ui/button";
@@ -47,11 +48,13 @@ interface PostCardProps {
   onLike?: () => void;
   onFlag?: () => void;
   onDelete?: () => void | Promise<void>;
+  onShare?: () => void | Promise<void>;
+  onSave?: () => void | Promise<void>;
   compact?: boolean;
   premium?: boolean;
 }
 
-export function PostCard({ post, onLike, onFlag, onDelete, compact, premium }: PostCardProps) {
+export function PostCard({ post, onLike, onFlag, onDelete, onShare, onSave, compact, premium }: PostCardProps) {
   const { user, isAuthenticated } = useAuth();
 
   const requireAuth = (action: string) => {
@@ -246,10 +249,31 @@ export function PostCard({ post, onLike, onFlag, onDelete, compact, premium }: P
               {post.commentCount}
             </Link>
           </Button>
-          <Button variant="outline" size="sm" className="gap-1" onClick={() => void shareNative()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            onClick={() => {
+              if (!requireAuth("share posts")) return;
+              void (onShare ? onShare() : shareNative());
+            }}
+          >
             <Share2 className="h-4 w-4" />
             {post.shareCount}
           </Button>
+          {onSave && (
+            <Button
+              variant={post.savedByMe ? "default" : "outline"}
+              size="sm"
+              className="gap-1"
+              onClick={() => {
+                if (!requireAuth("save posts")) return;
+                void onSave();
+              }}
+            >
+              <Bookmark className={`h-4 w-4 ${post.savedByMe ? "fill-current" : ""}`} />
+            </Button>
+          )}
           {onFlag && !isAuthor && (
             <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground lg:hidden" onClick={onFlag}>
               <Flag className="h-4 w-4" />

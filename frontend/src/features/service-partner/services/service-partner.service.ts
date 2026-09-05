@@ -6,7 +6,7 @@ import {
   resolveOwnedCenterId,
 } from "@/features/service-booking/services/service-booking.service";
 import type { ServiceBooking } from "@/features/service-booking/types";
-import { buildMockServicePartnerSnapshot } from "../data/mock-sh-data";
+import { emptyServicePartnerSnapshot } from "../data/mock-sh-data";
 import type { ServicePartnerSnapshot, ShJobCard, ShTechnician, ShWorkflowStage } from "../types";
 
 function bookingToJobCard(b: ServiceBooking, idx: number): ShJobCard {
@@ -101,11 +101,7 @@ export async function fetchServicePartnerSnapshot(
   }
 
   if (!centerId) {
-    return buildMockServicePartnerSnapshot(
-      userName ? `${userName}'s Workshop` : "Your Workshop",
-      "Delhi NCR",
-      0
-    );
+    return emptyServicePartnerSnapshot(userName ? `${userName}'s workshop` : "Your workshop");
   }
 
   const { data: centerRow } = await supabase
@@ -122,57 +118,54 @@ export async function fetchServicePartnerSnapshot(
     jobCards = bookings.slice(0, 12).map((b, i) => bookingToJobCard(b, i));
   }
 
-  const mock = buildMockServicePartnerSnapshot(
+  const empty = emptyServicePartnerSnapshot(
     (centerRow as { name?: string })?.name ?? "Workshop",
-    (centerRow as { city?: string })?.city ?? "India",
-    analytics.pending + (analytics.completed > 0 ? 4 : 0)
+    (centerRow as { city?: string })?.city ?? "India"
   );
 
-  const activeJobs = bookings.filter((b) => b.status !== "completed" && b.status !== "cancelled").length || mock.activeVehicles;
+  const activeJobs = bookings.filter((b) => b.status !== "completed" && b.status !== "cancelled").length;
 
-  const technicians: ShTechnician[] = mechanics.length
-    ? mechanics.map((m) => ({
-        id: m.id,
-        name: m.displayName,
-        role: "technician",
-        active: m.isActive,
-        jobsToday: 0,
-        skill: m.specialization ?? "General",
-      }))
-    : mock.technicians;
+  const technicians: ShTechnician[] = mechanics.map((m) => ({
+    id: m.id,
+    name: m.displayName,
+    role: "technician",
+    active: m.isActive,
+    jobsToday: 0,
+    skill: m.specialization ?? "General",
+  }));
 
-  const customers = (await fetchCrmCustomers(centerId)) || mock.customers;
-  const insights = (await fetchAiInsights(centerId)) ?? mock.insights;
+  const customers = await fetchCrmCustomers(centerId);
+  const insights = (await fetchAiInsights(centerId)) ?? [];
 
-  const kanban = mock.kanban.map((col) => ({
+  const kanban = empty.kanban.map((col) => ({
     ...col,
     jobs: jobCards.filter((j) => j.stage === col.stage),
   }));
 
   return {
-    ...mock,
+    ...empty,
     centerId,
     profile: {
       id: centerId,
-      name: (centerRow as { name?: string })?.name ?? mock.profile.name,
-      city: (centerRow as { city?: string })?.city ?? mock.profile.city,
-      rating: Number((centerRow as { rating?: number })?.rating ?? mock.profile.rating),
-      isVerified: (centerRow as { is_verified?: boolean })?.is_verified ?? true,
+      name: (centerRow as { name?: string })?.name ?? empty.profile.name,
+      city: (centerRow as { city?: string })?.city ?? empty.profile.city,
+      rating: Number((centerRow as { rating?: number })?.rating ?? 0),
+      isVerified: Boolean((centerRow as { is_verified?: boolean })?.is_verified),
       activeJobs,
       techniciansOnline: technicians.filter((t) => t.active).length,
-      satisfactionPct: mock.profile.satisfactionPct,
-      branchCount: mock.profile.branchCount,
+      satisfactionPct: 0,
+      branchCount: 0,
     },
     activeVehicles: activeJobs,
     bookings,
-    jobCards: jobCards.length ? jobCards : mock.jobCards,
+    jobCards,
     kanban,
     technicians,
     customers,
     insights,
-    revenueToday: analytics.revenue > 0 ? analytics.revenue : mock.revenueToday,
-    revenueMonth: mock.revenueMonth,
-    metrics: mock.metrics.map((m) => {
+    revenueToday: analytics.revenue > 0 ? analytics.revenue : 0,
+    revenueMonth: 0,
+    metrics: empty.metrics.map((m) => {
       if (m.key === "active") return { ...m, value: activeJobs };
       if (m.key === "completed") return { ...m, value: analytics.completed };
       if (m.key === "rev_today" && analytics.revenue > 0) {

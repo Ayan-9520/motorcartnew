@@ -46,14 +46,14 @@ export function DealerAnalyticsPage() {
   return (
     <DealerConsoleShell
       title="Analytics"
-      description="Vehicle views, hot inventory, lead conversion and monthly sales — Indian market insights."
+      description="Lead conversion and sold listings from your CRM. Listing view tracking is not live yet."
       crumbs={[{ label: "Analytics" }]}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total views" value={analytics.totalViews.toLocaleString()} icon={Eye} />
         <StatCard label="Enquiries" value={analytics.totalEnquiries} icon={BarChart3} />
         <StatCard label="Conversion" value={`${analytics.conversionPct}%`} icon={Percent} trend="up" />
-        <StatCard label="Revenue (MTD)" value={formatCurrency(stats.revenueMtd)} icon={TrendingUp} />
+        <StatCard label="Sold listings value" value={formatCurrency(stats.revenueMtd)} icon={TrendingUp} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -122,6 +122,9 @@ export function DealerAnalyticsPage() {
 
         <div className="dealer-os-card">
           <h2 className="font-semibold mb-4">Monthly sales (₹ Lakhs)</h2>
+          <p className="text-sm text-muted-foreground -mt-2 mb-4">
+            Month-by-month sales dates are not recorded yet. Use sold listings value above.
+          </p>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={analytics.monthlyRevenue}>

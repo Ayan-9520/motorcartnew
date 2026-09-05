@@ -22,6 +22,30 @@ import type {
   BankIntegrationConfig,
   FinanceChartPoint,
 } from "../types";
+import {
+  isFinanceRestEnabled,
+  restFetchApplicationById,
+  restFetchApplications,
+  restFetchCommissions,
+  restFetchDsaApplications,
+  restFetchDsaCommissions,
+  restFetchDsaLeads,
+  restFetchLenders,
+  restFetchLenderApplications,
+  restFetchTimeline,
+  restSubmitLoanApplication,
+  restUpdateStatus,
+  restUploadAndAttachDocument,
+} from "./finance-api.service";
+
+async function tryRest<T>(fn: () => Promise<T>): Promise<{ ok: true; data: T } | { ok: false }> {
+  if (!isFinanceRestEnabled()) return { ok: false };
+  try {
+    return { ok: true, data: await fn() };
+  } catch {
+    return { ok: false };
+  }
+}
 
 function mapApplication(
   row: DbFinanceApplication & { banks?: { name: string } | null }
@@ -52,6 +76,10 @@ function mapApplication(
 }
 
 export async function fetchLenders(): Promise<Lender[]> {
+  const rest = await tryRest(() => restFetchLenders());
+  if (rest.ok && rest.data.length) {
+    return mergeLenders(rest.data);
+  }
   try {
     const result = await Promise.race([
       supabase
@@ -91,6 +119,9 @@ export async function submitLoanApplication(payload: {
   vehicleId?: string;
   applicantMetadata?: Record<string, unknown>;
 }) {
+  const rest = await tryRest(() => restSubmitLoanApplication(payload));
+  if (rest.ok) return rest.data;
+
   const { data, error } = await supabase.rpc("submit_finance_application", {
     p_bank_id: payload.bankId,
     p_loan_amount: payload.loanAmount,
@@ -121,6 +152,9 @@ export async function submitLoanApplication(payload: {
 }
 
 export async function fetchUserApplications(userId: string): Promise<LoanApplication[]> {
+  const rest = await tryRest(() => restFetchApplications());
+  if (rest.ok) return rest.data.filter((a) => a.userId === userId);
+
   const { data } = await supabase
     .from("finance_applications")
     .select("*, banks(name)")
@@ -134,6 +168,9 @@ export async function fetchUserApplications(userId: string): Promise<LoanApplica
 }
 
 export async function fetchApplicationById(id: string): Promise<LoanApplication | null> {
+  const rest = await tryRest(() => restFetchApplicationById(id));
+  if (rest.ok) return rest.data;
+
   const { data } = await supabase
     .from("finance_applications")
     .select("*, banks(name)")
@@ -145,6 +182,12 @@ export async function fetchApplicationById(id: string): Promise<LoanApplication 
 }
 
 export async function fetchDsaApplications(dsaAgentId: string): Promise<LoanApplication[]> {
+  const rest = await tryRest(() => restFetchDsaApplications());
+  if (rest.ok) {
+    const scoped = rest.data.filter((a) => !dsaAgentId || a.dsaAgentId === dsaAgentId);
+    if (scoped.length) return scoped;
+  }
+
   const { data } = await supabase
     .from("finance_applications")
     .select("*, banks(name)")
@@ -157,6 +200,11 @@ export async function fetchDsaApplications(dsaAgentId: string): Promise<LoanAppl
 }
 
 export async function fetchDsaDeskLeads(dsaAgentId?: string): Promise<FinanceLead[]> {
+  const rest = await tryRest(() => restFetchDsaLeads());
+  if (rest.ok && rest.data.length) {
+    return dsaAgentId ? rest.data.filter((l) => l.assignedDsaId === dsaAgentId) : rest.data;
+  }
+
   let q = supabase.from("finance_leads").select("*").order("created_at", { ascending: false }).limit(50);
   if (dsaAgentId) q = q.eq("assigned_dsa_id", dsaAgentId);
   const { data } = await q;
@@ -187,6 +235,9 @@ export async function fetchDsaTeam(): Promise<DsaTeamMember[]> {
 }
 
 export async function fetchLenderApplications(): Promise<LoanApplication[]> {
+  const rest = await tryRest(() => restFetchLenderApplications());
+  if (rest.ok) return rest.data;
+
   const { data } = await supabase
     .from("finance_applications")
     .select("*, banks(name)")
@@ -197,6 +248,9 @@ export async function fetchLenderApplications(): Promise<LoanApplication[]> {
 }
 
 export async function updateApplicationStatus(id: string, status: FinanceStatus, notes?: string) {
+  const rest = await tryRest(() => restUpdateStatus(id, status, notes));
+  if (rest.ok) return rest.data;
+
   const { data, error } = await supabase.rpc("advance_finance_application", {
     p_application_id: id,
     p_status: status,
@@ -214,6 +268,9 @@ export async function updateApplicationStatus(id: string, status: FinanceStatus,
 }
 
 export async function fetchAllApplications(): Promise<LoanApplication[]> {
+  const rest = await tryRest(() => restFetchApplications());
+  if (rest.ok) return rest.data;
+
   const { data } = await supabase
     .from("finance_applications")
     .select("*, banks(name)")
@@ -277,6 +334,9 @@ export async function distributeFinanceLead(leadId: string) {
 }
 
 export async function fetchCommissions(dsaAgentId?: string): Promise<FinanceCommission[]> {
+  const rest = await tryRest(() => (dsaAgentId ? restFetchDsaCommissions() : restFetchCommissions()));
+  if (rest.ok && rest.data.length) return rest.data;
+
   let q = supabase.from("finance_commissions").select("*").order("created_at", { ascending: false });
   if (dsaAgentId) q = q.eq("dsa_agent_id", dsaAgentId);
   const { data } = await q.limit(100);
@@ -333,6 +393,9 @@ export async function updateVerification(
 }
 
 export async function fetchStatusHistory(applicationId: string): Promise<FinanceStatusHistoryEntry[]> {
+  const rest = await tryRest(() => restFetchTimeline(applicationId));
+  if (rest.ok) return rest.data;
+
   const { data } = await supabase
     .from("finance_status_history")
     .select("*")
@@ -376,6 +439,9 @@ export async function uploadFinanceDocument(
   applicationId: string,
   file: File
 ): Promise<{ path: string } | { error: string }> {
+  const rest = await tryRest(() => restUploadAndAttachDocument(applicationId, userId, file));
+  if (rest.ok) return rest.data;
+
   const ext = file.name.split(".").pop() ?? "pdf";
   const path = `${userId}/${applicationId}/${Date.now()}.${ext}`;
 

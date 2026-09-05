@@ -82,8 +82,8 @@ export type HomePageData = {
 export async function fetchHomePageApi(): Promise<HomePageData | null> {
   try {
     const { data } = await withApiTimeout(
-      api.get<{ data: HomePageData }>("/api/home", { timeout: 5000 }),
-      5000
+      api.get<{ data: HomePageData }>("/api/home", { timeout: 12_000 }),
+      12_000
     );
     return data.data ?? null;
   } catch {

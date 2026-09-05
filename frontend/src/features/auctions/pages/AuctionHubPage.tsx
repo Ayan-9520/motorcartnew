@@ -28,17 +28,24 @@ export function AuctionHubPage() {
       <AuctionHubHero />
 
       <div className="container -mt-2 mb-6 flex flex-wrap justify-center gap-3">
-        <span className="auction-hub-stat-pill">
-          <Radio className="h-3.5 w-3.5 text-red-500" />
-          <strong>{stats.liveLots}+</strong> live lots
-        </span>
+        {stats.liveLots > 0 ? (
+          <span className="auction-hub-stat-pill">
+            <Radio className="h-3.5 w-3.5 text-red-500" />
+            <strong>{stats.liveLots}</strong> auction lots
+          </span>
+        ) : (
+          <span className="auction-hub-stat-pill">
+            <Gavel className="h-3.5 w-3.5 text-primary" />
+            Auction listings
+          </span>
+        )}
         <span className="auction-hub-stat-pill">
           <MapPin className="h-3.5 w-3.5 text-primary" />
-          <strong>{stats.cities}</strong> cities
+          {stats.cities > 0 ? <><strong>{stats.cities}</strong> cities</> : "Pan-India coverage"}
         </span>
         <span className="auction-hub-stat-pill">
           <Users className="h-3.5 w-3.5 text-primary" />
-          <strong>{stats.eventsToday}</strong> events today
+          {stats.eventsToday > 0 ? <><strong>{stats.eventsToday}</strong> events today</> : "Scheduled events"}
         </span>
       </div>
 
@@ -85,7 +92,7 @@ export function AuctionHubPage() {
       <section className="container border-t border-border/80 pb-10 pt-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="auction-hub-section-title">Featured live lots</h2>
+            <h2 className="auction-hub-section-title">Featured auction lots</h2>
             <p className="mt-1 text-sm text-muted-foreground">Bid in real time — transparent reserve &amp; auto-bid</p>
           </div>
           <Button className="rounded-xl shadow-[var(--shadow-primary)]" asChild>
@@ -103,7 +110,7 @@ export function AuctionHubPage() {
             ))}
           </div>
         ) : liveAuctions.length === 0 ? (
-          <p className="py-12 text-center text-muted-foreground">No live lots right now — check upcoming events.</p>
+          <p className="py-12 text-center text-muted-foreground">No auction lots right now — check upcoming events.</p>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {liveAuctions.slice(0, 6).map((a, i) => (

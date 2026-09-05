@@ -11,7 +11,7 @@ export const HUB_BRAND_LISTS: Record<HubCategorySlug, string[]> = {
   trucks: ["Tata", "Ashok Leyland", "Mahindra", "Eicher", "BharatBenz", "Volvo"],
   buses: ["Ashok Leyland", "Tata", "Mahindra", "Eicher", "Volvo"],
   ev: ["Tata", "Hyundai", "MG", "Mahindra", "Ola", "Ather", "Kia"],
-  auto: ["Bajaj", "Piaggio", "Mahindra", "TVS"],
+  auto: ["Bajaj", "Piaggio", "Mahindra", "TVS", "Atul", "Force"],
   equipment: ["JCB", "Mahindra", "Tata", "Caterpillar"],
 };
 
@@ -48,9 +48,12 @@ export const HUB_BUDGET_PRESETS: Record<HubCategorySlug, BudgetPreset[]> = {
     { label: "₹20L+", priceMin: 2000000 },
   ],
   auto: [
-    { label: "Under ₹3L", priceMax: 300000 },
-    { label: "₹3–5L", priceMin: 300000, priceMax: 500000 },
-    { label: "₹5L+", priceMin: 500000 },
+    { label: "Under ₹1 Lakh", priceMax: 100000 },
+    { label: "₹1 - ₹2 Lakh", priceMin: 100000, priceMax: 200000 },
+    { label: "₹2 - ₹3 Lakh", priceMin: 200000, priceMax: 300000 },
+    { label: "₹3 - ₹5 Lakh", priceMin: 300000, priceMax: 500000 },
+    { label: "₹5 - ₹10 Lakh", priceMin: 500000, priceMax: 1000000 },
+    { label: "Above ₹10 Lakh", priceMin: 1000000 },
   ],
   equipment: [
     { label: "Under ₹10L", priceMax: 1000000 },

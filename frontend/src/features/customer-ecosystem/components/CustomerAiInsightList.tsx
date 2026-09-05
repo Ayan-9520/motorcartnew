@@ -17,14 +17,21 @@ type CustomerAiInsightListProps = {
 
 export function CustomerAiInsightList({ insights, compact }: CustomerAiInsightListProps) {
   const list = compact ? insights.slice(0, 3) : insights;
-  if (!list.length) return null;
+  if (!list.length) {
+    if (compact) return null;
+    return (
+      <p className="cos-empty">
+        Personalized AI insights are not available yet. Ownership alerts appear here from your garage, quotations, test drives, and applications.
+      </p>
+    );
+  }
 
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="cos-section-title">
           <Bot className="h-4 w-4 text-primary" />
-          AI recommendations
+          Ownership alerts
         </h2>
         {compact ? (
           <Link to="/dashboard/customer/insights" className="text-xs font-medium text-primary hover:underline">

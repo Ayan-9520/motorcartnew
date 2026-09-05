@@ -64,8 +64,8 @@ export const DASHBOARD_ROUTES: Partial<Record<UserRole, string>> = {
   broker: "/dashboard/broker",
 };
 
-/** Main nav entry for all vehicle hubs (cars, bikes, trucks, …) — not only cars */
-export const VEHICLE_HUB_NAV = { label: "Vehicles", href: "/cars" } as const;
+/** @deprecated Vehicles hub nav removed — use Buy (`/buy`) instead */
+export const VEHICLE_HUB_NAV = { label: "Vehicles", href: "/buy" } as const;
 
 export const VEHICLE_HUB_PATH_PREFIXES = [
   "/cars",
@@ -87,7 +87,6 @@ export function isVehicleHubNavPath(pathname: string): boolean {
 }
 
 export const NAV_LINKS = [
-  VEHICLE_HUB_NAV,
   { label: "Buy", href: "/buy" },
   { label: "Sell", href: "/sell" },
   { label: "Auctions", href: "/auctions" },
@@ -105,8 +104,8 @@ export const VEHICLE_ECOSYSTEM = [
     id: "new-cars",
     label: "New Cars",
     icon: "Car",
-    stat: "45K+",
-    href: "/new-cars",
+    stat: "New car catalog",
+    href: "/buy/cars/new",
     description: "OEM dealers, on-road price & test drives",
     highlight: "Latest launches",
   },
@@ -114,8 +113,8 @@ export const VEHICLE_ECOSYSTEM = [
     id: "used-cars",
     label: "Certified Pre-Owned",
     icon: "CarFront",
-    stat: "2.1L+",
-    href: "/used-cars",
+    stat: "Certified pre-owned",
+    href: "/buy/cars/used",
     description: "Inspected, warranty & AI fair price",
     highlight: "7-day return",
   },
@@ -123,23 +122,23 @@ export const VEHICLE_ECOSYSTEM = [
     id: "bikes",
     label: "Bikes",
     icon: "Bike",
-    stat: "85K+",
-    href: "/vehicles/bikes",
+    stat: "Two-wheeler listings",
+    href: "/buy/bikes/used",
     description: "New & pre-owned two-wheelers",
   },
   {
     id: "trucks",
     label: "Trucks",
     icon: "Truck",
-    stat: "12K+",
-    href: "/vehicles/trucks",
+    stat: "Commercial listings",
+    href: "/buy/trucks/used",
     description: "Commercial & logistics",
   },
   {
     id: "auctions",
     label: "Auctions",
     icon: "Gavel",
-    stat: "142 live",
+    stat: "Auction marketplace",
     href: "/auctions",
     description: "Bank repo & dealer auctions",
   },
@@ -147,7 +146,7 @@ export const VEHICLE_ECOSYSTEM = [
     id: "finance",
     label: "Finance",
     icon: "Landmark",
-    stat: "₹1200Cr+",
+    stat: "Loan marketplace",
     href: "/finance",
     description: "Loans & instant eligibility",
   },
@@ -162,12 +161,12 @@ export const VEHICLE_ECOSYSTEM = [
 ] as const;
 
 export const VEHICLE_CATEGORIES = [
-  { id: "new-cars", label: "New Cars", icon: "Car", count: "45K+", href: "/new-cars" },
-  { id: "used-cars", label: "Certified Pre-Owned", icon: "CarFront", count: "2.1L+", href: "/used-cars" },
-  { id: "bikes", label: "Bikes", icon: "Bike", count: "85K+", href: "/vehicles/bikes" },
-  { id: "trucks", label: "Trucks", icon: "Truck", count: "12K+", href: "/vehicles/trucks" },
-  { id: "buses", label: "Buses", icon: "Bus", count: "3K+", href: "/vehicles/buses" },
-  { id: "ev", label: "EV", icon: "Zap", count: "28K+", href: "/vehicles/ev" },
+  { id: "new-cars", label: "New Cars", icon: "Car", count: "Catalog", href: "/buy/cars/new" },
+  { id: "used-cars", label: "Certified Pre-Owned", icon: "CarFront", count: "Catalog", href: "/buy/cars/used" },
+  { id: "bikes", label: "Bikes", icon: "Bike", count: "Listings", href: "/buy/bikes/used" },
+  { id: "trucks", label: "Trucks", icon: "Truck", count: "Listings", href: "/buy/trucks/used" },
+  { id: "buses", label: "Buses", icon: "Bus", count: "Listings", href: "/buy/buses/used" },
+  { id: "ev", label: "EV", icon: "Zap", count: "Listings", href: "/buy/ev/new" },
 ] as const;
 
 export const SEARCH_TABS = ["All", "Cars", "Bikes", "Auctions", "Parts", "Finance"] as const;

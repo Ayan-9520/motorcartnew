@@ -37,8 +37,9 @@ export function DealersHubHero({ dealerCount }: DealersHubHeroProps) {
               Find verified <span className="text-primary">dealers</span> near you
             </h1>
             <p className="dealers-hub-subtitle">
-              8,500+ KYC-verified showrooms — new, used, bikes, commercial &amp; EV — with AI leads, CRM &amp;
-              WhatsApp-ready inventory.
+              {dealerCount > 0
+                ? `${dealerCount.toLocaleString("en-IN")} KYC-verified dealers — new, used, bikes, commercial & EV — with AI leads, CRM & WhatsApp-ready inventory.`
+                : "Find KYC-verified dealers — new, used, bikes, commercial & EV — with AI leads, CRM & WhatsApp-ready inventory."}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button className="rounded-xl shadow-[var(--shadow-primary)]" asChild>
@@ -51,7 +52,7 @@ export function DealersHubHero({ dealerCount }: DealersHubHeroProps) {
           </div>
 
           <form onSubmit={onSearch} className="dealers-hub-search-card">
-            <p className="text-sm font-semibold text-foreground">Search showrooms</p>
+            <p className="text-sm font-semibold text-foreground">Search dealers</p>
             <div className="dealers-hub-search-row">
               <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               <select

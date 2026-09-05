@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { categoryFilterTypes, SEARCH_CATEGORIES } from "@/lib/unified-search/categories";
+import { boundPage, sanitizeSearchQuery } from "@/lib/http/request-meta";
 import { rankResults } from "@/lib/unified-search/scoring";
 import {
   searchAuctions,
@@ -8,10 +9,16 @@ import {
   searchCommunityPosts,
   searchDealers,
   searchDsa,
-  searchGrowthTemplates,
+  searchFinanceProducts,
   searchInsurance,
+  searchInsurancePartners,
+  searchJobsPublic,
+  searchNewCarStock,
+  searchOrganizations,
   searchPartsCatalog,
   searchPartsSellers,
+  searchProfessionals,
+  searchServiceCentersPublic,
   searchVehicles,
   searchWorkshops,
 } from "@/lib/unified-search/providers";
@@ -21,16 +28,22 @@ const ARCHITECTURE = {
   mode: "federated",
   providers: [
     "vehicles",
+    "new_car_stock",
     "auctions",
     "dealers",
-    "brokers",
-    "business_profiles",
+    "organizations",
+    "jobs",
+    "professionals",
+    "finance_products",
+    "insurance",
+    "service_centers",
     "parts",
     "community",
-    "growth",
   ],
-  note: "Read-only SQL aggregation. No source module modifications. No data moves.",
+  note: "PostgreSQL ILIKE federation. Catalog-only rows are never labeled as dealer stock. Growth templates are not public.",
 } as const;
+
+const PII_RE = /phone|email|gst|pan|password|secret|token|aadhaar|accountNumber|ifsc|otp/i;
 
 function dedupeByUrl(items: UnifiedSearchResult[]): UnifiedSearchResult[] {
   const seen = new Set<string>();
@@ -47,6 +60,16 @@ function filterByTypes(items: UnifiedSearchResult[], types: string[] | null) {
   return items.filter((i) => types.includes(i.result_type));
 }
 
+function publicSafe(item: UnifiedSearchResult): UnifiedSearchResult {
+  const blob = JSON.stringify(item.metadata ?? {});
+  if (!PII_RE.test(blob) && !PII_RE.test(item.description) && !PII_RE.test(item.title)) return item;
+  return {
+    ...item,
+    description: item.description.replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[redacted]"),
+    metadata: item.metadata && typeof item.metadata === "object" ? { id: (item.metadata as { id?: string }).id } : {},
+  };
+}
+
 export function getSearchCategories() {
   return {
     architecture: ARCHITECTURE,
@@ -57,56 +80,88 @@ export function getSearchCategories() {
 export async function federatedSearch(params: {
   q: string;
   category?: string;
+  type?: string;
   limit?: number;
   offset?: number;
 }) {
-  const q = params.q?.trim() ?? "";
-  const limit = Math.min(params.limit ?? 60, 120);
-  const offset = params.offset ?? 0;
-  const typeFilter = categoryFilterTypes(params.category);
+  const q = sanitizeSearchQuery(params.q);
+  const { limit, offset } = boundPage(params.limit, params.offset, 40);
+  const typeFilter = categoryFilterTypes(params.type ?? params.category);
+
+  if (q.length < 2) {
+    return {
+      query: q,
+      category: params.category ?? params.type ?? null,
+      total: 0,
+      limit,
+      offset,
+      by_type: {} as Record<string, number>,
+      results: [] as UnifiedSearchResult[],
+      architecture: ARCHITECTURE,
+      hint: "Enter at least 2 characters",
+    };
+  }
 
   const [
     vehicles,
+    stock,
     auctions,
     dealers,
     brokers,
     dsa,
     insurance,
+    partners,
     workshops,
+    centers,
     partsSellers,
     parts,
     posts,
     groups,
-    growth,
+    companies,
+    jobs,
+    professionals,
+    finance,
   ] = await Promise.all([
     searchVehicles(q),
+    searchNewCarStock(q),
     searchAuctions(q),
     searchDealers(q),
     searchBrokers(q),
     searchDsa(q),
     searchInsurance(q),
+    searchInsurancePartners(q),
     searchWorkshops(q),
+    searchServiceCentersPublic(q),
     searchPartsSellers(q),
     searchPartsCatalog(q),
     searchCommunityPosts(q),
     searchCommunityGroups(q),
-    searchGrowthTemplates(q),
+    searchOrganizations(q),
+    searchJobsPublic(q),
+    searchProfessionals(q),
+    searchFinanceProducts(q),
   ]);
 
   let merged = dedupeByUrl([
     ...vehicles,
+    ...stock,
     ...auctions,
     ...dealers,
     ...brokers,
     ...dsa,
     ...insurance,
+    ...partners,
     ...workshops,
+    ...centers,
     ...partsSellers,
     ...parts,
     ...posts,
     ...groups,
-    ...growth,
-  ]);
+    ...companies,
+    ...jobs,
+    ...professionals,
+    ...finance,
+  ]).map(publicSafe);
 
   merged = filterByTypes(merged, typeFilter);
   merged = rankResults(merged, q);
@@ -121,7 +176,7 @@ export async function federatedSearch(params: {
 
   return {
     query: q,
-    category: params.category ?? null,
+    category: params.category ?? params.type ?? null,
     total,
     limit,
     offset,
@@ -132,7 +187,7 @@ export async function federatedSearch(params: {
 }
 
 export async function searchSuggestions(q: string, limit = 10) {
-  const needle = q.trim();
+  const needle = sanitizeSearchQuery(q);
   if (needle.length < 2) return { query: needle, suggestions: [] as string[] };
 
   const [vehicles, businesses, dealers] = await Promise.all([
@@ -141,7 +196,7 @@ export async function searchSuggestions(q: string, limit = 10) {
     prismaDealerHints(needle),
   ]);
 
-  const suggestions = [...new Set([...vehicles, ...businesses, ...dealers])].slice(0, limit);
+  const suggestions = [...new Set([...vehicles, ...businesses, ...dealers])].slice(0, Math.min(limit, 10));
   return { query: needle, suggestions };
 }
 
@@ -149,6 +204,7 @@ async function prismaVehicleHints(q: string) {
   const rows = await prisma.vehicle.findMany({
     where: {
       deletedAt: null,
+      status: "available",
       OR: [{ brand: { contains: q } }, { model: { contains: q } }, { title: { contains: q } }],
     },
     select: { brand: true, model: true, title: true },

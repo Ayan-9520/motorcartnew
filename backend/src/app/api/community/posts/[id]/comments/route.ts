@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { ok, err } from "@/lib/api-response";
 import { requireCommunityAuth, requireCommunityPublic } from "@/lib/community/guard";
 import { addPostComment, listPostComments } from "@/services/community-engagement.service";
+import { communityRateLimit, handleCommunityError } from "@/lib/community/http";
 
 export async function GET(
   req: NextRequest,
@@ -12,10 +13,7 @@ export async function GET(
 
   const { id } = await ctx.params;
   const limit = new URL(req.url).searchParams.get("limit");
-  const comments = await listPostComments(
-    id,
-    limit ? parseInt(limit, 10) : 50
-  );
+  const comments = await listPostComments(id, limit ? parseInt(limit, 10) : 50);
   if (comments === null) return err("Post not found", 404);
   return ok({ data: comments });
 }
@@ -26,18 +24,15 @@ export async function POST(
 ) {
   const gate = await requireCommunityAuth(req, "posts");
   if ("response" in gate) return gate.response;
+  const limited = communityRateLimit(req, gate.auth.sub, "comment", 40);
+  if (limited) return limited;
 
   const { id } = await ctx.params;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const content = body.content != null ? String(body.content) : "";
 
   try {
-    const comment = await addPostComment(
-      id,
-      gate.auth.sub,
-      content,
-      body.parent_id != null ? String(body.parent_id) : null
-    );
+    const comment = await addPostComment(id, gate.auth.sub, content);
     if (!comment) return err("Post not found", 404);
 
     return ok(
@@ -46,7 +41,7 @@ export async function POST(
           id: comment.id,
           post_id: comment.postId,
           user_id: comment.userId,
-          parent_id: comment.parentId,
+          parent_id: null,
           content: comment.content,
           created_at: comment.createdAt.toISOString(),
           author: comment.user.communityProfile
@@ -65,9 +60,6 @@ export async function POST(
       201
     );
   } catch (e) {
-    if (e instanceof Error && e.message === "EMPTY_COMMENT") {
-      return err("Comment content required", 400);
-    }
-    return err("Could not add comment", 400);
+    return handleCommunityError(e);
   }
 }

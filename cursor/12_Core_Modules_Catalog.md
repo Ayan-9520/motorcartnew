@@ -12,10 +12,11 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 |--------|---------------|---------------|--------|
 | Home | `/` | `pages/HomePage.tsx`, `features/home/` | ✅ |
 | Unified search | `/search` | `features/unified-search/`, `features/search/` | ⚠️ |
-| Customer dashboard | `/dashboard/customer` | `dashboards/customer/` | ⚠️ |
+| Customer dashboard | `/dashboard/customer` | `pages/dashboard/CustomerDashboardPage.tsx` + ecosystem | ✅ Batch 9 super-app sections |
 | Wishlist | `/wishlist` | vehicle store + DB | ⚠️ |
 | Notifications | `/notifications` | `features/notifications-center/` | ⚠️ |
 | Profile & settings | `/profile`, auth settings | `pages/`, auth components | ✅ |
+| MotorCart careers | `/careers` | `pages/CareersPage.tsx` | ✅ own hiring (not ecosystem jobs) |
 | Mobile customer app | Expo app | `apps/mobile-customer/` | 🏗️ |
 
 ---
@@ -26,8 +27,9 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 |--------|-------|---------------|--------|
 | Vehicle hubs (7 types) | `/vehicles/:hub` | `features/ecosystem/pages/VehicleHubPage.tsx` | ✅ |
 | Buy hub | `/buy` | `features/marketplace/pages/BuyHubPage.tsx` | ✅ |
-| Sell flow | `/sell` | marketplace sell pages | ✅ |
+| Sell flow | `/sell` + `/dashboard/customer/sell` | marketplace sell + sell requests | ✅ listing kept; sell-request lifecycle |
 | New cars | `/new-cars` | new-car listing pages | ✅ |
+| Stock-by-PIN | listing PIN check → `GET /api/inventory/by-pincode` | `features/inventory/` | ✅ exact PIN, real stock |
 | Used / preowned | `/used-cars` | preowned pages | ✅ |
 | Vehicle detail | `/vehicles/:slug` | `VehicleDetailPage` | ✅ |
 | Compare | `/compare` | compare feature | ⚠️ |
@@ -43,7 +45,7 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 | Finance marketplace | `/finance` | `features/finance/pages/FinanceMarketplacePage.tsx` | ⚠️ |
 | Loan apply | `/finance/apply` | loan application forms | ⚠️ |
 | DSA portal | `/dashboard/dsa` | DSA workspace | ⚠️ |
-| Lender dashboard | `/dashboard/lender` | lender pages | ⚠️ |
+| Lender dashboard | `/dashboard/finance` | `LenderDashboardPage` | ✅ Batch 11 products + existing applications |
 | Finance manager | `/dashboard/finance-manager` | manager desk | ⚠️ |
 | EMI calculators | embedded widgets | finance components | ✅ |
 
@@ -54,8 +56,9 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 | Module | Route | Path | Status |
 |--------|-------|------|--------|
 | Insurance hub | `/insurance` | `features/insurance/pages/InsuranceHubPage.tsx` | ✅ |
-| Quote / compare | `/insurance/*` | insurance components (7 vehicle types) | ✅ |
-| Customer policies | customer dashboard | insurance customer pages | ⚠️ |
+| Quote / compare | `/insurance/*` | insurance components (7 vehicle types) | ✅ partner quotes only when persisted |
+| Insurance partner console | `/dashboard/insurance` | `InsurancePartnerDashboardPage` | ✅ Batch 11 |
+| Customer policies | customer dashboard + `/api/insurance/policies` | policies/claims foundation | ✅ records when issued |
 
 ---
 
@@ -65,7 +68,7 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 |--------|-------|------|--------|
 | Services hub | `/services` | `features/service-booking/pages/ServicesHubPage.tsx` | ✅ |
 | Service booking | booking flows | service-booking | ⚠️ |
-| Service partner ERP | `/dashboard/service-partner` | `features/service-partner/` (~50 routes) | ⚠️ mock-heavy |
+| Service partner ERP | `/dashboard/service` | `features/service-partner/` | ✅ Batch 11 empty-state / real bookings |
 
 ---
 
@@ -75,7 +78,10 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 |--------|-------|------|--------|
 | Parts hub | `/parts` | `features/parts/` | ✅ |
 | Cart / checkout | `/parts/cart` | parts commerce | ⚠️ |
-| Parts supplier ERP | `/dashboard/parts-supplier` | `features/parts-supplier/` (~70 routes) | ⚠️ mock-heavy |
+| Parts supplier ERP | `/dashboard/parts` | `features/parts-supplier/` | ✅ inventory/orders via org-scoped products |
+| Ecosystem jobs | `/jobs`, `/jobs/:id`, `/company/:slug/jobs` | `features/jobs/` | ✅ separate from `/careers` |
+| Company pages | `/company/:slug` | `features/jobs/pages/CompanyPublicPage.tsx` | ✅ public-safe |
+| OEM console | `/dashboard/oem` | `features/oem/pages/OemDashboardPage.tsx` | ✅ authorized-dealer metrics |
 
 ---
 
@@ -94,10 +100,14 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 
 | Module | Route | Path | Status |
 |--------|-------|------|--------|
-| Used car dealer CRM | `/dashboard/dealer` | `features/dealer-crm/` | ⚠️ |
+| Used car dealer CRM | `/dashboard/dealer` | `features/dealer-crm/` | ✅ Batch 7 + Batch 10 comms/dialer |
+| Quotations | `/dashboard/dealer/quotations`, `/dashboard/customer/quotations` | `features/quotations/` | ✅ |
+| Test drives | `/dashboard/dealer/test-drives`, `/dashboard/new-car/test-drives`, `/dashboard/customer/test-drives` | `features/test-drives/` | ✅ |
 | New car dealer OS | `/dashboard/new-car-dealer` | `features/new-car-dealer/` | ⚠️ placeholders |
 | Inventory CRM | dealer inventory routes | dealer-crm inventory | ✅ partial |
-| Leads pipeline | dealer leads | `LeadTable`, hooks | ⚠️ |
+| Leads pipeline | `/dashboard/dealer/leads`, `/dashboard/dealer/pipeline` | dealer-crm + `/api/crm/*` | ✅ Sales OS |
+| Lead Board | `/dashboard/dealer/lead-board` | gated REST | ✅ entitlement + flags |
+| PIN lead routing | `/api/lead-routing` | exact PIN coverage | ✅ not stock-by-PIN |
 | Storefront | public dealer page | `DealerStorefrontPage` | ✅ |
 | Team / analytics | dealer subpages | dealer-crm pages | ⚠️ |
 | Subscriptions | dealer billing page | `DealerSubscriptionPage` | 🏗️ |
@@ -112,7 +122,15 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 | Growth CRM | `/dashboard/growth` | `features/growth-crm/` | 🏗️ |
 | Business hub | `/business` | `features/business-hub/` | ⚠️ |
 | Business directory | `/directory` | `features/business-directory/` | ⚠️ |
-| Billing | `/dashboard/billing` | `features/billing/` | 🏗️ |
+| Billing / subscriptions | `/dashboard/dealer/billing`, `/dashboard/super-admin/subscriptions` | commercial APIs + N2 `/dashboard/billing` | ✅ Batch 8 DB plans |
+| Partner payouts | `/dashboard/dealer/earnings`, `/dashboard/super-admin/payouts` | `/api/payouts*` | ✅ |
+| Customer rewards | `/dashboard/customer/rewards` | `/api/rewards*` | ✅ ledger; MotorCart One **reads** balance |
+| MotorCart One | `/dashboard/customer/one`, `/one/verify/:token` | identity card + QR verify | ✅ not a payment card |
+| Unified search | `/api/search` | PostgreSQL federation | ✅ Batch 12; catalog ≠ stock |
+| Admin command center | `/dashboard/super-admin` | `/api/admin/overview`, `/api/admin/analytics` | ✅ real counts / zeros |
+| Saved searches / reminders | `/dashboard/customer/saved-searches`, `/reminders` | `/api/saved-searches`, `/api/reminders` | ✅ |
+| Valuation desk | `/dashboard/valuation` | partner org membership | ✅ indicative only |
+| Dealer acquisitions | `/dashboard/dealer/acquisitions` | open sell requests + offers | ✅ PII masked |
 
 ---
 
@@ -120,10 +138,12 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 
 | Module | Route | Path | Status |
 |--------|-------|------|--------|
-| Community feed | `/community` | `features/community/` feed pages | ⚠️ |
-| Groups | `/community/groups` | `CommunityGroupsPage` | ⚠️ |
-| Profiles | `/community/u/:id` | profile pages | ⚠️ |
-| Moderation | super-admin community | `CommunityModerationPage` | ⚠️ |
+| Community feed | `/community` | `features/community/` feed pages | ✅ real DB feed |
+| Discover | `/community/discover` | `CommunityDiscoverPage` | ✅ |
+| Saved posts | `/community/saved` | `CommunitySavedPage` | ✅ |
+| Groups | `/community/groups` | `CommunityGroupsPage` | ⚠️ groups API; empty if none |
+| Profiles | `/community/u/:id` | profile pages | ✅ |
+| Moderation | super-admin community + `CommunityReport` | reports API + existing admin page | ✅ foundation |
 | Mobile community nav | — | `CommunityLayout` | ✅ |
 
 ---
@@ -156,6 +176,8 @@ Legend: ✅ Working · ⚠️ Partial / mock-heavy · 📋 Planned · 🏗️ Sh
 | Permissions | `permissions/matrix.ts` | ✅ |
 | Theme (light/dark) | `ThemeContext`, global.css | ✅ |
 | i18n structure | English only today | 📋 |
+| Communication OS | `/api/communications/*`, `/api/telephony/*` | ✅ Batch 10 |
+| AI sales agent | `/api/ai/conversations`, `/api/ai/recommendations/best-deal` | ✅ Batch 10 server-side |
 
 ---
 

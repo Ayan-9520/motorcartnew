@@ -5,6 +5,11 @@ import type {
   Prisma,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  parseProfileType,
+  resolveDealerAndOrgForUser,
+  roleToProfileType,
+} from "@/lib/community/ownership";
 
 const DEALER_ROLES = new Set<AppRole>([
   "dealer",
@@ -100,16 +105,23 @@ export async function getOrCreateUserProfile(userId: string) {
   const handle = await uniqueHandle(baseHandleFromName(displayName), userId);
   const persona = roleToPersona(user.role);
 
+  const { dealerId, organizationId } = await resolveDealerAndOrgForUser(userId);
+  const profileType = roleToProfileType(user.role);
+
   const profile = await prisma.communityUserProfile.create({
     data: {
       userId,
       persona,
+      profileType,
       displayName: displayName.slice(0, 128),
       handle,
       avatarUrl: user.avatarUrl,
       bio: user.communityBio,
       coverUrl: user.communityCoverUrl,
       locationCity: user.city,
+      locationState: user.state,
+      dealerId,
+      organizationId,
     },
   });
 
@@ -119,6 +131,34 @@ export async function getOrCreateUserProfile(userId: string) {
   });
 
   return profile;
+}
+
+export async function getProfileByUserId(userId: string) {
+  return prisma.communityUserProfile.findUnique({
+    where: { userId },
+    include: { user: { select: { id: true, fullName: true, avatarUrl: true, role: true } } },
+  });
+}
+
+export async function getPublicProfileForViewer(userId: string, viewerId?: string | null) {
+  let profile = await getProfileByUserId(userId);
+  if (!profile) {
+    const user = await prisma.user.findFirst({ where: { id: userId, deletedAt: null }, select: { id: true } });
+    if (!user) return null;
+    await getOrCreateUserProfile(userId);
+    profile = await getProfileByUserId(userId);
+  }
+  if (!profile) return null;
+  const is_self = viewerId === userId;
+  let is_following = false;
+  if (viewerId && !is_self) {
+    const follow = await prisma.communityFollow.findFirst({
+      where: { followerUserId: viewerId, targetType: "user", targetUserId: userId },
+      select: { id: true },
+    });
+    is_following = !!follow;
+  }
+  return { profile, is_self, is_following };
 }
 
 export async function getProfileByHandle(handle: string) {
@@ -133,10 +173,15 @@ export async function updateUserProfile(
   userId: string,
   input: {
     display_name?: string;
+    headline?: string | null;
     bio?: string | null;
     cover_url?: string | null;
     avatar_url?: string | null;
     location_city?: string | null;
+    location_state?: string | null;
+    profile_type?: string | null;
+    dealer_id?: string | null;
+    organization_id?: string | null;
     is_private?: boolean;
   }
 ) {
@@ -146,11 +191,18 @@ export async function updateUserProfile(
   if (input.display_name !== undefined) {
     data.displayName = String(input.display_name).slice(0, 128);
   }
+  if (input.headline !== undefined) data.headline = input.headline == null ? null : String(input.headline).slice(0, 160);
   if (input.bio !== undefined) data.bio = input.bio;
   if (input.cover_url !== undefined) data.coverUrl = input.cover_url;
   if (input.avatar_url !== undefined) data.avatarUrl = input.avatar_url;
   if (input.location_city !== undefined) data.locationCity = input.location_city;
+  if (input.location_state !== undefined) data.locationState = input.location_state;
+  if (input.profile_type !== undefined) data.profileType = parseProfileType(input.profile_type);
   if (input.is_private !== undefined) data.isPrivate = Boolean(input.is_private);
+
+  const owned = await resolveDealerAndOrgForUser(userId);
+  data.dealerId = owned.dealerId;
+  data.organizationId = owned.organizationId;
 
   const updated = await prisma.communityUserProfile.update({
     where: { id: profile.id },

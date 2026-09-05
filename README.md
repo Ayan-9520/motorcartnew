@@ -68,4 +68,10 @@ Remote: `https://github.com/Ayan-9520/motorcart.in.git`
 - [DEV-START.md](DEV-START.md) — daily dev steps
 - [backend/docs/SETUP.md](backend/docs/SETUP.md) — PostgreSQL + Redis
 - [backend/docs/API.md](backend/docs/API.md) — API reference  
-- [docs/phases/](docs/phases/) — phase plans (archive)
+- [cursor/32_Customer_SuperApp_MotorCartOne_Valuation.md](cursor/32_Customer_SuperApp_MotorCartOne_Valuation.md) — Batch 9 (MotorCart One is not a payment card)
+- [cursor/33_Communication_AI_Sales_OS.md](cursor/33_Communication_AI_Sales_OS.md) — Batch 10 Communication + AI Sales OS
+- [cursor/35_Final_Platform_Gap_Audit.md](cursor/35_Final_Platform_Gap_Audit.md) — Batch 12 gap audit
+- [cursor/36_Production_Runbook.md](cursor/36_Production_Runbook.md) — production ops (no prod access from dev)
+- [cursor/37_Launch_Readiness.md](cursor/37_Launch_Readiness.md) — launch classification
+
+**BATCH 12 = FINAL MAJOR IMPLEMENTATION (integration / hardening).** **BATCH 13 = NOT STARTED.**

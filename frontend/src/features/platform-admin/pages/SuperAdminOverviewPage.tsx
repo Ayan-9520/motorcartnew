@@ -46,8 +46,8 @@ const ERP_MODULES = [
   { to: "/dashboard/super-admin/fraud", label: "Fraud detection", icon: AlertTriangle, desc: "Risk desk & blocks" },
   { to: "/dashboard/super-admin/featured", label: "Featured inventory", icon: Sparkles, desc: "Homepage curation" },
   { to: "/dashboard/super-admin/cms", label: "CMS", icon: LayoutTemplate, desc: "Pages & legal content" },
-  { to: "/dashboard/super-admin/reports", label: "Reports", icon: FileText, desc: "GMV & compliance exports" },
-  { to: "/dashboard/super-admin/analytics", label: "Revenue analytics", icon: BarChart3, desc: "MRR, GMV & growth" },
+  { to: "/dashboard/super-admin/reports", label: "Reports", icon: FileText, desc: "Operational reports from live records" },
+  { to: "/dashboard/super-admin/analytics", label: "Revenue analytics", icon: BarChart3, desc: "Recorded invoices & payments only" },
   { to: "/dashboard/super-admin/notifications", label: "Push notifications", icon: Bell, desc: "Campaigns & broadcasts" },
   { to: "/dashboard/super-admin/transactions", label: "All transactions", icon: ArrowLeftRight, desc: "Unified payment ledger" },
 ];
@@ -83,14 +83,39 @@ export function SuperAdminOverviewPage() {
             { label: "Pending KYC", value: o.pendingKyc },
             { label: "Dealer queue", value: o.pendingDealers },
             { label: "Live listings", value: o.listingsLive.toLocaleString("en-IN") },
-            { label: "Est. MRR", value: o.mrrEstimate, format: "currency" },
+            { label: "Organizations", value: (o.organizations ?? 0).toLocaleString("en-IN") },
+            { label: "Leads", value: (o.leads ?? 0).toLocaleString("en-IN") },
+            { label: "Quotations", value: (o.quotations ?? 0).toLocaleString("en-IN") },
+            { label: "Test drives", value: (o.testDrives ?? 0).toLocaleString("en-IN") },
+            { label: "Community posts", value: (o.communityPosts ?? 0).toLocaleString("en-IN") },
+            { label: "Jobs", value: (o.jobs ?? 0).toLocaleString("en-IN") },
+            { label: "Recorded invoices", value: o.recordedInvoiceTotal ?? 0, format: "currency" },
+            { label: "Reward points liability", value: (o.rewardLiabilityPoints ?? 0).toLocaleString("en-IN") },
             { label: "Open tickets", value: o.openTickets },
-            { label: "Fraud alerts", value: o.fraudOpen },
+            { label: "Open payouts", value: o.openPayoutRequests ?? 0 },
           ]}
         />
       ) : (
         <p className="text-sm text-muted-foreground animate-pulse">Loading metrics…</p>
       )}
+
+      {o?.ops ? (
+        <section className="sa-section">
+          <h2 className="sa-section__title">Operational queues</h2>
+          <SuperAdminStatGrid
+            stats={[
+              { label: "Unrouted leads", value: o.ops.unroutedLeads },
+              { label: "Pending test drives", value: o.ops.pendingTestDriveRequests },
+              { label: "Expiring quotations", value: o.ops.expiringQuotations },
+              { label: "Open reports", value: o.ops.openReports },
+              { label: "Payout mismatches", value: o.ops.payoutMismatches },
+              { label: "Failed messages", value: o.ops.failedCommunications },
+              { label: "Pending job apps", value: o.ops.pendingJobApplications },
+              { label: "Zero new-car stock rows", value: o.ops.zeroStockNewCars },
+            ]}
+          />
+        </section>
+      ) : null}
 
       <section className="sa-section">
         <h2 className="sa-section__title">Admin ERP modules</h2>

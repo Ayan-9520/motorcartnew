@@ -24,7 +24,7 @@ export function EcosystemHomeOverview() {
           </p>
           <div className="eco-home-ctas">
             <Button asChild className="h-11 rounded-xl px-6 font-semibold shadow-[var(--shadow-primary)]">
-              <Link to="/cars">
+              <Link to="/buy">
                 Browse vehicles <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -50,15 +50,15 @@ export function EcosystemHomeOverview() {
       <section className="eco-home-trust border-t border-border/80">
         <div className="container eco-home-trust-inner">
           <div className="eco-home-trust-item">
-            <strong>50K+</strong>
+            <strong>Trusted</strong>
             <span>Buyers</span>
           </div>
           <div className="eco-home-trust-item">
-            <strong>8.5K+</strong>
+            <strong>Verified</strong>
             <span>Dealers</span>
           </div>
           <div className="eco-home-trust-item">
-            <strong>14+</strong>
+            <strong>Lender</strong>
             <span>Lenders</span>
           </div>
           <div className="eco-home-trust-item">

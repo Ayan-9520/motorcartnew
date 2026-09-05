@@ -4,6 +4,7 @@ import { getAuthUser } from "@/lib/auth/middleware";
 import { ok, err, unauthorized, forbidden } from "@/lib/api-response";
 import { toSnakeRow } from "@/lib/db/table-map";
 import { createCustomerEnquiry, EnquiryError } from "@/lib/leads/enquiry.service";
+import { allowSlidingWindow } from "@/lib/http/sliding-window";
 import { mapLeadToPipelineStatus } from "@/lib/leads/enquiry.types";
 
 const ADMIN_ROLES = new Set(["super_admin", "admin"]);
@@ -61,29 +62,38 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+    if (!allowSlidingWindow(`leads:post:${ip}`, 8, 15 * 60 * 1000)) {
+      return err("Too many enquiries. Please try again later.", 429);
+    }
+
     const body = (await req.json()) as Record<string, unknown>;
     if (!body.name || !body.phone) {
       return err("Name and phone are required", 400);
     }
 
-    const result = await createCustomerEnquiry({
-      dealer_id: body.dealer_id as string | undefined,
-      dealer_slug: body.dealer_slug as string | undefined,
-      name: String(body.name),
-      phone: String(body.phone),
-      email: body.email as string | undefined,
-      source: (body.source as string) ?? "website",
-      notes: body.notes as string | undefined,
-      message: (body.message as string | undefined) ?? (body.notes as string | undefined),
-      vehicle_id: body.vehicle_id as string | undefined,
-      vehicle_title: body.vehicle_title as string | undefined,
-      vehicle_slug: body.vehicle_slug as string | undefined,
-      category: body.category as string | undefined,
-      location: body.location as string | undefined,
-      preferred_contact: body.preferred_contact as string | undefined,
-      consent: body.consent as boolean | undefined,
-      metadata: (body.metadata as Record<string, unknown>) ?? {},
-    });
+    const auth = getAuthUser(req);
+    const result = await createCustomerEnquiry(
+      {
+        dealer_id: body.dealer_id as string | undefined,
+        dealer_slug: body.dealer_slug as string | undefined,
+        name: String(body.name),
+        phone: String(body.phone),
+        email: body.email as string | undefined,
+        source: (body.source as string) ?? "website",
+        notes: body.notes as string | undefined,
+        message: (body.message as string | undefined) ?? (body.notes as string | undefined),
+        vehicle_id: body.vehicle_id as string | undefined,
+        vehicle_title: body.vehicle_title as string | undefined,
+        vehicle_slug: body.vehicle_slug as string | undefined,
+        category: body.category as string | undefined,
+        location: body.location as string | undefined,
+        preferred_contact: body.preferred_contact as string | undefined,
+        consent: body.consent as boolean | undefined,
+        metadata: (body.metadata as Record<string, unknown>) ?? {},
+      },
+      { actorUserId: auth?.sub },
+    );
 
     return ok({
       data: toSnakeRow(result.lead as unknown as Record<string, unknown>),

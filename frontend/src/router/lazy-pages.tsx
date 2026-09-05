@@ -25,6 +25,18 @@ export const DealerAuctionsPage = lazyNamed(() => import("@/features/dealer-crm/
 export const DealerStorefrontPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerStorefrontPage"), "DealerStorefrontPage");
 export const DealerSettingsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerSettingsPage"), "DealerSettingsPage");
 export const DealerCallsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerCallsPage"), "DealerCallsPage");
+export const DealerPipelinePage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerPipelinePage"), "DealerPipelinePage");
+export const DealerOpportunitiesPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerOpportunitiesPage"), "DealerOpportunitiesPage");
+export const DealerFollowUpsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerFollowUpsPage"), "DealerFollowUpsPage");
+export const DealerLeadBoardPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerLeadBoardPage"), "DealerLeadBoardPage");
+export const DealerCreditsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerCreditsPage"), "DealerCreditsPage");
+export const DealerBillingPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerBillingPage"), "DealerBillingPage");
+export const DealerEarningsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerEarningsPage"), "DealerEarningsPage");
+export const DealerQuotationsPage = lazyNamed(() => import("@/features/quotations/pages/DealerQuotationsPage"), "DealerQuotationsPage");
+export const DealerQuotationEditorPage = lazyNamed(() => import("@/features/quotations/pages/DealerQuotationEditorPage"), "DealerQuotationEditorPage");
+export const DealerQuotationDetailPage = lazyNamed(() => import("@/features/quotations/pages/DealerQuotationDetailPage"), "DealerQuotationDetailPage");
+export const DealerTestDrivesPage = lazyNamed(() => import("@/features/test-drives/pages/DealerTestDrivesPage"), "DealerTestDrivesPage");
+export const DealerTestDriveDetailPage = lazyNamed(() => import("@/features/test-drives/pages/DealerTestDriveDetailPage"), "DealerTestDriveDetailPage");
 export const OrganizationFoundationPage = lazyNamed(
   () => import("@/features/organization/pages/OrganizationFoundationPage"),
   "OrganizationFoundationPage",

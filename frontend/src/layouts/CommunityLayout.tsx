@@ -1,6 +1,8 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
+  Bookmark,
+  Compass,
   Home,
   LogOut,
   UserCircle,
@@ -25,6 +27,19 @@ export function CommunityLayout() {
 
   const nav = [
     { href: "/community", label: "Feed", icon: Home, active: isFeedPath(pathname) },
+    {
+      href: "/community/discover",
+      label: "Discover",
+      icon: Compass,
+      active: pathname.startsWith("/community/discover"),
+    },
+    {
+      href: "/community/saved",
+      label: "Saved",
+      icon: Bookmark,
+      active: pathname.startsWith("/community/saved"),
+      authOnly: true,
+    },
     {
       href: "/community/groups",
       label: "Groups",

@@ -10,6 +10,7 @@ import { VehiclePagination } from "../components/VehiclePagination";
 import { CompareFloatingBar } from "../components/CompareFloatingBar";
 import { AIRecommendations } from "../components/AIRecommendations";
 import { VehicleMarketplaceShell } from "../components/VehicleMarketplaceShell";
+import { StockByPinPanel } from "@/features/inventory/components/StockByPinPanel";
 import { useVehicleSearch } from "@/hooks/useVehicleSearch";
 import { setPageMeta } from "@/utils/seo";
 import { VEHICLE_CATEGORIES } from "@/lib/constants";
@@ -58,10 +59,11 @@ export function VehicleListingPage() {
       <div className="space-y-6">
         <CategoryTabs />
         <AdvancedSearchBar onToggleFilters={() => setShowMobileFilters((s) => !s)} />
+        <StockByPinPanel />
 
-        <div className="flex gap-8">
-          <div className={`hidden w-72 shrink-0 lg:block ${showMobileFilters ? "lg:block" : ""}`}>
-            <div className={showMobileFilters ? "fixed inset-0 z-50 overflow-y-auto bg-background/95 p-4 lg:static lg:bg-transparent lg:p-0" : ""}>
+        <div className="flex items-start gap-8">
+          <div className={`marketplace-filters-rail hidden w-72 shrink-0 lg:block ${showMobileFilters ? "lg:block" : ""}`}>
+            <div className={showMobileFilters ? "fixed inset-0 z-50 overflow-y-auto bg-background/95 p-4 lg:static lg:overflow-visible lg:bg-transparent lg:p-0" : ""}>
               {showMobileFilters && (
                 <button type="button" className="mb-4 text-sm text-primary lg:hidden" onClick={() => setShowMobileFilters(false)}>
                   ← Back to results

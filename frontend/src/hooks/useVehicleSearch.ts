@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { searchVehicles } from "@/services/vehicle.service";
+import { searchNewCars } from "@/features/new-cars/services/new-cars.service";
 import { preserveListingRouteParams } from "@/features/marketplace/lib/route-utils";
 import { filtersFromSearchParams } from "@/lib/vehicle-utils";
 import type { VehicleFilters, VehicleListing, VehicleSortOption } from "@/types/vehicle";
@@ -29,15 +30,26 @@ export function useVehicleSearch(categoryParam?: string) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const result = await searchVehicles({ filters, sort, page, pageSize: PAGE_SIZE });
-    setVehicles(result.vehicles);
-    setTotal(result.total);
-    setTotalPages(result.totalPages);
-    setLoading(false);
+    try {
+      // New cars: only dealer NewCarInventory / stock API — never invent mock or leftover used rows.
+      if (filters.category === "new-cars" || filters.condition === "new") {
+        const result = await searchNewCars({ filters, sort, page, pageSize: PAGE_SIZE });
+        setVehicles(result.vehicles);
+        setTotal(result.total);
+        setTotalPages(result.totalPages);
+        return;
+      }
+      const result = await searchVehicles({ filters, sort, page, pageSize: PAGE_SIZE });
+      setVehicles(result.vehicles);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    } finally {
+      setLoading(false);
+    }
   }, [filters, sort, page]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const setFilter = (key: string, value: string | undefined) => {

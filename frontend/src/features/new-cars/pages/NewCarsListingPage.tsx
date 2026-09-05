@@ -8,6 +8,7 @@ import { VehicleFilters } from "@/features/vehicles/components/VehicleFilters";
 import { VehicleSortBar } from "@/features/vehicles/components/VehicleSortBar";
 import { VehiclePagination } from "@/features/vehicles/components/VehiclePagination";
 import { CompareFloatingBar } from "@/features/vehicles/components/CompareFloatingBar";
+import { StockByPinPanel } from "@/features/inventory/components/StockByPinPanel";
 import { NewCarCard } from "../components/NewCarCard";
 import { useNewCarSearch } from "../hooks/useNewCarSearch";
 import { setPageMeta } from "@/utils/seo";
@@ -57,8 +58,10 @@ export function NewCarsListingPage() {
           <p className="mt-1 text-muted-foreground">{total}+ models · OEM dealers · instant EMI</p>
         </motion.div>
 
-        <div className="flex gap-8">
-          <div className="hidden w-72 shrink-0 lg:block">
+        <StockByPinPanel />
+
+        <div className="flex items-start gap-8">
+          <div className="marketplace-filters-rail hidden w-72 shrink-0 lg:block">
             <VehicleFilters filters={filterRecord} onFilter={setFilter} onClear={clearFilters} />
           </div>
           <div className="min-w-0 flex-1 space-y-6">

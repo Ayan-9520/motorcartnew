@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
 import { createVehicle, type VehicleFormData } from "@/services/vehicle.service";
+import { mutateSellRequest } from "@/features/customer-ecosystem/services/superapp.service";
 import { uploadMultiple, validateImageFile } from "@/services/storage.service";
 import { setPageMeta } from "@/utils/seo";
 import {
@@ -76,7 +77,7 @@ export function SellListingPage() {
     }));
     setPageMeta({
       title: sellPageTitle(hub),
-      description: `List your ${hubCategoryLabel(hub).toLowerCase()} for free — instant valuation & verified buyers on Motorcart.`,
+      description: `List your ${hubCategoryLabel(hub).toLowerCase()} — listing plus optional sell request for dealer offers.`,
     });
   }, [hub, defaults]);
 
@@ -184,6 +185,22 @@ export function SellListingPage() {
         toast.error(error.message ?? "Could not submit listing");
         return;
       }
+      try {
+        await mutateSellRequest({
+          brand: form.brand,
+          model: form.model,
+          variant: form.variant,
+          year: form.year,
+          kmsDriven: form.kmsDriven,
+          fuelType: form.fuelType,
+          transmission: form.transmission,
+          city: form.city,
+          state: form.state,
+          expectedPrice: form.price || undefined,
+        });
+      } catch {
+        /* listing already created — sell request is additive */
+      }
 
       photos.forEach((p) => URL.revokeObjectURL(p.preview));
       setPhotos([]);
@@ -203,8 +220,7 @@ export function SellListingPage() {
           </div>
           <h1 className="mt-4 text-2xl font-bold">Listing submitted!</h1>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Your {hubLabel.toLowerCase()} listing is under review. Verified buyers will contact you
-            shortly.
+            Your {hubLabel.toLowerCase()} listing is under review. Open Sell My Vehicle in your customer dashboard to submit for dealer offers.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild>
@@ -233,7 +249,7 @@ export function SellListingPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">Pre-owned vehicles only</p>
             <h1 className="marketplace-listing-title mt-1">{title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Enter your details — we will share instant valuation and connect you with verified buyers.
+              Enter vehicle details to list it. Indicative estimates are not AI and not a dealer offer.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-6">
@@ -397,26 +413,26 @@ export function SellListingPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  Instant valuation
+                  Indicative estimate
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-primary">{formatCurrency(estimated)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  AI estimate based on year, kms &amp; market — final offer after inspection.
+                  Formula based on year, kms and asking price. Not AI, not a partner valuation, and not a dealer purchase offer.
                 </p>
                 <ul className="mt-4 space-y-2 text-xs text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <IndianRupee className="h-3.5 w-3.5 text-primary" />
-                    Zero commission for owners
+                    Listing remains available as before
                   </li>
                   <li className="flex items-center gap-2">
                     <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                    RC &amp; inspection support
+                    Dealer offers appear only after you submit a sell request
                   </li>
                   <li className="flex items-center gap-2">
                     <MapPin className="h-3.5 w-3.5 text-primary" />
-                    8,500+ verified buyers
+                    No simulated buyer counts
                   </li>
                 </ul>
               </CardContent>

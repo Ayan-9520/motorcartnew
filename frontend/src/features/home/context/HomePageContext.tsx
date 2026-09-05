@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchHomePageApi, type HomePageData } from "@/integrations/api/home";
 import {
   asNewCarListings,
@@ -41,7 +41,21 @@ type HomePageContextValue = {
 
 const HomePageContext = createContext<HomePageContextValue | null>(null);
 
+/** Always-visible marketing chrome (partners / trust / social proof). */
+function buildChrome() {
+  return {
+    banks: BANK_OFFERS,
+    loanProducts: loanProducts.filter((p) => p.is_featured).slice(0, 3),
+    communityPosts: COMMUNITY_POSTS,
+    heroStats: [...HERO_STATS] as HomeHeroStatItem[],
+    platformStats,
+    testimonials,
+  };
+}
+
 function buildFallback(): HomePageContextValue {
+  const chrome = buildChrome();
+
   if (realDataOnly) {
     return {
       data: null,
@@ -51,13 +65,8 @@ function buildFallback(): HomePageContextValue {
       newCars: [],
       preownedCars: [],
       auctions: [],
-      banks: [],
-      loanProducts: [],
       parts: [],
-      communityPosts: [],
-      heroStats: [],
-      platformStats: [],
-      testimonials: [],
+      ...chrome,
     };
   }
 
@@ -84,8 +93,6 @@ function buildFallback(): HomePageContextValue {
       startingBid: a.startingBid,
       slug: a.id,
     })),
-    banks: BANK_OFFERS,
-    loanProducts: loanProducts.filter((p) => p.is_featured).slice(0, 3),
     parts: autoParts.slice(0, 4).map((p) => ({
       id: p.id,
       name: p.name,
@@ -96,33 +103,66 @@ function buildFallback(): HomePageContextValue {
       reviewCount: p.reviewCount,
       image: p.image,
     })),
-    communityPosts: COMMUNITY_POSTS,
-    heroStats: [...HERO_STATS],
-    platformStats,
-    testimonials,
+    ...chrome,
   };
 }
 
+function pickList<T>(live: T[], fallback: T[], allowMock: boolean): T[] {
+  if (live.length) return live;
+  return allowMock ? fallback : live;
+}
+
 export function HomePageProvider({ children }: { children: ReactNode }) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching, isPending } = useQuery({
     queryKey: ["home-page"],
     queryFn: fetchHomePageApi,
-    staleTime: 30_000,
-    refetchOnWindowFocus: true,
-    retry: 0,
-    gcTime: 120_000,
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: (n) => Math.min(1000 * 2 ** n, 4000),
+    placeholderData: keepPreviousData,
   });
+
+  const loading = isPending || (isLoading && !data) || (isFetching && !data);
+  const allowMock = !realDataOnly;
+  const chrome = buildChrome();
+  const fb = buildFallback();
 
   const value: HomePageContextValue = (() => {
     if (!data) {
-      const fb = buildFallback();
-      return { ...fb, isLoading: false };
+      return { ...fb, isLoading: loading };
     }
 
     const featuredFromApi = mapHomeVehicles(data.featured_vehicles);
     const newFromApi = asNewCarListings(mapHomeVehicles(data.new_cars));
     const preownedFromApi = asPreownedListings(mapHomeVehicles(data.preowned_cars));
-    const fb = buildFallback();
+    const auctionsFromApi = data.auctions.map(mapHomeAuctionToCard);
+    const banksFromApi = data.banks.map(mapHomeBankToOffer);
+    const loansFromApi = data.banks.slice(0, 6).map(mapHomeBankToLoanProduct);
+    const partsFromApi = data.parts.map(mapHomePartToCard);
+    const communityFromApi = data.community_posts.map((p) => ({
+      tag: p.tag,
+      title: p.title,
+      author: p.author,
+      replies: p.replies,
+      href: p.href,
+    }));
+    const heroFromApi = data.hero_stats.map((s) => ({
+      label: s.label,
+      value: s.value,
+      href: s.href,
+    }));
+    const platformFromApi = data.platform_stats.map((s) => ({
+      label: s.label,
+      value: s.value,
+    }));
+    const testimonialsFromApi = data.testimonials.map((t) => ({
+      name: t.name,
+      role: t.role,
+      text: t.text,
+      rating: t.rating,
+    }));
 
     const hasLiveContent = Boolean(
       featuredFromApi.length ||
@@ -138,40 +178,20 @@ export function HomePageProvider({ children }: { children: ReactNode }) {
 
     return {
       data,
-      isLoading,
+      isLoading: loading,
       isLive: hasLiveContent,
-      featuredVehicles: featuredFromApi.length ? featuredFromApi : realDataOnly ? [] : fb.featuredVehicles,
-      newCars: newFromApi.length ? newFromApi : realDataOnly ? [] : fb.newCars,
-      preownedCars: preownedFromApi.length ? preownedFromApi : realDataOnly ? [] : fb.preownedCars,
-      auctions: data.auctions.length ? data.auctions.map(mapHomeAuctionToCard) : realDataOnly ? [] : fb.auctions,
-      banks: data.banks.length ? data.banks.map(mapHomeBankToOffer) : realDataOnly ? [] : fb.banks,
-      loanProducts: data.banks.length
-        ? data.banks.slice(0, 6).map(mapHomeBankToLoanProduct)
-        : realDataOnly ? [] : fb.loanProducts,
-      parts: data.parts.length ? data.parts.map(mapHomePartToCard) : realDataOnly ? [] : fb.parts,
-      communityPosts: data.community_posts.length
-        ? data.community_posts.map((p) => ({
-            tag: p.tag,
-            title: p.title,
-            author: p.author,
-            replies: p.replies,
-            href: p.href,
-          }))
-        : realDataOnly ? [] : fb.communityPosts,
-      heroStats: data.hero_stats.length
-        ? data.hero_stats.map((s) => ({ label: s.label, value: s.value, href: s.href }))
-        : realDataOnly ? [] : fb.heroStats,
-      platformStats: data.platform_stats.length
-        ? data.platform_stats.map((s) => ({ label: s.label, value: s.value }))
-        : realDataOnly ? [] : fb.platformStats,
-      testimonials: data.testimonials.length
-        ? data.testimonials.map((t) => ({
-            name: t.name,
-            role: t.role,
-            text: t.text,
-            rating: t.rating,
-          }))
-        : realDataOnly ? [] : fb.testimonials,
+      featuredVehicles: pickList(featuredFromApi, fb.featuredVehicles, allowMock),
+      newCars: pickList(newFromApi, fb.newCars, allowMock),
+      preownedCars: pickList(preownedFromApi, fb.preownedCars, allowMock),
+      auctions: pickList(auctionsFromApi, fb.auctions, allowMock),
+      // Marketing chrome: never blank the home when API omits banks/social proof
+      banks: banksFromApi.length ? banksFromApi : chrome.banks,
+      loanProducts: loansFromApi.length ? loansFromApi : chrome.loanProducts,
+      parts: pickList(partsFromApi, fb.parts, allowMock),
+      communityPosts: communityFromApi.length ? communityFromApi : chrome.communityPosts,
+      heroStats: heroFromApi.length ? heroFromApi : chrome.heroStats,
+      platformStats: platformFromApi.length ? platformFromApi : chrome.platformStats,
+      testimonials: testimonialsFromApi.length ? testimonialsFromApi : chrome.testimonials,
     };
   })();
 

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { Upload, FileSpreadsheet, Download, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
+import { Upload, FileSpreadsheet, Download, AlertCircle, CheckCircle2, RotateCcw, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ export function BulkUploadZone({ dealer, sellerId, onComplete }: BulkUploadZoneP
     onComplete?.();
   };
 
-  const validCount = state.total - state.errors.length;
+  const validCount = state.total;
 
   return (
     <Card>
@@ -46,12 +46,15 @@ export function BulkUploadZone({ dealer, sellerId, onComplete }: BulkUploadZoneP
           <FileSpreadsheet className="h-5 w-5 text-primary" />
           Bulk Excel / CSV Upload
         </CardTitle>
-        <CardDescription>Drag and drop or browse. Validates rows and inserts into your showroom + marketplace.</CardDescription>
+        <CardDescription>
+          Required: Brand · Model. Same Excel for petrol/diesel and EV (Range Km + Battery kWh). Download demo sample
+          and upload as-is. Images: https URLs in Excel; PNG/JPG/AVIF via Edit after upload.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button type="button" variant="outline" size="sm" className="gap-2" onClick={downloadSampleTemplate}>
           <Download className="h-4 w-4" />
-          Download sample Excel template
+          Download demo Excel (ICE + EV)
         </Button>
 
         <section
@@ -83,15 +86,15 @@ export function BulkUploadZone({ dealer, sellerId, onComplete }: BulkUploadZoneP
           />
         </section>
 
-        {state.errors.length > 0 && (
-          <aside className="max-h-40 overflow-y-auto rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              Validation errors ({state.errors.length})
+        {state.warnings.length > 0 && (
+          <aside className="max-h-32 overflow-y-auto rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4" />
+              Warnings ({state.warnings.length}) — rows still uploadable
             </p>
             <ul className="space-y-1 text-xs text-muted-foreground">
-              {state.errors.slice(0, 25).map((err, i) => (
-                <li key={i}>
+              {state.warnings.slice(0, 15).map((err, i) => (
+                <li key={`w-${i}`}>
                   Row {err.row}: {err.message}
                 </li>
               ))}
@@ -99,8 +102,25 @@ export function BulkUploadZone({ dealer, sellerId, onComplete }: BulkUploadZoneP
           </aside>
         )}
 
-        {state.total > 0 && state.status !== "uploading" && (
-          <footer className="flex gap-2">
+        {state.errors.length > 0 && (
+          <aside className="max-h-40 overflow-y-auto rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              Need correction ({state.errors.length})
+            </p>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {state.errors.slice(0, 25).map((err, i) => (
+                <li key={`e-${i}`}>
+                  Row {err.row}: {err.message}
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+
+        {state.total > 0 && state.status !== "uploading" && state.status !== "done" && (
+          <footer className="flex flex-wrap items-center gap-2">
+            <p className="text-sm text-muted-foreground mr-auto">{validCount} ready to upload</p>
             <Button variant="default" onClick={startUpload} disabled={!dealer || validCount <= 0}>
               Upload {validCount} valid rows
             </Button>
@@ -141,6 +161,9 @@ export function BulkUploadZone({ dealer, sellerId, onComplete }: BulkUploadZoneP
                 Retry failed rows
               </Button>
             )}
+            <Button variant="ghost" size="sm" onClick={reset}>
+              Upload another file
+            </Button>
           </aside>
         )}
       </CardContent>

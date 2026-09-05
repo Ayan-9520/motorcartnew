@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  buildInsuranceQuotes,
-  fetchInsurancePartners,
-  persistInsuranceQuotes,
-} from "../services/insurance.service";
-import { POPULAR_BIKE_MODELS, POPULAR_CAR_MODELS } from "../lib/insurance-premium";
+import { api } from "@/lib/api/axios";
 import type { InsuranceQuoteInput, InsuranceQuoteOffer, InsuranceVehicleType } from "../types";
+import { POPULAR_BIKE_MODELS, POPULAR_CAR_MODELS } from "../lib/insurance-premium";
 
 function defaultsForType(vehicleType: InsuranceVehicleType): InsuranceQuoteInput {
   const popular = vehicleType === "bike" ? POPULAR_BIKE_MODELS[0] : POPULAR_CAR_MODELS[0];
@@ -22,6 +18,13 @@ function defaultsForType(vehicleType: InsuranceVehicleType): InsuranceQuoteInput
   };
 }
 
+type StoredQuote = {
+  id: string;
+  partnerId?: string | null;
+  premium?: number | string | null;
+  quoteKind?: string;
+};
+
 export function useInsuranceQuote(vehicleType: InsuranceVehicleType = "car") {
   const [input, setInput] = useState<InsuranceQuoteInput>(() => defaultsForType(vehicleType));
   const [offers, setOffers] = useState<InsuranceQuoteOffer[]>([]);
@@ -34,10 +37,35 @@ export function useInsuranceQuote(vehicleType: InsuranceVehicleType = "car") {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const partners = await fetchInsurancePartners();
-      const quotes = buildInsuranceQuotes(partners, input);
-      setOffers(quotes);
-      void persistInsuranceQuotes(input, quotes).catch(() => {});
+      const { data } = await api.get<{ data: StoredQuote[] }>("/api/insurance/quotes");
+      const rows = (data.data ?? []).filter((q) => q.quoteKind === "PARTNER_QUOTE" || q.quoteKind === "BOUND");
+      setOffers(
+        rows.map((q) => ({
+          id: q.id,
+          partnerId: q.partnerId ?? "",
+          partnerName: q.quoteKind === "BOUND" ? "Bound policy quote" : "Partner quote",
+          partnerSlug: "",
+          logoUrl: null,
+          planType: input.planType,
+          vehicleType: input.vehicleType,
+          vehicleYear: input.vehicleYear,
+          vehicleMake: input.vehicleMake,
+          vehicleModel: input.vehicleModel,
+          registrationCity: input.registrationCity,
+          idvAmount: 0,
+          annualPremium: Number(q.premium ?? 0),
+          monthlyPremium: Math.round(Number(q.premium ?? 0) / 12),
+          ncbPercent: input.ncbPercent,
+          claimSettlementRatio: 0,
+          rankScore: 0,
+          approvalProbability: 0,
+          breakdown: [],
+          addons: input.addons,
+          highlights: [q.quoteKind ?? "PARTNER_QUOTE"],
+        }))
+      );
+    } catch {
+      setOffers([]);
     } finally {
       setLoading(false);
     }

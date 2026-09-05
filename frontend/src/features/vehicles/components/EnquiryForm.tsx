@@ -1,23 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { submitVehicleEnquiry } from "@/services/leads.service";
+import { useAuth } from "@/hooks/useAuth";
 import type { VehicleListing } from "@/types/vehicle";
 import toast from "react-hot-toast";
 
 export function EnquiryForm({ vehicle }: { vehicle: VehicleListing }) {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(user?.fullName ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
   const [message, setMessage] = useState(`I'm interested in ${vehicle.title}`);
   const [consent, setConsent] = useState(false);
   const [preferredContact, setPreferredContact] = useState<"phone" | "email" | "whatsapp">("phone");
   const [sent, setSent] = useState(false);
   const [assignment, setAssignment] = useState<"assigned" | "unassigned" | undefined>();
+
+  useEffect(() => {
+    if (user?.fullName) setName((current) => current || user.fullName || "");
+    if (user?.phone) setPhone((current) => current || user.phone || "");
+    if (user?.email) setEmail((current) => current || user.email || "");
+  }, [user?.id, user?.fullName, user?.phone, user?.email]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

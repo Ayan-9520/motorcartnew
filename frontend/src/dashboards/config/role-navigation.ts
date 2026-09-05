@@ -23,12 +23,15 @@ import {
   Wrench,
   ClipboardList,
   Crown,
+  CreditCard,
+  BadgeIndianRupee,
   Plug,
   Gauge,
   UserPlus,
 } from "lucide-react";
 import type { AppRole } from "@/types/database";
 import { isDealerRole } from "@/permissions/role-matching";
+import { featureFlags } from "@/config/feature-flags";
 
 export type RoleNavItem = {
   to: string;
@@ -83,7 +86,16 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
         { to: "/dashboard/dealer/inventory", label: "Inventory", icon: Car },
         { to: "/dashboard/dealer/inventory/excel", label: "Bulk upload", icon: FileSpreadsheet },
         { to: "/dashboard/dealer/leads", label: "Lead CRM", icon: Users },
+        { to: "/dashboard/dealer/pipeline", label: "Pipeline", icon: Gauge },
+        { to: "/dashboard/dealer/follow-ups", label: "Follow-ups", icon: ClipboardList },
         { to: "/dashboard/dealer/enquiries", label: "Enquiries", icon: FileQuestion },
+        ...(featureFlags.leadBoard
+          ? [{ to: "/dashboard/dealer/lead-board", label: "Lead Board", icon: UserPlus }]
+          : []),
+        { to: "/dashboard/dealer/acquisitions", label: "Acquisitions", icon: Car },
+        { to: "/dashboard/dealer/credits", label: "Credits", icon: Crown },
+        { to: "/dashboard/dealer/billing", label: "Billing", icon: CreditCard },
+        { to: "/dashboard/dealer/earnings", label: "Earnings", icon: BadgeIndianRupee },
         { to: "/dashboard/dealer/finance", label: "Finance", icon: Landmark },
         { to: "/dashboard/dealer/auctions", label: "Auctions", icon: Gavel },
         { to: "/dashboard/dealer/whatsapp", label: "WhatsApp", icon: MessageSquare },
@@ -104,8 +116,9 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
       subtitle: "Ownership OS",
       items: [
         { to: "/dashboard/customer", label: "Dashboard Home", icon: LayoutDashboard, end: true },
+        { to: "/dashboard/customer/one", label: "MotorCart One", icon: CreditCard },
         { to: "/dashboard/customer/garage", label: "My Garage", icon: Car },
-        { to: "/dashboard/customer/insights", label: "AI Insights", icon: Bot },
+        { to: "/dashboard/customer/insights", label: "Ownership alerts", icon: Bell },
         { to: "/dashboard/customer/notifications", label: "Notifications", icon: Bell },
         { to: "/dashboard/customer/profile", label: "Account", icon: Settings },
       ],

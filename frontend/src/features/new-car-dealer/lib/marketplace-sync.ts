@@ -1,4 +1,3 @@
-import { getVehicleHero } from "@/lib/media/vehicle-media-registry";
 import { createVehicle, deleteVehicle, updateVehicle } from "@/services/vehicle.service";
 import type { DealerProfile } from "@/features/dealer-crm/types";
 import type { VehicleListing } from "@/types/vehicle";
@@ -13,6 +12,7 @@ export type NewCarStockInput = {
   onRoadPrice?: number;
   color?: string;
   imageUrl?: string;
+  images?: string[];
   year?: number;
   description?: string;
 };
@@ -24,9 +24,9 @@ export async function syncNewCarToMarketplace(
   dealer: Pick<DealerProfile, "id" | "city" | "state">
 ) {
   const onRoad = input.onRoadPrice ?? Math.round(input.exShowroomPrice * 1.12);
-  const images = input.imageUrl
-    ? [input.imageUrl]
-    : [getVehicleHero({ brand: input.brand, model: input.model, bodyType: "Sedan" })];
+  const images = (input.images?.length ? input.images : input.imageUrl ? [input.imageUrl] : []).filter(Boolean);
+  // Do not invent stock photos — empty gallery if dealer provided none
+  const storeImages = images.length ? images : [];
 
   return createVehicle(
     {
@@ -42,12 +42,12 @@ export async function syncNewCarToMarketplace(
       bodyType: "SUV",
       category: "new-cars",
       kmsDriven: 0,
-      owners: 1,
+      owners: 0,
       color: input.color ?? "White",
       city: dealer.city,
       state: dealer.state,
       description: input.description ?? `${input.brand} ${input.model} — brand new at showroom price.`,
-      images,
+      images: storeImages,
       condition: "new",
       saleMode: "dealer_offer",
       metadata: { exShowroom: input.exShowroomPrice, onRoad } as VehicleListing["metadata"],
@@ -72,7 +72,12 @@ export async function updateMarketplaceVehicle(
   if (input.transmission) patch.transmission = input.transmission;
   if (input.onRoadPrice != null) patch.price = input.onRoadPrice;
   if (input.exShowroomPrice != null) patch.originalPrice = input.exShowroomPrice;
-  if (input.imageUrl) patch.images = [input.imageUrl];
+  if (input.images?.length) patch.images = input.images;
+  else if (input.imageUrl) patch.images = [input.imageUrl];
+  patch.condition = "new";
+  patch.category = "new-cars";
+  patch.kmsDriven = 0;
+  patch.owners = 0;
   if (input.stockStatus === "booked" || input.stockStatus === "delivered") patch.status = "sold";
   else if (input.stockStatus === "available") patch.status = "available";
   return updateVehicle(vehicleId, patch);

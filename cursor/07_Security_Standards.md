@@ -39,6 +39,8 @@
 - Encrypt sensitive data at rest where required (finance, KYC)
 - Minimize PII in logs
 - Soft delete for user-generated content where appropriate
+- Communication/telephony webhooks: HMAC + idempotent event IDs; recordings/transcripts NEVER_ALLOW and org-isolated
+- Provider secrets hashed server-side; never returned on GET
 
 ---
 

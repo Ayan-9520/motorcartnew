@@ -4,6 +4,7 @@ import type { JwtPayload } from "@/lib/auth/jwt";
 import { loadUserAccess, isPendingBusinessAccess } from "@/lib/auth/account-access";
 import { emitDbChange } from "@/lib/socket-emit";
 import type { FinanceStatus } from "@prisma/client";
+import { ensureCommissionOnDisbursement } from "@/services/finance-commission.service";
 
 type RpcArgs = Record<string, unknown>;
 
@@ -151,6 +152,13 @@ async function submitFinanceApplication(args: RpcArgs, auth: JwtPayload | null) 
   const amount = Number(args.p_loan_amount ?? args.p_amount ?? args.amount ?? 0);
   const tenure = Number(args.p_tenure_months ?? args.p_tenure ?? args.tenure ?? 60);
   const bankId = (args.p_bank_id ?? args.bank_id) as string | undefined;
+  const vehicleId = (args.p_vehicle_id ?? args.vehicle_id) as string | undefined;
+  const interestRate = args.p_interest_rate ?? args.interest_rate ?? null;
+  const monthlyIncome = args.p_monthly_income ?? args.monthly_income ?? null;
+  const cibilScore = args.p_cibil_score ?? args.cibil_score ?? null;
+  const employmentType = String(args.p_employment_type ?? args.employment_type ?? "salaried");
+  const applicationType = String(args.p_application_type ?? args.application_type ?? "new_loan");
+  const applicantMetadata = (args.p_applicant_metadata ?? args.applicant_metadata ?? {}) as object;
 
   const app = await prisma.financeApplication.create({
     data: {
@@ -158,15 +166,25 @@ async function submitFinanceApplication(args: RpcArgs, auth: JwtPayload | null) 
       bankId: bankId || null,
       amount,
       tenure,
+      loanAmount: amount,
+      tenureMonths: tenure,
       status: "submitted",
+      vehicleId: vehicleId || null,
+      interestRate: interestRate != null ? Number(interestRate) : null,
+      cibilScore: cibilScore != null ? Number(cibilScore) : null,
+      monthlyIncome: monthlyIncome != null ? BigInt(Math.round(Number(monthlyIncome))) : null,
+      employmentType,
+      applicationType,
+      applicantMetadata: applicantMetadata as Prisma.InputJsonValue,
+      documents: [],
       metadata: {
-        interest_rate: args.p_interest_rate ?? args.interest_rate ?? null,
-        monthly_income: args.p_monthly_income ?? args.monthly_income ?? null,
-        cibil_score: args.p_cibil_score ?? args.cibil_score ?? null,
-        employment_type: args.p_employment_type ?? args.employment_type ?? "salaried",
-        application_type: args.p_application_type ?? args.application_type ?? "new_loan",
-        vehicle_id: args.p_vehicle_id ?? args.vehicle_id ?? null,
-        applicant_metadata: args.p_applicant_metadata ?? args.applicant_metadata ?? {},
+        interest_rate: interestRate,
+        monthly_income: monthlyIncome,
+        cibil_score: cibilScore,
+        employment_type: employmentType,
+        application_type: applicationType,
+        vehicle_id: vehicleId ?? null,
+        applicant_metadata: applicantMetadata,
         submitted_at: new Date().toISOString(),
       },
     },
@@ -176,6 +194,9 @@ async function submitFinanceApplication(args: RpcArgs, auth: JwtPayload | null) 
     data: {
       applicationId: app.id,
       status: "submitted",
+      fromStatus: "draft",
+      toStatus: "submitted",
+      changedBy: auth.sub,
       note: "Application submitted by customer",
     },
   });
@@ -205,9 +226,28 @@ async function advanceFinanceApplication(args: RpcArgs, auth: JwtPayload | null)
       data: {
         applicationId: id,
         status,
-        note: String(args.p_note ?? `Status → ${status} (${reviewer.role})`),
+        fromStatus: app.status,
+        toStatus: status,
+        changedBy: auth.sub,
+        note: String(args.p_note ?? args.p_notes ?? `Status → ${status} (${reviewer.role})`),
       },
     });
+    if (status === "processing") {
+      const existing = await tx.financeVerification.count({ where: { applicationId: id } });
+      if (existing === 0) {
+        await tx.financeVerification.createMany({
+          data: ["identity", "income", "cibil", "bank_statement"].map((checkType) => ({
+            applicationId: id,
+            checkType,
+            status: "pending",
+            metadata: {},
+          })),
+        });
+      }
+    }
+    if (status === "disbursed") {
+      await ensureCommissionOnDisbursement(id, tx);
+    }
   });
 
   return { ok: true };
@@ -219,6 +259,8 @@ async function updateFinanceVerification(args: RpcArgs, auth: JwtPayload | null)
     data: {
       applicationId: String(args.p_application_id ?? args.application_id),
       status: String(args.p_status ?? "pending"),
+      checkType: args.p_check_type ? String(args.p_check_type) : null,
+      notes: args.p_notes != null ? String(args.p_notes) : null,
       metadata: args as object,
     },
   });

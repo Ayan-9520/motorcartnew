@@ -97,13 +97,19 @@ export function isBundledMediaUrl(url: string): boolean {
   return typeof url === "string" && url.trim().startsWith("/media/");
 }
 
+export function isListingSafeUrl(url?: string | null): url is string {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (t.length < 5) return false;
+  if (isBlockedImageUrl(t)) return false;
+  // Dealer uploads + pasted https/http image URLs (CDN, CloudConvert, etc.)
+  if (isUserMediaUrl(t) || isBundledMediaUrl(t)) return true;
+  if (/^https?:\/\//i.test(t)) return true;
+  return false;
+}
+
 export function cleanImageUrls(urls: readonly string[]): string[] {
-  return urls.filter(
-    (u) =>
-      typeof u === "string" &&
-      (u.startsWith("https://images.pexels.com/") || isUserMediaUrl(u) || isBundledMediaUrl(u)) &&
-      !isBlockedImageUrl(u)
-  );
+  return urls.filter((u) => isListingSafeUrl(u));
 }
 
 /** Segment pools — never mix cars into bikes/trucks/etc. */
@@ -146,12 +152,12 @@ export const HUB_HERO_IMAGES: Record<
   string
 > = {
   cars: "/brand/hero-automotive-premium-v2.webp",
-  bikes: pexels(PX.bike1, 1400),
-  trucks: pexels(PX.truck1, 1400),
-  buses: pexels(PX.bus1, 1400),
-  ev: pexels(PX.ev1, 1400),
-  auto: pexels(PX.auto1, 1400),
-  equipment: pexels(PX.equipment1, 1400),
+  bikes: "/media/vehicles/bikes/Royal Enfield/Classic 350/01.webp",
+  trucks: "/media/vehicles/trucks/Tata/Prima/01.webp",
+  buses: "/media/vehicles/buses/Ashok Leyland/Viking/01.webp",
+  ev: "/media/vehicles/cars/Hyundai/Creta/01.webp",
+  auto: "/brand/hero-automotive-premium-v2.webp",
+  equipment: "/media/vehicles/trucks/Tata/Prima/01.webp",
 };
 
 /** Indian OEM brands — stable gallery offset within segment (visual consistency per brand) */
@@ -313,14 +319,6 @@ export function localAssetPath(
 ): string {
   const slug = brand.trim().toLowerCase().replace(/\s+/g, "-");
   return `/media/vehicles/${segment}/${slug}/${file}`;
-}
-
-export function isListingSafeUrl(url?: string | null): url is string {
-  if (!url || typeof url !== "string") return false;
-  const t = url.trim();
-  if (t.length < 5) return false;
-  if (isBlockedImageUrl(t)) return false;
-  return t.startsWith("https://images.pexels.com/") || isUserMediaUrl(t) || isBundledMediaUrl(t);
 }
 
 export function getModelImages(

@@ -293,7 +293,31 @@ export async function getUnifiedNotificationsOverview(userId: string) {
   };
 }
 
+async function persistNativeNotificationRead(userId: string, unifiedId: string) {
+  const colon = unifiedId.indexOf(":");
+  const source = colon >= 0 ? unifiedId.slice(0, colon) : "";
+  const native = colon >= 0 ? unifiedId.slice(colon + 1) : unifiedId;
+  const now = new Date();
+
+  if (source === "system" && native.startsWith("log_")) {
+    const id = native.slice(4);
+    await prisma.notificationLog.updateMany({ where: { id, userId }, data: { readAt: now } });
+    return;
+  }
+  if (source === "auction") {
+    await prisma.auctionNotification.updateMany({ where: { id: native, userId }, data: { readAt: now } });
+    return;
+  }
+  if (source === "community" || source === "system") {
+    await prisma.notification.updateMany({
+      where: { id: native, userId },
+      data: { isRead: true, readAt: now },
+    });
+  }
+}
+
 export async function markNotificationReadUnified(userId: string, unifiedId: string) {
+  await persistNativeNotificationRead(userId, unifiedId);
   await markUnifiedRead(userId, unifiedId);
   return { id: unifiedId, is_read: true };
 }

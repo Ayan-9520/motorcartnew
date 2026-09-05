@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Bell, Bot, Car, Home, Landmark } from "lucide-react";
+import { Bell, Car, Home, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -7,7 +7,7 @@ const TABS = [
   { to: "/dashboard/customer/garage", label: "Garage", icon: Car },
   { to: "/dashboard/customer/loans", label: "Finance", icon: Landmark },
   { to: "/dashboard/customer/notifications", label: "Alerts", icon: Bell },
-  { to: "/dashboard/customer/insights", label: "AI", icon: Bot },
+  { to: "/dashboard/customer/insights", label: "Pulse", icon: Bell },
 ] as const;
 
 /** Premium mobile bottom navigation for customer ownership OS */

@@ -6,7 +6,8 @@ import {
 } from "@/features/marketplace/lib/route-utils";
 
 export function hubLandingPath(slug: EcosystemHubSlug): string {
-  return `/${slug}`;
+  // Legacy /cars|/bikes hub pages removed — land on Buy listings
+  return hubBuyPath(slug, "used");
 }
 
 export function hubSearchPath(slug: EcosystemHubSlug, query?: string): string {

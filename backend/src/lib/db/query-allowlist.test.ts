@@ -46,6 +46,11 @@ describe("db query allowlist", () => {
     assert.equal(decision.ok, true);
   });
 
+  it("never allows customer garage PII via generic query", () => {
+    assert.equal(NEVER_ALLOW_TABLES.has("customer_vehicles"), true);
+    assert.equal(NEVER_ALLOW_TABLES.has("customer_preferences"), true);
+  });
+
   it("never allows refresh_tokens", () => {
     assert.equal(NEVER_ALLOW_TABLES.has("refresh_tokens"), true);
     const decision = authorizeLegacyQuery(

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Bot,
@@ -12,12 +13,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { api } from "@/lib/api/axios";
 import { useHeroSearch } from "@/features/home/components/hero-search-context";
 import { getHeroHubConfig, getHomeHeroDashboard, type HeroDashboardCard } from "@/features/home/data/hero-hub-config";
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { buildHeroDashboardPool } from "@/features/home/lib/map-home-data";
 import { useAuctionCountdown } from "@/features/home/hooks/useAuctionCountdown";
 import { SEGMENT_DEFAULTS } from "@/lib/media/vehicle-media-registry";
+import { realDataOnly } from "@/config/real-data";
 
 const fade = (delay: number) => ({
   initial: { opacity: 0, y: 14 },
@@ -59,7 +62,15 @@ function ListingCardImage({ src, alt }: { src?: string; alt: string }) {
   );
 }
 
-function DashboardCard({ card, delay }: { card: HeroDashboardCard; delay: number }) {
+function DashboardCard({
+  card,
+  delay,
+  aiConfigured,
+}: {
+  card: HeroDashboardCard;
+  delay: number;
+  aiConfigured: boolean;
+}) {
   if (card.type === "auction") {
     return (
       <motion.div {...fade(delay)} className="hero-dash-card hero-dash-card-auction">
@@ -125,6 +136,7 @@ function DashboardCard({ card, delay }: { card: HeroDashboardCard; delay: number
   }
 
   if (card.type === "ai") {
+    const isCommunityCard = card.href.includes("/community");
     return (
       <motion.div {...fade(delay)} className="hero-dash-card">
         <div className="flex items-center gap-2">
@@ -133,9 +145,14 @@ function DashboardCard({ card, delay }: { card: HeroDashboardCard; delay: number
           </span>
           <div className="min-w-0">
             <p className="hero-dash-card-title line-clamp-1">{card.title}</p>
-            <p className="flex items-center gap-1 text-[10px] font-medium text-primary">
-              <span className="ai-pulse" /> Online
-            </p>
+            {isCommunityCard ? (
+              <p className="flex items-center gap-1 text-[10px] font-medium text-primary">Community</p>
+            ) : (
+              <p className="flex items-center gap-1 text-[10px] font-medium text-primary">
+                {aiConfigured ? <span className="ai-pulse" /> : null}
+                {aiConfigured ? "AI ready" : "AI not configured"}
+              </p>
+            )}
           </div>
         </div>
         <p className="hero-dash-meta mt-2 line-clamp-2">{card.subtitle}</p>
@@ -181,6 +198,14 @@ export function HeroDashboardPanel() {
 
   const [rotateIndex, setRotateIndex] = useState(0);
 
+  const readyQ = useQuery({
+    queryKey: ["api-ready"],
+    queryFn: async () => (await api.get("/api/ready")).data,
+    staleTime: 60_000,
+    retry: 0,
+  });
+  const aiConfigured = readyQ.data?.checks?.aiKeyConfigured === true;
+
   const pool = useMemo(
     () =>
       isHome
@@ -195,8 +220,9 @@ export function HeroDashboardPanel() {
     [isHome, featuredVehicles, auctions, loanProducts, communityPosts, heroStats]
   );
 
-  const staticHomeDash = isHome && !pool ? getHomeHeroDashboard() : null;
+  const staticHomeDash = isHome && !pool && !realDataOnly ? getHomeHeroDashboard() : null;
 
+  // Hooks must run unconditionally — never after the empty-state early return.
   useEffect(() => {
     if (!pool) return;
     const maxItems = Math.max(
@@ -226,19 +252,26 @@ export function HeroDashboardPanel() {
         {
           type: "stats" as const,
           title: "Marketplace momentum",
-          subtitle: `${pool.listingCount}+ featured listings · ${pool.liveAuctionCount} live lots`,
+          subtitle:
+            pool.liveAuctionCount > 0
+              ? `${pool.listingCount}+ featured listings · ${pool.liveAuctionCount} auction lots`
+              : `${pool.listingCount}+ featured listings`,
           href: "/buy",
         },
       ];
     }
-    return staticHomeDash?.cards ?? hub.dashboard;
+    return staticHomeDash?.cards ?? (!realDataOnly ? hub.dashboard : []);
   }, [pool, rotateIndex, staticHomeDash, hub.dashboard]);
 
   const panelTitle = pool?.panelTitle ?? staticHomeDash?.panelTitle ?? `${hub.label} dashboard`;
   const dashboardTags = pool?.tags ?? staticHomeDash?.tags ?? hub.dashboardTags;
-  const dealerLabel =
+  const dealerCountText =
     pool?.dealerCount ??
-    (data?.stats?.dealers ? `${data.stats.dealers.toLocaleString("en-IN")}+` : "8.5K+");
+    (typeof data?.stats?.dealers === "number" ? data.stats.dealers.toLocaleString("en-IN") : undefined);
+  const liveAuctionsCount = pool?.liveAuctionCount ?? data?.stats?.live_auctions ?? 0;
+  const hasLiveAuctions = liveAuctionsCount > 0;
+
+  if (realDataOnly && isHome && !pool) return null;
 
   return (
     <motion.div {...fade(0.1)} className="hero-intelligence-panel">
@@ -249,15 +282,17 @@ export function HeroDashboardPanel() {
           </span>
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Live intelligence
+              {hasLiveAuctions ? "Live intelligence" : "Marketplace intelligence"}
             </p>
             <p className="text-sm font-bold tracking-tight text-foreground">{panelTitle}</p>
           </div>
         </div>
-        <span className="hero-intelligence-live">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-          Live
-        </span>
+        {hasLiveAuctions ? (
+          <span className="hero-intelligence-live">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+            Live
+          </span>
+        ) : null}
       </div>
 
       <div className="hero-dashboard-grid">
@@ -271,7 +306,7 @@ export function HeroDashboardPanel() {
               transition={{ duration: 0.35 }}
               className={card.type === "stats" ? "col-span-2" : undefined}
             >
-              <DashboardCard card={card} delay={0.05 + i * 0.04} />
+              <DashboardCard card={card} delay={0.05 + i * 0.04} aiConfigured={aiConfigured} />
             </motion.div>
           ))}
         </AnimatePresence>
@@ -284,8 +319,10 @@ export function HeroDashboardPanel() {
             </div>
             <div className="mt-2 flex items-end justify-between gap-3">
               <p className="text-2xl font-bold tracking-tight text-foreground">
-                {pool ? `${pool.liveAuctionCount}` : "142"}
-                <span className="ml-1 text-sm font-semibold text-muted-foreground">live lots</span>
+                {hasLiveAuctions ? liveAuctionsCount : pool?.listingCount ?? 0}
+                <span className="ml-1 text-sm font-semibold text-muted-foreground">
+                  {hasLiveAuctions ? "auction lots" : "featured listings"}
+                </span>
               </p>
               <div className="flex h-10 flex-1 max-w-[130px] items-end gap-0.5">
                 {[40, 65, 45, 80, 55, 95, 70].map((h, idx) => (
@@ -298,7 +335,8 @@ export function HeroDashboardPanel() {
               </div>
             </div>
             <p className="hero-dash-meta mt-2 flex items-center gap-1">
-              <Users className="h-3 w-3" /> {dealerLabel} verified dealers
+              <Users className="h-3 w-3" />{" "}
+              {dealerCountText ? `${dealerCountText} verified dealers` : "Verified dealers"}
             </p>
           </motion.div>
         )}

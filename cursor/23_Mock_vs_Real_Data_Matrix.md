@@ -14,10 +14,43 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 | Vehicle detail (DB id) | **REAL** | `/api/vehicles/[id]` |
 | Vehicle detail (mock id) | **MOCK** | Mock catalog only — no FK |
 | Compare | **MOCK** | Deep spec matrix incomplete |
-| Wishlist | **PARTIAL** | Table exists; frontend partially wired |
-| Enquiry / leads | **REAL** | `POST /api/leads` |
+| Wishlist | **REAL** | `/api/wishlist` JWT scoped; guest local only |
+| Enquiry / leads | **REAL** | `POST /api/leads` + customer 360 enquiries |
+| Quotations | **REAL** | `/api/quotations` — empty until dealer issues; historical snapshot |
+| Test drives | **REAL** | `/api/test-drives` — empty until a customer requests; never auto-confirmed |
+| Stock-by-PIN | **REAL** | `/api/inventory/by-pincode` — exact dealer/branch PIN; empty `{ count: 0, items: [] }` if none |
+| PIN lead routing | **REAL** | `/api/lead-routing` — CRM assignment, not inventory search |
+| Dealer CRM pipeline / calls / follow-ups | **REAL** | `/api/crm/*` — empty when none |
+| Lead Board | **REAL** (gated) | `/api/lead-board` — published listings only; masked PII |
+| Lead credits | **REAL** (gated) | ledger + admin grant; purchase creates unpaid payment until server confirm |
+| Subscriptions / invoices | **REAL** | `/api/billing/managed-plans` + org subscriptions; empty until configured |
+| Partner payouts | **REAL** | `/api/payouts` — zero until approved entries exist |
+| Customer rewards | **REAL** | `/api/rewards/account` ledger; 0 if no rules |
+| MotorCart One | **REAL** | `/api/customer/one` membership card; QR verify is public and minimal |
+| Saved searches | **REAL** | `/api/saved-searches`; notify job only on new matches |
+| Reminders | **REAL** | `ScheduledReminder`; insurance due dates only when on file |
+| Sell requests / dealer offers | **REAL** | `/api/sell-requests`, `/api/sale-offers` — empty until created |
+| Partner valuations | **REAL** | `/api/valuations` — indicative; not AI |
+| Used listing media trust | **REAL** | `VehicleMediaAsset` watermark derivative; plate mask is manual/pending |
 | Dealer directory | **PARTIAL** | Mix of directory API + mocks |
-| Featured home sections | **MERGE** | Home context + mocks |
+| Unified search | **REAL** | `GET /api/search` — empty until 2+ chars; never catalog-as-stock; no PII |
+| Admin command center | **REAL** | `/api/admin/overview` counts; zeros if empty; **no** invented MRR/GMV |
+| Founder dashboard fallback | **REAL zeros** | Never fabricate user/dealer KPIs |
+| Billing UI copy | **HONEST** | “Online payment is not configured.” when gateway off |
+
+---
+
+## Fake-data classification (Batch 12)
+
+| Pattern | Class | Action |
+|---------|-------|--------|
+| `src/**/*.test.ts` mocks | TEST_ONLY | keep |
+| Prisma seed scripts | DEV_ONLY | keep; not production truth |
+| `MOCK_OVERVIEW` / mock catalogs | LEGACY_UNUSED on real-data path | not used when `VITE_REAL_DATA_ONLY` |
+| Founder FALLBACK users: 4 | PRODUCTION_RISK | **removed** (zeros) |
+| Admin `mrrEstimate` from mock | PRODUCTION_RISK | **removed** (always 0) |
+| Trending searches in Ctrl+K | PRODUCTION_RISK on real-data | **hidden** when real-data-only |
+| Hardcoded “8,500+ showrooms” | PRODUCTION_RISK | **removed** from search shortcuts |
 
 ---
 
@@ -25,11 +58,11 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 
 | Feature | Data source | Notes |
 |---------|-------------|-------|
-| Finance marketplace browse | **MOCK** | `finance.service.ts` fallbacks |
-| Loan application submit | **PARTIAL** | RPC + mock paths |
-| DSA desk | **MOCK** | Desk utils with mock data |
-| Lender dashboard | **MOCK** | UI complete |
-| Finance manager pipeline | **PARTIAL** | Some real RPC |
+| Finance marketplace browse | **PARTIAL** | REST `/api/finance/lenders` when `VITE_FEATURE_FINANCE_MARKETPLACE`; mock fallback |
+| Loan application submit | **PARTIAL** | REST + RPC + mock paths |
+| DSA desk | **PARTIAL** | REST scoped to `dsa_agent_id`; demo fallback |
+| Lender dashboard | **PARTIAL** | REST scoped to `bank_id`/`bank_slug`; demo fallback |
+| Finance manager pipeline | **PARTIAL** | REST + RPC status; commissions on disburse |
 
 ---
 
@@ -37,9 +70,10 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 
 | Feature | Data source | Notes |
 |---------|-------------|-------|
-| Insurance hub / quote UI | **REAL UI** | Quote logic mostly client-side defaults |
-| Policy vault | **MOCK** | Not synced |
-| Renewals | **NOT IMPLEMENTED** | Cron planned |
+| Insurance hub / quote UI | **REAL** | Only `PARTNER_QUOTE` / `BOUND` from `/api/insurance/quotes`; no client-fabricated premiums |
+| Policy vault | **REAL** | `InsurancePolicy` when issued |
+| Claims | **FOUNDATION** | Notification workflow only — no settlement |
+| Renewals | **REAL relation** | `renewalOfId` + Batch 9 reminders |
 
 ---
 
@@ -47,10 +81,10 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 
 | Feature | Data source | Notes |
 |---------|-------------|-------|
-| Services hub (public) | **REAL UI** | Booking depth limited |
-| Service partner ERP | **MOCK** | `mock-sh-data.ts` |
-| Parts hub (public) | **MERGE** | Filters + catalog |
-| Parts supplier ERP | **MOCK** | Large ERP UI |
+| Services hub (public) | **REAL UI** | PIN discovery exact match |
+| Service partner ERP | **REAL / EMPTY** | No mock jobs/technicians/revenue |
+| Parts hub (public) | **REAL search** | `/api/parts/search` + PIN |
+| Parts supplier ERP | **REAL inventory** | Org-scoped `PartProduct`; mock catalog unused |
 | Cart / checkout | **PARTIAL** | Flow exists; backend partial |
 
 ---
@@ -70,10 +104,10 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 | Feature | Data source | Notes |
 |---------|-------------|-------|
 | Inventory list | **REAL** | DB vehicles |
-| Leads pipeline | **PARTIAL** | Real leads + mock calls |
-| Calls page | **MOCK** | `crm-mock.ts` when empty |
-| WhatsApp page | **UI ONLY** | No provider integration |
-| Analytics | **MOCK** | Charts with sample data |
+| Leads pipeline | **REAL** | Canonical `Lead` + dealer owner fetch |
+| Calls page | **REAL / EMPTY** | `LeadCall` + `CallSession`; no simulated connect |
+| WhatsApp page | **GATED** | Shared Communication OS; disabled without provider |
+| Analytics | **PARTIAL** | Real lead/sold counts; views and monthly sales dates not tracked |
 | Storefront | **REAL** | Dealer + inventory |
 
 ---
@@ -92,10 +126,13 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 
 | Feature | Data source | Notes |
 |---------|-------------|-------|
-| Feed posts | **PARTIAL** | `social_posts` via `/api/db/query` — 500s if table/perm issue |
-| Groups | **PARTIAL** | UI + query |
-| Likes / comments | **PARTIAL** | Wired in UI |
-| Follow graph | **NOT IMPLEMENTED** | |
+| Feed posts | **REAL** | `GET /api/community/feed` → `social_posts`. Empty → "No posts yet." |
+| Profiles | **REAL** | `CommunityUserProfile` via `/api/community/profile/*` |
+| Groups | **PARTIAL** | Dedicated groups API; empty list if none |
+| Likes / comments / shares / saves | **REAL** | Dedicated REST; DB counts only |
+| Follow graph | **REAL** | `CommunityFollow` + `UserFollow` |
+| Discovery | **REAL** | `/api/community/discover` — no fabricated suggestions |
+| Reports | **REAL** | `CommunityReport` foundation; no auto-delete |
 | Messaging | **NOT IMPLEMENTED** | |
 
 ---
@@ -118,7 +155,8 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 | Feature | Data source | Notes |
 |---------|-------------|-------|
 | Auth login/register | **REAL** | JWT |
-| Notifications | **PARTIAL** | DB + guest scoped service |
+| Notifications | **REAL** | `/api/notifications/*` + `/api/customer/360` owner scoped |
+| Customer garage / 360 | **REAL** | `/api/customer/360` — empty when no rows |
 | AI control center | **UI / STUB** | Not production LLM pipelines |
 | Growth CRM | **MOCK** | Architecture pages |
 | Broker CRM | **SHELL** | Layout exists |
@@ -149,7 +187,7 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 
 ## Priority: mock → real conversions (P0–P1)
 
-1. Community feed (`social_posts`, likes, comments)
+1. ~~Community feed (`social_posts`, likes, comments)~~ **DONE Batch 6**
 2. Lead pipeline end-to-end (enquiry → dealer CRM)
 3. Wishlist for authenticated users
 4. Notifications per user

@@ -16,7 +16,7 @@
 - **JWT** access token in `Authorization: Bearer <token>`
 - Refresh via auth refresh endpoint
 - Protected routes must validate session before business logic
-- Public endpoints: vehicle browse, public lead capture, health — document any new public route
+- Public endpoints: vehicle browse, public lead capture, liveness `GET /api/health`, readiness `GET /api/ready`, federated search `GET /api/search`, stock-by-PIN (`GET /api/inventory/by-pincode`), MotorCart One QR verify (`GET /api/motorcart-one/verify/[token]`), parts search (`GET /api/parts/search`, `GET /api/parts/by-pincode`), service PIN (`GET /api/service/by-pincode`), jobs list (`GET /api/jobs`), company profile (`GET /api/company/[slug]`), ecosystem discover (`GET /api/discover/ecosystem`)
 
 ---
 
@@ -43,6 +43,18 @@ Implement in `backend/src/app/api/<resource>/route.ts`.
 | `POST /api/upload` | File uploads |
 
 **New public or high-traffic APIs should get dedicated routes**, not generic query passthrough.
+
+Dedicated commerce objects:
+
+- Quotations — `POST/GET /api/quotations` (Phase 5A)
+- Test drives — `POST/GET /api/test-drives` plus lifecycle sub-routes (Phase 5B)
+- Community — `/api/community/*` (Batch 6: profile, feed, posts, follow, saved, discover, reports)
+- Sales OS — `/api/crm/*`, `/api/lead-routing/*`, `/api/lead-board/*`, `/api/consents` (Batch 7)
+- Commercial — `/api/billing/managed-plans`, `/api/billing/organization-subscriptions`, `/api/billing/payments`, `/api/billing/invoices`, `/api/payouts/*`, `/api/rewards/*` (Batch 8). Financial tables are never allowed on `/api/db/query`.
+- Super-app — `/api/customer/one`, `/api/customer/activity`, `/api/saved-searches`, `/api/reminders`, `/api/media`, `/api/sell-requests`, `/api/sale-offers`, `/api/valuations`, public `/api/motorcart-one/verify/[token]` (Batch 9). Super-app tables are never allowed on `/api/db/query`.
+- Stock-by-PIN — `GET /api/inventory/by-pincode` (Phase 5C, public, exact PIN only)
+
+Do not implement those via `/api/db/query`.
 
 ---
 
@@ -73,3 +85,5 @@ Socket.io for auctions and live updates — extend existing room patterns; do no
 
 - Do not remove or rename existing endpoints without deprecation plan.
 - Adding optional JSON fields is safe; removing or changing types requires migration + frontend coordination.
+
+Dedicated Communication/AI REST lives under `/api/communications/*`, `/api/telephony/*`, `/api/ai/*`. Do not expose generic DB access as an AI tool.

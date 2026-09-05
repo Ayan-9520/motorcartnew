@@ -20,7 +20,7 @@ export function NewCarsHomeSection() {
           eyebrow="New cars"
           title={newCars.length > 0 ? `Latest models (${newCars.length})` : "Latest models & launch offers"}
           description="On-road price, EMI, test drives and OEM dealer offers — synced live from dealer inventory."
-          href="/new-cars"
+          href="/buy/cars/new"
           linkLabel="New cars hub"
         />
         {brands.length > 0 ? (

@@ -67,6 +67,30 @@ export interface ParsedInventoryRow {
   dealerPrice?: number;
   discount?: number;
   mainImageUrl?: string;
+  /** Up to 4 http(s) image URLs from sheet (Main + Image URL 2–4, or pipe-separated). */
+  imageUrls?: string[];
+  /** True when spreadsheet had blank/range/non-deterministic price. */
+  priceOnRequest?: boolean;
+  priceSourceText?: string;
+  /** Optional real new-car listing specs from Excel. */
+  bodyType?: string;
+  engineCc?: string;
+  mileage?: string;
+  /** EV claimed range e.g. "489 km". */
+  rangeKm?: string;
+  /** EV pack e.g. "45 kWh". */
+  batteryKwh?: string;
+  power?: string;
+  torque?: string;
+  seating?: string;
+  bootSpace?: string;
+  groundClearance?: string;
+  driveType?: string;
+  airbags?: string;
+  onRoadPrice?: number;
+  waitingPeriodDays?: string;
+  brochureUrl?: string;
+  features?: string[];
 }
 
 export interface RowValidationError {
@@ -90,6 +114,7 @@ export interface BulkUploadState {
   success: number;
   failed: number;
   errors: RowValidationError[];
+  warnings: RowValidationError[];
   results: UploadRowResult[];
   uploadId?: string;
 }
@@ -109,7 +134,7 @@ export interface CallLogEntry {
   leadName: string;
   phone: string;
   duration: number;
-  outcome: "answered" | "missed" | "voicemail";
+  outcome: string;
   createdAt: string;
 }
 

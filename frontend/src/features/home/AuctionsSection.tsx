@@ -29,7 +29,30 @@ export function AuctionsSection() {
     return () => clearInterval(id);
   }, []);
 
-  if (!auctions.length) return null;
+  if (!auctions.length) {
+    return (
+      <section className="home-section-alt">
+        <div className="container home-stack">
+          <SectionHeader
+            eyebrow="Live now"
+            title="Live auctions — cars, bikes & commercial"
+            description="Dealer inventory, bank repo & fleet disposals. Transparent bidding with AI fair-value for bankers and buyers."
+            href="/auctions"
+            linkLabel="All auctions"
+          />
+          <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
+            <p className="text-sm font-semibold text-foreground">No live auctions right now</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Check back soon, or browse the full auction floor.
+            </p>
+            <Button size="sm" className="mt-4 rounded-xl" asChild>
+              <Link to="/auctions">Open auctions</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="home-section-alt">

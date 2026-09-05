@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const FALLBACK = {
   totals: {
-    users: 4,
-    dealers: 1,
+    users: 0,
+    dealers: 0,
     brokers: 0,
     directory_listings: 0,
     leads: 0,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { MessageSquare, Phone, Shield, Landmark } from "lucide-react";
+import { FileText, MessageSquare, Phone, Shield, Landmark } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,11 +65,18 @@ export function NewCarLeadDetailPage() {
         { label: lead.customerName },
       ]}
       actions={
-        <Button className="rounded-xl" asChild>
-          <a href={`tel:${lead.phone}`}>
-            <Phone className="mr-1 h-4 w-4" /> Call
-          </a>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button className="rounded-xl" asChild>
+            <a href={`tel:${lead.phone}`}>
+              <Phone className="mr-1 h-4 w-4" /> Call
+            </a>
+          </Button>
+          <Button variant="outline" className="rounded-xl" asChild>
+            <Link to={`/dashboard/new-car/quotations/new?phone=${encodeURIComponent(lead.phone)}`}>
+              <FileText className="mr-1 h-4 w-4" /> Quotation
+            </Link>
+          </Button>
+        </div>
       }
     >
       <div className="grid gap-6 lg:grid-cols-3">
@@ -131,7 +138,7 @@ export function NewCarLeadDetailPage() {
                 </a>
               </Button>
               <Button variant="outline" className="rounded-lg justify-start" asChild>
-                <Link to="/dashboard/new-car/test-drives">Schedule test drive</Link>
+                <Link to="/dashboard/new-car/test-drives">Test drive requests</Link>
               </Button>
               <Button variant="outline" className="rounded-lg justify-start" asChild>
                 <Link to="/finance/apply">Start finance</Link>

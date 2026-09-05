@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, Activity, TrendingUp, Workflow, ExternalLink } from "lucide-react";
 import { setPageMeta } from "@/utils/seo";
@@ -12,9 +12,12 @@ import { AIWorkflowPanel } from "../components/AIWorkflowPanel";
 import { AILogFeed } from "../components/AILogFeed";
 import { AI_HUB_TRUST } from "../data/ai-hub-data";
 import type { AIAgentId } from "../types";
+import { recommendBestDeal } from "@/features/dealer-crm/services/commos.service";
 
 export function AIControlCenterPage() {
   const { agents, logs, workflowRuns, stats, running, openAIEnabled, refresh, testAgent } = useAIControlCenter();
+  const [dealQuery, setDealQuery] = useState("₹12 lakh ke andar automatic SUV chahiye");
+  const [dealOut, setDealOut] = useState("");
 
   useEffect(() => {
     setPageMeta({
@@ -83,6 +86,29 @@ export function AIControlCenterPage() {
           <AIWorkflowPanel runs={workflowRuns} onRunComplete={refresh} />
           <AILogFeed logs={logs} />
         </div>
+      </section>
+
+      <section className="container pb-10">
+        <h2 className="ai-hub-section-title">Ask MotorCart — Best Deal For Me</h2>
+        <p className="text-sm text-muted-foreground mb-3">Uses live inventory ranking. AI unavailable if the provider is not configured.</p>
+        <form
+          className="flex flex-wrap gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setDealOut("…");
+            void recommendBestDeal(dealQuery)
+              .then((r) => setDealOut(r?.explanation ?? "No messages yet"))
+              .catch(() => setDealOut("AI unavailable"));
+          }}
+        >
+          <input
+            className="min-w-[240px] flex-1 rounded border px-3 py-2"
+            value={dealQuery}
+            onChange={(e) => setDealQuery(e.target.value)}
+          />
+          <button type="submit" className="rounded border px-4 py-2">Find</button>
+        </form>
+        {dealOut ? <p className="mt-2 text-sm">{dealOut}</p> : null}
       </section>
 
       <section className="container pb-14">

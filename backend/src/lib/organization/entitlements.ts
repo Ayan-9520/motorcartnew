@@ -24,10 +24,8 @@ export const PARTNER_FEATURE_KEYS = [
 
 export type PartnerFeatureKey = (typeof PARTNER_FEATURE_KEYS)[number];
 
-/** Future-phase features: never granted by any plan in Phase 3. */
+/** Still locked for every plan until a later batch. Lead Board / paid leads are gated by flag + entitlement override, not plan math. */
 export const PHASE_LOCKED_FEATURES = new Set<PartnerFeatureKey>([
-  "lead_board",
-  "paid_leads",
   "dialer",
   "ai_calling",
 ]);
@@ -87,11 +85,11 @@ export const FEATURE_UNLOCK_HINT: Record<PartnerFeatureKey, string> = {
   inventory_upload: "Included",
   bulk_excel_upload: "Available in Pro",
   lead_management: "Included",
-  lead_board: "Coming in a later phase",
-  paid_leads: "Coming in a later phase",
+  lead_board: "Available via admin entitlement",
+  paid_leads: "Available via admin entitlement",
   crm: "Available in Starter",
-  dialer: "Coming in a later phase",
-  ai_calling: "Coming in a later phase",
+  dialer: "Gated: flag + entitlement + telephony provider",
+  ai_calling: "Gated: flag + entitlement + telephony + AI provider + phone consent",
   analytics: "Available in Starter",
   finance_leads: "Available in Pro",
   insurance_leads: "Available in Pro",

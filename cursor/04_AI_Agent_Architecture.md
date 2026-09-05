@@ -192,6 +192,8 @@ Track in `10_Sprint_Backlog.md` (P3-06 through P3-09).
 
 ## Related
 
+Batch 10: one orchestration engine (`ai-agent.service`) + permissioned tools. No frontend API keys. Client system prompts rejected. Best-deal ranking is deterministic; LLM may explain only. See `cursor/33_Communication_AI_Sales_OS.md`.
+
 - `14_Automation_Platform.md`
 - `15_Performance_and_Scalability.md`
 - `22_Security_Risk_Register.md` (SEC-007)

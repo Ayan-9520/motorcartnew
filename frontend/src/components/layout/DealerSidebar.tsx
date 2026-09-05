@@ -1,19 +1,26 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Car, Users, MessageSquare, BarChart3,
-  Phone, UserCog, Settings, FileQuestion, ChevronLeft,
+  Phone, UserCog, Settings, FileQuestion, FileText, Calendar, ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/uiStore";
 import { Button } from "@/components/ui/button";
+import { featureFlags } from "@/config/feature-flags";
 
 const links = [
   { to: "/dashboard/dealer", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/dashboard/dealer/inventory", label: "Inventory", icon: Car },
   { to: "/dashboard/dealer/leads", label: "Leads", icon: Users },
+  { to: "/dashboard/dealer/pipeline", label: "Pipeline", icon: LayoutDashboard },
+  { to: "/dashboard/dealer/follow-ups", label: "Follow-ups", icon: Calendar },
+  { to: "/dashboard/dealer/quotations", label: "Quotations", icon: FileText },
+  { to: "/dashboard/dealer/test-drives", label: "Test drives", icon: Calendar },
   { to: "/dashboard/dealer/enquiries", label: "Enquiries", icon: FileQuestion },
   { to: "/dashboard/dealer/whatsapp", label: "WhatsApp", icon: MessageSquare },
   { to: "/dashboard/dealer/calls", label: "Calls", icon: Phone },
+  ...(featureFlags.leadBoard ? [{ to: "/dashboard/dealer/lead-board", label: "Lead Board", icon: Users }] : []),
+  { to: "/dashboard/dealer/credits", label: "Credits", icon: BarChart3 },
   { to: "/dashboard/dealer/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/dashboard/dealer/team", label: "Team", icon: UserCog },
   { to: "/dashboard/dealer/settings", label: "Settings", icon: Settings },

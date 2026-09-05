@@ -4,7 +4,6 @@
  */
 import { supabase } from "@/shared/api/client";
 import type { CustomerEcosystemSnapshot, EngagementCampaign } from "../types";
-import { buildMockCustomerSnapshot } from "../data/mock-customer-data";
 
 export type ReminderKind = "insurance_expiry" | "service_due" | "emi_due" | "puc_expiry" | "document_expiry";
 
@@ -109,10 +108,37 @@ export async function previewAutomationForUser(userId: string | undefined): Prom
   reminders: ScheduledReminder[];
   campaigns: EngagementCampaign[];
 }> {
-  const snap = buildMockCustomerSnapshot();
-  const uid = userId ?? "demo";
+  const snap = userId
+    ? ((await import("./customer-ecosystem.service")).fetchCustomerEcosystemSnapshot(userId))
+    : null;
+  const resolved = snap ? await snap : {
+    vehicles: [],
+    campaigns: [],
+    insurance: [],
+    serviceRecords: [],
+    documents: [],
+    notifications: [],
+    insights: [],
+    preferences: { profileCompletion: 0, loyaltyTier: "Bronze", rewardPointsBalance: 0 },
+    widgets: [],
+    timeline: [],
+    insuranceClaims: [],
+    unreadNotifications: 0,
+    enquiries: [],
+    wishlistVehicleIds: [],
+    financeApplications: [],
+    availability: {
+      rewardsLedger: false,
+      insuranceClaims: false,
+      aiInsights: false,
+      fastagProvider: false,
+      savedSearches: false,
+      documentScan: false,
+    },
+  } satisfies CustomerEcosystemSnapshot;
+  const uid = userId ?? "anonymous";
   return {
-    reminders: deriveRemindersFromSnapshot(uid, snap),
-    campaigns: resolveEngagementCampaigns(snap),
+    reminders: deriveRemindersFromSnapshot(uid, resolved),
+    campaigns: resolveEngagementCampaigns(resolved),
   };
 }

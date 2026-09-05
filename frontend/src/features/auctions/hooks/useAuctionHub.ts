@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MOCK_AUCTION_EVENTS } from "../data/auction-hub-data";
 import { fetchAuctions } from "../services/auction.service";
+import { realDataOnly } from "@/config/real-data";
 import type { AuctionEvent } from "../data/auction-hub-data";
 import type { AuctionListing } from "../types";
 
@@ -28,7 +29,7 @@ export function useAuctionHub() {
   }, [load]);
 
   const events = useMemo(() => {
-    let list: AuctionEvent[] = [...MOCK_AUCTION_EVENTS];
+    let list: AuctionEvent[] = realDataOnly ? [] : [...MOCK_AUCTION_EVENTS];
     if (stateFilter !== "All States") {
       list = list.filter((e) => e.state === stateFilter || e.city.includes(stateFilter.split(" ")[0]!));
     }
@@ -51,10 +52,10 @@ export function useAuctionHub() {
   const upcomingAuctions = auctions.filter((a) => a.status === "upcoming");
 
   const stats = {
-    liveLots: liveAuctions.length + liveEvents.reduce((s, e) => s + e.vehicleCount, 0),
-    cities: new Set(MOCK_AUCTION_EVENTS.map((e) => e.city)).size,
-    eventsToday: liveEvents.length + upcomingEvents.filter((e) => {
-      const d = new Date(e.startsAt);
+    liveLots: liveAuctions.length,
+    cities: new Set(liveAuctions.map((a) => a.location).filter(Boolean)).size,
+    eventsToday: liveAuctions.length + upcomingAuctions.filter((a) => {
+      const d = new Date(a.startsAt ?? a.endsAt ?? 0);
       const now = new Date();
       return d.toDateString() === now.toDateString();
     }).length,

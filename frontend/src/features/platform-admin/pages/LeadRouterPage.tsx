@@ -5,6 +5,7 @@ import {
   fetchLeadRouterHistoryApi,
   fetchLeadRouterOverviewApi,
 } from "@/integrations/api/lead-router";
+import { fetchPinRoutingOverview } from "@/features/dealer-crm/services/sales-os.service";
 import { SuperAdminShell } from "../components/SuperAdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +26,15 @@ export function LeadRouterPage() {
     retry: 1,
   });
 
+  const pinQ = useQuery({
+    queryKey: ["pin-lead-routing"],
+    queryFn: fetchPinRoutingOverview,
+    retry: 1,
+  });
+
   const overview = overviewQ.data;
   const history = historyQ.data?.items ?? [];
+  const pin = pinQ.data as { unrouted?: number; routed_assignments?: number; board_available?: number } | null;
 
   return (
     <SuperAdminShell
@@ -43,6 +51,13 @@ export function LeadRouterPage() {
         <p className="text-sm text-destructive">Could not load overview. Sign in as platform admin.</p>
       )}
 
+      {pin && (
+        <div className="grid gap-4 sm:grid-cols-3 mb-6">
+          <StatCard label="PIN unrouted (canonical)" value={Number(pin.unrouted ?? 0)} />
+          <StatCard label="PIN assignments" value={Number(pin.routed_assignments ?? 0)} />
+          <StatCard label="Lead Board available" value={Number(pin.board_available ?? 0)} />
+        </div>
+      )}
       {overview && (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">

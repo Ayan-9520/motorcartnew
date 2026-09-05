@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { ok, err } from "@/lib/api-response";
 import { requireCommunityAuth } from "@/lib/community/guard";
 import { likePost, unlikePost } from "@/services/community-engagement.service";
+import { communityRateLimit, handleCommunityError } from "@/lib/community/http";
 
 export async function POST(
   req: NextRequest,
@@ -9,11 +10,17 @@ export async function POST(
 ) {
   const gate = await requireCommunityAuth(req, "posts");
   if ("response" in gate) return gate.response;
+  const limited = communityRateLimit(req, gate.auth.sub, "like", 60);
+  if (limited) return limited;
 
   const { id } = await ctx.params;
-  const post = await likePost(id, gate.auth.sub);
-  if (!post) return err("Post not found", 404);
-  return ok({ data: { post_id: id, liked: true, like_count: post.likeCount } });
+  try {
+    const post = await likePost(id, gate.auth.sub);
+    if (!post) return err("Post not found", 404);
+    return ok({ data: { post_id: id, liked: true, like_count: post.likeCount } });
+  } catch (e) {
+    return handleCommunityError(e);
+  }
 }
 
 export async function DELETE(

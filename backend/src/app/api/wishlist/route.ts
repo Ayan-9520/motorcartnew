@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth/middleware";
 import { err, ok, unauthorized } from "@/lib/api-response";
 import { toSnakeRow } from "@/lib/db/table-map";
+import { allowSlidingWindow } from "@/lib/http/sliding-window";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -48,6 +49,11 @@ export async function POST(req: NextRequest) {
     where: { id: vehicleId, deletedAt: null },
   });
   if (!vehicle) return err("VEHICLE_NOT_FOUND", 404);
+
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+  if (!allowSlidingWindow(`wishlist:post:${auth.sub}:${ip}`, 40, 15 * 60 * 1000)) {
+    return err("Too many wishlist updates. Please try again later.", 429);
+  }
 
   await prisma.wishlist.upsert({
     where: { userId_vehicleId: { userId: auth.sub, vehicleId } },

@@ -23,6 +23,7 @@ export function CustomerServiceRecordsPage() {
         </Button>
       }
     >
+      {(data?.serviceRecords ?? []).length ? (
       <ul className="space-y-3">
         {(data?.serviceRecords ?? []).map((s) => (
           <li key={s.id} className="cos-service-row">
@@ -40,6 +41,14 @@ export function CustomerServiceRecordsPage() {
           </li>
         ))}
       </ul>
+      ) : (
+        <div className="cos-empty">
+          <p>No service records yet.</p>
+          <Button className="rounded-xl" asChild>
+            <Link to={DEFAULT_SERVICE_BOOK_PATH}>Book a service</Link>
+          </Button>
+        </div>
+      )}
     </CustomerEcosystemPage>
   );
 }

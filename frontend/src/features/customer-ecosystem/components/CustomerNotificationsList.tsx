@@ -20,6 +20,10 @@ type CustomerNotificationsListProps = {
 };
 
 export function CustomerNotificationsList({ notifications, onMarkRead }: CustomerNotificationsListProps) {
+  if (!notifications.length) {
+    return <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">No notifications yet.</p>;
+  }
+
   return (
     <ul className="space-y-2">
       {notifications.map((n) => (

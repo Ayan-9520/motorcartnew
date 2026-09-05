@@ -30,10 +30,11 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, sellerI
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [variant, setVariant] = useState("");
-  const [fuelType, setFuelType] = useState("Petrol");
-  const [transmission, setTransmission] = useState("Manual");
+  const [stock, setStock] = useState("1");
+  const [fuelType, setFuelType] = useState("");
+  const [transmission, setTransmission] = useState("");
   const [price, setPrice] = useState("");
-  const [waitingDays, setWaitingDays] = useState("14");
+  const [waitingDays, setWaitingDays] = useState("");
   const [brochureUrl, setBrochureUrl] = useState("");
   const [offerTitle, setOfferTitle] = useState("");
   const v2 = featureFlags.newCarInventoryV2;
@@ -42,19 +43,30 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, sellerI
     setBrand("");
     setModel("");
     setVariant("");
-    setFuelType("Petrol");
-    setTransmission("Manual");
+    setStock("1");
+    setFuelType("");
+    setTransmission("");
     setPrice("");
-    setWaitingDays("14");
+    setWaitingDays("");
     setBrochureUrl("");
     setOfferTitle("");
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ex = Number(price.replace(/\D/g, ""));
-    if (!brand.trim() || !model.trim() || !ex || ex < 100000) {
-      toast.error("Brand, model and valid ex-showroom price required");
+    if (!brand.trim() || !model.trim()) {
+      toast.error("Brand and model are required");
+      return;
+    }
+    const stockN = Number(String(stock || "1").replace(/\D/g, "")) || 1;
+    if (!Number.isInteger(stockN) || stockN < 0) {
+      toast.error("Stock must be an integer ≥ 0");
+      return;
+    }
+    const exDigits = price.replace(/\D/g, "");
+    const ex = exDigits ? Number(exDigits) : 0;
+    if (exDigits && (!Number.isFinite(ex) || ex < 0)) {
+      toast.error("Price must be ≥ 0 or left blank");
       return;
     }
     setLoading(true);
@@ -63,11 +75,12 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, sellerI
       {
         brand,
         model,
-        variant: variant || "Standard",
-        fuelType,
-        transmission,
+        variant: variant.trim() || "",
+        fuelType: fuelType.trim() || "Petrol",
+        transmission: transmission.trim() || "Manual",
         exShowroomPrice: ex,
-        waitingPeriodDays: v2 ? Number(waitingDays) || 14 : undefined,
+        stock: stockN,
+        waitingPeriodDays: v2 && waitingDays.trim() ? Number(waitingDays) || undefined : undefined,
         brochureUrl: v2 && brochureUrl.trim() ? brochureUrl.trim() : undefined,
         offers:
           v2 && offerTitle.trim()
@@ -75,7 +88,7 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, sellerI
             : undefined,
       },
       {
-        syncMarketplace: Boolean(sellerId && dealerCity && dealerState),
+        syncMarketplace: Boolean(sellerId && dealerCity && dealerState && ex > 0),
         sellerId,
         dealerCity,
         dealerState,
@@ -97,49 +110,57 @@ export function NewCarAddInventoryDialog({ open, onOpenChange, dealerId, sellerI
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Add new car</DialogTitle>
-          <DialogDescription>Stock appears in showroom inventory and on /buy/cars/new.</DialogDescription>
+          <DialogDescription>
+            Required: Brand and Model. Variant, Stock, and price are optional (stock defaults to 1).
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <Label htmlFor="ncd-brand">Brand</Label>
-              <Input id="ncd-brand" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Hyundai" />
+              <Label htmlFor="ncd-brand">Brand *</Label>
+              <Input id="ncd-brand" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Hyundai" required />
             </div>
             <div>
-              <Label htmlFor="ncd-model">Model</Label>
-              <Input id="ncd-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Creta" />
+              <Label htmlFor="ncd-model">Model *</Label>
+              <Input id="ncd-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Creta" required />
             </div>
-          </div>
-          <div>
-            <Label htmlFor="ncd-variant">Variant</Label>
-            <Input id="ncd-variant" value={variant} onChange={(e) => setVariant(e.target.value)} placeholder="SX(O) 1.5 Turbo" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <Label htmlFor="ncd-fuel">Fuel</Label>
-              <Input id="ncd-fuel" value={fuelType} onChange={(e) => setFuelType(e.target.value)} />
+              <Label htmlFor="ncd-variant">Variant (optional)</Label>
+              <Input id="ncd-variant" value={variant} onChange={(e) => setVariant(e.target.value)} placeholder="SX(O) 1.5 Turbo" />
             </div>
             <div>
-              <Label htmlFor="ncd-tx">Transmission</Label>
-              <Input id="ncd-tx" value={transmission} onChange={(e) => setTransmission(e.target.value)} />
+              <Label htmlFor="ncd-stock">Stock (optional, default 1)</Label>
+              <Input id="ncd-stock" inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="1" />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="ncd-fuel">Fuel (optional)</Label>
+              <Input id="ncd-fuel" value={fuelType} onChange={(e) => setFuelType(e.target.value)} placeholder="Petrol" />
+            </div>
+            <div>
+              <Label htmlFor="ncd-tx">Transmission (optional)</Label>
+              <Input id="ncd-tx" value={transmission} onChange={(e) => setTransmission(e.target.value)} placeholder="Manual" />
             </div>
           </div>
           <div>
-            <Label htmlFor="ncd-price">Ex-showroom price (₹)</Label>
-            <Input id="ncd-price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="1899000" />
+            <Label htmlFor="ncd-price">Ex-showroom / dealer price (optional)</Label>
+            <Input id="ncd-price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Leave blank if unknown" />
           </div>
           {v2 ? (
             <>
               <div>
-                <Label htmlFor="ncd-wait">Waiting period (days)</Label>
+                <Label htmlFor="ncd-wait">Waiting period days (optional)</Label>
                 <Input id="ncd-wait" inputMode="numeric" value={waitingDays} onChange={(e) => setWaitingDays(e.target.value)} />
               </div>
               <div>
-                <Label htmlFor="ncd-brochure">Brochure URL</Label>
+                <Label htmlFor="ncd-brochure">Brochure URL (optional)</Label>
                 <Input id="ncd-brochure" value={brochureUrl} onChange={(e) => setBrochureUrl(e.target.value)} placeholder="https://…/brochure.pdf" />
               </div>
               <div>
-                <Label htmlFor="ncd-offer">Dealer offer (title)</Label>
+                <Label htmlFor="ncd-offer">Dealer offer title (optional)</Label>
                 <Input id="ncd-offer" value={offerTitle} onChange={(e) => setOfferTitle(e.target.value)} placeholder="Festival discount" />
               </div>
             </>

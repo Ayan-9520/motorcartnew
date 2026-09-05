@@ -1,93 +1,69 @@
 import { useEffect, useState } from "react";
-import { Check, Crown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 import { DealerConsoleShell } from "../components/DealerConsoleShell";
-import { useDealer } from "../hooks/useDealer";
-import { SUBSCRIPTION_PLANS, planFromTier } from "../data/subscription-plans";
-import { changeSubscriptionTier, fetchDealerEnterprise } from "../services/dealer-enterprise.service";
-import { formatCurrency } from "@/lib/utils";
+import { fetchFeatureMatrix, fetchManagedPlans, fetchOrgSubscriptions } from "@/features/commercial/commercial.service";
 import { setPageMeta } from "@/utils/seo";
-import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
 export function DealerSubscriptionPage() {
-  const { dealer, loading } = useDealer();
-  const [tier, setTier] = useState("free");
-  const [busy, setBusy] = useState<string | null>(null);
+  const [plans, setPlans] = useState<Array<Record<string, unknown>>>([]);
+  const [subs, setSubs] = useState<Array<Record<string, unknown>>>([]);
+  const [features, setFeatures] = useState<Array<Record<string, unknown>>>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setPageMeta({ title: "Subscription plans" });
-    if (dealer) {
-      void fetchDealerEnterprise(dealer.id).then((e) => {
-        if (e) setTier(e.subscriptionTier);
-      });
-    }
-  }, [dealer]);
+    void Promise.all([fetchManagedPlans(), fetchOrgSubscriptions(), fetchFeatureMatrix()])
+      .then(([p, s, f]) => {
+        setPlans(p);
+        setSubs(s);
+        setFeatures(f);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Unavailable"));
+  }, []);
 
-  const upgrade = async (code: string) => {
-    if (!dealer) return;
-    setBusy(code);
-    const { error } = await changeSubscriptionTier(dealer.id, code);
-    setBusy(null);
-    if (error) toast.error(error.message);
-    else {
-      setTier(code);
-      toast.success(`Plan updated to ${code}`);
-    }
-  };
-
-  const current = planFromTier(tier);
-
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
+  const current = subs[0] as { status?: string; plan?: { slug?: string; name?: string } } | undefined;
 
   return (
     <DealerConsoleShell
       title="Subscription plans"
-      description="Free, Premium and Enterprise — listing caps, team seats and CRM features."
+      description="Admin-configured organization plans. Prices come from billing, not this page."
       crumbs={[{ label: "Plans" }]}
     >
+      {error && <p className="text-sm text-destructive">{error}</p>}
       <p className="text-sm text-muted-foreground">
-        Current plan: <strong className="text-foreground">{current.name}</strong> · up to{" "}
-        {current.maxListings} listings · {current.maxTeamMembers} team seats
+        Current: <strong className="text-foreground">{current?.plan?.name ?? current?.status ?? "none"}</strong>
       </p>
-
       <div className="dealer-plans-grid">
-        {SUBSCRIPTION_PLANS.map((plan) => (
-          <article
-            key={plan.code}
-            className={cn(
-              "dealer-plan-card",
-              plan.highlighted && "dealer-plan-card-featured",
-              tier === plan.code && "dealer-plan-card-active"
-            )}
-          >
-            {plan.highlighted && (
-              <span className="dealer-plan-badge">
-                <Crown className="h-3 w-3" /> Popular
-              </span>
-            )}
-            <h3 className="text-lg font-bold">{plan.name}</h3>
-            <p className="dealer-plan-price">
-              {plan.priceMonthly === 0 ? "Free" : formatCurrency(plan.priceMonthly)}
-              {plan.priceMonthly > 0 && <span className="text-xs font-normal text-muted-foreground">/mo</span>}
-            </p>
-            <ul className="dealer-plan-features">
-              {plan.features.map((f) => (
-                <li key={f}>
-                  <Check className="h-4 w-4 text-primary shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Button
-              className="w-full mt-4"
-              variant={tier === plan.code ? "secondary" : "default"}
-              disabled={tier === plan.code || busy === plan.code}
-              onClick={() => void upgrade(plan.code)}
-            >
-              {tier === plan.code ? "Current plan" : busy === plan.code ? "Updating…" : "Select plan"}
-            </Button>
-          </article>
+        {plans.length === 0 && <p className="text-sm text-muted-foreground">No plans published.</p>}
+        {plans.map((plan) => {
+          const featuresList = Array.isArray(plan.includedFeatures) ? (plan.includedFeatures as string[]) : [];
+          const active = current?.plan?.name === plan.name || String(plan.slug) === String(current?.plan?.slug ?? "");
+          return (
+            <article key={String(plan.id)} className={cn("dealer-plan-card", active && "dealer-plan-card-active")}>
+              <h3 className="text-lg font-bold">{String(plan.name)}</h3>
+              <p className="dealer-plan-price">
+                {String(plan.price)} {String(plan.currency ?? "INR")}
+                <span className="text-xs font-normal text-muted-foreground">/{String(plan.billingCycle)}</span>
+              </p>
+              <ul className="dealer-plan-features">
+                {featuresList.map((f) => (
+                  <li key={f}>
+                    <Check className="h-4 w-4 text-primary shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted-foreground mt-4">{active ? "Current plan" : "Assigned by MotorCart admin"}</p>
+            </article>
+          );
+        })}
+      </div>
+      <div className="dealer-os-card space-y-1 mt-4">
+        {features.map((f) => (
+          <p key={String(f.key)} className="text-sm">
+            {String(f.key)} · {String(f.state)}
+          </p>
         ))}
       </div>
     </DealerConsoleShell>

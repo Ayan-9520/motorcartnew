@@ -74,6 +74,7 @@ export function DealerInventoryCRMPage() {
   const buildPayload = (form: VehicleFormState) => {
     const images = form.imageUrls.map((u) => u.trim()).filter(Boolean);
     const emiMonthly = calculateEmiMonthly(form.price, form.emiRate, form.emiTenure);
+    const isNew = form.condition === "new";
     return {
       title: form.title || `${form.year} ${form.brand} ${form.model}`,
       brand: form.brand,
@@ -84,9 +85,9 @@ export function DealerInventoryCRMPage() {
       fuelType: form.fuelType,
       transmission: form.transmission,
       bodyType: form.bodyType,
-      category: form.category,
-      kmsDriven: form.kmsDriven,
-      owners: form.owners,
+      category: isNew ? "new-cars" : form.category === "new-cars" ? "used-cars" : form.category,
+      kmsDriven: isNew ? 0 : form.kmsDriven,
+      owners: isNew ? 0 : form.owners,
       color: form.color,
       city: form.city,
       state: form.state,
@@ -103,8 +104,8 @@ export function DealerInventoryCRMPage() {
           year: form.year,
           fuel: form.fuelType,
           transmission: form.transmission,
-          kmsDriven: form.kmsDriven,
-          ownership: form.owners,
+          kmsDriven: isNew ? 0 : form.kmsDriven,
+          ownership: isNew ? 0 : form.owners,
           price: form.price,
           registrationState: form.state,
         }),
@@ -117,18 +118,13 @@ export function DealerInventoryCRMPage() {
       toast.error("Dealer profile not ready — refresh or complete signup");
       return;
     }
-    const images = form.imageUrls.map((u) => u.trim()).filter(Boolean);
-    if (!images.length) {
-      toast.error("Add at least one photo (upload or URL)");
-      return;
-    }
     const payload = buildPayload(form);
     if (editing) {
       const { error } = await updateVehicle(editing.id, {
         ...payload,
         status: form.status,
         is_featured: form.featured,
-      } as never);
+      });
       if (error) {
         toast.error(error.message ?? "Could not update listing");
         throw new Error(error.message);
@@ -143,6 +139,7 @@ export function DealerInventoryCRMPage() {
       toast.success("Vehicle added to inventory");
     }
     setEditing(null);
+    setDrawerOpen(false);
     await load();
     refetchCRM();
   };
@@ -157,22 +154,37 @@ export function DealerInventoryCRMPage() {
     setDrawerOpen(true);
   };
 
-  const markSold = async (id: string) => {
-    await updateVehicle(id, { status: "sold" });
-    toast.success("Marked sold");
+  const toggleSold = async (v: VehicleListing) => {
+    const next = v.status === "sold" ? "available" : "sold";
+    const { error } = await updateVehicle(v.id, { status: next });
+    if (error) {
+      toast.error(error.message ?? "Could not update status");
+      return;
+    }
+    toast.success(next === "sold" ? "Marked sold" : "Marked available (Live)");
     await load();
+    refetchCRM();
   };
 
   const toggleFeatured = async (v: VehicleListing) => {
-    await updateVehicle(v.id, { is_featured: !v.isFeatured } as never);
+    const { error } = await updateVehicle(v.id, { is_featured: !v.isFeatured });
+    if (error) {
+      toast.error(error.message ?? "Could not update featured");
+      return;
+    }
     await load();
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this listing?")) return;
-    await deleteVehicle(id);
+    const { error } = await deleteVehicle(id);
+    if (error) {
+      toast.error(error.message ?? "Delete failed");
+      return;
+    }
     toast.success("Deleted");
     await load();
+    refetchCRM();
   };
 
   const statusFilters = [
@@ -222,13 +234,19 @@ export function DealerInventoryCRMPage() {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_minmax(240px,280px)]">
             <div className="space-y-3 min-w-0">
-              {pageItems.map((v) => (
+              {pageItems.map((v) => {
+                const thumb = v.images?.find((u) => /^https?:\/\//i.test(String(u ?? "").trim()));
+                const priceOnRequest =
+                  Boolean((v.metadata as { priceOnRequest?: boolean } | undefined)?.priceOnRequest) || !(v.price > 0);
+                return (
                 <article key={v.id} className="dealer-inventory-row">
-                  <img
-                    src={v.images[0]}
-                    alt=""
-                    className="dealer-inventory-thumb"
-                  />
+                  {thumb ? (
+                    <img src={thumb} alt="" className="dealer-inventory-thumb" />
+                  ) : (
+                    <div className="dealer-inventory-thumb flex items-center justify-center bg-muted text-[10px] text-muted-foreground">
+                      No photo
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap gap-2">
                       <Badge variant={v.status === "available" ? "default" : "secondary"}>{v.status}</Badge>
@@ -236,7 +254,9 @@ export function DealerInventoryCRMPage() {
                       <Badge variant="outline">{v.brand}</Badge>
                     </div>
                     <h3 className="mt-1 font-semibold truncate">{v.title}</h3>
-                    <p className="text-primary font-bold">{formatCurrency(v.price)}</p>
+                    <p className="text-primary font-bold">
+                      {priceOnRequest ? "Price on request" : formatCurrency(v.price)}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {v.kmsDriven.toLocaleString()} km · {v.fuelType} · {v.transmission}
                     </p>
@@ -245,21 +265,27 @@ export function DealerInventoryCRMPage() {
                     <Button size="sm" variant="outline" asChild>
                       <Link to={vehicleDetailPath(v)}>View</Link>
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => openEdit(v)}>
+                    <Button size="sm" variant="outline" title="Edit" onClick={() => openEdit(v)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => toggleFeatured(v)}>
+                    <Button size="sm" variant="outline" title="Featured" onClick={() => void toggleFeatured(v)}>
                       <Star className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => markSold(v.id)}>
+                    <Button
+                      size="sm"
+                      variant={v.status === "sold" ? "default" : "outline"}
+                      title={v.status === "sold" ? "Mark available again" : "Mark sold"}
+                      onClick={() => void toggleSold(v)}
+                    >
                       <CheckCircle className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => remove(v.id)}>
+                    <Button size="sm" variant="outline" title="Delete" onClick={() => void remove(v.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </article>
-              ))}
+                );
+              })}
               {!pageItems.length && (
                 <div className="dealer-os-card py-16 text-center text-muted-foreground">
                   <Sparkles className="h-10 w-10 mx-auto mb-3 text-primary opacity-50" />

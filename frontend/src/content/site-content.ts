@@ -25,15 +25,15 @@ export const SITE_CONTACT = {
 } as const;
 
 export const SITE_STATS = [
-  { value: "8,500+", label: "Dealer partners" },
-  { value: "14", label: "Lender integrations" },
-  { value: "128K+", label: "Community members" },
-  { value: "240+", label: "Cities live" },
+  { value: "Verified dealer network", label: "Dealer partners" },
+  { value: "Lender ecosystem", label: "Lender integrations" },
+  { value: "Owner community", label: "Community" },
+  { value: "Pan-India coverage", label: "Cities" },
 ] as const;
 
 /** One-line trust strip for homepage hero */
 export const SITE_STATS_BAR =
-  "8,500+ dealers · 14 lenders · 128K+ community · 142 live auctions";
+  "Verified dealers · lender ecosystem · owner community · auction marketplace";
 
 export const SITE_DESCRIPTION =
   "Buy, sell, finance, insure, and service vehicles across India — cars, bikes, trucks, EVs, auctions, parts, and dealer tools on one AI-powered platform.";

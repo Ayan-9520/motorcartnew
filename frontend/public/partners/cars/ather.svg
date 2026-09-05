@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 48" role="img" fill="none">
+  <title>Ather</title>
+  <circle cx="24" cy="24" r="18" fill="#111"/>
+  <path fill="#fff" d="M24 10.5c-6.2 0-10.2 4.8-10.2 11.5 0 4.8 2.3 8.3 5.9 9.9L16.5 42h6l2.9-8.2c.5.1 1.1.2 1.6.2 6.2 0 10.2-4.7 10.2-12S30.2 10.5 24 10.5zm0 5.8c3.2 0 5 2.5 5 6.2s-1.8 6-5 6-5-2.3-5-6 1.8-6.2 5-6.2z"/>
+  <text x="52" y="30" fill="#111" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="800" letter-spacing="0.16em">ATHER</text>
+</svg>

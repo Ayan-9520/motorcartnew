@@ -21,44 +21,6 @@ const ACCESSORY_CATALOG = [
   { name: "RSA kit (1 year)", price: 3500 },
 ];
 
-function LeadList({
-  title,
-  description,
-  filter,
-}: {
-  title: string;
-  description: string;
-  filter: (stage: string) => boolean;
-}) {
-  const { data, refresh } = useNewCarDealerOS();
-  const leads = (data?.leads ?? []).filter((l) => filter(l.stage));
-
-  return (
-    <NewCarDealerShell title={title} description={description}>
-      {leads.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No records yet — move leads in CRM or wait for customer enquiries.</p>
-      ) : (
-        <ul className="space-y-3">
-          {leads.map((l) => (
-            <li key={l.id} className="ncd-list-row">
-              <div>
-                <Link to={`/dashboard/new-car/leads/${l.id}`} className="font-medium hover:text-primary">
-                  {l.customerName}
-                </Link>
-                <p className="text-sm text-muted-foreground">{l.preferredModel ?? "Model TBD"} · {l.phone}</p>
-              </div>
-              <Badge variant="outline">{l.source}</Badge>
-            </li>
-          ))}
-        </ul>
-      )}
-      <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={() => void refresh()}>
-        Refresh
-      </Button>
-    </NewCarDealerShell>
-  );
-}
-
 export function NewCarInsurancePage() {
   useEffect(() => setPageMeta({ title: "Insurance hub" }), []);
   return (
@@ -92,16 +54,7 @@ export function NewCarInsurancePage() {
   );
 }
 
-export function NewCarTestDrivesPage() {
-  useEffect(() => setPageMeta({ title: "Test drives" }), []);
-  return (
-    <LeadList
-      title="Test drive calendar"
-      description="Leads in test-drive stage — schedule slots and assign vehicles."
-      filter={(s) => s === "test_drive"}
-    />
-  );
-}
+export { DealerTestDrivesPage as NewCarTestDrivesPage } from "@/features/test-drives/pages/DealerTestDrivesPage";
 
 export function NewCarRtoPage() {
   const { data } = useNewCarDealerOS();

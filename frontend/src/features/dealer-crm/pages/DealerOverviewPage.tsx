@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import {
   BarChart3,
   Bell,
+  Calendar,
   Car,
+  FileText,
   Gavel,
   IndianRupee,
   Percent,
@@ -34,6 +36,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, L
 const QUICK_LINKS = [
   { label: "Inventory", href: "/dashboard/dealer/inventory", icon: Car },
   { label: "Lead CRM", href: "/dashboard/dealer/leads", icon: Users },
+  { label: "Quotations", href: "/dashboard/dealer/quotations", icon: FileText },
+  { label: "Test drives", href: "/dashboard/dealer/test-drives", icon: Calendar },
   { label: "Auctions", href: "/dashboard/dealer/auctions", icon: Gavel },
   { label: "Analytics", href: "/dashboard/dealer/analytics", icon: BarChart3 },
 ];
@@ -107,7 +111,7 @@ export function DealerOverviewPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Revenue (MTD)" value={formatCurrency(stats.revenueMtd)} icon={IndianRupee} />
+        <StatCard label="Sold listings value" value={formatCurrency(stats.revenueMtd)} icon={IndianRupee} />
         <StatCard label="Leads" value={stats.totalLeads} icon={Users} change={`${stats.newLeads} new`} />
         <StatCard label="Vehicles live" value={stats.activeListings} icon={Car} change={`${stats.totalListings} total`} />
         <StatCard label="Conversion" value={`${stats.conversionRate}%`} icon={Percent} trend="up" />
@@ -144,6 +148,9 @@ export function DealerOverviewPage() {
         </div>
         <div className="dealer-os-card">
           <h2 className="font-semibold text-lg mb-4">Monthly sales (₹ Lakhs)</h2>
+          <p className="text-sm text-muted-foreground -mt-2 mb-4">
+            Month-by-month sales dates are not recorded yet.
+          </p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartRevenue.length ? chartRevenue : analytics.monthlyRevenue}>

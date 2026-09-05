@@ -32,6 +32,8 @@ export function CommunityEditProfileDialog({
   const [fullName, setFullName] = useState(profile.fullName);
   const [handle, setHandle] = useState(profile.handle ?? "");
   const [bio, setBio] = useState(profile.bio ?? "");
+  const [headline, setHeadline] = useState(profile.headline ?? "");
+  const [city, setCity] = useState(profile.city ?? "");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -39,6 +41,8 @@ export function CommunityEditProfileDialog({
       setFullName(profile.fullName);
       setHandle(profile.handle ?? suggestCommunityHandle(profile.fullName, profile.id));
       setBio(profile.bio ?? "");
+      setHeadline(profile.headline ?? "");
+      setCity(profile.city ?? "");
     }
   }, [open, profile]);
 
@@ -49,6 +53,8 @@ export function CommunityEditProfileDialog({
         fullName: fullName.trim(),
         handle: handle.trim().replace(/^@/, "") || null,
         bio: bio.trim() || null,
+        headline: headline.trim() || null,
+        city: city.trim() || null,
       });
       if (updated) {
         onSaved(updated);
@@ -139,6 +145,20 @@ export function CommunityEditProfileDialog({
               placeholder="rajesh_auto"
               className="mt-1"
             />
+          </div>
+          <div>
+            <Label htmlFor="cp-headline">Headline</Label>
+            <Input
+              id="cp-headline"
+              value={headline}
+              onChange={(e) => setHeadline(e.target.value)}
+              placeholder="Sales consultant · New cars"
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="cp-city">City</Label>
+            <Input id="cp-city" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1" />
           </div>
           <div>
             <Label htmlFor="cp-bio">Bio</Label>

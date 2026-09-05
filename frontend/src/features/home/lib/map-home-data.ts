@@ -10,6 +10,10 @@ import { auctionDetailPath } from "@/features/auctions/lib/auction-utils";
 import { vehicleDetailPath } from "@/lib/vehicle-utils";
 import type { HeroDashboardCard } from "@/features/home/data/hero-hub-config";
 import type { PartnerLogoItem } from "@/features/home/data/homepage-data";
+import {
+  partnerBrandBuyHref,
+  resolvePartnerCarLogoPath,
+} from "@/features/home/lib/partner-logo-resolve";
 
 export function mapHomeVehicles(rows: DbVehicle[]): VehicleListing[] {
   return rows.map((v) => mapDbToListing(v, null));
@@ -154,7 +158,7 @@ export function buildHeroDashboardPool(input: {
 
   const loans: HeroDashboardCard[] = input.loanProducts.slice(0, 3).map((loan) => ({
     type: "loan" as const,
-    title: "Loan pre-approved",
+    title: "Loan offers",
     price: loan.max_loan_amount,
     meta: `${loan.bank_name} · ${loan.interest_rate_min}% · Bank partner`,
     href: "/finance",
@@ -234,7 +238,7 @@ export function mapBrandsToPartnerLogos(
   return brands.map((b) => ({
     id: b.slug,
     name: b.name,
-    logo: `/partners/cars/${b.slug}.svg`,
-    href: `/vehicles?brand=${encodeURIComponent(b.slug)}`,
+    logo: resolvePartnerCarLogoPath(b.slug || b.name),
+    href: partnerBrandBuyHref(b.name, b.slug),
   }));
 }

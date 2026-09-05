@@ -72,11 +72,11 @@ function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): Ncd
     inventorySource: "ncd",
     brand,
     model,
-    variant: String(r.variant ?? meta.variant ?? "Standard"),
+    variant: String(r.variant ?? meta.variant ?? ""),
     fuelType: String(r.fuel_type ?? meta.fuelType ?? "Petrol"),
     transmission: String(r.transmission ?? meta.transmission ?? "Manual"),
     exShowroomPrice: ex,
-    onRoadPrice: onRoad,
+    onRoadPrice: onRoad > 0 ? onRoad : 0,
     discountAmount: Number(r.discount_amount ?? meta.discountAmount ?? 0),
     stockStatus: (r.stock_status ?? meta.stockStatus ?? "available") as NcdInventoryItem["stockStatus"],
     stockHealth: (r.stock_health ?? meta.stockHealth ?? "fast_moving") as NcdInventoryItem["stockHealth"],
@@ -131,13 +131,16 @@ function mergeLeads(primary: NcdLead[], legacy: NcdLead[]): NcdLead[] {
 function buildRealSnapshot(
   inventory: NcdInventoryItem[],
   leads: NcdLead[],
-  dealerName: string
+  dealerName: string,
+  kpis?: { totalRows?: number; available?: number; outOfStock?: number; lowStock?: number },
 ): NewCarDealerSnapshot {
-  const mock = buildMockNewCarDealerSnapshot(dealerName);
   const hot = leads.filter((l) => HOT_STAGES.has(l.stage)).length;
   const delivered = leads.filter((l) => l.stage === "delivered").length;
   const bookings = leads.filter((l) => l.stage === "booking").length;
   const testDrives = leads.filter((l) => l.stage === "test_drive").length;
+  const available = kpis?.available ?? inventory.filter((i) => i.stockStatus === "available").length;
+  const out = kpis?.outOfStock ?? inventory.filter((i) => i.stockStatus === "out_of_stock").length;
+  const low = kpis?.lowStock ?? 0;
 
   const sourceCounts = leads.reduce<Record<string, number>>((acc, l) => {
     acc[l.source] = (acc[l.source] ?? 0) + 1;
@@ -149,78 +152,85 @@ function buildRealSnapshot(
       ? [
           {
             id: "empty-stock",
-            title: "Upload your price list",
-            summary: "Use Bulk Excel upload to list 30+ models on the showroom and public site.",
+            title: "No inventory yet",
+            summary: "Add a vehicle or upload Excel/CSV to populate showroom stock.",
             severity: "info" as const,
             actionLabel: "Bulk upload",
             actionUrl: "/dashboard/new-car/inventory/bulk",
           },
         ]
-      : hot > 0
+      : low > 0
         ? [
             {
-              id: "hot-leads",
-              title: `${hot} hot leads need follow-up`,
-              summary: "Contact new and test-drive enquiries within 15 minutes for best conversion.",
+              id: "low-stock",
+              title: `${low} low-stock variant(s)`,
+              summary: "Deterministic threshold — restock or update quantity.",
               severity: "warning" as const,
-              actionLabel: "Open CRM",
-              actionUrl: "/dashboard/new-car/leads",
+              actionLabel: "Open inventory",
+              actionUrl: "/dashboard/new-car/inventory",
             },
           ]
-        : [
-            {
-              id: "stock-ok",
-              title: `${inventory.length} models in stock`,
-              summary: "Share your showroom link with customers on WhatsApp and social media.",
-              severity: "success" as const,
-              actionLabel: "Public listing",
-              actionUrl: "/buy/cars/new",
-            },
-          ];
+        : hot > 0
+          ? [
+              {
+                id: "hot-leads",
+                title: `${hot} open leads need follow-up`,
+                summary: "Real CRM leads assigned to your dealer workspace.",
+                severity: "warning" as const,
+                actionLabel: "Open CRM",
+                actionUrl: "/dashboard/new-car/leads",
+              },
+            ]
+          : [
+              {
+                id: "stock-ok",
+                title: `${available} available variant(s)`,
+                summary: "Stock counts come from NewCarInventory in PostgreSQL.",
+                severity: "success" as const,
+                actionLabel: "Public listing",
+                actionUrl: "/buy/cars/new",
+              },
+            ];
 
   return {
     showroom: {
-      ...mock.showroom,
+      id: "showroom",
       name: dealerName,
-      monthlyTarget: Math.max(inventory.length, 10),
+      brand: "",
+      city: "",
+      status: "live",
+      monthlyTarget: 0,
       monthlyAchieved: delivered,
       carsSoldMtd: delivered,
     },
     metrics: [
-      { key: "stock", label: "In stock", value: inventory.length, href: "/dashboard/new-car/inventory" },
+      { key: "stock", label: "Inventory rows", value: kpis?.totalRows ?? inventory.length, href: "/dashboard/new-car/inventory" },
+      { key: "available", label: "Available", value: available, href: "/dashboard/new-car/inventory" },
+      { key: "out_of_stock", label: "Out of stock", value: out, href: "/dashboard/new-car/inventory" },
+      { key: "low_stock", label: "Low stock", value: low, href: "/dashboard/new-car/inventory" },
       { key: "leads", label: "Open leads", value: leads.length, sublabel: `${hot} hot`, href: "/dashboard/new-car/leads" },
       { key: "test_drives", label: "Test drives", value: testDrives, href: "/dashboard/new-car/test-drives" },
       { key: "bookings", label: "Bookings", value: bookings, href: "/dashboard/new-car/bookings" },
-      { key: "sold", label: "Delivered MTD", value: delivered },
-      { key: "deliveries", label: "Pending delivery", value: bookings, href: "/dashboard/new-car/deliveries" },
+      { key: "sold", label: "Delivered stage", value: delivered },
     ],
     hotLeadsCount: hot,
     inventory,
     leads,
     bookings: leads
       .filter((l) => l.stage === "booking")
-      .map((l, i) => ({
+      .map((l) => ({
         id: l.id,
         customerName: l.customerName,
         vehicleLabel: l.preferredModel ?? "TBD",
-        tokenAmount: 25000,
+        tokenAmount: 0,
         bookingAmount: l.budgetMax ?? 0,
         status: "pending" as const,
         bookedAt: l.createdAt,
       })),
-    deliveries: leads
-      .filter((l) => l.stage === "delivered")
-      .map((l) => ({
-        id: l.id,
-        customerName: l.customerName,
-        vehicleLabel: l.preferredModel ?? "Vehicle",
-        pdiComplete: true,
-        rcStatus: "Applied",
-        deliveryDate: l.createdAt,
-      })),
+    deliveries: [],
     staff: [],
     insights,
-    salesChart: [{ month: "MTD", units: delivered, revenue: delivered * 1_500_000 }],
+    salesChart: [],
     leadSourceChart: Object.entries(sourceCounts).map(([source, count]) => ({ source, count })),
   };
 }
@@ -235,11 +245,33 @@ export async function fetchNewCarDealerSnapshot(
 ): Promise<NewCarDealerSnapshot> {
   const name = dealerName ?? "Your showroom";
   if (!dealerId) {
-    if (realDataOnly) return emptySnapshot(name);
+    if (realDataOnly) return withRealTestDriveCount(emptySnapshot(name));
     return buildMockNewCarDealerSnapshot(name);
   }
 
   const fallbackImg = getVehicleHero({ brand: "Car", model: "Sedan", bodyType: "Sedan" });
+
+  if (hasConfiguredApi()) {
+    try {
+      const { data } = await api.get<{
+        data?: Record<string, unknown>[];
+        kpis?: { totalRows?: number; available?: number; outOfStock?: number; lowStock?: number };
+      }>("/api/new-car/inventory", { params: { dealer_id: dealerId, pageSize: 100 } });
+      const rows = Array.isArray(data.data) ? data.data : [];
+      const inventory = rows.map((r) => mapInventoryRow(r, fallbackImg));
+      const [{ data: marketplaceLeads }, { data: legacyLeads }] = await Promise.all([
+        supabase.from("leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
+        supabase.from("dealer_leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
+      ]);
+      const leads = mergeLeads(
+        (marketplaceLeads ?? []).map((r) => mapLeadRow(r as Record<string, unknown>)),
+        (legacyLeads ?? []).map((r) => mapLeadRow(r as Record<string, unknown>))
+      );
+      return withRealTestDriveCount(buildRealSnapshot(inventory, leads, name, data.kpis));
+    } catch {
+      /* fall through to legacy path */
+    }
+  }
 
   const [{ data: inv, error: invErr }, { data: marketplaceLeads }, { data: legacyLeads }, { data: marketplaceVehicles, error: vehErr }] =
     await Promise.all([
@@ -257,7 +289,7 @@ export async function fetchNewCarDealerSnapshot(
   );
 
   if (!hasInv && !hasMarketplace && leads.length === 0) {
-    if (realDataOnly) return emptySnapshot(name);
+    if (realDataOnly) return withRealTestDriveCount(emptySnapshot(name));
     return { ...buildMockNewCarDealerSnapshot(name), showroom: { ...buildMockNewCarDealerSnapshot(name).showroom, name } };
   }
 
@@ -267,7 +299,28 @@ export async function fetchNewCarDealerSnapshot(
       ? (marketplaceVehicles as DbVehicle[]).map((v) => mapVehicleToNcdItem(v, fallbackImg))
       : [];
 
-  return buildRealSnapshot(inventory, leads, name);
+  return withRealTestDriveCount(buildRealSnapshot(inventory, leads, name));
+}
+
+async function withRealTestDriveCount(snapshot: NewCarDealerSnapshot): Promise<NewCarDealerSnapshot> {
+  if (!hasConfiguredApi()) return snapshot;
+  try {
+    const { data } = await api.get<{ data?: unknown[] }>("/api/test-drives");
+    const count = Array.isArray(data.data) ? data.data.length : 0;
+    return {
+      ...snapshot,
+      metrics: snapshot.metrics.map((m) =>
+        m.key === "test_drives" ? { ...m, value: count } : m,
+      ),
+    };
+  } catch {
+    return {
+      ...snapshot,
+      metrics: snapshot.metrics.map((m) =>
+        m.key === "test_drives" ? { ...m, value: 0 } : m,
+      ),
+    };
+  }
 }
 
 export async function createNewCarInventory(
@@ -282,16 +335,40 @@ export async function createNewCarInventory(
     onRoadPrice?: number;
     stockStatus?: string;
     imageUrl?: string;
+    images?: string[];
     waitingPeriodDays?: number;
     brochureUrl?: string;
     offers?: NcdInventoryItem["offers"];
     stock?: number;
+    year?: number;
+    bodyType?: string;
+    engineCc?: string;
+    mileage?: string;
+    rangeKm?: string;
+    batteryKwh?: string;
+    power?: string;
+    torque?: string;
+    seating?: string;
+    bootSpace?: string;
+    groundClearance?: string;
+    driveType?: string;
+    airbags?: string;
+    features?: string[];
+    notes?: string;
   },
-  options?: { sellerId?: string; dealerCity?: string; dealerState?: string; syncMarketplace?: boolean }
+  options?: {
+    sellerId?: string;
+    dealerCity?: string;
+    dealerState?: string;
+    syncMarketplace?: boolean;
+    linkedVehicleId?: string;
+  }
 ) {
   const ex = payload.exShowroomPrice;
-  const onRoad = payload.onRoadPrice ?? Math.round(ex * 1.12);
-  let vehicleId: string | undefined;
+  // Never invent on-road (e.g. ex * 1.12) — only use dealer-provided value
+  const onRoad =
+    payload.onRoadPrice != null && Number(payload.onRoadPrice) > 0 ? Number(payload.onRoadPrice) : undefined;
+  let vehicleId: string | undefined = options?.linkedVehicleId;
 
   if (options?.syncMarketplace && options.sellerId && options.dealerCity && options.dealerState) {
     const { data: veh, error: vehErr } = await syncNewCarToMarketplace(
@@ -302,7 +379,7 @@ export async function createNewCarInventory(
         fuelType: payload.fuelType,
         transmission: payload.transmission,
         exShowroomPrice: ex,
-        onRoadPrice: onRoad,
+        onRoadPrice: onRoad ?? ex,
         imageUrl: payload.imageUrl,
       },
       options.sellerId,
@@ -316,32 +393,57 @@ export async function createNewCarInventory(
     dealer_id: dealerId,
     brand: payload.brand.trim(),
     model: payload.model.trim(),
-    variant: payload.variant.trim(),
+    variant: payload.variant.trim() || null,
+    year: payload.year,
     fuel_type: payload.fuelType,
     transmission: payload.transmission,
     ex_showroom_price: ex,
-    on_road_price: onRoad,
-    price: ex,
+    on_road_price: onRoad ?? null,
+    price: ex > 0 ? ex : null,
     stock: payload.stock ?? 1,
     stock_status: payload.stockStatus ?? "available",
     stock_health: "fast_moving",
-    colors: ["White"],
-    image_url:
-      payload.imageUrl ?? getVehicleHero({ brand: payload.brand, model: payload.model, bodyType: "Sedan" }),
-    expected_delivery_days: payload.waitingPeriodDays ?? 14,
+    colors: [],
+    image_url: payload.imageUrl ?? payload.images?.[0] ?? null,
+    expected_delivery_days: payload.waitingPeriodDays ?? null,
     waiting_period_days: payload.waitingPeriodDays,
     brochure_url: payload.brochureUrl ?? null,
     offers: payload.offers ?? [],
-    year: new Date().getFullYear(),
-    metadata: vehicleId ? { vehicle_id: vehicleId } : {},
+    body_type: payload.bodyType,
+    engine_cc: payload.engineCc,
+    mileage: payload.mileage,
+    range_km: payload.rangeKm,
+    battery_kwh: payload.batteryKwh,
+    power: payload.power,
+    torque: payload.torque,
+    seating: payload.seating,
+    boot_space: payload.bootSpace,
+    ground_clearance: payload.groundClearance,
+    drive_type: payload.driveType,
+    airbags: payload.airbags,
+    features: payload.features?.join("|"),
+    notes: payload.notes,
+    metadata: {
+      ...(vehicleId ? { vehicle_id: vehicleId } : {}),
+      ...(ex <= 0 ? { price_on_request: true } : {}),
+      ...(payload.images?.length
+        ? { images: payload.images.map((u) => String(u).trim()).filter(Boolean).slice(0, 8) }
+        : payload.imageUrl
+          ? { images: [payload.imageUrl] }
+          : {}),
+    },
   };
 
-  if (featureFlags.newCarInventoryV2 && hasConfiguredApi()) {
+  if (hasConfiguredApi()) {
     try {
       const { data, status } = await api.post<{ data?: Record<string, unknown> }>("/api/new-car/inventory", row);
       if (status >= 200 && status < 300) return { data: data?.data, error: null };
     } catch (e) {
-      return { data: null, error: { message: e instanceof Error ? e.message : "API error" } };
+      const ax = e as { response?: { data?: { message?: string } }; message?: string };
+      return {
+        data: null,
+        error: { message: ax.response?.data?.message ?? ax.message ?? "Could not add vehicle" },
+      };
     }
   }
 
@@ -360,9 +462,13 @@ export async function updateNewCarInventory(
     onRoadPrice?: number;
     stockStatus?: NcdInventoryItem["stockStatus"];
     imageUrl?: string;
+    images?: string[];
   }
 ) {
   const ncdId = item.ncdInventoryId ?? (item.inventorySource === "ncd" ? item.id : undefined);
+  const photos = (patch.images ?? (patch.imageUrl ? [patch.imageUrl] : undefined))
+    ?.map((u) => String(u ?? "").trim())
+    .filter(Boolean);
   const updates = {
     brand: patch.brand,
     model: patch.model,
@@ -372,7 +478,8 @@ export async function updateNewCarInventory(
     ex_showroom_price: patch.exShowroomPrice,
     on_road_price: patch.onRoadPrice,
     stock_status: patch.stockStatus,
-    image_url: patch.imageUrl,
+    image_url: photos?.[0] ?? patch.imageUrl,
+    ...(photos ? { images: photos } : {}),
   };
 
   if (ncdId) {
@@ -393,7 +500,8 @@ export async function updateNewCarInventory(
       transmission: patch.transmission,
       exShowroomPrice: patch.exShowroomPrice,
       onRoadPrice: patch.onRoadPrice,
-      imageUrl: patch.imageUrl,
+      imageUrl: photos?.[0] ?? patch.imageUrl,
+      images: photos,
       stockStatus: patch.stockStatus,
     });
   }
@@ -403,17 +511,31 @@ export async function updateNewCarInventory(
 
 export async function removeNewCarInventory(item: NcdInventoryItem) {
   const ncdId = item.ncdInventoryId ?? (item.inventorySource === "ncd" ? item.id : undefined);
-  if (ncdId) {
-    if (hasConfiguredApi()) {
-      await api.delete(`/api/new-car/inventory/${ncdId}`);
-    } else {
-      await supabase.from("new_car_inventory").delete().eq("id", ncdId);
+  try {
+    if (ncdId) {
+      if (hasConfiguredApi()) {
+        await api.delete(`/api/new-car/inventory/${ncdId}`);
+      } else {
+        await supabase.from("new_car_inventory").delete().eq("id", ncdId);
+      }
     }
+    if (item.vehicleId) {
+      const { error } = await deleteVehicle(item.vehicleId, { cascadeInventory: false });
+      if (error) return { error: { message: error.message ?? "Failed to delete linked vehicle" } };
+    } else if (!ncdId && item.id) {
+      // Grid item id may be vehicle id when sourced from vehicles table
+      const { error } = await deleteVehicle(item.id);
+      if (error) return { error: { message: error.message ?? "Delete failed" } };
+    }
+    return { error: null as { message: string } | null };
+  } catch (e) {
+    const ax = e as { response?: { data?: { message?: string } }; message?: string };
+    return {
+      error: {
+        message: ax.response?.data?.message ?? ax.message ?? "Delete failed",
+      },
+    };
   }
-  if (item.vehicleId) {
-    await deleteVehicle(item.vehicleId);
-  }
-  return { error: null as { message: string } | null };
 }
 
 export async function uploadDailyNewCarStock(

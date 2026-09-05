@@ -4,16 +4,13 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PartnerLogoMarquee } from "@/features/home/components/PartnerLogoMarquee";
 import { SectionHeader } from "./SectionHeader";
-import { useHomePage } from "@/features/home/context/HomePageContext";
-import { mapBanksToPartnerLogos, mapBrandsToPartnerLogos } from "@/features/home/lib/map-home-data";
+import { PARTNER_BANK_LOGOS, PARTNER_CAR_LOGOS } from "@/features/home/data/homepage-data";
 
+/**
+ * Always uses curated partner logos so the home never flickers empty / broken
+ * when /api/home brands are partial or slow.
+ */
 export function HomePartnersPremium() {
-  const { banks, data } = useHomePage();
-  const bankLogos = banks.length ? mapBanksToPartnerLogos(banks) : undefined;
-  const carLogos = data?.brands?.length ? mapBrandsToPartnerLogos(data.brands) : undefined;
-
-  if (!bankLogos?.length && !carLogos?.length) return null;
-
   return (
     <section className="home-partners-premium home-section-alt">
       <div className="container home-stack">
@@ -30,7 +27,7 @@ export function HomePartnersPremium() {
           viewport={{ once: true }}
           className="home-partners-premium-panel"
         >
-          <PartnerLogoMarquee bankLogos={bankLogos} carLogos={carLogos} />
+          <PartnerLogoMarquee bankLogos={PARTNER_BANK_LOGOS} carLogos={PARTNER_CAR_LOGOS} />
         </motion.div>
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Button size="sm" className="home-section-cta rounded-xl font-semibold" asChild>
@@ -39,7 +36,7 @@ export function HomePartnersPremium() {
             </Link>
           </Button>
           <Button size="sm" variant="outline" className="rounded-xl" asChild>
-            <Link to="/vehicles">Browse by brand</Link>
+            <Link to="/buy">Browse by brand</Link>
           </Button>
         </div>
       </div>

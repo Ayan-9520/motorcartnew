@@ -68,6 +68,34 @@ export type AdminOverviewDto = {
   pendingFinance: number;
   approvedFinance: number;
   loanDisbursedTotal: number;
+  organizations?: number;
+  dealers?: number;
+  leads?: number;
+  opportunities?: number;
+  quotations?: number;
+  testDrives?: number;
+  communityPosts?: number;
+  jobs?: number;
+  serviceBookings?: number;
+  partOrders?: number;
+  insuranceApplications?: number;
+  openPayoutRequests?: number;
+  recordedInvoiceTotal?: number;
+  confirmedPaymentTotal?: number;
+  rewardLiabilityPoints?: number;
+  mrrEstimate?: number;
+  openTickets?: number;
+  fraudOpen?: number;
+  ops?: {
+    unroutedLeads: number;
+    pendingTestDriveRequests: number;
+    expiringQuotations: number;
+    openReports: number;
+    payoutMismatches: number;
+    failedCommunications: number;
+    pendingJobApplications: number;
+    zeroStockNewCars: number;
+  };
 };
 
 export type AdminFlowDto = {

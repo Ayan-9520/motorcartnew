@@ -53,6 +53,16 @@ export function VehicleHubIconBar({
   const onSelect = (hub: EcosystemHubSlug) => {
     const condition = route?.condition ?? activeCondition;
     setBuyContext(hub, condition);
+
+    // Stay on Buy/Sell hub landing — update headline + brands for the selected icon
+    if (pathname === "/buy" || pathname === "/sell") {
+      window.dispatchEvent(
+        new CustomEvent("motorcart:hub-change", { detail: { hub, condition } })
+      );
+      onNavigate?.();
+      return;
+    }
+
     const target =
       pathname.startsWith("/buy") ||
       pathname.startsWith("/sell") ||
@@ -122,11 +132,6 @@ export function VehicleHubIconBar({
               />
             </span>
             <span className="vehicle-hub-icon-label">{hubCategoryLabel(hub)}</span>
-            {variant === "page" && (
-              <span className="vehicle-hub-icon-hint">
-                {isSellContext ? "Sell" : "Buy · Sell"}
-              </span>
-            )}
           </button>
         );
       })}

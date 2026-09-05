@@ -46,14 +46,26 @@ export async function searchVehicles(q: string): Promise<UnifiedSearchResult[]> 
   return rows.map((v) => {
     const rt = vehicleResultType(v.category, v.condition);
     const desc = `${v.year} ${v.brand} ${v.model} · ${v.city} · ₹${Number(v.price)}`;
+    const isNew = v.condition === "new" || v.category === "new-cars";
+    const hub =
+      v.category === "bikes"
+        ? "bikes"
+        : v.category === "trucks"
+          ? "trucks"
+          : v.category === "buses"
+            ? "buses"
+            : v.category === "ev" || String(v.fuelType ?? "").toLowerCase() === "electric"
+              ? "ev"
+              : "cars";
+    const condition = isNew ? "new" : "used";
     return {
       result_type: rt,
       title: v.title,
       description: desc,
-      url: `/vehicles/${v.category}/${v.slug}`,
+      url: `/buy/${hub}/${condition}/${encodeURIComponent(v.slug)}`,
       source: "marketplace",
       score: scoreMatch(q, [v.title, v.brand, v.model, v.city, v.variant]),
-      metadata: { id: v.id, category: v.category },
+      metadata: { id: v.id, category: v.category, slug: v.slug },
     };
   });
 }
@@ -83,11 +95,12 @@ export async function searchDealers(q: string): Promise<UnifiedSearchResult[]> {
     where: {
       deletedAt: null,
       ...(q.trim()
-        ? { OR: [{ name: { contains: q } }, { city: { contains: q } }, { slug: { contains: q } }] }
+        ? { OR: [{ name: { contains: q } }, { city: { contains: q } }, { slug: { contains: q } }, { pincode: { contains: q } }] }
         : {}),
     },
     take: PER_PROVIDER,
     orderBy: { name: "asc" },
+    select: { id: true, name: true, city: true, state: true, slug: true, isVerified: true, pincode: true },
   });
 
   return rows.map((d) => ({
@@ -96,7 +109,7 @@ export async function searchDealers(q: string): Promise<UnifiedSearchResult[]> {
     description: `${d.city}, ${d.state}${d.isVerified ? " · Verified" : ""}`,
     url: `/dealers/${d.slug}`,
     source: "dealers",
-    score: scoreMatch(q, [d.name, d.city, d.slug]),
+    score: scoreMatch(q, [d.name, d.city, d.slug, d.pincode]),
     metadata: { id: d.id },
   }));
 }
@@ -197,16 +210,18 @@ export function searchPartsSellers(q: string) {
 }
 
 export async function searchPartsCatalog(q: string): Promise<UnifiedSearchResult[]> {
-  const rows = await prisma.part.findMany({
+  const rows = await prisma.partProduct.findMany({
     where: {
-      isActive: true,
+      deletedAt: null,
+      status: "ACTIVE",
       ...(q.trim()
         ? {
             OR: [
               { name: { contains: q } },
               { brand: { contains: q } },
-              { category: { contains: q } },
-              { slug: { contains: q } },
+              { partNumber: { contains: q } },
+              { sku: { contains: q } },
+              { categorySlug: { contains: q } },
             ],
           }
         : {}),
@@ -216,13 +231,15 @@ export async function searchPartsCatalog(q: string): Promise<UnifiedSearchResult
   });
 
   return rows.map((p) => ({
-    result_type: "parts_seller" as const,
+    result_type: "part" as const,
     title: p.name,
-    description: `${p.category}${p.brand ? ` · ${p.brand}` : ""} · ₹${Number(p.price)}`,
-    url: `/parts/${p.category}/${p.slug}`,
+    description: [p.brand, p.partNumber, p.categorySlug, p.stock > 0 ? "In seller stock" : "Listed"]
+      .filter(Boolean)
+      .join(" · "),
+    url: `/parts?q=${encodeURIComponent(p.name)}`,
     source: "parts",
-    score: scoreMatch(q, [p.name, p.brand, p.category, p.slug]),
-    metadata: { id: p.id },
+    score: scoreMatch(q, [p.name, p.brand, p.partNumber, p.sku]),
+    metadata: { id: p.id, stock: p.stock },
   }));
 }
 
@@ -299,4 +316,175 @@ export async function searchGrowthTemplates(q: string): Promise<UnifiedSearchRes
     score: scoreMatch(q, [t.name, t.templateKey, t.body]),
     metadata: { id: t.id, workspace_slug: t.workspace.slug },
   }));
+}
+
+export async function searchOrganizations(q: string): Promise<UnifiedSearchResult[]> {
+  const rows = await prisma.organization.findMany({
+    where: {
+      deletedAt: null,
+      status: "active",
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { displayName: { contains: q, mode: "insensitive" } },
+        { slug: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    take: PER_PROVIDER,
+    select: { id: true, slug: true, displayName: true, type: true },
+  });
+  return rows.map((o) => ({
+    result_type: "company" as const,
+    title: o.displayName,
+    description: o.type,
+    url: `/company/${o.slug}`,
+    source: "organizations",
+    score: scoreMatch(q, [o.displayName, o.slug, o.type]),
+    metadata: { id: o.id, type: o.type },
+  }));
+}
+
+export async function searchJobsPublic(q: string): Promise<UnifiedSearchResult[]> {
+  const rows = await prisma.jobPosting.findMany({
+    where: {
+      status: "OPEN",
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { location: { contains: q, mode: "insensitive" } },
+        { careerPath: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    take: PER_PROVIDER,
+    select: { id: true, title: true, location: true, careerPath: true, salaryMin: true, salaryMax: true },
+  });
+  return rows.map((j) => ({
+    result_type: "job" as const,
+    title: j.title,
+    description: [j.location, j.careerPath].filter(Boolean).join(" · "),
+    url: `/jobs/${j.id}`,
+    source: "jobs",
+    score: scoreMatch(q, [j.title, j.location, j.careerPath]),
+    metadata: { id: j.id },
+  }));
+}
+
+export async function searchProfessionals(q: string): Promise<UnifiedSearchResult[]> {
+  const rows = await prisma.communityUserProfile.findMany({
+    where: {
+      isPrivate: false,
+      OR: [
+        { displayName: { contains: q, mode: "insensitive" } },
+        { headline: { contains: q, mode: "insensitive" } },
+        { handle: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    take: PER_PROVIDER,
+    select: { userId: true, displayName: true, headline: true, handle: true, locationCity: true },
+  });
+  return rows.map((p) => ({
+    result_type: "professional" as const,
+    title: p.displayName,
+    description: [p.headline, p.locationCity].filter(Boolean).join(" · "),
+    url: `/community/@${p.handle}`,
+    source: "community",
+    score: scoreMatch(q, [p.displayName, p.headline, p.handle]),
+    metadata: { userId: p.userId },
+  }));
+}
+
+export async function searchFinanceProducts(q: string): Promise<UnifiedSearchResult[]> {
+  const rows = await prisma.financeProduct.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { loanType: { contains: q, mode: "insensitive" } },
+        { vehicleCategory: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    take: PER_PROVIDER,
+    select: { id: true, name: true, loanType: true, vehicleCategory: true },
+  });
+  return rows.map((p) => ({
+    result_type: "finance_product" as const,
+    title: p.name,
+    description: [p.loanType, p.vehicleCategory].filter(Boolean).join(" · "),
+    url: `/finance`,
+    source: "finance",
+    score: scoreMatch(q, [p.name, p.loanType, p.vehicleCategory]),
+    metadata: { id: p.id },
+  }));
+}
+
+export async function searchInsurancePartners(q: string): Promise<UnifiedSearchResult[]> {
+  const rows = await prisma.insurancePartner.findMany({
+    where: {
+      isActive: true,
+      OR: [{ name: { contains: q, mode: "insensitive" } }, { slug: { contains: q, mode: "insensitive" } }],
+    },
+    take: PER_PROVIDER,
+    select: { id: true, name: true, slug: true },
+  });
+  return rows.map((p) => ({
+    result_type: "insurance_partner" as const,
+    title: p.name,
+    description: "Insurance partner",
+    url: `/insurance`,
+    source: "insurance",
+    score: scoreMatch(q, [p.name, p.slug]),
+    metadata: { id: p.id },
+  }));
+}
+
+export async function searchServiceCentersPublic(q: string): Promise<UnifiedSearchResult[]> {
+  const rows = await prisma.serviceCenter.findMany({
+    where: {
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { city: { contains: q, mode: "insensitive" } },
+        { pincode: q },
+      ],
+    },
+    take: PER_PROVIDER,
+    select: { id: true, name: true, city: true, slug: true, pincode: true },
+  });
+  return rows.map((c) => ({
+    result_type: "service_center" as const,
+    title: c.name,
+    description: [c.city, c.pincode].filter(Boolean).join(" · "),
+    url: `/services/${c.slug}`,
+    source: "service",
+    score: scoreMatch(q, [c.name, c.city, c.pincode]),
+    metadata: { id: c.id },
+  }));
+}
+
+/** Dealer-held new-car stock only — never CatalogVariant / master catalog. */
+export async function searchNewCarStock(q: string): Promise<UnifiedSearchResult[]> {
+  const rows = await prisma.newCarInventory.findMany({
+    where: {
+      stock: { gt: 0 },
+      stockStatus: "available",
+      OR: [
+        { brand: { contains: q, mode: "insensitive" } },
+        { model: { contains: q, mode: "insensitive" } },
+        { variant: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    take: PER_PROVIDER,
+    select: { id: true, brand: true, model: true, variant: true, year: true },
+  });
+  return rows.map((r) => {
+    const slug = `ncd-${r.id}`;
+    const title = [r.year, r.brand, r.model, r.variant].filter(Boolean).join(" ").trim();
+    return {
+      result_type: "new_car_stock" as const,
+      title: title || `${r.brand} ${r.model}`,
+      description: r.variant ? `${r.variant} · dealer stock` : "Dealer stock · new car",
+      // Detail page resolves ncd-{uuid} via /new-cars/:slug and buy hub
+      url: `/buy/cars/new/${encodeURIComponent(slug)}`,
+      source: "dealer_stock",
+      score: scoreMatch(q, [r.brand, r.model, r.variant]),
+      metadata: { id: r.id, slug },
+    };
+  });
 }

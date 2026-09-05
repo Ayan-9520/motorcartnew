@@ -26,6 +26,9 @@ export async function GET(req: NextRequest) {
   const handle = searchParams.get("handle");
   const businessSlug = searchParams.get("business_slug");
   const groupSlug = searchParams.get("group_slug");
+  const dealerId = searchParams.get("dealer_id");
+  const authorId = searchParams.get("author_id");
+  const vehicleOnly = searchParams.get("vehicle_only") === "1" || searchParams.get("vehicle_only") === "true";
   const limit = searchParams.get("limit")
     ? parseInt(searchParams.get("limit")!, 10)
     : undefined;
@@ -41,6 +44,9 @@ export async function GET(req: NextRequest) {
     handle,
     business_slug: businessSlug,
     group_slug: groupSlug,
+    dealer_id: dealerId,
+    author_id: authorId,
+    vehicle_only: vehicleOnly,
   });
 
   if (result.forbidden) {
@@ -48,12 +54,15 @@ export async function GET(req: NextRequest) {
   }
 
   return ok({
-    data: result.items.map(({ post, liked_by_me }) =>
+    data: result.items.map(({ post, liked_by_me, saved_by_me }) =>
       mapSocialPost(
         post,
         post.author.communityProfile,
         post.author,
-        liked_by_me !== undefined ? { liked_by_me } : undefined
+        {
+          ...(liked_by_me !== undefined ? { liked_by_me } : {}),
+          ...(saved_by_me !== undefined ? { saved_by_me } : {}),
+        }
       )
     ),
     next_cursor: result.next_cursor,

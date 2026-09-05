@@ -215,7 +215,7 @@ export function buildMockNewCarDealerSnapshot(dealerName = "Hyundai Arena Pune")
     { key: "leads", label: "Active leads", value: leads.length, sublabel: `${hotLeadsCount} hot`, href: "/dashboard/new-car/leads" },
     { key: "finance", label: "Finance conversion", value: "68%", sublabel: "32 files MTD", trend: 5.2, variant: "success" as const },
     { key: "insurance", label: "Insurance conversion", value: "74%", sublabel: "ACKO + Digit", trend: 3.1, variant: "success" as const },
-    { key: "testdrives", label: "Test drives", value: 38, sublabel: "12 scheduled today", href: "/dashboard/new-car/test-drives" },
+    { key: "testdrives", label: "Test drives", value: 0, sublabel: "No bookings in demo snapshot", href: "/dashboard/new-car/test-drives" },
     { key: "whatsapp", label: "WhatsApp enquiries", value: 156, sublabel: "24 unread", href: "/dashboard/new-car/whatsapp" },
     { key: "booking", label: "Booking amount", value: "₹42.5L", sublabel: "Token collected MTD" },
     { key: "accessories", label: "Accessories revenue", value: "₹8.4L", sublabel: "+18% attach rate" },

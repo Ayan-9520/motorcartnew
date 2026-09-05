@@ -127,6 +127,14 @@ export async function runDbQuery(params: {
   }
 
   if (params.action === "delete") {
+    // Soft-delete tables (e.g. vehicles): set deletedAt so listings disappear without FK breakage
+    if (tableHasSoftDelete(params.table) && typeof delegate.updateMany === "function") {
+      await delegate.updateMany({
+        where,
+        data: { deletedAt: new Date() },
+      });
+      return null;
+    }
     await delegate.deleteMany({ where });
     return null;
   }

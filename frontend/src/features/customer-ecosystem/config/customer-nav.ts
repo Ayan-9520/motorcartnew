@@ -3,7 +3,7 @@ import {
   Award,
   BarChart3,
   Bell,
-  Bot,
+  Calendar,
   Car,
   CreditCard,
   FileText,
@@ -47,7 +47,8 @@ export const CUSTOMER_ECOSYSTEM_NAV: CustomerNavGroup[] = [
     label: "Overview",
     items: [
       { to: "/dashboard/customer", label: "Dashboard Home", icon: LayoutDashboard, end: true },
-      { to: "/dashboard/customer/insights", label: "AI Insights", icon: Bot },
+      { to: "/dashboard/customer/one", label: "MotorCart One", icon: CreditCard },
+      { to: "/dashboard/customer/insights", label: "Ownership alerts", icon: Bell },
       { to: "/dashboard/customer/notifications", label: "Notifications", icon: Bell },
     ],
   },
@@ -68,6 +69,8 @@ export const CUSTOMER_ECOSYSTEM_NAV: CustomerNavGroup[] = [
     items: [
       { to: "/dashboard/customer/loans", label: "Loan Applications", icon: Landmark },
       { to: "/dashboard/customer/loans", label: "EMI Tracker", icon: CreditCard },
+      { to: "/dashboard/customer/quotations", label: "My Quotations", icon: FileText },
+      { to: "/dashboard/customer/test-drives", label: "My Test Drives", icon: Calendar },
       { to: "/finance/tools", label: "Credit Score", icon: BarChart3 },
       { to: "/finance/tools", label: "Eligibility Checker", icon: Sparkles },
     ],
@@ -76,6 +79,10 @@ export const CUSTOMER_ECOSYSTEM_NAV: CustomerNavGroup[] = [
     label: "Marketplace",
     items: [
       { to: "/wishlist", label: "Saved Vehicles", icon: Heart },
+      { to: "/dashboard/customer/saved-searches", label: "Saved Searches", icon: Search },
+      { to: "/dashboard/customer/reminders", label: "Reminders", icon: Calendar },
+      { to: "/dashboard/customer/activity", label: "Activity", icon: BarChart3 },
+      { to: "/dashboard/customer/sell", label: "Sell My Vehicle", icon: Gavel },
       { to: "/dashboard/customer/recently-viewed", label: "Recently Viewed", icon: Search },
       { to: "/vehicles/compare", label: "Compare Vehicles", icon: Car },
       { to: "/auctions/browse", label: "Auctions & Bids", icon: Gavel },

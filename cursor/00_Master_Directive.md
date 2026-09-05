@@ -2,7 +2,7 @@
 
 **Version:** 2.0 Premium  
 **Status:** Authoritative — overrides assumptions when conflicts arise  
-**Index:** See `cursor/README.md` for all 26 enterprise documents
+**Index:** See `cursor/README.md` for all enterprise documents
 
 ---
 

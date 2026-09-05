@@ -142,43 +142,51 @@ export async function rejectBusinessAccount(
 }
 
 export async function fetchPlatformOverview(): Promise<PlatformOverview> {
+  const EMPTY: PlatformOverview = {
+    totalUsers: 0,
+    activeUsers: 0,
+    pendingKyc: 0,
+    pendingDealers: 0,
+    pendingBusiness: 0,
+    pendingFinance: 0,
+    approvedFinance: 0,
+    loanDisbursedTotal: 0,
+    openTickets: 0,
+    fraudOpen: 0,
+    mrrEstimate: 0,
+    listingsLive: 0,
+  };
   const adminOverview = await fetchAdminOverviewApi();
-
-  try {
-    const [users, dealers, vehicles, tickets, fraud] = await Promise.all([
-      supabase.from("users").select("id, status, kyc_status", { count: "exact", head: false }).limit(5000),
-      supabase
-        .from("dealers")
-        .select("id, verification_status", { count: "exact" })
-        .in("verification_status", ["pending", "documents_submitted", "under_review"]),
-      supabase.from("vehicles").select("id", { count: "exact", head: true }).eq("status", "available"),
-      supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
-      supabase.from("platform_fraud_alerts").select("id", { count: "exact", head: true }).eq("status", "open"),
-    ]);
-
-    const rows = users.data ?? [];
-    const pendingKyc = rows.filter((u) => u.kyc_status === "submitted" || u.kyc_status === "pending").length;
-    const activeUsers = rows.filter((u) => (u.status ?? "active") === "active").length;
-
-    return {
-      totalUsers: adminOverview?.totalUsers ?? users.count ?? rows.length,
-      activeUsers: adminOverview?.activeUsers ?? activeUsers,
-      pendingKyc: adminOverview?.pendingKyc ?? pendingKyc,
-      pendingDealers: adminOverview?.pendingDealers ?? dealers.count ?? 0,
-      pendingBusiness:
-        adminOverview?.pendingBusiness ??
-        rows.filter((u) => u.status === "pending_verification").length,
-      pendingFinance: adminOverview?.pendingFinance ?? 0,
-      approvedFinance: adminOverview?.approvedFinance ?? 0,
-      loanDisbursedTotal: adminOverview?.loanDisbursedTotal ?? 0,
-      openTickets: tickets.count ?? 0,
-      fraudOpen: fraud.count ?? 0,
-      mrrEstimate: adminOverview?.loanDisbursedTotal ?? MOCK_OVERVIEW.mrrEstimate,
-      listingsLive: adminOverview?.listingsLive ?? vehicles.count ?? 0,
-    };
-  } catch (e) {
-    return useMock(MOCK_OVERVIEW, e);
-  }
+  if (!adminOverview) return EMPTY;
+  return {
+    totalUsers: adminOverview.totalUsers,
+    activeUsers: adminOverview.activeUsers,
+    pendingKyc: adminOverview.pendingKyc,
+    pendingDealers: adminOverview.pendingDealers,
+    pendingBusiness: adminOverview.pendingBusiness,
+    pendingFinance: adminOverview.pendingFinance,
+    approvedFinance: adminOverview.approvedFinance,
+    loanDisbursedTotal: adminOverview.loanDisbursedTotal,
+    openTickets: adminOverview.openTickets ?? 0,
+    fraudOpen: adminOverview.fraudOpen ?? 0,
+    mrrEstimate: 0,
+    listingsLive: adminOverview.listingsLive,
+    organizations: adminOverview.organizations,
+    dealers: adminOverview.dealers,
+    leads: adminOverview.leads,
+    opportunities: adminOverview.opportunities,
+    quotations: adminOverview.quotations,
+    testDrives: adminOverview.testDrives,
+    communityPosts: adminOverview.communityPosts,
+    jobs: adminOverview.jobs,
+    serviceBookings: adminOverview.serviceBookings,
+    partOrders: adminOverview.partOrders,
+    insuranceApplications: adminOverview.insuranceApplications,
+    openPayoutRequests: adminOverview.openPayoutRequests,
+    recordedInvoiceTotal: adminOverview.recordedInvoiceTotal,
+    rewardLiabilityPoints: adminOverview.rewardLiabilityPoints,
+    ops: adminOverview.ops,
+  };
 }
 
 export async function fetchAdminUsers(): Promise<AdminUserRow[]> {

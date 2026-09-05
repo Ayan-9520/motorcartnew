@@ -55,16 +55,19 @@ export function inferBuyHubFromVehicle(
   };
 
   const hub = hubMap[seg] ?? "cars";
-  let condition: VehicleConditionSlug =
-    vehicle.condition === "new" ? "new" : "used";
+  // New-car inventory (ncd-*) and explicit new flags always stay under New — never Pre-Owned
+  const isNew =
+    /^ncd-/i.test(vehicle.slug ?? "") ||
+    vehicle.condition === "new" ||
+    vehicle.category === "new-cars";
+  let condition: VehicleConditionSlug = isNew ? "new" : "used";
 
-  if (hub === "cars") {
-    if (vehicle.category === "new-cars") condition = "new";
-    else if (vehicle.category === "used-cars") condition = "used";
+  if (hub === "cars" && !isNew) {
+    if (vehicle.category === "used-cars") condition = "used";
   }
 
   if (hub === "auto" || hub === "equipment") {
-    condition = "used";
+    condition = isNew ? "new" : "used";
   }
 
   return { hub, condition };
@@ -204,6 +207,9 @@ export function filterVehicles(
 
   if (filters.brand) result = result.filter((v) => v.brand.toLowerCase() === filters.brand!.toLowerCase());
   if (filters.model) result = result.filter((v) => v.model.toLowerCase().includes(filters.model!.toLowerCase()));
+  if (filters.variant) {
+    result = result.filter((v) => (v.variant ?? "").toLowerCase().includes(filters.variant!.toLowerCase()));
+  }
   if (filters.fuel) result = result.filter((v) => v.fuelType.toLowerCase() === filters.fuel!.toLowerCase());
   if (filters.transmission) result = result.filter((v) => v.transmission.toLowerCase() === filters.transmission!.toLowerCase());
   if (filters.priceMin != null) result = result.filter((v) => getDiscountedPrice(v) >= filters.priceMin!);
@@ -325,6 +331,7 @@ export function filtersFromSearchParams(params: URLSearchParams): VehicleFilters
     condition: condition === "new" || condition === "used" ? condition : undefined,
     brand: params.get("brand") ?? undefined,
     model: params.get("model") ?? undefined,
+    variant: params.get("variant") ?? undefined,
     fuel: params.get("fuel") ?? undefined,
     transmission: params.get("transmission") ?? undefined,
     priceMin: params.get("priceMin") ? Number(params.get("priceMin")) : undefined,

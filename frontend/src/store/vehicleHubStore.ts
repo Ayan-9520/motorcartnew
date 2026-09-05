@@ -8,7 +8,6 @@ import {
   sellListingPath,
   servicesHubPath,
 } from "@/features/marketplace/lib/route-utils";
-import { hubLandingPath } from "@/features/ecosystem/lib/hub-paths";
 import type { EcosystemHubSlug } from "@/features/ecosystem/types";
 
 /** Six primary vehicle ecosystems — navbar & home hub grid */
@@ -37,7 +36,8 @@ export function hubSellPath(hub: HubCategorySlug): string {
 }
 
 export function hubEcosystemPath(hub: EcosystemHubSlug): string {
-  return hubLandingPath(hub);
+  // Former /cars|/bikes hub landings removed — icon bar goes straight to Buy
+  return hubBuyPath(hub, "used");
 }
 
 /**

@@ -1,11 +1,8 @@
 import { NextRequest } from "next/server";
 import { ok, err } from "@/lib/api-response";
 import { requireCommunityAuth } from "@/lib/community/guard";
-import {
-  followTarget,
-  unfollowTarget,
-  type FollowTarget,
-} from "@/services/community-engagement.service";
+import { followTarget, unfollowTarget, type FollowTarget } from "@/services/community-engagement.service";
+import { communityRateLimit, handleCommunityError } from "@/lib/community/http";
 
 function parseTarget(body: Record<string, unknown>): FollowTarget | null {
   const targetType = body.target_type != null ? String(body.target_type) : "";
@@ -23,6 +20,9 @@ export async function POST(req: NextRequest) {
   const gate = await requireCommunityAuth(req, "follow");
   if ("response" in gate) return gate.response;
 
+  const limited = communityRateLimit(req, gate.auth.sub, "follow", 40);
+  if (limited) return limited;
+
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const target = parseTarget(body);
   if (!target) return err("Invalid follow target", 400);
@@ -31,12 +31,7 @@ export async function POST(req: NextRequest) {
     const result = await followTarget(gate.auth.sub, target);
     return ok({ data: result }, 201);
   } catch (e) {
-    if (e instanceof Error) {
-      if (e.message === "SELF_FOLLOW") return err("Cannot follow yourself", 400);
-      if (e.message === "TARGET_NOT_FOUND") return err("Target not found", 404);
-      if (e.message === "MISSING_TARGET") return err("Missing target id", 400);
-    }
-    return err("Could not follow", 400);
+    return handleCommunityError(e);
   }
 }
 
@@ -52,9 +47,6 @@ export async function DELETE(req: NextRequest) {
     const result = await unfollowTarget(gate.auth.sub, target);
     return ok({ data: result });
   } catch (e) {
-    if (e instanceof Error && e.message === "MISSING_TARGET") {
-      return err("Missing target id", 400);
-    }
-    return err("Could not unfollow", 400);
+    return handleCommunityError(e);
   }
 }

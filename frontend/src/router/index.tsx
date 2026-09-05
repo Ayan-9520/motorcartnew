@@ -19,6 +19,12 @@ import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { AboutPage } from "@/pages/AboutPage";
 import { ContactPage } from "@/pages/ContactPage";
 import { CareersPage } from "@/pages/CareersPage";
+import { JobsMarketplacePage } from "@/features/jobs/pages/JobsMarketplacePage";
+import { JobDetailPage } from "@/features/jobs/pages/JobDetailPage";
+import { CompanyPublicPage } from "@/features/jobs/pages/CompanyPublicPage";
+import { CompanyJobsPage } from "@/features/jobs/pages/CompanyJobsPage";
+import { OemDashboardPage } from "@/features/oem/pages/OemDashboardPage";
+import { InsurancePartnerDashboardPage } from "@/features/insurance/pages/InsurancePartnerDashboardPage";
 import { PressPage } from "@/pages/PressPage";
 import { PrivacyPage } from "@/pages/PrivacyPage";
 import { TermsPage } from "@/pages/TermsPage";
@@ -44,11 +50,25 @@ import {
   CustomerServiceRecordsPage,
   CustomerVehicleHealthPage,
   CustomerRecentlyViewedPage,
+  CustomerQuotationsPage,
+  CustomerQuotationDetailPage,
+  CustomerTestDrivesPage,
+  CustomerTestDriveDetailPage,
+  CustomerMotorCartOnePage,
+  MotorCartOneVerifyPage,
+  CustomerSavedSearchesPage,
+  CustomerRemindersPage,
+  CustomerActivityPage,
+  CustomerSellRequestsPage,
 } from "@/features/customer-ecosystem";
 import { VehicleListingPage } from "@/features/vehicles/pages/VehicleListingPage";
 import { BuyHubPage } from "@/features/marketplace/pages/BuyHubPage";
+import { BuyBrandModelsPage } from "@/features/marketplace/pages/BuyBrandModelsPage";
+import { BuyModelVariantsPage } from "@/features/marketplace/pages/BuyModelVariantsPage";
 import { SellHubPage } from "@/features/marketplace/pages/SellHubPage";
 import { SellListingPage } from "@/features/marketplace/pages/SellListingPage";
+import { DealerAcquisitionsPage } from "@/features/sales-os/pages/DealerAcquisitionsPage";
+import { ValuationDeskPage } from "@/features/sales-os/pages/ValuationDeskPage";
 import { BuyCategoryListingPage } from "@/features/marketplace/pages/BuyCategoryListingPage";
 import { VehicleDetailPage } from "@/features/vehicles/pages/VehicleDetailPage";
 import { VehicleComparePage } from "@/features/vehicles/pages/VehicleComparePage";
@@ -71,7 +91,6 @@ import {
   NewCarTeamPage,
   NewCarFinancePage,
   NewCarInsurancePage,
-  NewCarTestDrivesPage,
   NewCarRtoPage,
   NewCarCustomersPage,
   NewCarWhatsAppPage,
@@ -99,6 +118,18 @@ import {
   DealerStorefrontPage,
   DealerSettingsPage,
   DealerCallsPage,
+  DealerPipelinePage,
+  DealerOpportunitiesPage,
+  DealerFollowUpsPage,
+  DealerLeadBoardPage,
+  DealerCreditsPage,
+  DealerBillingPage,
+  DealerEarningsPage,
+  DealerQuotationsPage,
+  DealerQuotationEditorPage,
+  DealerQuotationDetailPage,
+  DealerTestDrivesPage,
+  DealerTestDriveDetailPage,
   OrganizationFoundationPage,
 } from "@/router/lazy-pages";
 import { AuctionHubPage } from "@/features/auctions/pages/AuctionHubPage";
@@ -183,6 +214,8 @@ import { CommunityDealerPage } from "@/features/community/pages/CommunityDealerP
 import { CommunityBusinessPage } from "@/features/community/pages/CommunityBusinessPage";
 import { CommunityInfluencerPage } from "@/features/community/pages/CommunityInfluencerPage";
 import { CommunityMeRedirect } from "@/features/community/pages/CommunityMeRedirect";
+import { CommunityDiscoverPage } from "@/features/community/pages/CommunityDiscoverPage";
+import { CommunitySavedPage } from "@/features/community/pages/CommunitySavedPage";
 import { CommunityLayout } from "@/layouts/CommunityLayout";
 import { SuperAdminLayout } from "@/layouts/SuperAdminLayout";
 import {
@@ -213,6 +246,9 @@ import {
   MarketplaceLeadsPage,
   CatalogImportPage,
   CatalogImportPreviewPage,
+  CommercialRevenuePage,
+  CommercialPayoutsPage,
+  CommercialRewardsRulesPage,
   CommunityModerationPage,
   AuctionAdminPage,
   AuctionDeskGate,
@@ -221,7 +257,6 @@ import { AIControlCenterPage } from "@/router/lazy-pages";
 import { DealersHubPage } from "@/features/dealer-network/pages/DealersHubPage";
 import { DealersBrowsePage } from "@/features/dealer-network/pages/DealersBrowsePage";
 import { DealerProfilePage } from "@/features/dealer-network/pages/DealerProfilePage";
-import { VehicleHubPage } from "@/features/ecosystem/pages/VehicleHubPage";
 import {
   DirectoryHubPage,
   DirectoryListPage,
@@ -240,12 +275,12 @@ export const router = createBrowserRouter([
     element: <PublicLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "cars", element: <VehicleHubPage /> },
-      { path: "bikes", element: <VehicleHubPage /> },
-      { path: "trucks", element: <VehicleHubPage /> },
-      { path: "buses", element: <VehicleHubPage /> },
-      { path: "ev", element: <VehicleHubPage /> },
-      { path: "auto", element: <VehicleHubPage /> },
+      { path: "cars", element: <Navigate to="/buy/cars/used" replace /> },
+      { path: "bikes", element: <Navigate to="/buy/bikes/used" replace /> },
+      { path: "trucks", element: <Navigate to="/buy/trucks/used" replace /> },
+      { path: "buses", element: <Navigate to="/buy/buses/used" replace /> },
+      { path: "ev", element: <Navigate to="/buy/ev/used" replace /> },
+      { path: "auto", element: <Navigate to="/buy/auto/used" replace /> },
       { path: "new-cars", element: <NewCarsHubPage /> },
       { path: "new-cars/browse", element: <Navigate to="/buy/cars/new" replace /> },
       { path: "new-cars/:slug", element: <VehicleDetailPage /> },
@@ -253,6 +288,8 @@ export const router = createBrowserRouter([
       { path: "used-cars/browse", element: <Navigate to="/buy/cars/used" replace /> },
       { path: "used-cars/:slug", element: <VehicleDetailPage /> },
       { path: "buy", element: <BuyHubPage /> },
+      { path: "buy/:category/:condition/brand/:brandSlug/model/:modelSlug", element: <BuyModelVariantsPage /> },
+      { path: "buy/:category/:condition/brand/:brandSlug", element: <BuyBrandModelsPage /> },
       { path: "buy/:category/:condition/:slug", element: <VehicleDetailPage /> },
       { path: "buy/:category/:condition", element: <BuyCategoryListingPage /> },
       { path: "vehicles", element: <Navigate to="/buy" replace /> },
@@ -263,6 +300,7 @@ export const router = createBrowserRouter([
       { path: "vehicles/:category/:slug", element: <VehicleDetailPage /> },
       { path: "sell", element: <SellHubPage /> },
       { path: "sell/:category", element: <SellListingPage /> },
+      { path: "one/verify/:token", element: <MotorCartOneVerifyPage /> },
       { path: "auctions", element: <AuctionHubPage /> },
       { path: "auctions/browse", element: <AuctionListingPage /> },
       { path: "auctions/:status/:slug", element: <AuctionRoomPage /> },
@@ -359,6 +397,8 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <CommunityFeedPage /> },
           { path: "me", element: <CommunityMeRedirect /> },
+          { path: "discover", element: <CommunityDiscoverPage /> },
+          { path: "saved", element: <CommunitySavedPage /> },
           { path: "post/:id", element: <CommunityPostPage /> },
           { path: "groups", element: <CommunityGroupsPage /> },
           { path: "groups/:slug", element: <CommunityGroupPage /> },
@@ -379,6 +419,10 @@ export const router = createBrowserRouter([
       { path: "about", element: <AboutPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "careers", element: <CareersPage /> },
+      { path: "jobs", element: <JobsMarketplacePage /> },
+      { path: "jobs/:id", element: <JobDetailPage /> },
+      { path: "company/:slug", element: <CompanyPublicPage /> },
+      { path: "company/:slug/jobs", element: <CompanyJobsPage /> },
       { path: "press", element: <PressPage /> },
       { path: "privacy", element: <PrivacyPage /> },
       { path: "terms", element: <TermsPage /> },
@@ -449,9 +493,23 @@ export const router = createBrowserRouter([
       { path: "dashboard/dealer/subscription", element: <DealerSubscriptionPage /> },
       { path: "dashboard/dealer/storefront", element: <DealerStorefrontPage /> },
       { path: "dashboard/dealer/leads", element: <DealerLeadsPage /> },
+      { path: "dashboard/dealer/quotations", element: <DealerQuotationsPage /> },
+      { path: "dashboard/dealer/quotations/new", element: <DealerQuotationEditorPage /> },
+      { path: "dashboard/dealer/quotations/:id", element: <DealerQuotationDetailPage /> },
+      { path: "dashboard/dealer/quotations/:id/edit", element: <DealerQuotationEditorPage /> },
+      { path: "dashboard/dealer/test-drives", element: <DealerTestDrivesPage /> },
+      { path: "dashboard/dealer/test-drives/:id", element: <DealerTestDriveDetailPage /> },
       { path: "dashboard/dealer/enquiries", element: <DealerEnquiriesPage /> },
       { path: "dashboard/dealer/whatsapp", element: <DealerWhatsAppPage /> },
       { path: "dashboard/dealer/calls", element: <DealerCallsPage /> },
+      { path: "dashboard/dealer/pipeline", element: <DealerPipelinePage /> },
+      { path: "dashboard/dealer/opportunities", element: <DealerOpportunitiesPage /> },
+      { path: "dashboard/dealer/follow-ups", element: <DealerFollowUpsPage /> },
+      { path: "dashboard/dealer/lead-board", element: <DealerLeadBoardPage /> },
+      { path: "dashboard/dealer/acquisitions", element: <DealerAcquisitionsPage /> },
+      { path: "dashboard/dealer/credits", element: <DealerCreditsPage /> },
+      { path: "dashboard/dealer/billing", element: <DealerBillingPage /> },
+      { path: "dashboard/dealer/earnings", element: <DealerEarningsPage /> },
       { path: "dashboard/dealer/analytics", element: <DealerAnalyticsPage /> },
       { path: "dashboard/dealer/team", element: <DealerTeamPage /> },
       { path: "dashboard/dealer/settings", element: <DealerSettingsPage /> },
@@ -470,7 +528,12 @@ export const router = createBrowserRouter([
       { path: "dashboard/new-car/inventory/bulk", element: <NewCarBulkUploadPage /> },
       { path: "dashboard/new-car/leads", element: <NewCarLeadsPage /> },
       { path: "dashboard/new-car/leads/:id", element: <NewCarLeadDetailPage /> },
-      { path: "dashboard/new-car/test-drives", element: <NewCarTestDrivesPage /> },
+      { path: "dashboard/new-car/quotations", element: <DealerQuotationsPage /> },
+      { path: "dashboard/new-car/quotations/new", element: <DealerQuotationEditorPage /> },
+      { path: "dashboard/new-car/quotations/:id", element: <DealerQuotationDetailPage /> },
+      { path: "dashboard/new-car/quotations/:id/edit", element: <DealerQuotationEditorPage /> },
+      { path: "dashboard/new-car/test-drives", element: <DealerTestDrivesPage /> },
+      { path: "dashboard/new-car/test-drives/:id", element: <DealerTestDriveDetailPage /> },
       { path: "dashboard/new-car/bookings", element: <NewCarBookingsPage /> },
       { path: "dashboard/new-car/finance", element: <NewCarFinancePage /> },
       { path: "dashboard/new-car/insurance", element: <NewCarInsurancePage /> },
@@ -810,6 +873,102 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "dashboard/customer/quotations",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerQuotationsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/quotations/:id",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerQuotationDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/test-drives",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerTestDrivesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/test-drives/:id",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerTestDriveDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/one",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerMotorCartOnePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/saved-searches",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerSavedSearchesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/reminders",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerRemindersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/activity",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerActivityPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/customer/sell",
+        element: (
+          <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
+            <CustomerSellRequestsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/valuation",
+        element: (
+          <ProtectedRoute>
+            <ValuationDeskPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/oem",
+        element: (
+          <ProtectedRoute roles={["dealer", "new_car_dealer", "admin", "super_admin"]}>
+            <OemDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/insurance",
+        element: (
+          <ProtectedRoute roles={["broker", "admin", "super_admin"]}>
+            <InsurancePartnerDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "dashboard/customer/loans",
         element: (
           <ProtectedRoute roles={["customer", "admin", "super_admin"]}>
@@ -929,6 +1088,9 @@ export const router = createBrowserRouter([
       { path: "dashboard/super-admin/analytics", element: <PlatformAnalyticsPage /> },
       { path: "dashboard/super-admin/transactions", element: <TransactionsPage /> },
       { path: "dashboard/super-admin/subscriptions", element: <SubscriptionsPage /> },
+      { path: "dashboard/super-admin/revenue", element: <CommercialRevenuePage /> },
+      { path: "dashboard/super-admin/payouts", element: <CommercialPayoutsPage /> },
+      { path: "dashboard/super-admin/reward-rules", element: <CommercialRewardsRulesPage /> },
       { path: "dashboard/super-admin/reports", element: <ReportsPage /> },
       { path: "dashboard/super-admin/cms", element: <CmsPage /> },
       { path: "dashboard/super-admin/notifications", element: <NotificationsPage /> },

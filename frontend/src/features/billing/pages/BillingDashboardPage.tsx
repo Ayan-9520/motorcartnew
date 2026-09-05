@@ -46,7 +46,7 @@ export function BillingDashboardPage() {
   return (
     <BillingShell
       title="Billing & subscription"
-      description="Plans, entitlements, and usage (mock — no Razorpay, Stripe, GST, or auto-renew)."
+      description="Plans and entitlements. Online payment is not configured."
     >
       {!enabled && (
         <p className="mb-4 text-xs text-muted-foreground">

@@ -11,6 +11,7 @@ import {
   type EnquiryAssignment,
 } from "./enquiry.types";
 import { validateEnquiryInput, type ValidatedEnquiry } from "./enquiry.validation";
+import { stripClientOwnerFields } from "@/lib/customer/enquiries";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -147,7 +148,7 @@ async function mirrorDealerLead(args: {
 
 export async function createCustomerEnquiry(
   input: CustomerEnquiryInput,
-  options?: { now?: Date },
+  options?: { now?: Date; actorUserId?: string },
 ): Promise<CustomerEnquiryResult> {
   const parsed = validateEnquiryInput(input);
   if (!parsed.ok) throw new EnquiryError(parsed.message, 400);
@@ -181,7 +182,7 @@ export async function createCustomerEnquiry(
 
   const pipelineStatus = assignment === "assigned" ? "ASSIGNED" : "NEW";
   const metadata: Record<string, unknown> = {
-    ...value.metadata,
+    ...stripClientOwnerFields(value.metadata ?? {}),
     assignment,
     pipeline_status: pipelineStatus,
     vehicle_slug: value.vehicleSlug ?? detail?.slug,
@@ -196,6 +197,7 @@ export async function createCustomerEnquiry(
     preferred_contact: value.preferredContact,
     consent: value.consent,
     purchasable: detail?.purchasable ?? false,
+    ...(options?.actorUserId ? { customer_user_id: options.actorUserId } : {}),
   };
 
   const lead = await prisma.lead.create({
@@ -236,6 +238,33 @@ export async function createCustomerEnquiry(
         payload: { leadId: lead.id, dealerId: dealer.id, source: lead.source, assignment },
       },
     });
+  }
+
+  try {
+    const { applySalesOsOnEnquiry } = await import("@/services/sales-crm.service");
+    const { routeLeadByPin } = await import("@/services/sales-routing.service");
+    await applySalesOsOnEnquiry(lead.id, {
+      actorUserId: options?.actorUserId,
+      consent: value.consent,
+      preferredContact: value.preferredContact,
+      email: value.email,
+      location: value.location,
+      source: value.source,
+    });
+    if (assignment === "unassigned") {
+      const routed = await routeLeadByPin(lead.id);
+      if (routed.routed) {
+        const fresh = await prisma.lead.findFirst({ where: { id: lead.id } });
+        return {
+          lead: fresh ?? lead,
+          assignment: "assigned",
+          duplicate: false,
+          pipelineStatus: "ASSIGNED",
+        };
+      }
+    }
+  } catch {
+    /* Sales OS enrichment must not block enquiry capture */
   }
 
   return { lead, assignment, duplicate: false, pipelineStatus };

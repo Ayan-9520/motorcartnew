@@ -105,3 +105,17 @@ Requires `FEATURE_CATALOG_ADMIN=true` and `admin` / `super_admin` JWT.
 | POST | `/api/admin/catalog/import/:jobId/publish` | Publish APPROVED records to catalog DB (Phase 5E) |
 
 Preview UI: `/dashboard/super-admin/catalog/import/:jobId/preview` · Docs: `docs/catalog-import-preview.md`, `docs/catalog-import-approval.md`, `docs/catalog-import-publish.md`
+
+## Batch 10 Communication + AI (JWT)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET/POST | `/api/communications/providers` | Provider config (secrets never returned) |
+| POST | `/api/communications/messages` | Send (fails if provider missing) |
+| GET | `/api/communications/threads` | Dealer threads |
+| GET | `/api/communications/timeline` | Unified lead timeline |
+| POST | `/api/communications/webhooks/:provider` | HMAC + event id |
+| GET/POST | `/api/telephony/calls` | Dialer sessions |
+| POST | `/api/ai/conversations` | Server-owned agent chat |
+| POST | `/api/ai/recommendations/best-deal` | Deterministic ranking |
+

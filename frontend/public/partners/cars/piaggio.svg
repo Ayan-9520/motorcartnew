@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" fill="none">
+  <title>Piaggio</title>
+  <!-- Blue hexagonal shield mark -->
+  <path fill="#003D7C" d="M32 4L54 16v20c0 14-12 22-22 26C22 58 10 50 10 36V16L32 4z"/>
+  <path fill="#fff" d="M32 10L48 19v16.5c0 10.5-9 16.5-16 19.5-7-3-16-9-16-19.5V19L32 10z"/>
+  <path fill="#003D7C" d="M26 22h8.5c3.6 0 5.8 1.8 5.8 4.8 0 2.4-1.4 4-3.6 4.6L42 42h-6.2l-4.4-9.2H30V42h-4V22zm4 3.2v6.2h4c1.6 0 2.5-.8 2.5-2.1S35.6 25.2 34 25.2H30z"/>
+</svg>

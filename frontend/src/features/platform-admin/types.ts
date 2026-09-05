@@ -17,7 +17,33 @@ export interface PlatformOverview {
   fraudOpen: number;
   mrrEstimate: number;
   listingsLive: number;
+  organizations?: number;
+  dealers?: number;
+  leads?: number;
+  opportunities?: number;
+  quotations?: number;
+  testDrives?: number;
+  communityPosts?: number;
+  jobs?: number;
+  serviceBookings?: number;
+  partOrders?: number;
+  insuranceApplications?: number;
+  openPayoutRequests?: number;
+  recordedInvoiceTotal?: number;
+  rewardLiabilityPoints?: number;
+  ops?: AdminOverviewOps;
 }
+
+export type AdminOverviewOps = {
+  unroutedLeads: number;
+  pendingTestDriveRequests: number;
+  expiringQuotations: number;
+  openReports: number;
+  payoutMismatches: number;
+  failedCommunications: number;
+  pendingJobApplications: number;
+  zeroStockNewCars: number;
+};
 
 export interface AdminFlowRow {
   id: string;

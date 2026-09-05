@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VehicleImagePicker } from "@/features/dealer-crm/components/VehicleImagePicker";
 import { updateNewCarInventory } from "../services/new-car-dealer.service";
 import type { NcdInventoryItem } from "../types";
 
@@ -31,6 +32,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
   const [transmission, setTransmission] = useState("Manual");
   const [price, setPrice] = useState("");
   const [stockStatus, setStockStatus] = useState<NcdInventoryItem["stockStatus"]>("available");
+  const [imageUrls, setImageUrls] = useState<string[]>([""]);
 
   const resetFromItem = (v: NcdInventoryItem) => {
     setBrand(v.brand);
@@ -38,8 +40,9 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
     setVariant(v.variant);
     setFuelType(v.fuelType);
     setTransmission(v.transmission);
-    setPrice(String(v.exShowroomPrice));
+    setPrice(v.exShowroomPrice > 0 ? String(v.exShowroomPrice) : "");
     setStockStatus(v.stockStatus);
+    setImageUrls(v.imageUrl?.trim() ? [v.imageUrl.trim()] : [""]);
   };
 
   const onOpen = (next: boolean) => {
@@ -50,21 +53,29 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!item) return;
-    const ex = Number(price.replace(/\D/g, ""));
-    if (!brand.trim() || !model.trim() || !ex) {
-      toast.error("Brand, model and price required");
+    if (!brand.trim() || !model.trim()) {
+      toast.error("Brand and model are required");
       return;
     }
+    const digits = price.replace(/\D/g, "");
+    const ex = digits ? Number(digits) : 0;
+    if (Number.isNaN(ex) || ex < 0) {
+      toast.error("Enter a valid price, or leave blank for Price on Request");
+      return;
+    }
+    const photos = imageUrls.map((u) => u.trim()).filter(Boolean);
     setLoading(true);
     const { error } = await updateNewCarInventory(item, {
-      brand,
-      model,
-      variant: variant || "Standard",
+      brand: brand.trim(),
+      model: model.trim(),
+      variant: variant.trim() || "Standard",
       fuelType,
       transmission,
       exShowroomPrice: ex,
-      onRoadPrice: Math.round(ex * 1.12),
+      ...(ex > 0 ? { onRoadPrice: Math.round(ex * 1.12) } : {}),
       stockStatus,
+      images: photos,
+      ...(photos[0] ? { imageUrl: photos[0] } : {}),
     });
     setLoading(false);
     if (error) {
@@ -78,7 +89,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
 
   return (
     <Dialog open={open} onOpenChange={onOpen}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit stock</DialogTitle>
           <DialogDescription>Updates showroom and public listing when synced.</DialogDescription>
@@ -109,9 +120,14 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
             </div>
           </div>
           <div>
-            <Label htmlFor="edit-price">Ex-showroom (₹)</Label>
-            <Input id="edit-price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <Label htmlFor="edit-price">Ex-showroom (₹) — blank = Price on Request</Label>
+            <Input id="edit-price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Leave blank for POR" />
           </div>
+          <VehicleImagePicker
+            imageUrls={imageUrls}
+            uploadPrefix={`ncd/${item?.id ?? "edit"}`}
+            onChange={setImageUrls}
+          />
           <div>
             <Label htmlFor="edit-status">Stock status</Label>
             <select

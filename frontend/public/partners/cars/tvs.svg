@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 48" role="img" fill="none">
+  <title>TVS Motor</title>
+  <text x="2" y="34" fill="#0033A0" font-family="Arial Black,Impact,Arial,sans-serif" font-size="30" font-weight="900" letter-spacing="-0.06em">TVS</text>
+  <g fill="#E30613" transform="translate(86,6) scale(0.85)">
+    <path d="M8 36c1.5-8 6-16 14-20 1.5-2 3-5 3.5-8 1.5 3.5 3.5 6.5 6.5 8.5 5 3 9 8 10 14-3.5-1.5-7-2-10.5-1-1.5 3.5-4 7-7.5 9-3 1.5-6.5 1-9.5-1C12 36 9.5 35.5 8 36z"/>
+    <path d="M24 10c1.5-3 3.5-6 3.2-9.5 3 2 5 5.5 5.8 9-2.5.2-5.5.2-9 .5z"/>
+    <path d="M30 14l8-2.5c.8 2.5.8 5.5-.2 8l-7.5-.8c.5-1.5.5-3.2-.3-4.7z"/>
+    <path d="M18 34c-1 2-2.5 3.5-4.5 4.2 2 .8 4 1 5.5.2 1.2 2 3 3.2 5 3.5-1.5-2-2.5-4-2.8-6.2-1.2.2-2.2-.2-3.2-1.7z"/>
+  </g>
+</svg>

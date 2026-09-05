@@ -1,76 +1,64 @@
 import { NextRequest } from "next/server";
+import { ok } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth/middleware";
-import { err, ok, unauthorized } from "@/lib/api-response";
 import { toSnakeRow } from "@/lib/db/table-map";
+import { requireDealerContext } from "@/lib/sales-os/access";
+import { DealerInventoryError } from "@/lib/dealer-inventory/errors";
+import { handleDealerInventoryError, inventoryActorFrom, requireDealerInventoryRole } from "@/lib/dealer-inventory/http";
+import {
+  archiveDealerInventoryItem,
+  updateDealerInventoryItem,
+  updateDealerInventoryStock,
+} from "@/services/dealer-inventory.service";
 
-async function assertDealerAccess(dealerId: string, authSub: string, role: string) {
-  if (role === "super_admin" || role === "admin") return true;
-  const dealer = await prisma.dealer.findFirst({
-    where: { id: dealerId, ownerId: authSub, deletedAt: null },
-  });
-  return Boolean(dealer);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const actor = inventoryActorFrom(req);
+    requireDealerInventoryRole(actor);
+    const { id } = await params;
+    const row = await prisma.newCarInventory.findUnique({ where: { id } });
+    if (!row) throw new DealerInventoryError("Inventory not found", 404, "NOT_FOUND");
+    await requireDealerContext(actor, row.dealerId);
+    return ok({ data: toSnakeRow(row as unknown as Record<string, unknown>) });
+  } catch (e) {
+    return handleDealerInventoryError(e);
+  }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = getAuthUser(req);
-  if (!auth) return unauthorized();
-
-  const { id } = await params;
-  const body = (await req.json()) as Record<string, unknown>;
-
-  const existing = await prisma.newCarInventory.findUnique({ where: { id } });
-  if (!existing) return err("NOT_FOUND", 404);
-
-  const allowed = await assertDealerAccess(existing.dealerId, auth.sub, auth.role);
-  if (!allowed) return err("FORBIDDEN", 403);
-
-  const row = await prisma.newCarInventory.update({
-    where: { id },
-    data: {
-      brand: body.brand != null ? String(body.brand) : undefined,
-      model: body.model != null ? String(body.model) : undefined,
-      variant: body.variant != null ? String(body.variant) : undefined,
-      fuelType: body.fuel_type != null ? String(body.fuel_type) : body.fuelType != null ? String(body.fuelType) : undefined,
-      transmission: body.transmission != null ? String(body.transmission) : undefined,
-      exShowroomPrice:
-        body.ex_showroom_price != null
-          ? Number(body.ex_showroom_price)
-          : body.exShowroomPrice != null
-            ? Number(body.exShowroomPrice)
-            : undefined,
-      onRoadPrice:
-        body.on_road_price != null
-          ? Number(body.on_road_price)
-          : body.onRoadPrice != null
-            ? Number(body.onRoadPrice)
-            : undefined,
-      stockStatus:
+  try {
+    const actor = inventoryActorFrom(req);
+    requireDealerInventoryRole(actor);
+    const { id } = await params;
+    const body = (await req.json()) as Record<string, unknown>;
+    const keys = Object.keys(body).filter((k) => body[k] !== undefined);
+    const stockOnly =
+      keys.includes("stock") &&
+      keys.every((k) => ["stock", "stock_status", "stockStatus"].includes(k));
+    if (stockOnly) {
+      const data = await updateDealerInventoryStock(
+        actor,
+        id,
+        Number(body.stock),
         body.stock_status != null ? String(body.stock_status) : body.stockStatus != null ? String(body.stockStatus) : undefined,
-      imageUrl: body.image_url != null ? String(body.image_url) : body.imageUrl != null ? String(body.imageUrl) : undefined,
-      expectedDeliveryDays:
-        body.expected_delivery_days != null
-          ? Number(body.expected_delivery_days)
-          : body.expectedDeliveryDays != null
-            ? Number(body.expectedDeliveryDays)
-            : undefined,
-    },
-  });
-
-  return ok({ data: toSnakeRow(row as unknown as Record<string, unknown>) });
+      );
+      return ok({ data });
+    }
+    const data = await updateDealerInventoryItem(actor, id, body);
+    return ok({ data });
+  } catch (e) {
+    return handleDealerInventoryError(e);
+  }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = getAuthUser(_req);
-  if (!auth) return unauthorized();
-
-  const { id } = await params;
-  const existing = await prisma.newCarInventory.findUnique({ where: { id } });
-  if (!existing) return err("NOT_FOUND", 404);
-
-  const allowed = await assertDealerAccess(existing.dealerId, auth.sub, auth.role);
-  if (!allowed) return err("FORBIDDEN", 403);
-
-  await prisma.newCarInventory.delete({ where: { id } });
-  return ok({ data: { id } });
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const actor = inventoryActorFrom(req);
+    requireDealerInventoryRole(actor);
+    const { id } = await params;
+    const data = await archiveDealerInventoryItem(actor, id);
+    return ok({ data });
+  } catch (e) {
+    return handleDealerInventoryError(e);
+  }
 }

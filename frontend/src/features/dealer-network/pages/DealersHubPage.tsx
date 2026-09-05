@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { setPageMeta } from "@/utils/seo";
@@ -12,24 +13,32 @@ import {
   DEALER_CATEGORIES,
   DEALERS_TRUST_STATS,
   HOW_DEALER_WORKS,
-  MOCK_PUBLIC_DEALERS,
   dealersBrowsePath,
 } from "../data/dealers-hub-data";
+import { fetchHomePageApi } from "@/integrations/api/home";
+import { useDealerDirectory } from "../hooks/useDealerDirectory";
 
 export function DealersHubPage() {
-  const featured = MOCK_PUBLIC_DEALERS.filter((d) => d.isVerified).slice(0, 6);
+  const homeQ = useQuery({
+    queryKey: ["home-page"],
+    queryFn: fetchHomePageApi,
+    staleTime: 30_000,
+    retry: 0,
+  });
+  const dealerCount = homeQ.data?.stats?.dealers ?? 0;
+  const { dealers: directoryDealers } = useDealerDirectory({ verifiedOnly: true });
+  const featured = directoryDealers.filter((d) => d.isVerified).slice(0, 6);
 
   useEffect(() => {
     setPageMeta({
       title: "Dealer Network — Motorcart",
-      description:
-        "Find 8,500+ verified automotive dealers across India — new, used, bikes, commercial & EV with CRM & AI leads.",
+      description: "Find verified automotive dealers across India — new, used, bikes, commercial & EV with CRM & AI leads.",
     });
   }, []);
 
   return (
     <div className="dealers-hub-page min-h-screen">
-      <DealersHubHero dealerCount={8500} />
+      <DealersHubHero dealerCount={dealerCount} />
 
       <div className="container -mt-2 mb-6 flex flex-wrap justify-center gap-3">
         {DEALERS_TRUST_STATS.map(({ label, sub }) => (
@@ -69,16 +78,18 @@ export function DealersHubPage() {
               <Store className="h-6 w-6 text-primary" />
               Featured dealers
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">Top-rated partners with live inventory</p>
+            <p className="mt-1 text-sm text-muted-foreground">Verified partners from the dealer directory</p>
           </div>
           <Button variant="outline" className="rounded-xl" asChild>
             <Link to={dealersBrowsePath({ verified: true })}>All verified</Link>
           </Button>
         </div>
         <div className="dealers-network-grid">
-          {featured.map((d, i) => (
-            <DealerNetworkCard key={d.id} dealer={d} index={i} />
-          ))}
+          {featured.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">No featured dealers yet.</p>
+          ) : (
+            featured.map((d, i) => <DealerNetworkCard key={d.id} dealer={d} index={i} />)
+          )}
         </div>
       </section>
 
@@ -99,7 +110,7 @@ export function DealersHubPage() {
         <div className="dealers-hub-footer-cta text-center">
           <h3 className="text-lg font-bold text-foreground">Grow with Motorcart Dealer CRM</h3>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
-            AI-scored leads, WhatsApp automation, bulk inventory &amp; analytics — join 8,500+ verified partners.
+            AI-scored leads, WhatsApp automation, bulk inventory &amp; analytics — join verified partners.
           </p>
           <Button className="mt-5 rounded-xl shadow-[var(--shadow-primary)]" asChild>
             <Link to="/dashboard/dealer">

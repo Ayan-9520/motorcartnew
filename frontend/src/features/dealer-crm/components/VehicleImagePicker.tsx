@@ -41,7 +41,7 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
           <input
             ref={fileRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            // Intentionally no accept= — Windows hides extensionless images (named 1, 2, 3) under Custom Files
             multiple
             className="sr-only"
             onChange={(e) => {
@@ -62,7 +62,10 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
           </Button>
         </div>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">JPEG, PNG or WebP · max 10MB each · or paste image URLs below</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Upload any image (JPG, PNG, WebP, AVIF, GIF, BMP) — saved in clear HD · or paste full https:// image URLs below.
+        Local paths like ./photo.jpg will not work.
+      </p>
 
       {urls.some((u) => u.trim()) && (
         <div className="mt-3 flex flex-wrap gap-2">

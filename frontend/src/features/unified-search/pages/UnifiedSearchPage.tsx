@@ -13,6 +13,7 @@ import {
   saveRecentSearch,
   type UnifiedSearchResultDto,
 } from "@/integrations/api/unified-search";
+import { normalizeSearchHref } from "@/lib/global-search";
 
 export function UnifiedSearchPage() {
   const [params, setParams] = useSearchParams();
@@ -189,7 +190,7 @@ export function UnifiedSearchPage() {
           {results.map((r, idx) => (
             <li key={`${r.url}-${idx}`}>
               <Link
-                to={r.url}
+                to={normalizeSearchHref(r.url, r.metadata)}
                 className="block rounded-lg border p-4 hover:border-primary/50 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex flex-wrap items-center gap-2 mb-1">

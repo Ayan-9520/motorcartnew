@@ -59,13 +59,21 @@ export const featureFlags = {
   unifiedIdentity: viteFlag("VITE_FEATURE_M1_UNIFIED_IDENTITY", ecosystemOn),
   unifiedBusiness: viteFlag("VITE_FEATURE_M2_UNIFIED_BUSINESS", ecosystemOn),
   leadRouter: viteFlag("VITE_FEATURE_M3_LEAD_ROUTER", ecosystemOn),
-  unifiedNotifications: viteFlag("VITE_FEATURE_M4_NOTIFICATIONS", ecosystemOn),
-  unifiedSearch: viteFlag("VITE_FEATURE_M5_UNIFIED_SEARCH", ecosystemOn),
+  unifiedNotifications: viteFlag("VITE_FEATURE_M4_NOTIFICATIONS", true),
+  unifiedSearch: viteFlag("VITE_FEATURE_M5_UNIFIED_SEARCH", true),
   /** Phase N2.1 — billing MVP */
   billingV2: viteFlag("VITE_FEATURE_BILLING_V2", ecosystemOn),
   /** Phase 5B — catalog import admin (dry-run) */
   catalogAdmin: viteFlag("VITE_FEATURE_CATALOG_ADMIN", false),
   organizationLayer: viteFlag("VITE_FEATURE_ORGANIZATION_LAYER", true),
+  /** Phase C — finance marketplace REST (default on; set false to keep RPC/mock) */
+  financeMarketplace: viteFlag("VITE_FEATURE_FINANCE_MARKETPLACE"),
+  financeEligibilityApi: viteFlag("VITE_FEATURE_FINANCE_ELIGIBILITY_API"),
+  financeCompareApi: viteFlag("VITE_FEATURE_FINANCE_COMPARE_API"),
+  financeSoftApproval: viteFlag("VITE_FEATURE_FINANCE_SOFT_APPROVAL"),
+  financeDocumentsApi: viteFlag("VITE_FEATURE_FINANCE_DOCUMENTS_API"),
+  leadBoard: viteFlag("VITE_FEATURE_LEAD_BOARD", false),
+  paidLeads: viteFlag("VITE_FEATURE_PAID_LEADS", false),
 } as const;
 
 export function isGrowthUiEnabled(): boolean {

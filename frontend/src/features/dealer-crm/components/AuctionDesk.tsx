@@ -172,7 +172,7 @@ export function AuctionDesk({ liveAuctions, registrations, onRegister }: Auction
             <Zap className="h-5 w-5 text-primary" /> Auto-bid engine
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Set a maximum bid — Motorcart increments automatically until your cap on live lots.
+            Set a maximum bid — Motorcart increments automatically until your cap on auction lots.
           </p>
           <div className="mt-4 space-y-3">
             <div>

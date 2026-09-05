@@ -25,12 +25,11 @@ import { Button } from "@/components/ui/button";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { VehicleHubIconBar } from "@/features/marketplace/components/VehicleHubIconBar";
-import { NAV_LINKS, VEHICLE_HUB_NAV } from "@/lib/constants";
+import { NAV_LINKS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
 const NAV_ICONS: Record<string, LucideIcon> = {
-  [VEHICLE_HUB_NAV.href]: Car,
   "/buy": ShoppingCart,
   "/sell": Tag,
   "/auctions": Gavel,
@@ -169,7 +168,7 @@ export function NavbarMobileDrawer({
                   to={link.href}
                   onClick={onClose}
                   end={
-                    link.href === VEHICLE_HUB_NAV.href ? false : link.href === "/auctions" ? false : undefined
+                    link.href === "/buy" ? false : link.href === "/auctions" ? false : undefined
                   }
                   className={({ isActive }) =>
                     cn(

@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 24" fill="none" role="img"><title>Lexus</title><text x="60" y="16" text-anchor="middle" fill="#1A1A1A" font-family="system-ui,-apple-system,Segoe UI,Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="-0.02em">Lexus</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 64 64" fill="none">
+  <title>Lexus</title>
+  <!-- Official-style Lexus oval with open L (not a filled P-shape) -->
+  <ellipse cx="32" cy="32" rx="27.5" ry="27.5" stroke="#1A1A1A" stroke-width="3.4" fill="#FFFFFF"/>
+  <path
+    fill="#1A1A1A"
+    d="M23 45.5V18.5h7.4v20.8H45.5V45.5H23z"
+  />
+</svg>

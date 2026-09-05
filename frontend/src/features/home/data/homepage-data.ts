@@ -2,6 +2,11 @@ import type { LucideIcon } from "lucide-react";
 import { buyListingPath } from "@/features/marketplace/lib/route-utils";
 import type { HubCategorySlug } from "@/features/marketplace/types";
 import {
+  normalizePartnerSlug,
+  partnerBrandBuyHref,
+  resolvePartnerCarLogoPath,
+} from "@/features/home/lib/partner-logo-resolve";
+import {
   Bike,
   Bot,
   BusFront,
@@ -226,15 +231,15 @@ export function getHeroBrowsePath(
 }
 
 export const HERO_STATS = [
-  { label: "Vehicles", value: "2.4L+", href: "/vehicles" },
-  { label: "Dealers", value: "8.5K+", href: "/dealers" },
-  { label: "Loans", value: "₹1200Cr+", href: "/finance" },
-  { label: "Live Auctions", value: "142", href: "/auctions" },
-  { label: "Customers", value: "50K+", href: "/community" },
+  { label: "Vehicles", value: "Listings", href: "/buy" },
+  { label: "Dealers", value: "Verified", href: "/dealers" },
+  { label: "Loans", value: "Loan offers", href: "/finance" },
+  { label: "Auctions", value: "Auction listings", href: "/auctions" },
+  { label: "Community", value: "Member network", href: "/community" },
 ] as const;
 
 export const HOME_TRUST_PILLS = [
-  { id: "buyers", label: "50K+ buyers", icon: "users" as const },
+  { id: "buyers", label: "Trusted buyers", icon: "users" as const },
   { id: "lenders", label: "RBI lenders", icon: "landmark" as const },
   { id: "dealers", label: "Verified dealers", icon: "shield" as const },
   { id: "inventory", label: "Certified inventory", icon: "check" as const },
@@ -247,14 +252,14 @@ export const HOME_AI_RECOMMENDATIONS = [
     id: "suv",
     title: "Best SUVs under ₹20L",
     subtitle: "Family-ready picks with strong resale & mileage",
-    href: "/vehicles?type=suv&budget=under-20l",
+    href: "/buy/cars/used?bodyType=SUV&priceMax=2000000",
     badge: "AI Pick",
   },
   {
     id: "hatch",
     title: "Low EMI hatchbacks",
     subtitle: "EMI from ₹9,999/mo · instant eligibility",
-    href: "/vehicles?body=hatchback&sort=emi",
+    href: "/buy/cars/used?bodyType=Hatchback&sort=emi",
     badge: "Low EMI",
   },
   {
@@ -321,31 +326,41 @@ export const PARTNER_BANK_LOGOS: PartnerLogoItem[] = [
 
 /** OEM brands — row 2 marquee (right → left) */
 export const PARTNER_CAR_LOGOS: PartnerLogoItem[] = [
-  { id: "hyundai", name: "Hyundai", logo: "/partners/cars/hyundai.svg", href: "/vehicles?brand=hyundai" },
-  { id: "maruti", name: "Maruti Suzuki", logo: "/partners/cars/maruti.svg", href: "/vehicles?brand=maruti" },
-  { id: "tata", name: "Tata Motors", logo: "/partners/cars/tata.svg", href: "/vehicles?brand=tata" },
-  { id: "mahindra", name: "Mahindra", logo: "/partners/cars/mahindra.svg", href: "/vehicles?brand=mahindra" },
-  { id: "honda", name: "Honda", logo: "/partners/cars/honda.svg", href: "/vehicles?brand=honda" },
-  { id: "toyota", name: "Toyota", logo: "/partners/cars/toyota.svg", href: "/vehicles?brand=toyota" },
-  { id: "kia", name: "Kia", logo: "/partners/cars/kia.svg", href: "/vehicles?brand=kia" },
-  { id: "bmw", name: "BMW", logo: "/partners/cars/bmw.svg", href: "/vehicles?brand=bmw" },
-  { id: "mercedes", name: "Mercedes-Benz", logo: "/partners/cars/mercedes.svg", href: "/vehicles?brand=mercedes" },
-  { id: "skoda", name: "Škoda", logo: "/partners/cars/skoda.svg", href: "/vehicles?brand=skoda" },
-  { id: "nissan", name: "Nissan", logo: "/partners/cars/nissan.svg", href: "/vehicles?brand=nissan" },
-  { id: "ford", name: "Ford", logo: "/partners/cars/ford.svg", href: "/vehicles?brand=ford" },
-  { id: "volkswagen", name: "Volkswagen", logo: "/partners/cars/volkswagen.svg", href: "/vehicles?brand=volkswagen" },
-  { id: "mg", name: "MG", logo: "/partners/cars/mg.svg", href: "/vehicles?brand=mg" },
-  { id: "jeep", name: "Jeep", logo: "/partners/cars/jeep.svg", href: "/vehicles?brand=jeep" },
-  { id: "renault", name: "Renault", logo: "/partners/cars/renault.svg", href: "/vehicles?brand=renault" },
-  { id: "audi", name: "Audi", logo: "/partners/cars/audi.svg", href: "/vehicles?brand=audi" },
-  { id: "citroen", name: "Citroën", logo: "/partners/cars/citroen.svg", href: "/vehicles?brand=citroen" },
-  { id: "jaguar", name: "Jaguar", logo: "/partners/cars/jaguar.svg", href: "/vehicles?brand=jaguar" },
-  { id: "landrover", name: "Land Rover", logo: "/partners/cars/landrover.svg", href: "/vehicles?brand=landrover" },
-  { id: "porsche", name: "Porsche", logo: "/partners/cars/porsche.svg", href: "/vehicles?brand=porsche" },
-  { id: "lexus", name: "Lexus", logo: "/partners/cars/lexus.svg", href: "/vehicles?brand=lexus" },
-  { id: "isuzu", name: "Isuzu", logo: "/partners/cars/isuzu.svg", href: "/vehicles?brand=isuzu" },
-  { id: "volvo", name: "Volvo", logo: "/partners/cars/volvo.svg", href: "/vehicles?brand=volvo" },
-];
+  "Hyundai",
+  "Maruti Suzuki",
+  "Tata Motors",
+  "Mahindra",
+  "Honda",
+  "Toyota",
+  "Kia",
+  "BMW",
+  "Mercedes-Benz",
+  "Škoda",
+  "Nissan",
+  "Ford",
+  "Volkswagen",
+  "MG",
+  "Jeep",
+  "Renault",
+  "Audi",
+  "Citroën",
+  "Jaguar",
+  "Land Rover",
+  "Porsche",
+  "Lexus",
+  "Isuzu",
+  "Volvo",
+  "Ashok Leyland",
+  "Royal Enfield",
+].map((name) => {
+  const id = normalizePartnerSlug(name);
+  return {
+    id,
+    name,
+    logo: resolvePartnerCarLogoPath(name),
+    href: partnerBrandBuyHref(name),
+  };
+});
 
 export const SEARCH_BRAND_SUGGESTIONS = [
   "Hyundai",
@@ -413,15 +428,15 @@ export const HERO_AI_PICKS: HeroInsightPick[] = [
   {
     id: "repo-auction",
     title: "Bank repo ending today",
-    subtitle: "Live auctions · up to 30% off",
+    subtitle: "Auction listings",
     query: "bank repo",
     mode: "auctions",
-    badge: "Live",
+    badge: "Auction",
   },
 ];
 
 export const HERO_TRENDING_PICKS: HeroInsightPick[] = [
-  { id: "creta", title: "Creta 2023", subtitle: "12K+ listed", query: "Creta 2023", mode: "cars" },
+  { id: "creta", title: "Creta 2023", subtitle: "Popular SUV", query: "Creta 2023", mode: "cars" },
   { id: "nexon-ev", title: "Nexon EV", subtitle: "Electric SUVs", query: "Nexon EV", mode: "cars" },
   { id: "swift", title: "Swift VDI", subtitle: "Best value", query: "Swift VDI", mode: "cars" },
   { id: "fortuner", title: "Fortuner 4x4", subtitle: "Premium diesel", query: "Fortuner 4x4", mode: "cars" },
@@ -443,15 +458,15 @@ export interface QuickAccessItem {
 }
 
 export const QUICK_ACCESS: QuickAccessItem[] = [
-  { label: "New Cars", href: "/new-cars", icon: Car, description: "45K+ models" },
-  { label: "Pre-Owned", href: "/used-cars", icon: CarFront, description: "2.1L+ certified" },
-  { label: "Bikes", href: "/bikes", icon: Bike, description: "85K+ 2W" },
+  { label: "New Cars", href: "/new-cars", icon: Car, description: "New car catalog" },
+  { label: "Pre-Owned", href: "/used-cars", icon: CarFront, description: "Certified pre-owned listings" },
+  { label: "Bikes", href: "/bikes", icon: Bike, description: "Bikes & scooters" },
   { label: "Trucks", href: "/trucks", icon: Truck, description: "Commercial" },
   { label: "Buses", href: "/buses", icon: BusFront, description: "Fleet" },
   { label: "Auto", href: "/auto", icon: CarTaxiFront, description: "3W" },
   { label: "EV", href: "/ev", icon: Zap, description: "Electric" },
-  { label: "Live Auctions", href: "/auctions", icon: Gavel, description: "142 live" },
-  { label: "Community", href: "/community", icon: MessageCircle, description: "128K+ members" },
+  { label: "Auctions", href: "/auctions", icon: Gavel, description: "Auction listings" },
+  { label: "Community", href: "/community", icon: MessageCircle, description: "Community feed" },
   { label: "Car Loans", href: "/finance", icon: Landmark, description: "14 lenders" },
   { label: "Sell", href: "/sell", icon: Store, description: "List free" },
   { label: "Parts", href: "/parts", icon: Package, description: "OEM parts" },
@@ -489,11 +504,11 @@ export const SERVICE_TILES = [
 ];
 
 export const AI_SHOWCASE = [
-  { name: "AI LeadBot", desc: "Qualify & score leads 24/7", stat: "94% accuracy", live: true },
-  { name: "AI FinanceBot", desc: "Loan eligibility & routing", stat: "3x faster", live: true },
-  { name: "AI AuctionBot", desc: "Live bidding intelligence", stat: "142 auctions", live: true },
-  { name: "AI DealerBot", desc: "Inventory & CRM automation", stat: "8.5K dealers", live: true },
-  { name: "AI SupportBot", desc: "Instant customer support", stat: "< 30s response", live: true },
+  { name: "AI LeadBot", desc: "Qualify & score leads", stat: "AI scoring", live: false },
+  { name: "AI FinanceBot", desc: "Loan eligibility & routing", stat: "Eligibility routing", live: false },
+  { name: "AI AuctionBot", desc: "Bidding intelligence", stat: "Auction insights", live: false },
+  { name: "AI DealerBot", desc: "Inventory & CRM automation", stat: "Dealer automation", live: false },
+  { name: "AI SupportBot", desc: "Instant customer support", stat: "Fast responses", live: false },
 ];
 
 export const COMMUNITY_POSTS = [

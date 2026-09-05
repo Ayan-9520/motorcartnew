@@ -64,10 +64,10 @@ export const liveAuctions: AuctionItem[] = [
 ];
 
 export const platformStats = [
-  { label: "Vehicles Listed", value: "2.4L+" },
-  { label: "Verified Dealers", value: "8,500+" },
-  { label: "Loans Processed", value: "₹12,000Cr+" },
-  { label: "Happy Customers", value: "5.2L+" },
+  { label: "Vehicles Listed", value: "Marketplace listings" },
+  { label: "Verified Dealers", value: "Verified dealer network" },
+  { label: "Loans Processed", value: "Loan offers" },
+  { label: "Happy Customers", value: "Customer community" },
 ];
 
 export const testimonials = [

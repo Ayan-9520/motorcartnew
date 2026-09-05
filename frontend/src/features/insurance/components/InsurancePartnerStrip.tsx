@@ -2,6 +2,7 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { MOCK_INSURANCE_PARTNERS } from "../data/mock-insurers";
 
 export function InsurancePartnerStrip() {
+  if (!MOCK_INSURANCE_PARTNERS.length) return null;
   return (
     <section className="ins-partners">
       <p className="ins-partners__label">IRDAI-authorised partners</p>

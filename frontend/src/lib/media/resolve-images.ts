@@ -2,7 +2,6 @@ import type { VehicleCategory } from "@/types/vehicle";
 import {
   cleanImageUrls,
   getVehicleGallery,
-  getVehicleHero,
   inferVehicleSegment,
   isListingSafeUrl,
   SEGMENT_DEFAULTS,
@@ -64,28 +63,12 @@ export function resolveVehicleGalleryFromListing(
 }
 
 /**
- * Detail page gallery — one consistent hero per listing (no mixed BMW/Audi thumbnails).
+ * Detail page gallery — uploaded photos only (never invent stock brand cars).
  */
 export function resolveVehicleDetailGallery(
   listing: VehicleResolveInput & { images?: string[] | null }
 ): string[] {
-  const uploaded = cleanImageUrls(listing.images ?? []);
-  const hero =
-    uploaded[0] ??
-    getVehicleHero({
-      brand: listing.brand,
-      model: listing.model,
-      bodyType: listing.bodyType,
-      category: listing.category,
-      fuelType: listing.fuelType,
-      seed: listing.seed ?? hashListing(listing),
-    });
-  if (uploaded.length >= 2) {
-    const rest = uploaded.slice(1, 4);
-    while (rest.length < 3) rest.push(hero);
-    return [hero, ...rest.slice(0, 3)];
-  }
-  return [hero, hero, hero, hero];
+  return cleanImageUrls(listing.images ?? []).slice(0, 8);
 }
 
 export function resolveVehicleHero(
@@ -98,14 +81,8 @@ export function resolveVehicleHero(
 ): string {
   const uploaded = cleanImageUrls(existing ?? []);
   if (uploaded[0]) return uploaded[0];
-  return getVehicleHero({
-    brand,
-    model,
-    bodyType,
-    category: extra?.category,
-    fuelType: extra?.fuelType,
-    seed,
-  });
+  // Empty — callers should treat as no image (do not invent Pexels)
+  return "";
 }
 
 function hashListing(l: VehicleResolveInput): number {

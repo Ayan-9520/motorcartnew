@@ -4,7 +4,7 @@ import { Menu, X, Search, User, Users, ShoppingCart, Heart } from "lucide-react"
 import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
 import { Button } from "@/components/ui/button";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
-import { isVehicleHubNavPath, NAV_LINKS, VEHICLE_HUB_NAV } from "@/lib/constants";
+import { NAV_LINKS } from "@/lib/constants";
 import { useUIStore } from "@/store/uiStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
@@ -23,11 +23,9 @@ function isInsuranceNavPath(pathname: string): boolean {
 
 function navMenuLinkClass(linkHref: string, isActive: boolean, pathname: string) {
   const active =
-    linkHref === VEHICLE_HUB_NAV.href
-      ? isVehicleHubNavPath(pathname)
-      : linkHref === "/insurance"
-        ? isInsuranceNavPath(pathname)
-        : isActive;
+    linkHref === "/insurance"
+      ? isInsuranceNavPath(pathname)
+      : isActive;
   return cn("nav-menu-link whitespace-nowrap", active && "nav-menu-link-active");
 }
 
@@ -208,7 +206,7 @@ export function Navbar() {
                   key={link.href}
                   to={link.href}
                   className={({ isActive }) => navMenuLinkClass(link.href, isActive, pathname)}
-                  end={link.href === VEHICLE_HUB_NAV.href ? false : undefined}
+                  end={link.href === "/buy" || link.href === "/auctions" ? false : undefined}
                 >
                   {link.label}
                 </NavLink>
@@ -242,14 +240,12 @@ export function Navbar() {
                   key={link.href}
                   to={link.href}
                   onClick={closeMobile}
-                  end={link.href === VEHICLE_HUB_NAV.href ? false : undefined}
+                  end={link.href === "/buy" || link.href === "/auctions" ? false : undefined}
                   className={({ isActive }) => {
                     const active =
-                      link.href === VEHICLE_HUB_NAV.href
-                        ? isVehicleHubNavPath(pathname)
-                        : link.href === "/insurance"
-                          ? isInsuranceNavPath(pathname)
-                          : isActive;
+                      link.href === "/insurance"
+                        ? isInsuranceNavPath(pathname)
+                        : isActive;
                     return cn("nav-mobile-link", active && "nav-mobile-link-active");
                   }}
                 >

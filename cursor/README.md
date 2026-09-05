@@ -4,6 +4,8 @@
 
 This folder is the **authoritative source of truth** for all AI-assisted and human development on MotorCart.
 
+**Document count:** 37 files (00–37).
+
 ---
 
 ## Mandatory instruction (every session)
@@ -28,7 +30,7 @@ Follow `00_Master_Directive.md` as the supreme engineering directive.
 
 ---
 
-## Complete document index (26 files)
+## Complete document index (37 files)
 
 ### Core directive
 
@@ -75,6 +77,18 @@ Follow `00_Master_Directive.md` as the supreme engineering directive.
 | 22 | [Security_Risk_Register.md](./22_Security_Risk_Register.md) | Active risks + mitigations |
 | 23 | [Mock_vs_Real_Data_Matrix.md](./23_Mock_vs_Real_Data_Matrix.md) | What's mock vs DB-backed |
 | 25 | [Developer_Quick_Start.md](./25_Developer_Quick_Start.md) | 15-minute onboarding |
+| 26 | [Quotations.md](./26_Quotations.md) | Phase 5A quotation engine |
+| 27 | [Test_Drives.md](./27_Test_Drives.md) | Phase 5B real test-drive product |
+| 28 | [Stock_By_PIN.md](./28_Stock_By_PIN.md) | Phase 5C exact PIN stock discovery |
+| 29 | [Community.md](./29_Community.md) | Batch 6 real community & professional network |
+| 30 | [Sales_OS_Lead_Board.md](./30_Sales_OS_Lead_Board.md) | Batch 7 Sales OS, PIN routing, Lead Board |
+| 31 | [Revenue_Billing_Payouts_Loyalty.md](./31_Revenue_Billing_Payouts_Loyalty.md) | Batch 8 commercial engine, payouts, rewards ledger |
+| 32 | [Customer_SuperApp_MotorCartOne_Valuation.md](./32_Customer_SuperApp_MotorCartOne_Valuation.md) | Batch 9 super-app, MotorCart One, used-vehicle trust, valuation |
+| 33 | [Communication_AI_Sales_OS.md](./33_Communication_AI_Sales_OS.md) | Batch 10 Communication OS, dialer, AI sales agent |
+| 34 | [Partner_Industry_OS.md](./34_Partner_Industry_OS.md) | Batch 11 Partner / Industry OS |
+| 35 | [Final_Platform_Gap_Audit.md](./35_Final_Platform_Gap_Audit.md) | Batch 12 gap audit |
+| 36 | [Production_Runbook.md](./36_Production_Runbook.md) | Backup, migrate, flags, incidents |
+| 37 | [Launch_Readiness.md](./37_Launch_Readiness.md) | Flags, env, launch classification |
 
 ---
 

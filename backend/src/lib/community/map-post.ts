@@ -36,7 +36,7 @@ export function mapSocialPost(
   post: SocialPost,
   author?: PostAuthorSlice,
   user?: Pick<User, "id" | "fullName" | "avatarUrl"> | null,
-  extras?: { liked_by_me?: boolean }
+  extras?: { liked_by_me?: boolean; saved_by_me?: boolean }
 ) {
   const meta =
     post.metadata && typeof post.metadata === "object" && !Array.isArray(post.metadata)
@@ -49,8 +49,11 @@ export function mapSocialPost(
     content: post.content,
     media: post.media,
     post_kind: post.postKind,
+    visibility: post.visibility,
     vehicle_id: post.vehicleId,
     dealer_id: post.dealerId,
+    organization_id: post.organizationId,
+    inventory_id: post.inventoryId,
     broker_id: post.brokerId,
     group_id: post.groupId,
     embed_provider: post.embedProvider,
@@ -66,5 +69,6 @@ export function mapSocialPost(
     updated_at: post.updatedAt.toISOString(),
     author: mapPostAuthor(author ?? null, user ?? null),
     ...(extras?.liked_by_me !== undefined ? { liked_by_me: extras.liked_by_me } : {}),
+    ...(extras?.saved_by_me !== undefined ? { saved_by_me: extras.saved_by_me } : {}),
   };
 }

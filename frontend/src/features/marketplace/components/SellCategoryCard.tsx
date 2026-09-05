@@ -10,6 +10,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { SellHubCategoryItem } from "../types";
 import { sellListingPath } from "../lib/route-utils";
 
@@ -23,17 +24,29 @@ const ICONS: Record<string, LucideIcon> = {
   Zap,
 };
 
-export function SellCategoryCard({ item }: { item: SellHubCategoryItem }) {
+export function SellCategoryCard({
+  item,
+  featured = false,
+}: {
+  item: SellHubCategoryItem;
+  featured?: boolean;
+}) {
   const Icon = ICONS[item.icon] ?? Car;
 
   return (
-    <Link to={sellListingPath(item.id)} className="buy-hub-card sell-category-card group block">
+    <Link
+      to={sellListingPath(item.id)}
+      className={cn(
+        "sell-category-card group block",
+        featured && "sell-category-card--featured"
+      )}
+    >
       <div className="flex items-start gap-3">
-        <span className="hub-category-icon">
+        <span className="hub-category-icon sell-category-icon">
           <Icon className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-foreground group-hover:text-primary">
+          <h3 className="text-base font-semibold text-foreground transition-colors group-hover:text-primary">
             {item.label}
           </h3>
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{item.description}</p>

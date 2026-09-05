@@ -24,11 +24,14 @@ interface NewCarCardProps {
 }
 
 export function NewCarCard({ vehicle, index = 0, compact = false }: NewCarCardProps) {
+  const meta = vehicle.metadata;
+  const priceOnRequest = Boolean(meta?.priceOnRequest) || !(vehicle.price > 0);
   const price = getDiscountedPrice(vehicle);
-  const emi = getVehicleEmi(vehicle);
-  const onRoad = vehicle.metadata.onRoadPrice ?? Math.round(price * 1.12);
+  const emi = priceOnRequest ? 0 : getVehicleEmi(vehicle);
+  const onRoad = priceOnRequest ? 0 : (vehicle.metadata.onRoadPrice ?? Math.round(price * 1.12));
   const rating = vehicle.metadata.rating ?? 4.5;
   const path = newCarDetailPath(vehicle.slug);
+  const priceSourceText = meta?.priceSourceText ? String(meta.priceSourceText) : "";
 
   return (
     <motion.div
@@ -89,11 +92,17 @@ export function NewCarCard({ vehicle, index = 0, compact = false }: NewCarCardPr
               </span>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground">Starting from</p>
+              <p className="text-[10px] text-muted-foreground">{priceOnRequest ? "Pricing" : "Starting from"}</p>
               <p className={cn("font-bold text-primary", compact ? "text-base" : "text-lg")}>
-                {formatCurrency(price)}
+                {priceOnRequest ? "Price on request" : formatCurrency(price)}
               </p>
-              <p className="text-[10px] text-muted-foreground">On-road ~{formatCurrency(onRoad)}</p>
+              {priceOnRequest ? (
+                priceSourceText ? (
+                  <p className="text-[10px] text-muted-foreground">{priceSourceText}</p>
+                ) : null
+              ) : (
+                <p className="text-[10px] text-muted-foreground">On-road ~{formatCurrency(onRoad)}</p>
+              )}
             </div>
             <div className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
               <span className="inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5">
@@ -112,9 +121,15 @@ export function NewCarCard({ vehicle, index = 0, compact = false }: NewCarCardPr
               )}
             </div>
             <p className="text-xs font-medium text-foreground">
-              EMI {formatCurrency(emi)}/mo
-              {vehicle.metadata.waitingPeriod && (
-                <span className="font-normal text-muted-foreground"> · {vehicle.metadata.waitingPeriod}</span>
+              {priceOnRequest ? (
+                <span className="font-normal text-muted-foreground">Contact dealer for EMI</span>
+              ) : (
+                <>
+                  EMI {formatCurrency(emi)}/mo
+                  {vehicle.metadata.waitingPeriod && (
+                    <span className="font-normal text-muted-foreground"> · {vehicle.metadata.waitingPeriod}</span>
+                  )}
+                </>
               )}
             </p>
           </CardContent>

@@ -57,6 +57,14 @@ Source: `PROJECT-AUDIT-ENTERPRISE.md` + master directive alignment.
 | C4 | Auction KYC gate for bidders | Med |
 | C5 | Razorpay/Stripe subscription webhooks | Med |
 
+**Cursor Enterprise Phase 5 (commerce objects, additive):**
+
+| Phase | Product | Status |
+|-------|---------|--------|
+| 5A | Quotations | Done — `cursor/26_Quotations.md` |
+| 5B | Real test drive | Done — `cursor/27_Test_Drives.md` |
+| 5C | Exact PIN stock discovery | **IMPLEMENTED** — `cursor/28_Stock_By_PIN.md` |
+
 ---
 
 ## Phase D — CRM unify (18–28 weeks) P2
@@ -78,7 +86,7 @@ Source: `PROJECT-AUDIT-ENTERPRISE.md` + master directive alignment.
 | E1 | `community.motorcart.in` build arg + DNS | Low |
 | E2 | Messaging schema + API | High |
 | E3 | Growth CRM queue stubs + architecture | Low |
-| E4 | Follow graph, events, polls | Med |
+| E4 | Follow graph (Batch 6 ✅); events/polls still later | Med |
 | E5 | Video upload + moderation pipeline | High |
 
 ---
@@ -159,3 +167,15 @@ backend/src/app/api/v2/   # versioned APIs when needed
 Detailed DB migrations: `docs/phases/PHASE-*.md`
 
 Update this roadmap when phases complete — mark ✅ in `10_Sprint_Backlog.md`.
+
+**Batch 7 (Sales OS / Lead Board):** implemented behind `FEATURE_LEAD_BOARD` + `paid_leads` entitlements. Dialer and AI calling remain locked. See `cursor/30_Sales_OS_Lead_Board.md`. PIN **lead** routing ≠ Phase 5C stock-by-PIN.
+
+**Batch 8 (Revenue / billing / payouts / loyalty):** ledger-driven commercial engine. Payment gateway default OFF. See `cursor/31_Revenue_Billing_Payouts_Loyalty.md`.
+
+**Batch 9 (Customer Super-App / MotorCart One / used trust / valuation):** identity card (not payments), saved searches, reminders, media watermark/plate workflow, sell requests + partner valuations + dealer offers. See `cursor/32_Customer_SuperApp_MotorCartOne_Valuation.md`.
+
+**Batch 10 (Communication OS / dialer / AI sales):** WhatsApp ≠ telephony. Server-side tools + deterministic best-deal. Dialer/AI calling still plan-locked; runtime flag + entitlement + provider. See `cursor/33_Communication_AI_Sales_OS.md`.
+
+**Batch 11 (Partner / Industry OS):** Organization tenant + domain records. Parts/workshop/OEM/bank/insurance/jobs. See `cursor/34_Partner_Industry_OS.md`.
+
+**Batch 12 (integration / launch hardening):** PostgreSQL unified search, admin command center, analytics foundation, health/ready, upload + rate-limit hardening. See `cursor/35_Final_Platform_Gap_Audit.md`, `cursor/36_Production_Runbook.md`, `cursor/37_Launch_Readiness.md`. **Batch 13 is not started.**

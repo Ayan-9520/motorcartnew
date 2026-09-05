@@ -1,21 +1,54 @@
-import { useEffect, useMemo, useState } from "react";
-import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
-import { getVehiclePool } from "@/services/vehicle.service";
+import { useEffect, useState } from "react";
+import { fetchVehiclesByIds } from "@/services/vehicle.service";
 import { useVehicleMarketStore } from "@/store/vehicleMarketStore";
 import type { VehicleListing } from "@/types/vehicle";
 
 export function useWishlistVehicles() {
   const ids = useVehicleMarketStore((s) => s.wishlist);
-  const [pool, setPool] = useState<VehicleListing[]>(MOCK_VEHICLES);
+  const [vehicles, setVehicles] = useState<VehicleListing[]>([]);
+  const [missingIds, setMissingIds] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(ids.length > 0);
+
+  const idsKey = ids.join(",");
 
   useEffect(() => {
-    void getVehiclePool().then(setPool);
-  }, []);
+    let cancelled = false;
+    const currentIds = idsKey ? idsKey.split(",") : [];
 
-  const vehicles = useMemo(
-    () => ids.map((id) => pool.find((v) => v.id === id)).filter((v): v is VehicleListing => Boolean(v)),
-    [ids, pool]
-  );
+    if (!currentIds.length) {
+      setVehicles([]);
+      setMissingIds([]);
+      setIsLoading(false);
+      return;
+    }
 
-  return { vehicles, count: ids.length, ids };
+    setIsLoading(true);
+    void fetchVehiclesByIds(currentIds).then((list) => {
+      if (cancelled) return;
+      const resolvedKeys = new Set<string>();
+      for (const v of list) {
+        resolvedKeys.add(v.id);
+        if (v.slug) resolvedKeys.add(v.slug);
+        if (v.slug.startsWith("ncd-")) resolvedKeys.add(v.slug.slice(4));
+        resolvedKeys.add(`ncd-${v.id}`);
+      }
+      const missing = currentIds.filter((id) => !resolvedKeys.has(id));
+      setVehicles(list);
+      setMissingIds(missing);
+      setIsLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [idsKey]);
+
+  return {
+    vehicles,
+    missingIds,
+    count: ids.length,
+    readyCount: vehicles.length,
+    isLoading,
+    ids,
+  };
 }

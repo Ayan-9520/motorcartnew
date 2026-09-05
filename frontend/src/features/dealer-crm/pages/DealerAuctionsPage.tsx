@@ -48,7 +48,7 @@ export function DealerAuctionsPage() {
   return (
     <DealerConsoleShell
       title="Auction management"
-      description="My bids, live lots, won auctions and auto-bid — fleet & repo inventory."
+      description="My bids, auction lots, won auctions and auto-bid — fleet & repo inventory."
       crumbs={[{ label: "Auctions" }]}
       actions={
         <Button variant="outline" size="sm" className="rounded-xl" asChild>

@@ -1,16 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { HOME_PLATFORM_PILLARS } from "@/features/home/data/home-platform-data";
 import { SectionHeader } from "./SectionHeader";
-import { cn } from "@/lib/utils";
-
-const ACCENT_CLASS = {
-  primary: "home-platform-card-primary",
-  auction: "home-platform-card-auction",
-  community: "home-platform-card-community",
-  finance: "home-platform-card-finance",
-} as const;
 
 export function HomePlatformMatrix() {
   return (
@@ -23,11 +15,9 @@ export function HomePlatformMatrix() {
           align="center"
           className="mx-auto"
         />
-        <div className="home-platform-bento">
+        <div className="quick-access-grid">
           {HOME_PLATFORM_PILLARS.map((pillar, i) => {
             const Icon = pillar.icon;
-            const size = pillar.size ?? "default";
-            const accent = pillar.accent ? ACCENT_CLASS[pillar.accent] : "";
             return (
               <motion.div
                 key={pillar.id}
@@ -35,34 +25,20 @@ export function HomePlatformMatrix() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: Math.min(i * 0.02, 0.24) }}
-                className={cn(
-                  "home-platform-cell",
-                  size === "wide" && "home-platform-cell-wide",
-                  size === "tall" && "home-platform-cell-tall",
-                  size === "featured" && "home-platform-cell-featured"
-                )}
+                className="min-w-0"
               >
                 <Link
                   to={pillar.href}
-                  className={cn("home-platform-card group", accent)}
+                  className="quick-access-card group flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card text-center transition-all hover:border-primary/50 hover:shadow-[var(--shadow-card-hover)]"
                 >
-                  <span className="home-platform-icon">
-                    <Icon className="h-5 w-5" strokeWidth={2} />
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Icon className="h-4 w-4" strokeWidth={2} />
                   </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary">
-                        {pillar.title}
-                      </h3>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 group-hover:text-primary" />
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                      {pillar.description}
-                    </p>
-                    <span className="mt-2 inline-block text-[11px] font-semibold text-primary">
-                      {pillar.stat}
-                    </span>
-                  </div>
+                  <span className="text-xs font-semibold leading-tight text-foreground">{pillar.title}</span>
+                  <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                    {pillar.stat}
+                  </span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
               </motion.div>
             );

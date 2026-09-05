@@ -62,15 +62,28 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
   const removeCompare = useVehicleMarketStore((s) => s.removeCompare);
   const inCompare = useVehicleMarketStore((s) => s.compare.includes(vehicle.id));
   const price = getDiscountedPrice(vehicle);
-  const emi = getVehicleEmi(vehicle);
+  const priceOnRequest =
+    Boolean(vehicle.metadata.priceOnRequest) ||
+    vehicle.metadata.priceDisplay === "Price on request" ||
+    !(price > 0);
+  const emi = priceOnRequest ? 0 : getVehicleEmi(vehicle);
   const discount = vehicle.metadata.discountPercent;
   const detailPath = vehicleDetailPath(vehicle);
   const isNew =
     vehicle.condition === "new" || vehicle.category === "new-cars";
   const fair =
     vehicle.metadata.fairPriceLabel ?? deriveFairPriceLabel(vehicle);
-  const onRoad = vehicle.metadata.onRoadPrice ?? Math.round(price * 1.12);
-  const rating = vehicle.metadata.rating ?? vehicle.dealerRating ?? 4.2;
+  // Only show on-road when dealer/upload provided it — never invent * 1.12
+  const onRoad =
+    typeof vehicle.metadata.onRoadPrice === "number" && vehicle.metadata.onRoadPrice > 0
+      ? vehicle.metadata.onRoadPrice
+      : undefined;
+  const rating =
+    typeof vehicle.metadata.rating === "number"
+      ? vehicle.metadata.rating
+      : typeof vehicle.dealerRating === "number"
+        ? vehicle.dealerRating
+        : undefined;
 
   const handleCompare = (e: MouseEvent) => {
     e.preventDefault();
@@ -159,7 +172,15 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
                 </p>
               </div>
               <div className="mt-3 flex items-end justify-between gap-3">
-                <PriceBlock price={price} emi={emi} isNew={isNew} onRoad={onRoad} original={vehicle.originalPrice} />
+                <PriceBlock
+                  price={price}
+                  emi={emi}
+                  isNew={isNew}
+                  onRoad={onRoad}
+                  original={vehicle.originalPrice}
+                  priceOnRequest={priceOnRequest}
+                  priceSourceText={vehicle.metadata.priceSourceText}
+                />
                 <div className="flex gap-1">
                   <Button type="button" size="sm" variant="outline" className="h-8" onClick={handleCompare}>
                     <GitCompare className="h-3.5 w-3.5" />
@@ -260,10 +281,12 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
               <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary">
                 {vehicle.title}
               </h3>
-              <span className="flex shrink-0 items-center gap-0.5 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                <Star className="h-2.5 w-2.5 fill-primary" />
-                {rating.toFixed(1)}
-              </span>
+              {rating != null ? (
+                <span className="flex shrink-0 items-center gap-0.5 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                  <Star className="h-2.5 w-2.5 fill-primary" />
+                  {rating.toFixed(1)}
+                </span>
+              ) : null}
             </div>
 
             <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -284,6 +307,8 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
                 onRoad={onRoad}
                 original={vehicle.originalPrice}
                 compact={compact}
+                priceOnRequest={priceOnRequest}
+                priceSourceText={vehicle.metadata.priceSourceText}
               />
             </div>
 
@@ -325,11 +350,17 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
 
 function SpecRow({ vehicle, isNew }: { vehicle: VehicleListing; isNew: boolean }) {
   if (isNew) {
+    const cells = [
+      vehicle.fuelType?.trim() ? { icon: Fuel, label: vehicle.fuelType } : null,
+      vehicle.transmission?.trim() ? { icon: Settings2, label: vehicle.transmission } : null,
+      vehicle.year > 0 ? { icon: Calendar, label: String(vehicle.year) } : null,
+    ].filter(Boolean) as { icon: ComponentType<{ className?: string }>; label: string }[];
+    if (!cells.length) return null;
     return (
       <div className="grid grid-cols-3 gap-1.5 text-[10px] text-muted-foreground">
-        <SpecCell icon={Fuel} label={vehicle.fuelType} />
-        <SpecCell icon={Settings2} label={vehicle.transmission} />
-        <SpecCell icon={Calendar} label={String(vehicle.year)} />
+        {cells.map((c) => (
+          <SpecCell key={c.label} icon={c.icon} label={c.label} />
+        ))}
       </div>
     );
   }
@@ -338,9 +369,9 @@ function SpecRow({ vehicle, isNew }: { vehicle: VehicleListing; isNew: boolean }
     <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-muted-foreground sm:grid-cols-3">
       <SpecCell icon={Gauge} label={`${vehicle.kmsDriven.toLocaleString()} km`} />
       <SpecCell icon={Users} label={`${vehicle.owners} owner${vehicle.owners > 1 ? "s" : ""}`} />
-      <SpecCell icon={Settings2} label={vehicle.transmission} />
-      <SpecCell icon={Fuel} label={vehicle.fuelType} />
-      <SpecCell icon={Calendar} label={String(vehicle.year)} />
+      {vehicle.transmission?.trim() ? <SpecCell icon={Settings2} label={vehicle.transmission} /> : null}
+      {vehicle.fuelType?.trim() ? <SpecCell icon={Fuel} label={vehicle.fuelType} /> : null}
+      {vehicle.year > 0 ? <SpecCell icon={Calendar} label={String(vehicle.year)} /> : null}
     </div>
   );
 }
@@ -361,18 +392,35 @@ function PriceBlock({
   onRoad,
   original,
   compact,
+  priceOnRequest,
+  priceSourceText,
 }: {
   price: number;
   emi: number;
   isNew: boolean;
-  onRoad: number;
+  onRoad?: number;
   original?: number;
   compact?: boolean;
+  priceOnRequest?: boolean;
+  priceSourceText?: string;
 }) {
+  if (priceOnRequest) {
+    return (
+      <div className="min-w-0 flex-1">
+        <p className={cn("font-bold text-foreground", compact ? "text-base" : "text-lg")}>Price on request</p>
+        {priceSourceText ? (
+          <p className="text-[10px] text-muted-foreground line-clamp-1">{priceSourceText}</p>
+        ) : (
+          <p className="text-[10px] text-muted-foreground">Ask dealer for exact price</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-w-0 flex-1">
       {isNew ? (
-        <p className="text-[10px] text-muted-foreground">Ex-showroom from</p>
+        <p className="text-[10px] text-muted-foreground">Ex-showroom</p>
       ) : null}
       <p className={cn("font-bold text-foreground", compact ? "text-base" : "text-lg")}>
         {formatCurrency(price)}
@@ -381,12 +429,14 @@ function PriceBlock({
       {original && original > price ? (
         <p className="text-[10px] text-muted-foreground line-through">{formatCurrency(original)}</p>
       ) : null}
-      {isNew ? (
-        <p className="text-[10px] text-muted-foreground">On-road ~{formatCurrency(onRoad)}</p>
+      {isNew && onRoad != null && onRoad > 0 ? (
+        <p className="text-[10px] text-muted-foreground">On-road {formatCurrency(onRoad)}</p>
       ) : null}
-      <div className="mt-1 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-        EMI {formatCurrency(emi)}/mo
-      </div>
+      {emi > 0 ? (
+        <div className="mt-1 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+          EMI {formatCurrency(emi)}/mo
+        </div>
+      ) : null}
     </div>
   );
 }

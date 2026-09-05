@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDealer } from "./useDealer";
 import { fetchDealerLeads, fetchDealerVehiclesByDealerId, fetchLeadsForDealerOwner } from "../services/dealer.service";
-import { MOCK_CALLS } from "../services/crm-mock";
 import { buildListingPerformance } from "../lib/dealer-analytics";
 import { fetchLeadCalls, subscribeDealerLeads } from "../services/crm.service";
 import type { CRMStats, LeadWithMeta } from "../types";
@@ -19,7 +18,7 @@ export function useDealerCRM() {
   const [leads, setLeads] = useState<DbLead[]>([]);
   const [vehicles, setVehicles] = useState<{ id: string; title: string; status: string; price: number; is_featured?: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [calls, setCalls] = useState(MOCK_CALLS);
+  const [calls, setCalls] = useState<{ id: string; leadName: string; phone: string; outcome: string; duration: number; createdAt: string }[]>([]);
   const loadSeq = useRef(0);
 
   const load = useCallback(async () => {
@@ -50,14 +49,14 @@ export function useDealerCRM() {
               id: c.id,
               leadName: lead?.name ?? "Lead",
               phone: lead?.phone ?? "",
-              outcome: (c.outcome ?? "answered") as "answered" | "missed" | "voicemail",
+              outcome: String(c.outcome ?? "CONNECTED"),
               duration: c.duration_seconds ?? 0,
               createdAt: c.created_at,
             };
           })
         );
       } else {
-        setCalls(MOCK_CALLS);
+        setCalls([]);
       }
       setVehicles(
         vehicleRows.map((v) => ({
@@ -143,7 +142,10 @@ export function useDealerCRM() {
     };
   }, [vehicles, leads, leadsWithMeta, calls.length]);
 
-  const listingPerformance = useMemo(() => buildListingPerformance(vehicles), [vehicles]);
+  const listingPerformance = useMemo(
+    () => buildListingPerformance(vehicles, leadsWithMeta),
+    [vehicles, leadsWithMeta]
+  );
 
   const statsWithMetrics = useMemo(() => {
     const perf = listingPerformance;

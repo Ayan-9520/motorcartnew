@@ -36,7 +36,9 @@ export const NEW_CAR_DEALER_NAV: NcdNavGroup[] = [
     label: "Sales",
     items: [
       { to: "/dashboard/new-car/inventory", label: "New car stock", icon: Car },
+      { to: "/dashboard/new-car/inventory/bulk", label: "Bulk upload", icon: Package },
       { to: "/dashboard/new-car/leads", label: "Lead CRM", icon: Users },
+      { to: "/dashboard/new-car/quotations", label: "Quotations", icon: FileText },
       { to: "/dashboard/new-car/test-drives", label: "Test drives", icon: Calendar },
       { to: "/dashboard/new-car/bookings", label: "Bookings", icon: ClipboardList },
       { to: "/dashboard/new-car/exchange", label: "Exchange cars", icon: ArrowLeftRight },

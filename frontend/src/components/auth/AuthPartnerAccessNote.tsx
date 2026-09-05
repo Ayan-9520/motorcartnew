@@ -1,7 +1,7 @@
 import { Building2, Package, TrendingUp, Wrench } from "lucide-react";
 
 const ROLES = [
-  { icon: Building2, label: "Dealers & showrooms" },
+  { icon: Building2, label: "Dealers & dealer network" },
   { icon: TrendingUp, label: "DSA & finance partners" },
   { icon: Package, label: "Parts suppliers" },
   { icon: Wrench, label: "Service & garages" },

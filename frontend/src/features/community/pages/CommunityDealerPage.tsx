@@ -11,11 +11,15 @@ import toast from "react-hot-toast";
 export function CommunityDealerPage() {
   const { slug } = useParams<{ slug: string }>();
   const [dealerId, setDealerId] = useState<string | null>(null);
+  const [lookedUp, setLookedUp] = useState(false);
   const feed = useCommunityFeed({ dealerId: dealerId ?? undefined });
 
   useEffect(() => {
     if (!slug) return;
-    void fetchDealerIdBySlug(slug).then(setDealerId);
+    void fetchDealerIdBySlug(slug).then((id) => {
+      setDealerId(id);
+      setLookedUp(true);
+    });
   }, [slug]);
 
   if (!slug) return null;
@@ -32,19 +36,30 @@ export function CommunityDealerPage() {
       </div>
       <h1 className="mt-4 text-2xl font-bold">/{slug}</h1>
       <p className="text-muted-foreground">Inventory stories, launches & customer wins — scoped to this showroom.</p>
-      {!dealerId ? (
+      {!lookedUp ? (
         <Skeleton className="mt-8 h-40" />
+      ) : !dealerId ? (
+        <p className="mt-8 rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+          No posts yet.
+        </p>
       ) : (
         <div className="mt-8 space-y-6">
           <PostComposer
             onSubmit={async (body, opts) => {
-              await feed.createPost(body, { ...opts, dealerId });
-              toast.success("Posted to dealer community");
+              try {
+                await feed.createPost(body, { ...opts, dealerId });
+                toast.success("Post published.");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Could not publish post");
+              }
             }}
           />
-          <p className="text-xs text-muted-foreground">Tip: link your Supabase dealer slug so posts attach to this hub.</p>
           {feed.loading ? (
             <Skeleton className="h-40" />
+          ) : feed.posts.length === 0 ? (
+            <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+              No posts yet.
+            </p>
           ) : (
             <div className="space-y-4">
               {feed.posts.map((p) => (

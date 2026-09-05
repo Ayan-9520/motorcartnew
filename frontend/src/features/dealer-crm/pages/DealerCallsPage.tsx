@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Phone, PhoneMissed, Voicemail, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,19 +8,35 @@ import { StatCard } from "../components/StatCard";
 import { CRMDataToolbar } from "../components/CRMDataToolbar";
 import { useDealerCRM } from "../hooks/useDealerCRM";
 import { usePaginatedFilter } from "../hooks/usePaginatedFilter";
+import { fetchTelephonyCalls } from "../services/commos.service";
 import { setPageMeta } from "@/utils/seo";
 
-const outcomeIcon = {
+const outcomeIcon: Record<string, typeof Phone> = {
   answered: Phone,
+  CONNECTED: Phone,
   missed: PhoneMissed,
+  NO_ANSWER: PhoneMissed,
+  BUSY: PhoneMissed,
   voicemail: Voicemail,
+  CALL_BACK: Phone,
+  NOT_INTERESTED: PhoneMissed,
+  WRONG_NUMBER: PhoneMissed,
 };
 
 export function DealerCallsPage() {
   const { calls, stats } = useDealerCRM();
+  const [dialerNote, setDialerNote] = useState("Checking telephony…");
 
   useEffect(() => {
     setPageMeta({ title: "Call logs" });
+    void fetchTelephonyCalls()
+      .then((res) => {
+        if (res?.message) setDialerNote(res.message);
+        else setDialerNote("No calls yet");
+      })
+      .catch((e: { response?: { data?: { message?: string } } }) => {
+        setDialerNote(e.response?.data?.message ?? "Provider not configured");
+      });
   }, []);
 
   const answered = calls.filter((c) => c.outcome === "answered").length;
@@ -46,6 +62,8 @@ export function DealerCallsPage() {
         </Button>
       }
     >
+      <p className="text-sm text-muted-foreground">{dialerNote}. Telephony is separate from WhatsApp. Successful calls are never simulated.</p>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Calls tracked" value={stats.callsTracked} icon={Phone} />
         <StatCard label="Answered" value={answered} icon={Phone} trend="up" />
@@ -67,7 +85,7 @@ export function DealerCallsPage() {
 
       <div className="dealer-os-card space-y-3">
         {pageItems.map((c) => {
-          const Icon = outcomeIcon[c.outcome];
+          const Icon = outcomeIcon[c.outcome] ?? Phone;
           return (
             <article key={c.id} className="dealer-call-row">
               <span className="dealer-notification-icon">
@@ -97,7 +115,7 @@ export function DealerCallsPage() {
         {!pageItems.length && (
           <p className="text-center text-muted-foreground py-10">
             <Plus className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            No calls logged — open a lead in CRM to add notes and call outcomes.
+            No calls yet — open a lead in CRM to log outcomes. Provider calls require a configured telephony adapter.
           </p>
         )}
       </div>

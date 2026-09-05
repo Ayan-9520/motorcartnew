@@ -1,5 +1,6 @@
 import type { AppRole, FinanceStatus, KycStatus, Prisma, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ensureCommissionOnDisbursement } from "./finance-commission.service";
 
 /** Roles that register via business signup and need admin approval */
 export const BUSINESS_ROLES: AppRole[] = [
@@ -248,9 +249,28 @@ export async function updateFinanceApplicationStatus(
       data: {
         applicationId: id,
         status,
+        fromStatus: app.status,
+        toStatus: status,
+        changedBy: reviewerId ?? null,
         note: note?.trim() || `Status updated to ${status} by ${reviewerId ?? "platform_admin"}`,
       },
     });
+    if (status === "processing") {
+      const existing = await tx.financeVerification.count({ where: { applicationId: id } });
+      if (existing === 0) {
+        await tx.financeVerification.createMany({
+          data: ["identity", "income", "cibil", "bank_statement"].map((checkType) => ({
+            applicationId: id,
+            checkType,
+            status: "pending",
+            metadata: {},
+          })),
+        });
+      }
+    }
+    if (status === "disbursed") {
+      await ensureCommissionOnDisbursement(id, tx);
+    }
   });
 
   return { ok: true };
@@ -378,6 +398,30 @@ export async function getPlatformAdminOverview() {
     pendingFinance,
     approvedFinance,
     disbursedTotal,
+    organizations,
+    dealers,
+    leads,
+    opportunities,
+    quotations,
+    testDrives,
+    communityPosts,
+    jobs,
+    serviceBookings,
+    partOrders,
+    insuranceQuotes,
+    openPayoutRequests,
+    invoiceSum,
+    paymentSum,
+    rewardSum,
+    unroutedLeads,
+    pendingTestDriveRequests,
+    expiringQuotations,
+    openReports,
+    payoutMismatches,
+    failedCommunications,
+    pendingJobApplications,
+    zeroStockNewCars,
+    openTickets,
   ] = await Promise.all([
     prisma.user.count({ where: { deletedAt: null } }),
     prisma.user.count({ where: { deletedAt: null, status: "active" } }),
@@ -415,6 +459,40 @@ export async function getPlatformAdminOverview() {
       where: { status: "disbursed" },
       _sum: { amount: true },
     }),
+    prisma.organization.count({ where: { deletedAt: null } }),
+    prisma.dealer.count({ where: { deletedAt: null } }),
+    prisma.lead.count(),
+    prisma.opportunity.count(),
+    prisma.quotation.count(),
+    prisma.testDriveBooking.count(),
+    prisma.socialPost.count(),
+    prisma.jobPosting.count(),
+    prisma.serviceBooking.count(),
+    prisma.partOrder.count(),
+    prisma.insuranceQuote.count(),
+    prisma.partnerPayoutRequest.count({
+      where: { status: { in: ["PENDING", "UNDER_REVIEW", "APPROVED", "IN_PROGRESS"] } },
+    }),
+    prisma.commercialInvoice.aggregate({
+      where: { status: { in: ["ISSUED", "PAID"] } },
+      _sum: { total: true },
+    }),
+    prisma.commercialPayment.aggregate({
+      where: { status: "PAID" },
+      _sum: { amount: true },
+    }),
+    prisma.rewardAccount.aggregate({ _sum: { balance: true } }),
+    prisma.lead.count({ where: { assignments: { none: {} } } }),
+    prisma.testDriveBooking.count({ where: { status: "requested" } }),
+    prisma.quotation.count({
+      where: { status: "issued", validityEnd: { lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) } },
+    }),
+    prisma.communityReport.count({ where: { status: "OPEN" } }),
+    prisma.reconciliationEntry.count({ where: { status: "MISMATCH" } }),
+    prisma.communicationMessage.count({ where: { status: "FAILED" } }),
+    prisma.jobApplication.count({ where: { status: "APPLIED" } }),
+    prisma.newCarInventory.count({ where: { stock: { lte: 0 } } }),
+    prisma.supportTicket.count({ where: { status: "open" } }),
   ]);
 
   return {
@@ -427,6 +505,43 @@ export async function getPlatformAdminOverview() {
     pendingFinance,
     approvedFinance,
     loanDisbursedTotal: Number(disbursedTotal._sum.amount ?? 0),
+    organizations,
+    dealers,
+    vehicles: listingsLive,
+    leads,
+    opportunities,
+    quotations,
+    testDrives,
+    communityPosts,
+    jobs,
+    serviceBookings,
+    partOrders,
+    insuranceApplications: insuranceQuotes,
+    openPayoutRequests,
+    recordedInvoiceTotal: Number(invoiceSum._sum.total ?? 0),
+    confirmedPaymentTotal: Number(paymentSum._sum.amount ?? 0),
+    rewardLiabilityPoints: Number(rewardSum._sum.balance ?? 0),
+    mrrEstimate: 0,
+    openTickets,
+    fraudOpen: 0,
+    ops: {
+      unroutedLeads,
+      pendingTestDriveRequests,
+      expiringQuotations,
+      openReports,
+      payoutMismatches,
+      failedCommunications,
+      pendingJobApplications,
+      zeroStockNewCars,
+    },
+    sources: {
+      users: "users.deleted_at IS NULL",
+      listingsLive: "vehicles.status=available",
+      loanDisbursedTotal: "SUM(finance_applications.amount) WHERE status=disbursed",
+      recordedInvoiceTotal: "SUM(commercial_invoices.total) WHERE status IN (ISSUED,PAID)",
+      rewardLiabilityPoints: "SUM(reward_accounts.balance)",
+      mrrEstimate: "not calculated — no subscription MRR series",
+    },
   };
 }
 

@@ -42,6 +42,7 @@ export interface CommunityPost {
   hashtags: string[];
   createdAt: string;
   likedByMe?: boolean;
+  savedByMe?: boolean;
 }
 
 export interface CommunityComment {
@@ -93,8 +94,12 @@ export interface SocialProfile {
   avatarUrl: string | null;
   coverUrl: string | null;
   bio: string | null;
+  headline: string | null;
   handle: string | null;
   role: string;
+  city: string | null;
+  state: string | null;
+  profileType: string | null;
   isVerified: boolean;
   postCount: number;
   followerCount: number;
@@ -106,7 +111,11 @@ export interface SocialProfile {
 export interface SocialProfileUpdate {
   fullName?: string;
   bio?: string | null;
+  headline?: string | null;
   handle?: string | null;
   avatarUrl?: string | null;
   coverUrl?: string | null;
+  city?: string | null;
+  state?: string | null;
+  profileType?: string | null;
 }

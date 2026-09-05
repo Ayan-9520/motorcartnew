@@ -50,6 +50,16 @@ export interface VehicleMetadata {
   offerTag?: string;
   isUpcoming?: boolean;
   isLatestLaunch?: boolean;
+  /** When no deterministic numeric price exists (ranges / blank). */
+  priceOnRequest?: boolean;
+  priceDisplay?: string;
+  priceSourceText?: string;
+  ncdInventoryId?: string;
+  stock?: number;
+  stockStatus?: string;
+  catalogVariantId?: string;
+  source?: string;
+  pincode?: string;
   /** Pre-owned */
   inspectionScore?: number;
   fairPriceLabel?: FairPriceLabel;
@@ -110,6 +120,7 @@ export interface VehicleFilters {
   condition?: "new" | "used";
   brand?: string;
   model?: string;
+  variant?: string;
   fuel?: string;
   transmission?: string;
   priceMin?: number;
@@ -119,6 +130,8 @@ export interface VehicleFilters {
   kmsMax?: number;
   owners?: number;
   city?: string;
+  /** Exact India PIN for new-car stock discovery (Phase 5C / dealer stock). */
+  pincode?: string;
   color?: string;
   bodyType?: string;
   /** Max monthly EMI (₹) */

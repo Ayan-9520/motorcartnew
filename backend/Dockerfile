@@ -19,8 +19,9 @@ ENV PORT=3001
 
 RUN apk add --no-cache curl postgresql-client
 
+# Full node_modules (tsx needed for seed; playwright removed from package.json)
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/package.json /app/package-lock.json ./
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
@@ -28,7 +29,6 @@ COPY --from=builder /app/server.ts ./server.ts
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/src ./src
-COPY --from=builder /app/scripts ./scripts
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
   && chmod +x /usr/local/bin/docker-entrypoint.sh \
@@ -37,7 +37,7 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
 
 EXPOSE 3001
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+HEALTHCHECK --interval=20s --timeout=5s --start-period=60s --retries=5 \
   CMD curl -fsS http://127.0.0.1:3001/api/health || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]

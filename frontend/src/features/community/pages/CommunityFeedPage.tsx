@@ -141,9 +141,9 @@ export function CommunityFeedPage() {
             onSubmit={async (body, opts) => {
               try {
                 await feed.createPost(body, opts);
-                toast.success("Posted");
-              } catch {
-                toast.error("Sign in to post");
+                toast.success("Post published.");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Could not publish post");
               }
             }}
           />
@@ -154,7 +154,7 @@ export function CommunityFeedPage() {
             </div>
           ) : displayPosts.length === 0 ? (
             <Card className="rounded-2xl border-dashed p-10 text-center">
-              <p className="font-medium text-foreground">No posts yet</p>
+              <p className="font-medium text-foreground">No posts yet.</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 {tab === "following"
                   ? "Follow people from their profile — their posts appear here."
@@ -171,6 +171,8 @@ export function CommunityFeedPage() {
                   post={p}
                   premium
                   onLike={() => void feed.like(p)}
+                  onShare={() => void feed.share(p)}
+                  onSave={() => void feed.save(p)}
                   onFlag={() => void flag(p.id)}
                   onDelete={async () => {
                     const r = await feed.deletePost(p);

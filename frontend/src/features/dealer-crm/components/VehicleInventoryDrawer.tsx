@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { X, Wand2 } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -155,10 +156,17 @@ export function VehicleInventoryDrawer({
   };
 
   const submit = async () => {
+    if (!form.brand.trim() || !form.model.trim()) {
+      toast.error("Brand and Model are required");
+      return;
+    }
     setSaving(true);
     try {
       await onSave(form);
       onClose();
+    } catch (e) {
+      // onSave already toasts; keep drawer open for retry
+      console.error(e);
     } finally {
       setSaving(false);
     }
@@ -186,33 +194,33 @@ export function VehicleInventoryDrawer({
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label>Brand</Label>
-              <select
-                className="dealer-os-select mt-1"
+              <Input
+                className="mt-1"
+                list="dealer-brand-list"
                 value={form.brand}
-                onChange={(e) =>
-                  setForm({ ...form, brand: e.target.value, model: BRAND_MODELS[e.target.value as IndianAutoBrand]?.[0] ?? "" })
-                }
-              >
+                onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                placeholder="e.g. Tata"
+              />
+              <datalist id="dealer-brand-list">
                 {INDIAN_AUTO_BRANDS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
+                  <option key={b} value={b} />
                 ))}
-              </select>
+              </datalist>
             </div>
             <div>
               <Label>Model</Label>
-              <select
-                className="dealer-os-select mt-1"
+              <Input
+                className="mt-1"
+                list="dealer-model-list"
                 value={form.model}
                 onChange={(e) => setForm({ ...form, model: e.target.value })}
-              >
+                placeholder="e.g. Curvv EV"
+              />
+              <datalist id="dealer-model-list">
                 {models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
+                  <option key={m} value={m} />
                 ))}
-              </select>
+              </datalist>
             </div>
             <div>
               <Label>Variant</Label>
@@ -309,7 +317,15 @@ export function VehicleInventoryDrawer({
                 <input
                   type="checkbox"
                   checked={form.condition === "new"}
-                  onChange={(e) => setForm({ ...form, condition: e.target.checked ? "new" : "used" })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      condition: e.target.checked ? "new" : "used",
+                      category: e.target.checked ? "new-cars" : form.category === "new-cars" ? "used-cars" : form.category,
+                      owners: e.target.checked ? 0 : Math.max(1, form.owners || 1),
+                      kmsDriven: e.target.checked ? 0 : form.kmsDriven,
+                    })
+                  }
                 />
                 New car
               </label>

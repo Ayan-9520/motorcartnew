@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/useUser";
-import { notify } from "@/shared/notifications/app-toast";
 import { CustomerEcosystemPage } from "../components/CustomerEcosystemPage";
 import { useCustomerEcosystem } from "../hooks/useCustomerEcosystem";
 import { setPageMeta } from "@/utils/seo";
@@ -60,12 +59,20 @@ export function CustomerProfileCenterPage() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
-                updateProfile({
-                  full_name: fd.get("fullName") as string,
-                  phone: fd.get("phone") as string,
-                  city: fd.get("city") as string,
-                  state: fd.get("state") as string,
-                });
+                void (async () => {
+                  await updateProfile({
+                    full_name: fd.get("fullName") as string,
+                    phone: fd.get("phone") as string,
+                    city: fd.get("city") as string,
+                    state: fd.get("state") as string,
+                  });
+                  await savePreferences({
+                    city: String(fd.get("city") ?? ""),
+                    state: String(fd.get("state") ?? ""),
+                    dob: String(fd.get("dob") ?? "") || undefined,
+                    anniversary: String(fd.get("anniversary") ?? "") || undefined,
+                  });
+                })();
               }}
             >
               <div className="grid gap-4 sm:grid-cols-2">
@@ -116,13 +123,13 @@ export function CustomerProfileCenterPage() {
             </h3>
             <ul className="mt-3 space-y-2 text-sm">
               <li className="flex justify-between rounded-lg border px-3 py-2">
-                Insurance reminders <span className="text-emerald-600">On</span>
+                Insurance reminders <span className="text-muted-foreground">{data?.preferences.notifyInsurance === false ? "Off" : "On"}</span>
               </li>
               <li className="flex justify-between rounded-lg border px-3 py-2">
-                Service reminders <span className="text-emerald-600">On</span>
+                Service reminders <span className="text-muted-foreground">{data?.preferences.notifyService === false ? "Off" : "On"}</span>
               </li>
               <li className="flex justify-between rounded-lg border px-3 py-2">
-                EMI alerts <span className="text-emerald-600">On</span>
+                EMI alerts <span className="text-muted-foreground">From loan applications when present</span>
               </li>
               <li className="flex justify-between rounded-lg border px-3 py-2">
                 Marketing <span className="text-muted-foreground">Off</span>

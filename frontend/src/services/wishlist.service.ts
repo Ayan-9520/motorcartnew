@@ -10,17 +10,18 @@ export function isDbVehicleId(id: string): boolean {
   return UUID_RE.test(id);
 }
 
-async function useRestWishlist(): Promise<boolean> {
+async function restWishlistEnabled(): Promise<boolean> {
   return featureFlags.wishlistDb && hasConfiguredApi();
 }
 
 export async function fetchWishlistVehicleIds(userId: string): Promise<string[]> {
-  if (await useRestWishlist()) {
+  if (await restWishlistEnabled()) {
     try {
       const { data } = await api.get<{ vehicleIds?: string[] }>("/api/wishlist");
       return data.vehicleIds ?? [];
     } catch (e) {
       console.warn("[wishlist] fetch api", e);
+      return [];
     }
   }
 
@@ -39,12 +40,13 @@ export async function fetchWishlistVehicleIds(userId: string): Promise<string[]>
 export async function addWishlistOnServer(userId: string, vehicleId: string): Promise<void> {
   if (!isDbVehicleId(vehicleId)) return;
 
-  if (await useRestWishlist()) {
+  if (await restWishlistEnabled()) {
     try {
       await api.post("/api/wishlist", { vehicle_id: vehicleId });
       return;
     } catch (e) {
       console.warn("[wishlist] add api", e);
+      return;
     }
   }
 
@@ -58,12 +60,13 @@ export async function addWishlistOnServer(userId: string, vehicleId: string): Pr
 export async function removeWishlistOnServer(userId: string, vehicleId: string): Promise<void> {
   if (!isDbVehicleId(vehicleId)) return;
 
-  if (await useRestWishlist()) {
+  if (await restWishlistEnabled()) {
     try {
       await api.delete("/api/wishlist", { params: { vehicle_id: vehicleId } });
       return;
     } catch (e) {
       console.warn("[wishlist] remove api", e);
+      return;
     }
   }
 

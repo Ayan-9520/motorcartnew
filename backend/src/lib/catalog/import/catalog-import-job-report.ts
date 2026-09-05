@@ -1,4 +1,3 @@
-import type { GaadiBazaarScrapeError } from "../../scraper/gaadi-bazaar/scraper/scraper-types";
 import type { ImportError } from "./import-types";
 import type { ImportPipelineRunResult } from "./import-pipeline";
 import type {
@@ -10,8 +9,9 @@ import type {
   CatalogImportJobPerformanceReport,
   CatalogImportJobStageTiming,
   CatalogImportJobStageKind,
+  GaadiBazaarScrapeError,
+  GaadiBazaarScrapeStats,
 } from "./catalog-import-job.types";
-import type { GaadiBazaarScrapeStats } from "../../scraper/gaadi-bazaar/scraper/scraper-types";
 
 const STAGE_LABELS: Record<CatalogImportJobStageKind, string> = {
   playwright_worker: "Playwright Worker",

@@ -64,9 +64,9 @@ export function AuthLayout() {
 
             <div className="auth-layout__stats grid grid-cols-3 gap-2.5">
               {[
-                { value: "12K+", label: "Listings" },
-                { value: "2.4K+", label: "Dealers" },
-                { value: "₹800Cr+", label: "GMV" },
+                { value: "Listings", label: "Vehicles" },
+                { value: "Verified", label: "Dealers" },
+                { value: "Finance", label: "Loan offers" },
               ].map((s) => (
                 <div key={s.label} className="auth-layout__stat">
                   <p className="text-sm font-bold text-foreground">{s.value}</p>

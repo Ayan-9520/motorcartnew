@@ -1,20 +1,22 @@
-import { deriveListingMetrics } from "../data/indian-automobile-catalog";
 import type { LeadWithMeta, ListingPerformance } from "../types";
 import type { CRMStats } from "../types";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function buildListingPerformance(
-  vehicles: { id: string; title: string; status: string; price: number }[]
+  vehicles: { id: string; title: string; status: string; price: number }[],
+  leads: LeadWithMeta[] = []
 ): ListingPerformance[] {
   return vehicles.map((v) => {
-    const m = deriveListingMetrics(v.id, v.title, v.price, v.status);
+    const enquiries = leads.filter(
+      (l) => l.vehicleInterest === v.title || (l as LeadWithMeta & { vehicleId?: string }).vehicleId === v.id
+    ).length;
     return {
       vehicleId: v.id,
       title: v.title,
-      views: m.views,
-      enquiries: m.enquiries,
-      whatsappClicks: m.whatsappClicks,
+      views: 0,
+      enquiries,
+      whatsappClicks: 0,
       status: v.status,
     };
   });
@@ -56,18 +58,17 @@ export function buildMonthlyLeadSeries(leads: { createdAt: string }[]): { month:
       const c = new Date(l.createdAt);
       return `${c.getFullYear()}-${c.getMonth()}` === key;
     }).length;
-    return { month: MONTHS[d.getMonth()], leads: count || Math.max(0, 3 - Math.abs(3 - i)) };
+    return { month: MONTHS[d.getMonth()], leads: count };
   });
 }
 
+/** Monthly sale dates are not stored. Do not fabricate a trend from sold totals. */
 export function buildMonthlyRevenueSeries(
-  vehicles: { status: string; price: number; title?: string }[]
+  _vehicles: { status: string; price: number; title?: string }[] = []
 ): { month: string; revenue: number }[] {
-  const soldTotal = vehicles.filter((v) => v.status === "sold").reduce((s, v) => s + v.price, 0);
-  const base = soldTotal > 0 ? soldTotal / 6 : 12_50_000;
   return Array.from({ length: 6 }, (_, i) => ({
     month: MONTHS[(new Date().getMonth() - (5 - i) + 12) % 12],
-    revenue: Math.round((base * (0.72 + i * 0.06)) / 100_000),
+    revenue: 0,
   }));
 }
 

@@ -29,7 +29,7 @@ export async function fetchInsurancePartners(): Promise<InsurancePartner[]> {
     .order("claim_settlement_ratio", { ascending: false });
 
   if (!error && data?.length) return data.map((r) => mapPartner(r as Record<string, unknown>));
-  return MOCK_INSURANCE_PARTNERS;
+  return [];
 }
 
 export function buildInsuranceQuotes(
@@ -43,38 +43,10 @@ export function buildInsuranceQuotes(
 }
 
 export async function persistInsuranceQuotes(
-  input: InsuranceQuoteInput,
-  offers: InsuranceQuoteOffer[]
+  _input: InsuranceQuoteInput,
+  _offers: InsuranceQuoteOffer[]
 ): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.id || !offers.length) return;
-
-  const rows = offers.slice(0, 6).map((o) => ({
-    user_id: user.id,
-    vehicle_type: input.vehicleType,
-    vehicle_year: input.vehicleYear,
-    vehicle_make: input.vehicleMake,
-    vehicle_model: input.vehicleModel,
-    registration_city: input.registrationCity,
-    fuel_type: input.fuelType ?? "petrol",
-    idv_amount: o.idvAmount,
-    ncb_percent: input.ncbPercent,
-    plan_type: input.planType,
-    partner_id: o.partnerId.startsWith("ins-") ? null : o.partnerId,
-    partner_name: o.partnerName,
-    annual_premium: o.annualPremium,
-    monthly_premium: o.monthlyPremium,
-    addons: input.addons,
-    premium_breakdown: o.breakdown,
-    claim_settlement_ratio: o.claimSettlementRatio,
-    rank_score: o.rankScore,
-  }));
-
-  try {
-    await supabase.from("insurance_quotes").insert(rows);
-  } catch {
-    /* table may not exist until migration */
-  }
+  /* Partner quotes persist only via insurer REST as PARTNER_QUOTE / BOUND. */
 }
 
 async function insertInsuranceApplicationDirect(

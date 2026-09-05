@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -15,7 +15,11 @@ import { useHomePage } from "@/features/home/context/HomePageContext";
 import { realDataOnly } from "@/config/real-data";
 import { formatPrice } from "@/lib/vehicle-utils";
 import { formatCurrency } from "@/lib/utils";
-import { HUB_HERO_IMAGES, MEDIA_DEFAULTS } from "@/lib/media/india-media-catalog";
+import { HUB_HERO_IMAGES } from "@/lib/media/india-media-catalog";
+
+/** Local muted cinematic car loop for homepage hero. */
+const HERO_CAR_VIDEO_SRC = "/brand/hero-car-loop.mp4";
+const HERO_HOME_POSTER = "/brand/hero-automotive-premium-v2.webp";
 
 export function HeroSection() {
   const { pathname } = useLocation();
@@ -23,6 +27,16 @@ export function HeroSection() {
   const { mode } = useHeroSearch();
   const hub = getHeroHubConfig(mode);
   const { featuredVehicles, auctions, heroStats, data } = useHomePage();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const [preferReducedMotion, setPreferReducedMotion] = useState(false);
+
+  const hubPoster =
+    mode in HUB_HERO_IMAGES
+      ? HUB_HERO_IMAGES[mode as keyof typeof HUB_HERO_IMAGES]
+      : undefined;
+  const posterSrc = isHome ? HERO_HOME_POSTER : (hubPoster ?? HERO_HOME_POSTER);
+  const showHeroVideo = isHome && !preferReducedMotion;
 
   const rotatingLines = useMemo(() => {
     if (!isHome) return [...HERO_HEADLINE_WORDS];
@@ -51,31 +65,59 @@ export function HeroSection() {
   const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setPreferReducedMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
     const id = setInterval(() => {
       setWordIndex((i) => (i + 1) % rotatingLines.length);
     }, 3200);
     return () => clearInterval(id);
   }, [rotatingLines.length]);
 
+  useEffect(() => {
+    setVideoReady(false);
+    const el = videoRef.current;
+    if (!el || !showHeroVideo) return;
+    el.muted = true;
+    const play = () => {
+      void el.play().then(() => setVideoReady(true)).catch(() => setVideoReady(false));
+    };
+    if (el.readyState >= 2) play();
+    else el.addEventListener("loadeddata", play, { once: true });
+    return () => el.removeEventListener("loadeddata", play);
+  }, [showHeroVideo, posterSrc]);
+
   return (
     <section className="hero-section hero-section--photo relative overflow-hidden border-b border-border">
       <div className="hero-section-bg" aria-hidden>
         <img
-          src={MEDIA_DEFAULTS.vehicleWide}
+          src={posterSrc}
           alt=""
-          className="hero-section-bg-photo"
+          className={`hero-section-bg-photo${videoReady && showHeroVideo ? " hero-section-bg-photo--behind-video" : ""}`}
           loading="eager"
           decoding="async"
           fetchPriority="high"
         />
-        <img
-          src={HUB_HERO_IMAGES.cars}
-          alt=""
-          className="hero-section-bg-brand"
-          loading="eager"
-          decoding="async"
-          aria-hidden
-        />
+        {showHeroVideo ? (
+          <video
+            ref={videoRef}
+            className={`hero-section-bg-video${videoReady ? " hero-section-bg-video--ready" : ""}`}
+            src={HERO_CAR_VIDEO_SRC}
+            poster={HERO_HOME_POSTER}
+            muted
+            loop
+            playsInline
+            autoPlay
+            preload="auto"
+            aria-hidden
+          />
+        ) : null}
+        <div className="hero-section-bg-cinematic" />
         <div className="hero-section-bg-overlay" />
         <div className="hero-section-bg-mesh" />
       </div>
@@ -127,7 +169,7 @@ export function HeroSection() {
                     className="h-10 rounded-xl px-5 font-semibold shadow-[var(--shadow-primary)]"
                     asChild
                   >
-                    <Link to="/buy/cars/used">
+                    <Link to="/buy">
                       Explore vehicles <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>

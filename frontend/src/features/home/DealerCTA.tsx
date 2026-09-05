@@ -8,7 +8,7 @@ const perks = [
   { icon: Store, label: "List unlimited inventory" },
   { icon: BarChart3, label: "Dealer CRM & analytics" },
   { icon: Shield, label: "Verified buyer leads" },
-  { icon: Users, label: "8,500+ dealer network" },
+  { icon: Users, label: "Dealer network" },
 ];
 
 export function DealerCTA() {

@@ -7,7 +7,7 @@ function hero(brand: string, model: string, bodyType: string, fuel = "petrol") {
   return getVehicleHero({ brand, model, bodyType, fuelType: fuel });
 }
 
-/** Realistic Indian ownership demo — used when Supabase tables are empty */
+/** Demo snapshot — not used on production customer paths after Phase 4. */
 export function buildMockCustomerSnapshot(): CustomerEcosystemSnapshot {
   const vehicles = [
     {
@@ -155,7 +155,7 @@ export function buildMockCustomerSnapshot(): CustomerEcosystemSnapshot {
     { id: "ai-1", insightKey: "insurance_expiry", title: "Insurance expiring soon", summary: "ACKO comprehensive for Creta ends in 8 days. Renew now to keep zero-dep cover.", severity: "warning" as const, actionLabel: "Renew policy", actionUrl: "/insurance/quote", vehicleLabel: "Hyundai Creta" },
     { id: "ai-2", insightKey: "service_due", title: "Service window opening", summary: "You're 1,600 km from 30,000 km service. Book early for weekend slots in Pune.", severity: "info" as const, actionLabel: "Book service", actionUrl: DEFAULT_SERVICE_BOOK_PATH, vehicleLabel: "Hyundai Creta" },
     { id: "ai-3", insightKey: "resale_up", title: "Resale value increased", summary: "Creta SX(O) estimate is up ₹58,000 vs last quarter in your city.", severity: "success" as const, actionLabel: "View valuation", actionUrl: "/dashboard/customer/garage", vehicleLabel: "Hyundai Creta" },
-    { id: "ai-4", insightKey: "loan_preapproved", title: "Top-up pre-approved", summary: "HDFC has a ₹2.5L pre-approved top-up at 9.2% for verified profiles.", severity: "success" as const, actionLabel: "Check eligibility", actionUrl: "/finance/tools", vehicleLabel: "Profile" },
+    { id: "ai-4", insightKey: "loan_preapproved", title: "Top-up eligibility", summary: "HDFC may offer top-up eligibility for verified profiles. Check eligibility for details.", severity: "success" as const, actionLabel: "Check eligibility", actionUrl: "/finance/tools", vehicleLabel: "Profile" },
     { id: "ai-5", insightKey: "fuel_efficiency", title: "Fuel efficiency dip", summary: "Last 3 tank-ups show 12% lower mileage — consider air filter check.", severity: "info" as const, actionLabel: "Book inspection", actionUrl: DEFAULT_SERVICE_BOOK_PATH, vehicleLabel: "Hyundai Creta" },
   ];
 
@@ -186,6 +186,17 @@ export function buildMockCustomerSnapshot(): CustomerEcosystemSnapshot {
     timeline,
     campaigns,
     unreadNotifications: notifications.filter((n) => !n.read).length,
+    enquiries: [],
+    wishlistVehicleIds: [],
+    financeApplications: [],
+    availability: {
+      rewardsLedger: false,
+      insuranceClaims: false,
+      aiInsights: false,
+      fastagProvider: false,
+      savedSearches: false,
+      documentScan: false,
+    },
   };
 }
 

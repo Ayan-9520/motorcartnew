@@ -82,6 +82,40 @@ function kanbanFromJobs(jobs: ShJobCard[]) {
   }));
 }
 
+export function emptyServicePartnerSnapshot(
+  centerName = "Your workshop",
+  city = "India"
+): ServicePartnerSnapshot {
+  return {
+    centerId: null,
+    profile: {
+      id: "",
+      name: centerName,
+      city,
+      rating: 0,
+      isVerified: false,
+      activeJobs: 0,
+      techniciansOnline: 0,
+      satisfactionPct: 0,
+      branchCount: 0,
+    },
+    activeVehicles: 0,
+    revenueToday: 0,
+    revenueMonth: 0,
+    metrics: [
+      { key: "rev_today", label: "Revenue today", value: "₹0", href: "/dashboard/service/finance/revenue" },
+      { key: "active", label: "Active jobs", value: 0, href: "/dashboard/service/workshop/kanban" },
+      { key: "completed", label: "Completed jobs", value: 0, href: "/dashboard/service/bookings/completed" },
+    ],
+    insights: [],
+    bookings: [],
+    jobCards: [],
+    kanban: kanbanFromJobs([]),
+    technicians: [],
+    customers: [],
+  };
+}
+
 export function buildMockServicePartnerSnapshot(
   centerName = "Motorcart Premium Garage",
   city = "Delhi NCR",

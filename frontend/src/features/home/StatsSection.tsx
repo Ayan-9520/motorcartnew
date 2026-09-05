@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import { Car, IndianRupee, Store, Users } from "lucide-react";
 import { useHomePage } from "@/features/home/context/HomePageContext";
-import { realDataOnly } from "@/config/real-data";
-import { platformStats } from "@/data/mock";
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 
 const statIcons = [Car, Store, IndianRupee, Users];
@@ -21,8 +19,7 @@ function parseStatValue(value: string): { numeric: number; suffix: string; prefi
 }
 
 export function StatsSection() {
-  const { platformStats: dynamicStats } = useHomePage();
-  const stats = dynamicStats.length ? dynamicStats : realDataOnly ? [] : platformStats;
+  const { platformStats: stats } = useHomePage();
   if (!stats.length) return null;
 
   return (

@@ -7,6 +7,8 @@ import {
   deleteCommunityPost,
   fetchCommunityFeed,
   fetchCommunityGroups,
+  savePost,
+  sharePost,
   togglePostLike,
 } from "../services/community.service";
 import type { CommunityGroup, CommunityPost, HashtagTrend } from "../types";
@@ -96,6 +98,24 @@ export function useCommunityFeed(opts?: {
     [user?.id, load]
   );
 
+  const share = useCallback(
+    async (post: CommunityPost) => {
+      if (!user?.id) return;
+      await sharePost(post.id, user.id);
+      await load();
+    },
+    [user?.id, load]
+  );
+
+  const save = useCallback(
+    async (post: CommunityPost) => {
+      if (!user?.id) return;
+      await savePost(post.id, Boolean(post.savedByMe));
+      await load();
+    },
+    [user?.id, load]
+  );
+
   const deletePost = useCallback(
     async (post: CommunityPost) => {
       if (!user?.id || post.authorId !== user.id) return { ok: false as const, error: "Not allowed" };
@@ -106,5 +126,5 @@ export function useCommunityFeed(opts?: {
     [user?.id]
   );
 
-  return { posts, groups, trending, loading, tag, reload: load, createPost, like, deletePost };
+  return { posts, groups, trending, loading, tag, reload: load, createPost, like, share, save, deletePost };
 }

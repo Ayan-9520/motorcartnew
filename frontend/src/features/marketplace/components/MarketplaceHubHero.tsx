@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  ArrowRight,
   Bike,
   Bot,
   Bus,
   Car,
   CarTaxiFront,
-  Gavel,
-  Landmark,
   Search,
-  Sparkles,
+  ShieldCheck,
   Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,11 @@ type MarketplaceHubHeroProps = {
 
 type HubTab = "new" | "used" | "sell" | "auction" | "finance";
 
+function titleCaseSingular(singular: string): string {
+  if (singular === "EV" || singular === "ev") return "EV";
+  return singular.charAt(0).toUpperCase() + singular.slice(1);
+}
+
 export function MarketplaceHubHero({ mode }: MarketplaceHubHeroProps) {
   const activeHub = useVehicleHubStore((s) => s.activeHub);
   const activeCondition = useVehicleHubStore((s) => s.activeCondition);
@@ -58,9 +62,11 @@ export function MarketplaceHubHero({ mode }: MarketplaceHubHeroProps) {
     if (mode === "buy" && (activeCondition === "new" || activeCondition === "used")) {
       setActiveTab(activeCondition);
     }
+    if (mode === "sell") setActiveTab("sell");
   }, [activeCondition, mode]);
 
   const HeroIcon = HERO_ICONS[activeHub];
+  const sellAccent = titleCaseSingular(copy.singular);
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +89,7 @@ export function MarketplaceHubHero({ mode }: MarketplaceHubHeroProps) {
     mode === "sell"
       ? [
           { id: "sell", label: `Sell ${copy.plural}` },
-          { id: "used", label: `Browse Pre-Owned`, href: buyListingPath(activeHub, "used") },
+          { id: "used", label: "Browse Pre-Owned", href: buyListingPath(activeHub, "used") },
           { id: "auction", label: "Auction", href: "/auctions" },
           { id: "finance", label: "Apply Loan", href: "/finance" },
         ]
@@ -96,7 +102,12 @@ export function MarketplaceHubHero({ mode }: MarketplaceHubHeroProps) {
         ];
 
   return (
-    <section className="marketplace-hub-hero">
+    <section
+      className={cn(
+        "marketplace-hub-hero",
+        mode === "sell" && "marketplace-hub-hero-sell"
+      )}
+    >
       <div className="container">
         <VehicleHubIconBar variant="page" className="mb-5 md:hidden" />
 
@@ -105,9 +116,19 @@ export function MarketplaceHubHero({ mode }: MarketplaceHubHeroProps) {
             <p className="marketplace-hub-eyebrow">
               {mode === "buy" ? "Buy on Motorcart" : "Sell on Motorcart"}
             </p>
-            <h1 className="marketplace-hub-hero-headline">
-              Find your <span className="text-primary">{copy.dreamLabel}</span>
-            </h1>
+            {mode === "sell" ? (
+              <>
+                <h1 className="marketplace-hub-hero-headline" key={`sell-${activeHub}`}>
+                  Get the best price for your{" "}
+                  <span className="text-primary">{sellAccent}</span>
+                </h1>
+                <p className="marketplace-hub-subtitle mt-3 max-w-xl">{copy.sellHeroLead}</p>
+              </>
+            ) : (
+              <h1 className="marketplace-hub-hero-headline" key={activeHub}>
+                Find your <span className="text-primary">{copy.dreamLabel}</span>
+              </h1>
+            )}
 
             <div className="marketplace-hub-tabs" role="tablist">
               {tabs.map((tab) => {
@@ -170,48 +191,43 @@ export function MarketplaceHubHero({ mode }: MarketplaceHubHeroProps) {
             )}
 
             {mode === "sell" && (
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Button className="rounded-xl shadow-[var(--shadow-primary)]" asChild>
-                  <Link to={sellListingPath(activeHub)}>Start listing</Link>
+                  <Link to={sellListingPath(activeHub)}>
+                    Start free listing
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Link>
                 </Button>
                 <Button variant="outline" className="rounded-xl" asChild>
-                  <Link to={buyListingPath(activeHub, "used")}>Browse pre-owned {copy.plural.toLowerCase()}</Link>
+                  <Link to={buyListingPath(activeHub, "used")}>
+                    See what buyers pay
+                  </Link>
                 </Button>
               </div>
             )}
-
-            <div className="marketplace-hub-quicklinks">
-              <Link
-                to={buyListingPath(activeHub, "new")}
-                className="marketplace-hub-quicklink"
-                onClick={() => selectCondition("new")}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                New
-              </Link>
-              <Link
-                to={buyListingPath(activeHub, "used")}
-                className="marketplace-hub-quicklink"
-                onClick={() => selectCondition("used")}
-              >
-                Pre-Owned
-              </Link>
-              <Link to="/auctions" className="marketplace-hub-quicklink">
-                <Gavel className="h-3.5 w-3.5" />
-                Auction
-              </Link>
-              <Link to="/finance" className="marketplace-hub-quicklink">
-                <Landmark className="h-3.5 w-3.5" />
-                Finance
-              </Link>
-            </div>
           </div>
 
-          <div className="marketplace-hub-hero-visual" aria-hidden>
-            <div className="marketplace-hub-hero-visual-inner">
+          <div className="marketplace-hub-hero-visual" aria-hidden key={activeHub}>
+            <div
+              className={cn(
+                "marketplace-hub-hero-visual-inner",
+                mode === "sell" && "marketplace-hub-hero-visual-inner--sell"
+              )}
+            >
               <HeroIcon className="marketplace-hub-hero-vehicle-icon" strokeWidth={1.25} />
-              <p className="marketplace-hub-hero-visual-label">{copy.plural}</p>
-              <p className="marketplace-hub-hero-visual-sub">Verified · AI priced · EMI ready</p>
+              <p className="marketplace-hub-hero-visual-label">
+                {mode === "sell" ? `Sell ${copy.plural}` : copy.plural}
+              </p>
+              <p className="marketplace-hub-hero-visual-sub">
+                {mode === "sell" ? (
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                    Free · Dealer offers · Pan-India
+                  </span>
+                ) : (
+                  "Verified · AI priced · EMI ready"
+                )}
+              </p>
             </div>
           </div>
         </div>

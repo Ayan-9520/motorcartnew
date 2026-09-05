@@ -1,4 +1,4 @@
-export type NcdStockStatus = "available" | "booked" | "transit" | "upcoming" | "delivered";
+export type NcdStockStatus = "available" | "out_of_stock" | "booked" | "transit" | "upcoming" | "delivered";
 export type NcdStockHealth = "fast_moving" | "slow_moving" | "dead_stock";
 export type NcdLeadStage =
   | "new"
