@@ -49,17 +49,18 @@
   }
 
   .dark {
-    --background: 200 38% 7%;
+    /* Pure black / neutral charcoal — no blue/navy cast */
+    --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --card: 198 24% 16%;
+    --card: 0 0% 9%;
     --card-foreground: 0 0% 100%;
-    --popover: 198 24% 16%;
+    --popover: 0 0% 9%;
     --popover-foreground: 0 0% 100%;
-    --secondary: 200 24% 10%;
+    --secondary: 0 0% 6%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 200 18% 12%;
-    --muted-foreground: 216 6% 72%;
-    --accent: 198 20% 14%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 12%;
     --accent-foreground: 0 0% 100%;
 
     --primary: 142 70% 49%;
@@ -67,13 +68,13 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 204 16% 21%;
-    --input: 204 16% 21%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
     --ring: 142 70% 49%;
 
-    --mc-surface: #0b141a;
-    --mc-surface-elevated: #111b21;
-    --mc-border: #2a3942;
+    --mc-surface: #000000;
+    --mc-surface-elevated: #171717;
+    --mc-border: #2e2e2e;
 
     --shadow-card: 0 2px 12px -2px rgb(0 0 0 / 0.45);
     --shadow-card-hover: 0 8px 24px -8px rgb(37 211 102 / 0.12);
@@ -5705,7 +5706,7 @@
   }
 
   .app-screen-auction--premium {
-    @apply flex items-center justify-center bg-[#0a0f14] p-2.5 pt-7;
+    @apply flex items-center justify-center bg-background p-2.5 pt-7;
   }
 
   .app-status-bar {
@@ -7787,8 +7788,8 @@
 .dark .ncd-main {
   background:
     radial-gradient(ellipse 80% 50% at 100% 0%, hsl(142 76% 36% / 0.12), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 0% 100%, hsl(199 89% 48% / 0.06), transparent 50%),
-    hsl(222 47% 6%);
+    radial-gradient(ellipse 60% 40% at 0% 100%, hsl(var(--primary) / 0.05), transparent 50%),
+    hsl(var(--background));
 }
 
 .ncd-sidebar {
@@ -7796,7 +7797,7 @@
 }
 
 .dark .ncd-sidebar {
-  @apply border-slate-800/80 bg-[hsl(222_47%_9%)] text-slate-300;
+  @apply border-border/80 bg-card text-muted-foreground;
 }
 
 .ncd-sidebar__brand {
@@ -7804,7 +7805,7 @@
 }
 
 .dark .ncd-sidebar__brand {
-  @apply border-slate-800;
+  @apply border-border;
 }
 
 .ncd-sidebar__title {
@@ -7812,7 +7813,7 @@
 }
 
 .dark .ncd-sidebar__title {
-  @apply text-white;
+  @apply text-foreground;
 }
 
 .ncd-sidebar__sub {
@@ -7820,7 +7821,7 @@
 }
 
 .dark .ncd-sidebar__sub {
-  @apply text-slate-500;
+  @apply text-muted-foreground;
 }
 
 .ncd-sidebar__logo-row {
@@ -7828,7 +7829,7 @@
 }
 
 .dark .ncd-sidebar__logo-row {
-  @apply border-slate-800/60;
+  @apply border-border/60;
 }
 
 .ncd-sidebar__web-link {
@@ -7848,7 +7849,7 @@
 }
 
 .dark .ncd-sidebar .sidebar-user-foot {
-  @apply border-slate-800/80 bg-[hsl(222_47%_9%)];
+  @apply border-border/80 bg-card;
 }
 
 .ncd-sidebar__logo {
@@ -7872,7 +7873,7 @@
 }
 
 .dark .ncd-sidebar__group-label {
-  @apply text-slate-600;
+  @apply text-muted-foreground/70;
 }
 
 .ncd-sidebar__link {
@@ -7880,7 +7881,7 @@
 }
 
 .dark .ncd-sidebar__link {
-  @apply text-slate-400 hover:bg-slate-800/80 hover:text-slate-100;
+  @apply text-muted-foreground hover:bg-muted/70 hover:text-foreground;
 }
 
 .ncd-sidebar__link--active {
@@ -7920,7 +7921,7 @@
 }
 
 .dark .ncd-hero {
-  @apply border-slate-700/60 bg-slate-900/80;
+  @apply border-border/60 bg-card;
 }
 
 .ncd-hero__glow {
@@ -7952,7 +7953,7 @@
 }
 
 .dark .ncd-hero__alert {
-  @apply text-slate-200;
+  @apply text-foreground/80;
 }
 
 .ncd-hero__alert-dot {
@@ -7968,7 +7969,7 @@
 }
 
 .dark .ncd-hero__target-card {
-  @apply border-slate-700/80 bg-slate-800/50;
+  @apply border-border/80 bg-muted/50;
 }
 
 .ncd-metric-grid {
@@ -7980,7 +7981,7 @@
 }
 
 .dark .ncd-metric {
-  @apply border-slate-700/60 bg-slate-900/60;
+  @apply border-border/60 bg-card;
 }
 
 .ncd-metric--skeleton {
@@ -8028,7 +8029,7 @@
 }
 
 .dark .ncd-panel {
-  @apply border-slate-700/60 bg-slate-900/50;
+  @apply border-border/60 bg-card;
 }
 
 .ncd-panel__title {
@@ -8064,7 +8065,7 @@
 }
 
 .dark .ncd-pipeline__card {
-  @apply border-slate-700 bg-slate-800/80;
+  @apply border-border bg-card/80;
 }
 
 .ncd-inventory-card {
@@ -8072,7 +8073,7 @@
 }
 
 .dark .ncd-inventory-card {
-  @apply border-slate-700 bg-slate-900/60;
+  @apply border-border bg-card;
 }
 
 .ncd-inventory-card__media {
@@ -8088,7 +8089,7 @@
 }
 
 .dark .ncd-list-row {
-  @apply border-slate-700 bg-slate-900/50;
+  @apply border-border bg-card/80;
 }
 
 .ncd-feature-chip {
@@ -8096,7 +8097,7 @@
 }
 
 .dark .ncd-feature-chip {
-  @apply border-slate-700 bg-slate-900/40;
+  @apply border-border bg-card/60;
 }
 
 .ncd-feature-chip__dot {
@@ -8146,7 +8147,7 @@
 }
 
 .dark .ncd-hero [class*="bg-slate"] {
-  background-color: rgb(51 65 85);
+  background-color: hsl(var(--muted));
 }
 
 /* Parts Supplier OS — theme-aware (light + .dark), green Motorcart brand */
@@ -8166,7 +8167,7 @@
   background:
     radial-gradient(ellipse 85% 55% at 100% 0%, hsl(142 76% 36% / 0.14), transparent 55%),
     radial-gradient(ellipse 55% 45% at 0% 100%, hsl(142 76% 20% / 0.08), transparent 50%),
-    linear-gradient(180deg, hsl(200 38% 7%) 0%, hsl(198 24% 10%) 50%, hsl(142 76% 9% / 0.1) 100%);
+    linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 50%, hsl(142 76% 9% / 0.1) 100%);
 }
 
 .psp-sidebar {
@@ -8269,7 +8270,7 @@
     135deg,
     hsl(var(--card) / 0.85) 0%,
     hsl(var(--primary) / 0.08) 48%,
-    hsl(198 24% 12% / 0.9) 100%
+    hsl(var(--secondary) / 0.9) 100%
   );
 }
 
@@ -8536,9 +8537,9 @@
 .dark .psp-glass-card {
   background: linear-gradient(
     145deg,
-    hsl(198 24% 12% / 0.92) 0%,
+    hsl(var(--card) / 0.92) 0%,
     hsl(142 76% 9% / 0.12) 50%,
-    hsl(198 24% 10% / 0.95) 100%
+    hsl(var(--secondary) / 0.95) 100%
   );
   border-color: hsl(142 76% 36% / 0.18);
   box-shadow: 0 0 24px hsl(142 76% 36% / 0.06);
@@ -8589,7 +8590,7 @@
 }
 
 .dark .psp-layout {
-  background-color: #07111f;
+  background-color: hsl(var(--background));
 }
 
 .dark .psp-metric:hover {
@@ -8653,11 +8654,11 @@
   background:
     radial-gradient(ellipse 85% 55% at 100% 0%, hsl(142 76% 36% / 0.14), transparent 55%),
     radial-gradient(ellipse 55% 45% at 0% 100%, hsl(142 76% 20% / 0.08), transparent 50%),
-    linear-gradient(180deg, hsl(200 38% 7%) 0%, hsl(198 24% 10%) 50%, hsl(142 76% 9% / 0.1) 100%);
+    linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 50%, hsl(142 76% 9% / 0.1) 100%);
 }
 
 .dark .sh-layout {
-  background-color: #07111f;
+  background-color: hsl(var(--background));
 }
 
 .sh-sidebar {
@@ -8836,7 +8837,7 @@
 }
 
 .dark .sh-glass-card {
-  background: linear-gradient(145deg, hsl(198 24% 12% / 0.92) 0%, hsl(142 76% 9% / 0.12) 50%, hsl(198 24% 10% / 0.95) 100%);
+  background: linear-gradient(145deg, hsl(var(--card) / 0.92) 0%, hsl(142 76% 9% / 0.12) 50%, hsl(var(--secondary) / 0.95) 100%);
   border-color: hsl(142 76% 36% / 0.18);
 }
 
@@ -9094,11 +9095,11 @@
 
 .dark .auth-layout__brand {
   background:
-    linear-gradient(165deg, hsl(222 47% 8% / 0.95) 0%, hsl(222 47% 5%) 50%, hsl(142 76% 36% / 0.06) 100%);
+    linear-gradient(165deg, hsl(var(--card) / 0.95) 0%, hsl(var(--background)) 50%, hsl(142 76% 36% / 0.06) 100%);
 }
 
 .dark .auth-layout__stat {
-  @apply border-slate-800/80 bg-slate-900/40;
+  @apply border-border/80 bg-card/40;
 }
 
 .dark .auth-role-chip--active {

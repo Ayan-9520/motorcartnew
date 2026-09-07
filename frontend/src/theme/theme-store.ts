@@ -16,7 +16,7 @@ export function resolveTheme(mode: ThemeMode): ResolvedTheme {
 
 const THEME_COLOR: Record<ResolvedTheme, string> = {
   light: "#f0f2f5",
-  dark: "#0b141a",
+  dark: "#000000",
 };
 
 export function applyThemeToDocument(resolved: ResolvedTheme) {

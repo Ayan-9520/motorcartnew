@@ -26,20 +26,20 @@ export const lightColors = {
 } as const;
 
 export const darkColors = {
-  background: "#0b141a",
-  backgroundSecondary: "#111b21",
-  card: "#1f2c34",
-  navbar: "#111b21",
-  sidebar: "#111b21",
-  border: "#2a3942",
+  background: "#000000",
+  backgroundSecondary: "#0a0a0a",
+  card: "#171717",
+  navbar: "#0a0a0a",
+  sidebar: "#0a0a0a",
+  border: "#2e2e2e",
   foreground: "#ffffff",
-  foregroundSecondary: "#b0b3b8",
-  foregroundMuted: "#8696a0",
+  foregroundSecondary: "#a3a3a3",
+  foregroundMuted: "#737373",
   primary: palette.green,
   primaryHover: palette.greenHover,
   primaryForeground: "#ffffff",
-  input: "#111b21",
-  accent: "#1f2c34",
+  input: "#0a0a0a",
+  accent: "#171717",
   destructive: palette.danger,
 } as const;
 
