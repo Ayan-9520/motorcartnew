@@ -6944,6 +6944,10 @@
   @apply rounded-xl border border-border/70 bg-card/80 px-4 py-3 shadow-sm;
 }
 
+.sa-stat--link {
+  @apply block transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
+}
+
 .sa-stat__top {
   @apply flex items-center justify-between gap-2;
 }

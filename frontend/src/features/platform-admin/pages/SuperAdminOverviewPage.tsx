@@ -75,24 +75,24 @@ export function SuperAdminOverviewPage() {
       {o ? (
         <SuperAdminStatGrid
           stats={[
-            { label: "Total users", value: o.totalUsers.toLocaleString("en-IN"), icon: Users },
-            { label: "Active users", value: o.activeUsers.toLocaleString("en-IN") },
-            { label: "Pending business", value: o.pendingBusiness },
-            { label: "Pending loans", value: o.pendingFinance },
-            { label: "Disbursed", value: o.loanDisbursedTotal, format: "currency" },
-            { label: "Pending KYC", value: o.pendingKyc },
-            { label: "Dealer queue", value: o.pendingDealers },
-            { label: "Live listings", value: o.listingsLive.toLocaleString("en-IN") },
-            { label: "Organizations", value: (o.organizations ?? 0).toLocaleString("en-IN") },
-            { label: "Leads", value: (o.leads ?? 0).toLocaleString("en-IN") },
-            { label: "Quotations", value: (o.quotations ?? 0).toLocaleString("en-IN") },
-            { label: "Test drives", value: (o.testDrives ?? 0).toLocaleString("en-IN") },
-            { label: "Community posts", value: (o.communityPosts ?? 0).toLocaleString("en-IN") },
-            { label: "Jobs", value: (o.jobs ?? 0).toLocaleString("en-IN") },
-            { label: "Recorded invoices", value: o.recordedInvoiceTotal ?? 0, format: "currency" },
-            { label: "Reward points liability", value: (o.rewardLiabilityPoints ?? 0).toLocaleString("en-IN") },
-            { label: "Open tickets", value: o.openTickets },
-            { label: "Open payouts", value: o.openPayoutRequests ?? 0 },
+            { label: "Total users", value: o.totalUsers.toLocaleString("en-IN"), icon: Users, to: "/dashboard/super-admin/users" },
+            { label: "Active users", value: o.activeUsers.toLocaleString("en-IN"), to: "/dashboard/super-admin/users" },
+            { label: "Pending business", value: o.pendingBusiness, to: "/dashboard/super-admin/business-approvals" },
+            { label: "Pending loans", value: o.pendingFinance, to: "/dashboard/super-admin/finance-approvals" },
+            { label: "Disbursed", value: o.loanDisbursedTotal, format: "currency", to: "/dashboard/super-admin/finance-approvals" },
+            { label: "Pending KYC", value: o.pendingKyc, to: "/dashboard/super-admin/kyc" },
+            { label: "Dealer queue", value: o.pendingDealers, to: "/dashboard/super-admin/dealers" },
+            { label: "Live listings", value: o.listingsLive.toLocaleString("en-IN"), to: "/dashboard/super-admin/vehicles" },
+            { label: "Organizations", value: (o.organizations ?? 0).toLocaleString("en-IN"), to: "/dashboard/super-admin/founder" },
+            { label: "Leads", value: (o.leads ?? 0).toLocaleString("en-IN"), to: "/dashboard/super-admin/marketplace-leads" },
+            { label: "Quotations", value: (o.quotations ?? 0).toLocaleString("en-IN"), to: "/dashboard/super-admin/marketplace-leads" },
+            { label: "Test drives", value: (o.testDrives ?? 0).toLocaleString("en-IN"), to: "/dashboard/super-admin/operations" },
+            { label: "Community posts", value: (o.communityPosts ?? 0).toLocaleString("en-IN"), to: "/dashboard/super-admin/operations" },
+            { label: "Jobs", value: (o.jobs ?? 0).toLocaleString("en-IN"), to: "/dashboard/super-admin/operations" },
+            { label: "Recorded invoices", value: o.recordedInvoiceTotal ?? 0, format: "currency", to: "/dashboard/super-admin/transactions" },
+            { label: "Reward points liability", value: (o.rewardLiabilityPoints ?? 0).toLocaleString("en-IN"), to: "/dashboard/super-admin/reward-rules" },
+            { label: "Open tickets", value: o.openTickets, to: "/dashboard/super-admin/tickets" },
+            { label: "Open payouts", value: o.openPayoutRequests ?? 0, to: "/dashboard/super-admin/payouts" },
           ]}
         />
       ) : (
@@ -104,14 +104,14 @@ export function SuperAdminOverviewPage() {
           <h2 className="sa-section__title">Operational queues</h2>
           <SuperAdminStatGrid
             stats={[
-              { label: "Unrouted leads", value: o.ops.unroutedLeads },
-              { label: "Pending test drives", value: o.ops.pendingTestDriveRequests },
-              { label: "Expiring quotations", value: o.ops.expiringQuotations },
-              { label: "Open reports", value: o.ops.openReports },
-              { label: "Payout mismatches", value: o.ops.payoutMismatches },
-              { label: "Failed messages", value: o.ops.failedCommunications },
-              { label: "Pending job apps", value: o.ops.pendingJobApplications },
-              { label: "Zero new-car stock rows", value: o.ops.zeroStockNewCars },
+              { label: "Unrouted leads", value: o.ops.unroutedLeads, to: "/dashboard/super-admin/lead-router" },
+              { label: "Pending test drives", value: o.ops.pendingTestDriveRequests, to: "/dashboard/super-admin/operations" },
+              { label: "Expiring quotations", value: o.ops.expiringQuotations, to: "/dashboard/super-admin/marketplace-leads" },
+              { label: "Open reports", value: o.ops.openReports, to: "/dashboard/super-admin/reports" },
+              { label: "Payout mismatches", value: o.ops.payoutMismatches, to: "/dashboard/super-admin/payouts" },
+              { label: "Failed messages", value: o.ops.failedCommunications, to: "/dashboard/super-admin/notifications" },
+              { label: "Pending job apps", value: o.ops.pendingJobApplications, to: "/dashboard/super-admin/operations" },
+              { label: "Zero new-car stock rows", value: o.ops.zeroStockNewCars, to: "/dashboard/super-admin/catalog/import" },
             ]}
           />
         </section>
