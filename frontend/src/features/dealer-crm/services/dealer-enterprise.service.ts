@@ -300,33 +300,47 @@ export async function registerDealerAuction(dealerId: string, auctionId: string)
 }
 
 export async function fetchPublicDealerBySlug(slug: string) {
-  const { data: dealer } = await supabase
-    .from("dealers")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
+  try {
+    const { data: dealer, error: dealerErr } = await supabase
+      .from("dealers")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
 
-  if (!dealer) return null;
+    if (dealerErr) {
+      console.warn("[dealer] public slug lookup", dealerErr.message);
+      return null;
+    }
+    if (!dealer) return null;
 
-  const [storefront, vehicles, reviews] = await Promise.all([
-    supabase.from("dealer_storefronts").select("*").eq("dealer_id", dealer.id).maybeSingle(),
-    supabase
-      .from("vehicles")
-      .select("id, slug, title, brand, model, year, price, images, status, is_certified, city")
-      .eq("dealer_id", dealer.id)
-      .eq("status", "available")
-      .order("created_at", { ascending: false })
-      .limit(24),
-    supabase
-      .from("reviews")
-      .select("id, rating, comment, created_at, user_id")
-      .eq("entity_type", "dealer")
-      .eq("entity_id", dealer.id)
-      .order("created_at", { ascending: false })
-      .limit(12),
-  ]);
+    const [storefront, vehicles, reviews] = await Promise.all([
+      supabase.from("dealer_storefronts").select("*").eq("dealer_id", dealer.id).maybeSingle(),
+      supabase
+        .from("vehicles")
+        .select("id, slug, title, brand, model, year, price, images, status, is_certified, city, category, fuel_type, transmission, body_type, kms_driven, condition, dealer_id, created_at")
+        .eq("dealer_id", dealer.id)
+        .in("status", ["available", "reserved"])
+        .order("created_at", { ascending: false })
+        .limit(48),
+      supabase
+        .from("reviews")
+        .select("id, rating, comment, created_at, user_id")
+        .eq("entity_type", "dealer")
+        .eq("entity_id", dealer.id)
+        .order("created_at", { ascending: false })
+        .limit(12),
+    ]);
 
-  return { dealer, storefront: storefront.data, vehicles: vehicles.data ?? [], reviews: reviews.data ?? [] };
+    return {
+      dealer,
+      storefront: storefront.data ?? null,
+      vehicles: vehicles.data ?? [],
+      reviews: reviews.data ?? [],
+    };
+  } catch (e) {
+    console.warn("[dealer] fetchPublicDealerBySlug", e);
+    return null;
+  }
 }
 
 export function buildAnalyticsFromData(

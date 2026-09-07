@@ -14,8 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { setPageMeta } from "@/utils/seo";
 import { usePublicDealer } from "../hooks/usePublicDealer";
 import { getDealerBySlug } from "../hooks/useDealerDirectory";
-import { NotFoundPage } from "@/pages/NotFoundPage";
-import { formatCurrency } from "@/lib/utils";
 import { VehicleCard } from "@/features/vehicles/components/VehicleCard";
 import { mapDbToListing } from "@/services/vehicle.service";
 import type { DbVehicle } from "@/types/database";
@@ -27,7 +25,7 @@ function mapVehicle(row: Record<string, unknown>): VehicleListing {
 
 export function DealerProfilePage() {
   const { slug } = useParams<{ slug: string }>();
-  const { data, loading } = usePublicDealer(slug);
+  const { data, loading, error } = usePublicDealer(slug);
   const mockFallback = slug ? getDealerBySlug(slug) : undefined;
 
   const dealer = data?.dealer;
@@ -50,7 +48,16 @@ export function DealerProfilePage() {
     return <p className="container py-16 text-muted-foreground">Loading showroom…</p>;
   }
 
-  if (!dealer && !mockFallback) return <NotFoundPage />;
+  if (!dealer && !mockFallback) {
+    return (
+      <div className="container space-y-3 px-4 py-16">
+        <p className="text-muted-foreground">{error ? "Could not load this showroom." : "Showroom not found."}</p>
+        <Button variant="outline" asChild>
+          <Link to="/dealers/browse">Browse dealers</Link>
+        </Button>
+      </div>
+    );
+  }
 
   const name = dealer?.name ?? mockFallback?.name ?? "Dealer";
   const city = dealer?.city ?? mockFallback?.city ?? "";

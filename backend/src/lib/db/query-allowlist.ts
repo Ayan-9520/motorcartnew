@@ -137,6 +137,8 @@ export const NEVER_ALLOW_TABLES = new Set([
 export const PUBLIC_SELECT_TABLES = new Set([
   "vehicles",
   "dealers",
+  "dealer_storefronts",
+  "reviews",
   "banks",
   "auctions",
   "service_centers",
