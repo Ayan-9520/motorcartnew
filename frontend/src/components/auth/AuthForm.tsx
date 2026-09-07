@@ -68,6 +68,8 @@ export function AuthForm({
   /** First-time signup verification (48h code) — separate from passwordless Email OTP login. */
   const [signupVerifyMode, setSignupVerifyMode] = useState(false);
   const [signupVerifyCode, setSignupVerifyCode] = useState("");
+  const [verifyMailSent, setVerifyMailSent] = useState(false);
+  const [verifyMailHint, setVerifyMailHint] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const [loginError, setLoginError] = useState<AuthErrorUI | null>(null);
@@ -114,13 +116,28 @@ export function AuthForm({
 
   const clearLoginError = () => setLoginError(null);
 
-  const openSignupVerify = (email?: string) => {
+  const openSignupVerify = (email?: string, opts?: { autoResend?: boolean }) => {
     const resolved = normalizeAuthEmail(email || attemptedEmail || getValues("email") || "");
     if (resolved.includes("@")) setAttemptedEmail(resolved);
     setSignupVerifyMode(true);
     setEmailOtpMode(false);
     setSignupVerifyCode("");
     setLoginError(null);
+    setVerifyMailSent(false);
+    setVerifyMailHint("Tap Resend if you do not have a code yet.");
+    if (opts?.autoResend !== false && resolved.includes("@")) {
+      void (async () => {
+        setResending(true);
+        const { errorUI } = await resendEmailConfirmation(resolved);
+        setResending(false);
+        if (!errorUI) {
+          setVerifyMailSent(true);
+          setVerifyMailHint(null);
+        } else {
+          setVerifyMailHint(errorUI.description);
+        }
+      })();
+    }
   };
 
   const goToWorkspace = async () => {
@@ -144,9 +161,7 @@ export function AuthForm({
         result.errorCode === "email_not_verified" ||
         (result.errorCode === "sign_in_blocked" && providers?.needsEmailConfirm)
       ) {
-        setSignupVerifyMode(true);
-        setEmailOtpMode(false);
-        setLoginError(null);
+        openSignupVerify(email, { autoResend: true });
       } else if (result.errorUI) {
         setLoginError(result.errorUI);
       }
@@ -166,11 +181,15 @@ export function AuthForm({
   const onResendVerification = async () => {
     if (!attemptedEmail) return;
     setResending(true);
+    setVerifyMailHint(null);
     const { errorUI } = await resendEmailConfirmation(attemptedEmail);
     setResending(false);
     if (!errorUI) {
       setSignupVerifyMode(true);
+      setVerifyMailSent(true);
       setLoginError(null);
+    } else {
+      setVerifyMailHint(errorUI.description);
     }
   };
 
@@ -304,8 +323,17 @@ export function AuthForm({
         {signupVerifyMode ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Code sent to <strong className="text-foreground">{attemptedEmail || "your email"}</strong> (check spam).
+              {verifyMailSent ? (
+                <>
+                  New code emailed to <strong className="text-foreground">{attemptedEmail}</strong> — check inbox + spam.
+                </>
+              ) : (
+                <>
+                  Enter the 6-digit code for <strong className="text-foreground">{attemptedEmail || "your email"}</strong>.
+                </>
+              )}
             </p>
+            {verifyMailHint ? <p className="text-xs text-amber-700 dark:text-amber-400">{verifyMailHint}</p> : null}
             <div className="auth-field">
               <Label htmlFor="signup-verify-code" className="auth-field__label">
                 6-digit code
@@ -352,6 +380,8 @@ export function AuthForm({
                 onClick={() => {
                   setSignupVerifyMode(false);
                   setSignupVerifyCode("");
+                  setVerifyMailSent(false);
+                  setVerifyMailHint(null);
                   setLoginError(null);
                 }}
               >

@@ -59,5 +59,6 @@ export async function sendMail(input: SendMailInput): Promise<{ sent: boolean; s
     html: input.html,
     text: input.text,
   });
+  console.info(`[mail] sent ok → ${input.to} (${input.subject})`);
   return { sent: true };
 }
