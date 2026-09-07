@@ -86,3 +86,4 @@ if grep -qE '^SMTP_PASS=(CHANGE_ME)?$' "$ENV_FILE"; then
 fi
 
 echo "SMTP_PASS is set. Ready to rebuild containers."
+echo "Tip: ln -sfn .env.production .env.docker  # optional backup for base compose env_file"

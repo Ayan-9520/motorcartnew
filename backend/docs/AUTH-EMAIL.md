@@ -40,9 +40,17 @@ docker compose --env-file .env.docker up -d --build backend
 
 ```bash
 cd /opt/motorcart
-git pull
-# edit .env.production + copy to .env.docker — same SMTP_* as local
-docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend frontend
+git pull origin main
+# ensure SMTP_* + MAILER_AUTOCONFIRM=false are in .env.production
+# (compose prod overlay injects them into the backend container)
+
+docker compose --env-file .env.production \
+  -f docker-compose.yml -f docker-compose.prod.yml \
+  up -d --build --force-recreate backend frontend nginx
+
+# Confirm SMTP reached the container (must NOT be empty):
+docker compose --env-file .env.production exec -T backend \
+  sh -c 'echo SMTP_HOST=$SMTP_HOST SMTP_USER=$SMTP_USER PASS_SET=$([ -n "$SMTP_PASS" ] && echo yes || echo no)'
 ```
 
 Do **not** push untested mail code straight to VPS.

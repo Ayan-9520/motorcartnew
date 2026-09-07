@@ -98,13 +98,15 @@ export function useAuth() {
         const errorCode = classifyAuthError(error.message, {
           requiresEmailConfirmation: needsConfirm,
         });
-        const errorUI = getAuthErrorUI(errorCode, error.message);
-        toast.error(getAuthErrorToast(errorCode), { duration: 5000 });
+        // Unverified email is expected — login UI opens OTP panel; avoid scary toast.
+        if (errorCode !== "email_not_verified") {
+          toast.error(getAuthErrorToast(errorCode), { duration: 5000 });
+        }
 
         return {
           error,
           errorCode,
-          errorUI,
+          errorUI: getAuthErrorUI(errorCode, error.message),
           success: false as const,
         };
       }
