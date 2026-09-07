@@ -140,13 +140,15 @@ export function AuthForm({
     setSubmitting(false);
 
     if (!result.success) {
-      if (result.errorUI) setLoginError(result.errorUI);
       if (
         result.errorCode === "email_not_verified" ||
         (result.errorCode === "sign_in_blocked" && providers?.needsEmailConfirm)
       ) {
         setSignupVerifyMode(true);
         setEmailOtpMode(false);
+        setLoginError(null);
+      } else if (result.errorUI) {
+        setLoginError(result.errorUI);
       }
       return;
     }
@@ -168,14 +170,7 @@ export function AuthForm({
     setResending(false);
     if (!errorUI) {
       setSignupVerifyMode(true);
-      setLoginError({
-        code: "email_not_verified",
-        title: "Verification email sent",
-        description: "Enter the new 6-digit code below (valid 48 hours), then you can use password next time.",
-        variant: "info",
-        showResendVerification: true,
-        showEnterVerificationCode: true,
-      });
+      setLoginError(null);
     }
   };
 
@@ -265,17 +260,17 @@ export function AuthForm({
           Loading sign-in options…
         </div>
       ) : (
-        providers?.needsEmailConfirm && (
+        providers?.needsEmailConfirm && !signupVerifyMode && (
           <p className="auth-form__notice mb-3 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-            First sign-in needs the 6-digit code from your email (valid 48 hours). After that, use email + password.{" "}
+            First sign-in needs the 6-digit email code.{" "}
             <button type="button" className="font-medium text-primary hover:underline" onClick={() => openSignupVerify()}>
-              Enter code here
+              Enter code
             </button>
           </p>
         )
       )}
 
-      {providers?.phone === true && (
+      {providers?.phone === true && !signupVerifyMode && (
         <TabsList className="auth-form__tabs mb-4 grid h-10 w-full grid-cols-2 rounded-xl bg-muted/50 p-1">
           <TabsTrigger value="email" className="rounded-lg text-xs font-semibold">
             Email
@@ -286,8 +281,8 @@ export function AuthForm({
         </TabsList>
       )}
 
-      <TabsContent value="email" className="mt-0 space-y-4">
-        {loginError && (
+      <TabsContent value="email" className="mt-0 space-y-3">
+        {loginError && !signupVerifyMode && (
           <AuthStatusAlert
             error={loginError}
             email={attemptedEmail}
@@ -307,34 +302,23 @@ export function AuthForm({
         )}
 
         {signupVerifyMode ? (
-          <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-            <p className="text-sm font-medium text-foreground">Enter signup email OTP</p>
-            <p className="text-xs text-muted-foreground">
-              Use the 6-digit code from MotorCart (not the Password / Email OTP login toggle below). Sent to{" "}
-              <strong className="text-foreground">{attemptedEmail || "your inbox"}</strong>.
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Code sent to <strong className="text-foreground">{attemptedEmail || "your email"}</strong> (check spam).
             </p>
-            <AuthFormField
-              id="login-signup-email"
-              label="Email address"
-              type="email"
-              autoComplete="email"
-              disabled={busy}
-              icon={<Mail className="h-4 w-4" />}
-              value={attemptedEmail}
-              onChange={(e) => setAttemptedEmail(normalizeAuthEmail(e.target.value))}
-            />
             <div className="auth-field">
               <Label htmlFor="signup-verify-code" className="auth-field__label">
-                6-digit code from email
+                6-digit code
               </Label>
               <Input
                 id="signup-verify-code"
                 className="mt-1.5 h-11 rounded-xl tracking-widest"
                 value={signupVerifyCode}
-                onChange={(e) => setSignupVerifyCode(e.target.value)}
+                onChange={(e) => setSignupVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 disabled={busy}
-                placeholder="e.g. 973911"
+                placeholder="000000"
                 autoFocus
               />
             </div>
@@ -345,24 +329,33 @@ export function AuthForm({
               onClick={() => void onConfirmSignupCode()}
             >
               {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Verify OTP & continue
+              Verify & continue
             </Button>
-            <div className="flex flex-col gap-1 sm:flex-row">
-              <Button type="button" variant="outline" className="w-full text-sm" disabled={busy || resending} onClick={() => void onResendVerification()}>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                disabled={busy || resending || !attemptedEmail}
+                onClick={() => void onResendVerification()}
+              >
                 {resending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Resend code
+                Resend
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full text-sm"
+                size="sm"
+                className="flex-1"
                 disabled={busy}
                 onClick={() => {
                   setSignupVerifyMode(false);
                   setSignupVerifyCode("");
+                  setLoginError(null);
                 }}
               >
-                Back to password
+                Password login
               </Button>
             </div>
           </div>
@@ -491,15 +484,17 @@ export function AuthForm({
           </form>
         ) : null}
 
-        <p className="text-center text-sm">
-          <Link to="/forgot-password" className="font-medium text-primary hover:underline">
-            Forgot password?
-          </Link>
-          {" · "}
-          <button type="button" className="font-medium text-primary hover:underline" onClick={() => openSignupVerify()}>
-            Verify email OTP
-          </button>
-        </p>
+        {!signupVerifyMode ? (
+          <p className="text-center text-sm">
+            <Link to="/forgot-password" className="font-medium text-primary hover:underline">
+              Forgot password?
+            </Link>
+            {" · "}
+            <button type="button" className="font-medium text-primary hover:underline" onClick={() => openSignupVerify()}>
+              Verify email OTP
+            </button>
+          </p>
+        ) : null}
       </TabsContent>
 
       {providers?.phone === true && (
