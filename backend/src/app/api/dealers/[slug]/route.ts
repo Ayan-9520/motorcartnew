@@ -101,7 +101,30 @@ export async function GET(_req: NextRequest, context: Ctx) {
       }),
     ]);
 
-    const vehicleRows = vehicles.map((v) => ({
+    type PublicVehicleRow = {
+      id: string;
+      slug: string;
+      title: string;
+      brand: string;
+      model: string;
+      year: number;
+      price: number;
+      images: unknown;
+      status: string;
+      is_certified: boolean;
+      city: string;
+      category: string;
+      fuel_type: string;
+      transmission: string;
+      body_type: string;
+      kms_driven: number;
+      condition: string;
+      dealer_id: string | null;
+      created_at: string;
+      metadata?: Record<string, unknown>;
+    };
+
+    const vehicleRows: PublicVehicleRow[] = vehicles.map((v) => ({
       id: v.id,
       slug: v.slug,
       title: v.title,
@@ -110,7 +133,7 @@ export async function GET(_req: NextRequest, context: Ctx) {
       year: v.year,
       price: Number(v.price),
       images: v.images,
-      status: v.status,
+      status: String(v.status),
       is_certified: v.isCertified,
       city: v.city,
       category: v.category,
@@ -123,7 +146,7 @@ export async function GET(_req: NextRequest, context: Ctx) {
       created_at: v.createdAt.toISOString(),
     }));
 
-    const inventoryRows = inventory.map((row) => {
+    const inventoryRows: PublicVehicleRow[] = inventory.map((row) => {
       const price = Number(row.onRoadPrice ?? row.price ?? row.exShowroomPrice);
       const title = [row.brand, row.model, row.variant].filter(Boolean).join(" ");
       const slug = `ncd-${row.id.slice(0, 8)}`;
