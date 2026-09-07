@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthPageChrome } from "@/components/auth/AuthPageChrome";
 import { AuthPageLinks } from "@/components/auth/AuthPageLinks";
+import { AuthStatusAlert } from "@/components/auth/AuthStatusAlert";
 import { useAuth } from "@/hooks/useAuth";
 import { normalizeAuthEmail } from "@/services/auth.service";
 import { resolveLoginRedirect, waitForHydratedUser } from "@/auth/login-redirect";
 import { useAuthStore } from "@/store/authStore";
+import type { AuthErrorUI } from "@/lib/auth-errors";
 import { setPrivatePageMeta } from "@/utils/seo";
 
 export function VerifyEmailPage() {
@@ -24,6 +26,7 @@ export function VerifyEmailPage() {
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [errorUI, setErrorUI] = useState<AuthErrorUI | null>(null);
 
   const canSubmit = useMemo(
     () => Boolean(email.includes("@") && code.trim().length >= 4),
@@ -35,15 +38,18 @@ export function VerifyEmailPage() {
   }, []);
 
   useEffect(() => {
-    if (!initialEmail || !initialCode) return;
+    if (!initialEmail || !initialCode || initialCode.length < 4) return;
     void (async () => {
       setBusy(true);
-      const { error } = await confirmSignupEmail(initialEmail, initialCode);
+      setErrorUI(null);
+      const result = await confirmSignupEmail(initialEmail, initialCode);
       setBusy(false);
-      if (!error) {
-        const u = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
-        if (u) navigate(resolveLoginRedirect(u, {}), { replace: true });
+      if (result.error) {
+        setErrorUI(result.errorUI ?? null);
+        return;
       }
+      const u = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
+      if (u) navigate(resolveLoginRedirect(u, {}), { replace: true });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot from URL
   }, []);
@@ -51,13 +57,20 @@ export function VerifyEmailPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
-    setBusy(true);
-    const { error } = await confirmSignupEmail(normalizeAuthEmail(email), code.trim());
-    setBusy(false);
-    if (!error) {
-      const u = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
-      if (u) navigate(resolveLoginRedirect(u, {}), { replace: true });
+    setErrorUI(null);
+    if (!canSubmit) {
+      setMsg("Enter your email and the 6-digit code from your inbox.");
+      return;
     }
+    setBusy(true);
+    const result = await confirmSignupEmail(normalizeAuthEmail(email), code.trim());
+    setBusy(false);
+    if (result.error) {
+      setErrorUI(result.errorUI ?? null);
+      return;
+    }
+    const u = (await waitForHydratedUser()) ?? useAuthStore.getState().user;
+    if (u) navigate(resolveLoginRedirect(u, {}), { replace: true });
   };
 
   const onResend = async () => {
@@ -67,9 +80,16 @@ export function VerifyEmailPage() {
       return;
     }
     setResending(true);
-    await resendEmailConfirmation(normalized);
+    setErrorUI(null);
+    setMsg(null);
+    const { error, errorUI: ui } = await resendEmailConfirmation(normalized);
     setResending(false);
-    setMsg("If an account exists, a new code was sent (valid 48 hours).");
+    if (error) {
+      setErrorUI(ui);
+      setMsg(null);
+      return;
+    }
+    setMsg("New code sent — check inbox and spam (valid 48 hours).");
   };
 
   return (
@@ -79,6 +99,15 @@ export function VerifyEmailPage() {
       description="Enter the 6-digit code we emailed you. Codes stay valid for 48 hours."
       footer={<AuthPageLinks prompt="Already verified?" linkLabel="Sign in" linkTo="/login" />}
     >
+      {errorUI ? (
+        <AuthStatusAlert
+          error={errorUI}
+          email={normalizeAuthEmail(email)}
+          onResendVerification={() => void onResend()}
+          resending={resending}
+          className="mb-3"
+        />
+      ) : null}
       <form onSubmit={onSubmit} className="space-y-3" noValidate>
         <div>
           <Label htmlFor="verify-email">Email</Label>
@@ -101,8 +130,9 @@ export function VerifyEmailPage() {
             id="verify-code"
             className="mt-1.5 h-11 rounded-xl tracking-widest"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             inputMode="numeric"
+            autoComplete="one-time-code"
             disabled={busy}
             placeholder="6-digit code"
           />
@@ -112,7 +142,7 @@ export function VerifyEmailPage() {
           {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Verify & continue
         </Button>
-        <Button type="button" variant="outline" className="w-full rounded-xl" disabled={resending || busy} onClick={onResend}>
+        <Button type="button" variant="outline" className="w-full rounded-xl" disabled={resending || busy} onClick={() => void onResend()}>
           {resending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Resend code
         </Button>

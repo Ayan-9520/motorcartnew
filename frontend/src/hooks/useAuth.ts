@@ -166,7 +166,7 @@ export function useAuth() {
     const { error } = await resendConfirmationEmail(email);
     if (error) {
       const errorCode = classifyAuthError(error.message);
-      toast.error(getAuthErrorToast(errorCode));
+      toast.error(getAuthErrorToast(errorCode, "verify"));
       return { error, errorCode, errorUI: getAuthErrorUI(errorCode, error.message) };
     }
     toast.success("Verification email sent — check your inbox and spam folder");
@@ -233,8 +233,8 @@ export function useAuth() {
     const { data, error } = await verifySignupEmail(normalizeAuthEmail(email), code);
     if (error) {
       const errorCode = classifyAuthError(error.message);
-      toast.error(getAuthErrorToast(errorCode));
-      return { error };
+      toast.error(getAuthErrorToast(errorCode, "verify"), { duration: 5000 });
+      return { error, errorCode, errorUI: getAuthErrorUI(errorCode, error.message) };
     }
     if (data.session?.user) {
       await loadProfile(data.session.user.id, data.session.user as Parameters<typeof loadProfile>[1]);
@@ -242,7 +242,7 @@ export function useAuth() {
       void logAuthActivity("email_verify", {});
     }
     toast.success("Email verified — welcome!");
-    return { error: null };
+    return { error: null, errorCode: null, errorUI: null };
   }, [loadProfile]);
 
   const loginGoogle = useCallback(async () => {

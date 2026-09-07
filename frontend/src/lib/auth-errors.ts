@@ -12,6 +12,8 @@ export type AuthErrorCode =
   | "weak_password"
   | "rate_limit"
   | "network"
+  | "invalid_otp"
+  | "mail_send_failed"
   | "unknown";
 
 export type AuthErrorUI = {
@@ -34,6 +36,26 @@ export function classifyAuthError(
   const m = message.toLowerCase();
 
   if (isEmailNotConfirmedError(message)) return "email_not_verified";
+
+  if (
+    m.includes("invalid or expired") ||
+    m.includes("invalid verification") ||
+    m.includes("expired verification") ||
+    m.includes("invalid otp") ||
+    m.includes("otp expired") ||
+    (m.includes("verification code") && (m.includes("invalid") || m.includes("expired")))
+  ) {
+    return "invalid_otp";
+  }
+
+  if (
+    m.includes("email service is not configured") ||
+    m.includes("could not send verification") ||
+    m.includes("smtp") ||
+    m.includes("mail not delivered")
+  ) {
+    return "mail_send_failed";
+  }
 
   if (
     m.includes("user not found") ||
@@ -114,6 +136,26 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
         showResendVerification: true,
         showForgotPassword: false,
         showEnterVerificationCode: true,
+      };
+    case "invalid_otp":
+      return {
+        code,
+        title: "Invalid or expired code",
+        description:
+          "That verification code is wrong or expired. Tap Resend code, then enter the new 6-digit OTP from your email (check spam).",
+        variant: "warning",
+        showResendVerification: true,
+        showEnterVerificationCode: true,
+      };
+    case "mail_send_failed":
+      return {
+        code,
+        title: "Could not send email",
+        description:
+          rawMessage?.trim() ||
+          "The server could not send the verification email. Check Hostinger SMTP settings on the VPS, then try Resend.",
+        variant: "destructive",
+        showResendVerification: true,
       };
     case "wrong_password":
       return {
@@ -223,11 +265,15 @@ export function getAuthErrorUI(code: AuthErrorCode, rawMessage?: string): AuthEr
 /** Short toast text — inline UI carries full detail */
 export function getAuthErrorToast(
   code: AuthErrorCode,
-  flow: "signin" | "signup" = "signin"
+  flow: "signin" | "signup" | "verify" = "signin"
 ): string {
   switch (code) {
     case "email_not_verified":
       return "Verify your email before signing in.";
+    case "invalid_otp":
+      return "Invalid or expired code — tap Resend.";
+    case "mail_send_failed":
+      return "Email could not be sent — check SMTP on server.";
     case "wrong_password":
       return "Incorrect email or password.";
     case "user_not_found":
@@ -245,8 +291,8 @@ export function getAuthErrorToast(
     case "network":
       return "Network error. Check your connection.";
     default:
-      return flow === "signup"
-        ? "Sign-up failed. Please try again."
-        : "Sign-in failed. Please try again.";
+      if (flow === "signup") return "Sign-up failed. Please try again.";
+      if (flow === "verify") return "Verification failed. Check the code or resend.";
+      return "Sign-in failed. Please try again.";
   }
 }
