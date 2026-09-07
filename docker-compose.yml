@@ -87,17 +87,9 @@ services:
       CATALOG_MASTER_SOURCE: ${CATALOG_MASTER_SOURCE:-json_api}
       CATALOG_MASTER_SOURCE_URL: ${CATALOG_MASTER_SOURCE_URL:-}
       CATALOG_MASTER_API_KEY: ${CATALOG_MASTER_API_KEY:-}
-      # Auth mail — must be in `environment` so `docker compose --env-file .env.production` reaches the container
       JWT_SECRET: ${JWT_SECRET:-}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
-      MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-false}
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-465}
-      SMTP_SECURE: ${SMTP_SECURE:-true}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      MAIL_FROM: ${MAIL_FROM:-}
     volumes:
       - backend_uploads:/app/uploads
       - ./backend/reports:/app/reports

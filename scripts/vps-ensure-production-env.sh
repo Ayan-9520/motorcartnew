@@ -55,7 +55,7 @@ force_kv "SMTP_HOST" "smtp.hostinger.com"
 force_kv "SMTP_PORT" "465"
 force_kv "SMTP_SECURE" "true"
 force_kv "SMTP_USER" "info@motorcart.in"
-force_kv "MAIL_FROM" "MotorCart <info@motorcart.in>"
+force_kv "MAIL_FROM" '"MotorCart <info@motorcart.in>"'
 
 if ! grep -qE "^SMTP_PASS=" "$ENV_FILE"; then
   echo "SMTP_PASS=" >> "$ENV_FILE"
