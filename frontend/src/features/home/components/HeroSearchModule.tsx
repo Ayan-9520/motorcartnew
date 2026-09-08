@@ -109,7 +109,11 @@ export function HeroSearchModule() {
   }, [isHome, data?.brands, hub.brands]);
 
   const quickSuggestions = useMemo(() => {
-    if (isHome && featuredVehicles.length) {
+    // Home: category/brand suggestions only — never repeat featured vehicle cards
+    if (isHome) {
+      return hub.trending.slice(0, 4);
+    }
+    if (featuredVehicles.length) {
       return featuredVehicles.slice(0, 4).map((v) => ({
         id: v.id,
         title: `${v.brand} ${v.model}`.trim(),

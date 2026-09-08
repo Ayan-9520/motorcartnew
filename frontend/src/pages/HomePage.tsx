@@ -7,16 +7,13 @@ import { HomePartnersPremium } from "@/features/home/HomePartnersPremium";
 import { FeaturedVehicles } from "@/features/home/FeaturedVehicles";
 import { NewCarsHomeSection } from "@/features/home/NewCarsHomeSection";
 import { PreownedCarsHomeSection } from "@/features/home/PreownedCarsHomeSection";
-import { CategorySection } from "@/features/home/CategorySection";
 import { AuctionsSection } from "@/features/home/AuctionsSection";
 import { CommunitySection } from "@/features/home/CommunitySection";
 import { FinanceSection } from "@/features/home/FinanceSection";
 import { BanksStripSection } from "@/features/home/BanksStripSection";
 import { PartsSection } from "@/features/home/PartsSection";
 import { ServicesSection } from "@/features/home/ServicesSection";
-import { VehicleEcosystemSection } from "@/features/home/VehicleEcosystemSection";
 import { AIFeaturesSection } from "@/features/home/AIFeaturesSection";
-import { AIRecommendationsHomeSection } from "@/features/home/AIRecommendationsHomeSection";
 import { DealerCTA } from "@/features/home/DealerCTA";
 import { StatsSection } from "@/features/home/StatsSection";
 import { TestimonialsSection } from "@/features/home/TestimonialsSection";
@@ -29,9 +26,7 @@ import { SITE_TAGLINE } from "@/lib/constants";
 import { useVehicleHubStore } from "@/store/vehicleHubStore";
 
 /**
- * Marketing homepage — hero unchanged; every product line gets a dedicated section.
- * Section order is fixed (not filtered by hero tab) so cars, trucks, auctions,
- * community, finance, parts & services all stay visible.
+ * Premium marketing homepage — one inventory pass, no duplicate vehicle rails in hero.
  */
 export function HomePage() {
   useEffect(() => {
@@ -47,28 +42,25 @@ export function HomePage() {
       <HomePageProvider>
         <div className="home-page home-page--premium min-w-0 overflow-x-clip bg-background">
           <HeroSearchProvider>
-          <HeroSection />
-          <QuickAccessSection />
-          <HomePlatformMatrix />
-          <HomeTrustBand />
-          <FeaturedVehicles />
-          <NewCarsHomeSection />
-          <PreownedCarsHomeSection />
-          <AuctionsSection />
-          <CommunitySection />
-          <FinanceSection />
-          <BanksStripSection />
-          <HomePartnersPremium />
-          <PartsSection />
-          <ServicesSection />
-          <CategorySection />
-          <VehicleEcosystemSection />
-          <AIFeaturesSection />
-          <AIRecommendationsHomeSection />
-          <DealerCTA />
-          <StatsSection />
-          <TestimonialsSection />
-          <AppDownloadSection />
+            <HeroSection />
+            <HomeTrustBand />
+            <QuickAccessSection />
+            <FeaturedVehicles />
+            <NewCarsHomeSection />
+            <PreownedCarsHomeSection />
+            <AuctionsSection />
+            <FinanceSection />
+            <BanksStripSection />
+            <CommunitySection />
+            <HomePartnersPremium />
+            <PartsSection />
+            <ServicesSection />
+            <HomePlatformMatrix />
+            <AIFeaturesSection />
+            <DealerCTA />
+            <StatsSection />
+            <TestimonialsSection />
+            <AppDownloadSection />
           </HeroSearchProvider>
         </div>
       </HomePageProvider>

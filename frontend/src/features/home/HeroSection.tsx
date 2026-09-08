@@ -10,23 +10,29 @@ import { HeroLiveStatsBar } from "@/features/home/components/HeroLiveStatsBar";
 import { useHeroSearch } from "@/features/home/components/hero-search-context";
 import { getHeroHubConfig } from "@/features/home/data/hero-hub-config";
 import { HERO_HEADLINE_WORDS } from "@/features/home/data/homepage-data";
-import { PHASE1_ROTATING_LINES, PHASE1_TAGLINE } from "@/features/home/data/phase1-home-data";
+import { PHASE1_ROTATING_LINES } from "@/features/home/data/phase1-home-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
-import { realDataOnly } from "@/config/real-data";
-import { formatPrice } from "@/lib/vehicle-utils";
-import { formatCurrency } from "@/lib/utils";
 import { HUB_HERO_IMAGES } from "@/lib/media/india-media-catalog";
 
 /** Local muted cinematic car loop for homepage hero. */
 const HERO_CAR_VIDEO_SRC = "/brand/hero-car-loop.mp4";
 const HERO_HOME_POSTER = "/brand/hero-automotive-premium-v2.webp";
 
+const HOME_TAGLINE = "Buy · sell · finance · auction — one automotive operating system.";
+
+const HOME_ROTATING = [
+  "Live dealer inventory across India",
+  "Bank-grade vehicle finance in one flow",
+  "Auctions, community & services — unified",
+  "AI-powered search for every vehicle type",
+] as const;
+
 export function HeroSection() {
   const { pathname } = useLocation();
   const isHome = pathname === "/";
   const { mode } = useHeroSearch();
   const hub = getHeroHubConfig(mode);
-  const { featuredVehicles, auctions, heroStats, data } = useHomePage();
+  const { heroStats, data } = useHomePage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [preferReducedMotion, setPreferReducedMotion] = useState(false);
@@ -39,28 +45,18 @@ export function HeroSection() {
   const showHeroVideo = isHome && !preferReducedMotion;
 
   const rotatingLines = useMemo(() => {
-    if (!isHome) return [...HERO_HEADLINE_WORDS];
-
-    const dynamic: string[] = [];
-    featuredVehicles.slice(0, 3).forEach((v) => {
-      dynamic.push(`${v.brand} ${v.model} — ${formatPrice(v.price)}`);
-    });
-    auctions.slice(0, 2).forEach((a) => {
-      dynamic.push(`Live auction: ${a.title} · ${formatCurrency(a.currentBid)}`);
-    });
-    heroStats.slice(0, 2).forEach((s) => {
-      dynamic.push(`${s.value} ${s.label.toLowerCase()}`);
-    });
-    if (data?.generated_at) {
-      dynamic.push("Inventory refreshed from live marketplace");
+    if (isHome) {
+      const lines: string[] = [...HOME_ROTATING];
+      heroStats.slice(0, 2).forEach((s) => {
+        lines.push(`${s.value} ${s.label.toLowerCase()}`);
+      });
+      if (data?.generated_at) {
+        lines.push("Marketplace synced in real time");
+      }
+      return lines.length ? lines : [...PHASE1_ROTATING_LINES];
     }
-
-    return dynamic.length >= 1
-      ? dynamic
-      : realDataOnly
-        ? ["Live marketplace — browse dealer inventory"]
-        : [...PHASE1_ROTATING_LINES];
-  }, [isHome, featuredVehicles, auctions, heroStats, data?.generated_at]);
+    return [...HERO_HEADLINE_WORDS];
+  }, [isHome, heroStats, data?.generated_at]);
 
   const [wordIndex, setWordIndex] = useState(0);
 
@@ -75,7 +71,7 @@ export function HeroSection() {
   useEffect(() => {
     const id = setInterval(() => {
       setWordIndex((i) => (i + 1) % rotatingLines.length);
-    }, 3200);
+    }, 3400);
     return () => clearInterval(id);
   }, [rotatingLines.length]);
 
@@ -93,7 +89,11 @@ export function HeroSection() {
   }, [showHeroVideo, posterSrc]);
 
   return (
-    <section className="hero-section hero-section--photo relative overflow-hidden border-b border-border">
+    <section
+      className={`hero-section hero-section--photo relative overflow-hidden border-b border-border${
+        isHome ? " hero-section--cinematic hero-section--premium" : ""
+      }`}
+    >
       <div className="hero-section-bg" aria-hidden>
         <img
           src={posterSrc}
@@ -121,32 +121,41 @@ export function HeroSection() {
         <div className="hero-section-bg-overlay" />
         <div className="hero-section-bg-mesh" />
       </div>
-      <div className="hero-section-glow" aria-hidden />
 
-      <div className="container relative z-[1] py-8 md:py-11 lg:py-12">
-        <div className="hero-layout-grid">
+      <div className={`container relative z-[1]${isHome ? " hero-premium-inner" : " py-8 md:py-11 lg:py-12"}`}>
+        <div className={isHome ? "hero-layout-premium" : "hero-layout-grid"}>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="hero-layout-left min-w-0 space-y-5"
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="hero-layout-left min-w-0 space-y-4 md:space-y-5"
           >
-            <HeroLiveStatsBar />
+            {!isHome ? <HeroLiveStatsBar /> : null}
 
-            <motion.div className="space-y-3">
-              <h1 className="hero-headline">
-                <span className="hero-headline-line hero-headline-muted">India&apos;s</span>
-                <span className="hero-headline-line hero-headline-accent">AI-powered</span>
-                <span className="hero-headline-line">automotive ecosystem</span>
-              </h1>
-              <p className="hero-rotating-line">
+            <div className="space-y-3">
+              {isHome ? (
+                <h1 className="hero-headline hero-headline--cinematic">
+                  <span className="hero-headline-kicker">India&apos;s automotive OS</span>
+                  <span className="hero-headline-line">Buy, finance &amp; auction</span>
+                  <span className="hero-headline-line hero-headline-accent hero-headline-shimmer">
+                    with AI speed
+                  </span>
+                </h1>
+              ) : (
+                <h1 className="hero-headline">
+                  <span className="hero-headline-line hero-headline-muted">India&apos;s</span>
+                  <span className="hero-headline-line hero-headline-accent">AI-powered</span>
+                  <span className="hero-headline-line">automotive ecosystem</span>
+                </h1>
+              )}
+              <p className="hero-rotating-line hero-rotating-line--premium">
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={`${mode}-${wordIndex}-${rotatingLines[wordIndex]}`}
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.22 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28 }}
                     className="font-semibold text-primary"
                   >
                     {rotatingLines[wordIndex]}
@@ -156,28 +165,26 @@ export function HeroSection() {
                   <span className="text-muted-foreground"> — {hub.headlineSuffix}.</span>
                 )}
               </p>
-              {isHome && (
-                <p className="max-w-xl text-sm text-muted-foreground md:text-base">{PHASE1_TAGLINE}</p>
-              )}
-            </motion.div>
+              {isHome ? <p className="hero-tagline-cinematic">{HOME_TAGLINE}</p> : null}
+            </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5">
               {isHome ? (
                 <>
                   <Button
-                    size="default"
-                    className="h-10 rounded-xl px-5 font-semibold shadow-[var(--shadow-primary)]"
+                    size="lg"
+                    className="hero-cta-primary h-11 rounded-xl px-6 font-semibold shadow-[var(--shadow-primary)]"
                     asChild
                   >
                     <Link to="/buy">
                       Explore vehicles <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button size="default" variant="outline" className="h-10 rounded-xl px-5" asChild>
-                    <Link to="/community">Join community</Link>
-                  </Button>
-                  <Button size="default" variant="outline" className="h-10 rounded-xl px-5" asChild>
+                  <Button size="lg" variant="outline" className="hero-cta-ghost h-11 rounded-xl px-5" asChild>
                     <Link to="/auctions">Live auctions</Link>
+                  </Button>
+                  <Button size="lg" variant="outline" className="hero-cta-ghost h-11 rounded-xl px-5" asChild>
+                    <Link to="/community">Join community</Link>
                   </Button>
                 </>
               ) : (
@@ -198,20 +205,25 @@ export function HeroSection() {
               )}
             </div>
 
-            <HeroSearchModule />
+            <div className={isHome ? "hero-search-premium-wrap" : undefined}>
+              <HeroSearchModule />
+            </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08 }}
-            className="hero-layout-right hidden min-w-0 md:flex md:flex-col lg:sticky lg:top-[calc(var(--nav-height,4rem)+0.75rem)]"
-          >
-            <HeroDashboardPanel />
-          </motion.div>
+          {!isHome ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.08 }}
+              className="hero-layout-right hidden min-w-0 md:flex md:flex-col lg:sticky lg:top-[calc(var(--nav-height,4rem)+0.75rem)]"
+            >
+              <HeroDashboardPanel />
+            </motion.div>
+          ) : null}
         </div>
 
-        <HeroSearchInsights />
+        {/* Home: no vehicle cards / AI picks here — inventory lives below hero once */}
+        {!isHome ? <HeroSearchInsights /> : null}
       </div>
     </section>
   );

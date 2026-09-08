@@ -36,7 +36,7 @@ export function HomeTrustBand() {
           className="hero-trust-band"
         >
           <div className="hero-stats-row">
-            {stats.map((stat, i) => (
+            {stats.slice(0, 6).map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 8 }}
@@ -46,10 +46,8 @@ export function HomeTrustBand() {
                 className="hero-stat-cell"
               >
                 <Link to={stat.href} className="hero-stat-link group">
-                  <p className="text-base font-bold tracking-tight text-foreground group-hover:text-primary sm:text-lg">
-                    {stat.value}
-                  </p>
-                  <p className="text-[10px] font-medium text-muted-foreground">{stat.label}</p>
+                  <p className="group-hover:text-primary">{stat.value}</p>
+                  <p>{stat.label}</p>
                 </Link>
               </motion.div>
             ))}
