@@ -1,8 +1,11 @@
 import { cn } from "@/lib/utils";
 
-export const MOTORCART_LOGO_FULL = "/brand/motorcart-logo.png";
-export const MOTORCART_LOGO_FULL_DARK = "/brand/motorcart-logo-dark.png";
-export const MOTORCART_LOGO_ICON = "/brand/motorcart-icon.png";
+/** Cache-bust so theme lockups refresh after brand asset updates. */
+const LOGO_ASSET_V = "20260908c";
+
+export const MOTORCART_LOGO_FULL = `/brand/motorcart-logo.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_FULL_DARK = `/brand/motorcart-logo-dark.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_ICON = `/brand/motorcart-icon.png?v=${LOGO_ASSET_V}`;
 
 type MotorcartLogoProps = {
   /** Full = icon + wordmark. Icon = circular car emblem only. */
@@ -12,9 +15,9 @@ type MotorcartLogoProps = {
   height?: number;
   alt?: string;
   /**
-   * auto = official navy lockup everywhere; dark mode adds a white plate for contrast.
-   * light = official navy lockup only (no plate).
-   * dark = white wordmark variant (legacy panels only).
+   * auto = theme-aware lockup (navy wordmark in light, light wordmark in dark — no white plate).
+   * light = official navy lockup only.
+   * dark = light/white wordmark variant.
    */
   tone?: "dark" | "light" | "auto";
 };
@@ -27,16 +30,19 @@ function FullLogoImg({
   alt,
   h,
   className,
+  decorative,
 }: {
   src: string;
   alt: string;
   h: number;
   className?: string;
+  decorative?: boolean;
 }) {
   return (
     <img
       src={src}
-      alt={alt}
+      alt={decorative ? "" : alt}
+      aria-hidden={decorative || undefined}
       width={Math.round(h * FULL_ASPECT)}
       height={h}
       decoding="async"
@@ -69,15 +75,21 @@ export function MotorcartLogo({
     );
   }
 
-  const src = tone === "dark" ? MOTORCART_LOGO_FULL_DARK : MOTORCART_LOGO_FULL;
-
   if (tone === "auto") {
     return (
-      <span className={cn("mc-logo-plate inline-flex items-center", className)}>
-        <FullLogoImg src={MOTORCART_LOGO_FULL} alt={alt} h={h} />
+      <span className={cn("mc-logo-swap inline-flex items-center", className)}>
+        <FullLogoImg src={MOTORCART_LOGO_FULL} alt={alt} h={h} className="mc-logo--for-light" />
+        <FullLogoImg
+          src={MOTORCART_LOGO_FULL_DARK}
+          alt={alt}
+          h={h}
+          className="mc-logo--for-dark"
+          decorative
+        />
       </span>
     );
   }
 
+  const src = tone === "dark" ? MOTORCART_LOGO_FULL_DARK : MOTORCART_LOGO_FULL;
   return <FullLogoImg src={src} alt={alt} h={h} className={className} />;
 }

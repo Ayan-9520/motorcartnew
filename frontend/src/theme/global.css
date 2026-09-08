@@ -1466,17 +1466,21 @@
     @apply flex shrink-0 items-center;
   }
 
-  /* Official navy lockup — white plate in dark mode keeps same logo + car readable */
-  .mc-logo-plate {
+  /* Theme-aware logo — no white plate; swap navy ↔ light wordmark */
+  .mc-logo-swap {
     @apply inline-flex items-center;
   }
 
-  .dark .mc-logo-plate:not(.mc-logo-plate--always) {
-    @apply rounded-[0.65rem] bg-white px-2 py-0.5 shadow-[0_1px_6px_rgba(0,0,0,0.28)] ring-1 ring-black/5;
+  .mc-logo-swap .mc-logo--for-dark {
+    display: none;
   }
 
-  .mc-logo-plate--always {
-    @apply rounded-[0.65rem] bg-white px-2 py-0.5 shadow-sm ring-1 ring-border/50;
+  .dark .mc-logo-swap .mc-logo--for-light {
+    display: none;
+  }
+
+  .dark .mc-logo-swap .mc-logo--for-dark {
+    display: inline-block;
   }
 
   .nav-brand-mark {
