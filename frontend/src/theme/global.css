@@ -339,12 +339,29 @@
 
   .hero-search-premium-wrap .hero-search-shell,
   .hero-search-premium-wrap .hero-category-tray {
-    @apply border-border/60 bg-card/80 shadow-[0_18px_50px_-24px_rgb(0_0_0_/_0.45)] backdrop-blur-xl;
+    @apply border-border bg-card shadow-[0_12px_36px_-20px_rgb(0_0_0_/_0.35)];
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .dark .hero-search-premium-wrap .hero-search-shell,
   .dark .hero-search-premium-wrap .hero-category-tray {
-    @apply border-white/10 bg-black/55;
+    @apply border-white/15 bg-card shadow-[0_12px_36px_-20px_rgb(0_0_0_/_0.65)];
+  }
+
+  .hero-search-premium-wrap .hero-search-card,
+  .hero-search-premium-wrap .hero-vehicle-tabs,
+  .hero-search-premium-wrap .hero-search-suggestions {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .hero-search-premium-wrap .hero-search-card {
+    @apply border-border bg-card shadow-[0_16px_40px_-18px_rgb(0_0_0_/_0.4)];
+  }
+
+  .hero-search-premium-wrap .hero-vehicle-tabs {
+    @apply border-border bg-card;
   }
 
   .hero-dynamic-rail {
@@ -490,27 +507,34 @@
   }
 
   .hero-section--cinematic .hero-cta-ghost {
-    @apply border-border/70 bg-background/55 backdrop-blur-md hover:bg-background/75;
+    @apply border-border bg-card text-foreground hover:bg-muted;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .dark .hero-section--cinematic .hero-cta-ghost {
+    @apply border-border bg-card hover:bg-muted;
   }
 
   .hero-section--cinematic .hero-section-bg-photo {
     object-fit: cover;
     object-position: center center;
     opacity: 1;
-    filter: saturate(1.06) contrast(1.04) brightness(1);
+    filter: none;
     animation: none;
   }
 
   .hero-section--cinematic .hero-section-bg-photo--behind-video {
-    opacity: 0.18;
+    opacity: 0;
   }
 
   .hero-section--cinematic .hero-section-bg-video {
     object-fit: cover;
     object-position: center center;
-    filter: saturate(1.08) contrast(1.05) brightness(1);
+    filter: none;
     transform: none;
     animation: none;
+    z-index: 1;
   }
 
   .hero-section--cinematic .hero-section-bg-video--ready {
@@ -518,7 +542,7 @@
   }
 
   .dark .hero-section--cinematic .hero-section-bg-video--ready {
-    opacity: 0.96;
+    opacity: 1;
   }
 
   .dark .hero-section--cinematic .hero-section-bg-photo {
@@ -526,55 +550,47 @@
   }
 
   .dark .hero-section--cinematic .hero-section-bg-photo--behind-video {
-    opacity: 0.16;
+    opacity: 0;
   }
 
-  .hero-section--cinematic .hero-section-bg-cinematic {
-    mix-blend-mode: normal;
-    background:
-      radial-gradient(ellipse 60% 70% at 72% 45%, transparent 0%, transparent 48%, hsl(var(--background) / 0.1) 100%),
-      linear-gradient(180deg, hsl(var(--background) / 0.08) 0%, transparent 22%, transparent 78%, hsl(var(--background) / 0.32) 100%);
-  }
-
-  .dark .hero-section--cinematic .hero-section-bg-cinematic {
-    mix-blend-mode: normal;
-    background:
-      radial-gradient(ellipse 60% 70% at 72% 45%, transparent 0%, transparent 42%, hsl(0 0% 0% / 0.25) 100%),
-      linear-gradient(180deg, hsl(0 0% 0% / 0.2) 0%, transparent 24%, transparent 74%, hsl(0 0% 0% / 0.48) 100%);
-  }
-
-  .hero-section--cinematic .hero-section-bg-overlay {
-    background:
-      linear-gradient(
-        100deg,
-        hsl(var(--background) / 0.8) 0%,
-        hsl(var(--background) / 0.5) 34%,
-        hsl(var(--background) / 0.14) 58%,
-        transparent 80%
-      ),
-      linear-gradient(to top, hsl(var(--background) / 0.4) 0%, transparent 44%);
-  }
-
-  .dark .hero-section--cinematic .hero-section-bg-overlay {
-    background:
-      linear-gradient(
-        100deg,
-        hsl(0 0% 0% / 0.76) 0%,
-        hsl(0 0% 0% / 0.48) 36%,
-        hsl(0 0% 0% / 0.12) 60%,
-        transparent 82%
-      ),
-      linear-gradient(to top, hsl(0 0% 0% / 0.5) 0%, transparent 44%);
-  }
-
-  .hero-section--cinematic .hero-section-bg-mesh {
-    background-image:
-      radial-gradient(circle at 10% 16%, hsl(var(--primary) / 0.04) 0%, transparent 38%),
-      radial-gradient(circle at 88% 20%, hsl(var(--primary) / 0.03) 0%, transparent 40%);
-  }
-
+  /* Home cinematic: no fog / blur layers over video */
+  .hero-section--cinematic .hero-section-bg-cinematic,
+  .hero-section--cinematic .hero-section-bg-overlay,
+  .hero-section--cinematic .hero-section-bg-mesh,
   .hero-section--cinematic .hero-section-glow {
-    display: none;
+    display: none !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .hero-section--cinematic .hero-headline--cinematic {
+    color: hsl(var(--foreground));
+    text-shadow: 0 1px 2px hsl(0 0% 100% / 0.85), 0 2px 18px hsl(0 0% 100% / 0.55);
+  }
+
+  .dark .hero-section--cinematic .hero-headline--cinematic {
+    text-shadow: 0 2px 18px hsl(0 0% 0% / 0.55);
+  }
+
+  .hero-section--cinematic .hero-headline-kicker {
+    @apply text-foreground/80;
+  }
+
+  .hero-section--cinematic .hero-tagline-cinematic,
+  .hero-section--cinematic .hero-rotating-line--premium {
+    text-shadow: 0 1px 2px hsl(0 0% 100% / 0.8);
+  }
+
+  .dark .hero-section--cinematic .hero-tagline-cinematic,
+  .dark .hero-section--cinematic .hero-rotating-line--premium {
+    text-shadow: 0 1px 12px hsl(0 0% 0% / 0.5);
+  }
+
+  .hero-section--cinematic .hero-search-card {
+    @apply border-border bg-card;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .hero-section-bg {
@@ -775,8 +791,10 @@
   }
 
   .hero-vehicle-tabs {
-    @apply flex gap-0.5 overflow-x-auto rounded-lg border border-border/70 bg-card/80 p-0.5 backdrop-blur-sm;
+    @apply flex gap-0.5 overflow-x-auto rounded-lg border border-border bg-card p-0.5;
     scrollbar-width: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .hero-vehicle-tabs::-webkit-scrollbar {
@@ -804,7 +822,9 @@
   }
 
   .hero-search-card {
-    @apply overflow-hidden rounded-2xl border border-border/75 bg-card/90 shadow-[0_12px_40px_-16px_hsl(var(--foreground)/0.15)] backdrop-blur-md;
+    @apply overflow-hidden rounded-2xl border border-border bg-card shadow-[0_12px_40px_-16px_hsl(var(--foreground)/0.15)];
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .hero-search-card-float {

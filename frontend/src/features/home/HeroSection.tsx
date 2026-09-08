@@ -15,8 +15,8 @@ import { useHomePage } from "@/features/home/context/HomePageContext";
 import { HUB_HERO_IMAGES } from "@/lib/media/india-media-catalog";
 
 /** Local muted cinematic car loop for homepage hero. */
-const HERO_CAR_VIDEO_SRC = "/brand/hero-car-loop.mp4";
-const HERO_HOME_POSTER = "/brand/hero-automotive-premium-v2.webp";
+const HERO_CAR_VIDEO_SRC = "/brand/hero-car-loop.mp4?v=20260908e";
+const HERO_HOME_POSTER = "/brand/hero-automotive-premium-v2.webp?v=20260908e";
 
 const HOME_TAGLINE = "Buy · sell · finance · auction — one automotive operating system.";
 
@@ -79,13 +79,48 @@ export function HeroSection() {
     setVideoReady(false);
     const el = videoRef.current;
     if (!el || !showHeroVideo) return;
+
     el.muted = true;
-    const play = () => {
-      void el.play().then(() => setVideoReady(true)).catch(() => setVideoReady(false));
+    el.defaultMuted = true;
+    el.playsInline = true;
+    el.setAttribute("muted", "");
+    el.setAttribute("playsinline", "");
+
+    let cancelled = false;
+    const markReady = () => {
+      if (!cancelled) setVideoReady(true);
     };
-    if (el.readyState >= 2) play();
-    else el.addEventListener("loadeddata", play, { once: true });
-    return () => el.removeEventListener("loadeddata", play);
+
+    const tryPlay = () => {
+      const p = el.play();
+      if (p && typeof p.then === "function") {
+        void p.then(markReady).catch(() => {
+          // Still reveal frame if browser decoded video but autoplay was blocked.
+          if (el.readyState >= 2) markReady();
+        });
+      } else if (el.readyState >= 2) {
+        markReady();
+      }
+    };
+
+    const onPlaying = () => markReady();
+    const onCanPlay = () => tryPlay();
+    const onLoadedData = () => tryPlay();
+
+    el.addEventListener("playing", onPlaying);
+    el.addEventListener("canplay", onCanPlay);
+    el.addEventListener("loadeddata", onLoadedData);
+
+    // Force reload in case a previous source was cached empty.
+    el.load();
+    if (el.readyState >= 2) tryPlay();
+
+    return () => {
+      cancelled = true;
+      el.removeEventListener("playing", onPlaying);
+      el.removeEventListener("canplay", onCanPlay);
+      el.removeEventListener("loadeddata", onLoadedData);
+    };
   }, [showHeroVideo, posterSrc]);
 
   return (
@@ -114,12 +149,18 @@ export function HeroSection() {
             playsInline
             autoPlay
             preload="auto"
+            controls={false}
+            disablePictureInPicture
             aria-hidden
           />
         ) : null}
-        <div className="hero-section-bg-cinematic" />
-        <div className="hero-section-bg-overlay" />
-        <div className="hero-section-bg-mesh" />
+        {!isHome ? (
+          <>
+            <div className="hero-section-bg-cinematic" />
+            <div className="hero-section-bg-overlay" />
+            <div className="hero-section-bg-mesh" />
+          </>
+        ) : null}
       </div>
 
       <div className={`container relative z-[1]${isHome ? " hero-premium-inner" : " py-8 md:py-11 lg:py-12"}`}>
