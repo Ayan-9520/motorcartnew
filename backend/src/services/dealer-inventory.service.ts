@@ -746,9 +746,20 @@ export async function previewDealerInventoryImport(
       input = validateInventoryInput(row.values);
       rowWarnings.push(...(input.warnings ?? []));
       if (rowWarnings.length) severity = "warning";
-      const branch = await assertBranchBelongs(dealer.id, input.branchId, input.branchName);
-      input.branchId = branch.branchId;
-      input.branchName = branch.branchName;
+      try {
+        const branch = await assertBranchBelongs(dealer.id, input.branchId, input.branchName);
+        input.branchId = branch.branchId;
+        input.branchName = branch.branchName;
+      } catch (branchErr) {
+        rowWarnings.push(
+          branchErr instanceof Error
+            ? `Branch ignored — ${branchErr.message}`
+            : "Branch ignored — not linked to your organization.",
+        );
+        input.branchId = null;
+        input.branchName = null;
+        severity = "warning";
+      }
       const catalog = await resolveCatalogVariantId(input);
       catalogVariantId = catalog.catalogVariantId;
       catalogMatchMethod = catalog.method;

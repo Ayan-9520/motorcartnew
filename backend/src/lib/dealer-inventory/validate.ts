@@ -161,7 +161,19 @@ export function parseStockStatus(raw: unknown, fallback: StockStatus = "availabl
   const s = blankToEmpty(raw).toLowerCase().replace(/\s+/g, "_");
   if (!s) return fallback;
   if ((STOCK_STATUSES as readonly string[]).includes(s)) return s as StockStatus;
-  throw new DealerInventoryError(`Invalid stock status: ${String(raw)}`, 400, "INVALID_STOCK_STATUS");
+  // Common dealer-sheet synonyms — never block import for wording differences
+  if (["active", "in_stock", "instock", "live", "ready", "available_stock", "ok", "yes"].includes(s)) {
+    return "available";
+  }
+  if (["sold", "sold_out", "soldout", "oos", "out", "unavailable", "no_stock", "nostock", "zero"].includes(s)) {
+    return "out_of_stock";
+  }
+  if (["reserved", "hold", "holding", "allocated"].includes(s)) return "booked";
+  if (["in_transit", "shipping", "pipeline"].includes(s)) return "transit";
+  if (["coming_soon", "preorder", "pre_order", "launch"].includes(s)) return "upcoming";
+  if (["delivered", "handed_over", "handover"].includes(s)) return "delivered";
+  // Soft: unknown status → fallback (caller may add a warning)
+  return fallback;
 }
 
 /**
@@ -187,9 +199,10 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
   if (!yearBlank) {
     const yearRaw = Number(String(blankToEmpty(raw.year ?? raw.model_year ?? raw.modelYear)).replace(/,/g, ""));
     if (!Number.isInteger(yearRaw) || yearRaw < 1990 || yearRaw > new Date().getFullYear() + 2) {
-      throw new DealerInventoryError("Invalid model year", 400, "INVALID_YEAR");
+      warnings.push(`Invalid model year "${blankToEmpty(raw.year ?? raw.model_year)}" — using ${year}.`);
+    } else {
+      year = yearRaw;
     }
-    year = yearRaw;
   }
 
   const stockBlank = !blankToEmpty(raw.stock ?? raw.qty ?? raw.quantity);
@@ -197,7 +210,8 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
   if (!stockBlank) {
     stock = Number(String(blankToEmpty(raw.stock ?? raw.qty ?? raw.quantity)).replace(/,/g, ""));
     if (!Number.isInteger(stock) || stock < 0) {
-      throw new DealerInventoryError("Stock must be an integer >= 0", 400, "INVALID_STOCK");
+      warnings.push(`Invalid stock "${blankToEmpty(raw.stock ?? raw.qty)}" — defaulted to 1.`);
+      stock = 1;
     }
   }
 
@@ -212,35 +226,46 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
 
   const dealerPrice = dealerCell.amount;
   if (dealerPrice != null && dealerPrice < 0) {
-    throw new DealerInventoryError("Dealer price must be >= 0", 400, "INVALID_DEALER_PRICE");
+    warnings.push("Dealer price was negative — ignored.");
   }
   const exOpt = exCell.amount ?? priceCell.amount;
   if (exOpt != null && exOpt < 0) {
-    throw new DealerInventoryError("Ex-showroom price must be >= 0", 400, "INVALID_PRICE");
+    warnings.push("Ex-showroom price was negative — ignored.");
   }
 
-  const exShowroomPrice = exOpt ?? (dealerPrice != null ? dealerPrice : 0);
-  const priceOnRequest = exShowroomPrice <= 0 && (dealerPrice == null || dealerPrice <= 0);
+  const safeDealer = dealerPrice != null && dealerPrice >= 0 ? dealerPrice : null;
+  const safeEx = exOpt != null && exOpt >= 0 ? exOpt : null;
+  const exShowroomPrice = safeEx ?? (safeDealer != null ? safeDealer : 0);
+  const priceOnRequest = exShowroomPrice <= 0 && (safeDealer == null || safeDealer <= 0);
   const priceSourceText =
     (priceOnRequest
       ? dealerCell.sourceText || priceCell.sourceText || exCell.sourceText
       : priceCell.sourceText || dealerCell.sourceText || exCell.sourceText) || null;
 
-  // Discount: accept blank; numeric only when deterministic. Percentage-looking small values stay as entered amount (existing semantics).
+  // Discount: accept blank; bad values become 0 with warning
   const discountRaw = blankToEmpty(raw.discount ?? raw.discount_amount ?? raw.discountAmount);
   let discountAmount = 0;
   if (discountRaw) {
     const d = Number(discountRaw.replace(/,/g, ""));
     if (!Number.isFinite(d) || d < 0) {
-      throw new DealerInventoryError("Discount must be >= 0", 400, "INVALID_DISCOUNT");
+      warnings.push(`Invalid discount "${discountRaw}" — set to 0.`);
+      discountAmount = 0;
+    } else {
+      discountAmount = d;
     }
-    discountAmount = d;
   }
 
-  const stockStatus = parseStockStatus(
-    raw.stock_status ?? raw.stockStatus,
-    stock === 0 ? "out_of_stock" : "available",
-  );
+  const statusRaw = blankToEmpty(raw.stock_status ?? raw.stockStatus);
+  const stockStatus = parseStockStatus(statusRaw, stock === 0 ? "out_of_stock" : "available");
+  if (
+    statusRaw &&
+    !(STOCK_STATUSES as readonly string[]).includes(statusRaw.toLowerCase().replace(/\s+/g, "_")) &&
+    !["active", "in_stock", "instock", "live", "ready", "available_stock", "ok", "yes", "sold", "sold_out", "soldout", "oos", "out", "unavailable", "no_stock", "nostock", "zero", "reserved", "hold", "holding", "allocated", "in_transit", "shipping", "pipeline", "coming_soon", "preorder", "pre_order", "launch", "delivered", "handed_over", "handover"].includes(
+      statusRaw.toLowerCase().replace(/\s+/g, "_"),
+    )
+  ) {
+    warnings.push(`Unknown stock status "${statusRaw}" — treated as ${stockStatus}.`);
+  }
 
   const colour = trim(raw.colour ?? raw.color, 60) || undefined;
   const colorsFromArr = Array.isArray(raw.colors)
@@ -248,13 +273,10 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
     : [];
   const colors = coloursMerge(colour, colorsFromArr);
 
-  const pincode = trim(raw.pincode ?? raw.postal_code ?? raw.postalCode ?? raw.pin ?? raw.pin_code, 16) || null;
+  let pincode = trim(raw.pincode ?? raw.postal_code ?? raw.postalCode ?? raw.pin ?? raw.pin_code, 16) || null;
   if (pincode && !/^\d{6}$/.test(pincode)) {
-    throw new DealerInventoryError(
-      `Invalid PIN "${pincode}". Enter a 6-digit PIN or leave the field blank.`,
-      400,
-      "INVALID_PIN",
-    );
+    warnings.push(`Invalid PIN "${pincode}" — left blank (enter a 6-digit PIN or leave empty).`);
+    pincode = null;
   }
 
   const deliveryRaw = blankToEmpty(raw.expected_delivery_days ?? raw.expectedDeliveryDays);
@@ -275,7 +297,7 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
     stock,
     stockStatus: stock === 0 && stockStatus === "available" ? "out_of_stock" : stockStatus,
     exShowroomPrice,
-    dealerPrice: dealerPrice != null && dealerPrice > 0 ? dealerPrice : null,
+    dealerPrice: safeDealer != null && safeDealer > 0 ? safeDealer : null,
     discountAmount,
     branchId: trim(raw.branch_id ?? raw.branchId, 64) || null,
     branchName: trim(raw.branch ?? raw.branch_name ?? raw.branchName, 120) || null,

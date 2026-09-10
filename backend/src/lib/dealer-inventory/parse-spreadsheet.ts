@@ -6,7 +6,91 @@ import { blankToEmpty } from "./validate";
 import * as XLSX from "xlsx";
 
 function normalizeHeader(h: string): string {
-  return h.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return h
+    .trim()
+    .toLowerCase()
+    .replace(/[()[\]{}]/g, "")
+    .replace(/[\s./\\-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+/** Exact alias first, then fuzzy contains for OEM sheets with odd headers. */
+function resolveFieldFromHeader(rawHeader: string): string | null {
+  const key = normalizeHeader(rawHeader);
+  if (!key || FORBIDDEN_IMPORT_COLUMNS.has(key)) return null;
+  if (IMPORT_HEADER_ALIASES[key]) return IMPORT_HEADER_ALIASES[key];
+
+  // Fuzzy: "Vehicle Brand Name" → brand, "Model / Series" → model
+  if (/(^|_)brand($|_)/.test(key) || key === "make" || key.endsWith("_make") || key.includes("manufacturer")) {
+    return "brand";
+  }
+  if (/(^|_)model($|_)/.test(key) && !key.includes("year")) return "model";
+  if (key.includes("variant") || key.includes("trim") || key.includes("grade")) return "variant";
+  if (key.includes("ex_showroom") || key.includes("exshowroom")) return "ex_showroom_price";
+  if (key.includes("on_road") || key.includes("onroad")) return "on_road_price";
+  if (key.includes("dealer_price") || key.includes("offer_price")) return "dealer_price";
+  if (key === "price" || key.endsWith("_price")) return "price";
+  if (key.includes("pincode") || key.includes("pin_code") || key === "pin") return "pincode";
+  if (key.includes("fuel")) return "fuel_type";
+  if (key.includes("transmission") || key.includes("gearbox")) return "transmission";
+  if (key.includes("colour") || key.includes("color")) return "colour";
+  if (key.includes("stock") && key.includes("status")) return "stock_status";
+  if (key === "qty" || key === "quantity" || key === "units" || key === "stock") return "stock";
+  if (key.includes("year") && !key.includes("warranty")) return "year";
+  return null;
+}
+
+function mapHeaders(headers: string[]): {
+  mapped: string[];
+  indexToField: Map<number, string>;
+  warnings: string[];
+} {
+  const mapped: string[] = [];
+  const indexToField = new Map<number, string>();
+  const warnings: string[] = [];
+  const usedFields = new Set<string>();
+
+  headers.forEach((h, i) => {
+    const key = normalizeHeader(h);
+    if (!key) return;
+    if (FORBIDDEN_IMPORT_COLUMNS.has(key)) {
+      warnings.push(`Ignored forbidden column: ${h}`);
+      return;
+    }
+    const field = resolveFieldFromHeader(h);
+    if (!field) {
+      warnings.push(`Ignored unknown column: ${h}`);
+      return;
+    }
+    // First matching column wins for a field (avoid duplicate Brand columns overwriting)
+    if (usedFields.has(field)) {
+      warnings.push(`Duplicate column for ${field} ignored: ${h}`);
+      return;
+    }
+    usedFields.add(field);
+    indexToField.set(i, field);
+    mapped.push(field);
+  });
+
+  return { mapped, indexToField, warnings };
+}
+
+function rowsFromTable(
+  headers: string[],
+  dataRows: string[][],
+  indexToField: Map<number, string>,
+): Array<{ rowNumber: number; values: Record<string, string> }> {
+  return dataRows
+    .map((row, idx) => {
+      const values: Record<string, string> = {};
+      indexToField.forEach((field, col) => {
+        values[field] = blankToEmpty(row[col]);
+      });
+      if (!values.brand && !values.model) return null;
+      return { rowNumber: idx + 2, values };
+    })
+    .filter(Boolean) as Array<{ rowNumber: number; values: Record<string, string> }>;
 }
 
 export type ParsedInventorySheet = {
@@ -29,7 +113,7 @@ export function parseInventorySpreadsheet(input: {
         : Buffer.from(input.content);
 
   if (buf.byteLength > MAX_BULK_FILE_BYTES) {
-    throw new DealerInventoryError("File too large (max 2MB)", 400, "FILE_TOO_LARGE");
+    throw new DealerInventoryError("File too large (max 12MB)", 400, "FILE_TOO_LARGE");
   }
 
   let headers: string[] = [];
@@ -41,9 +125,67 @@ export function parseInventorySpreadsheet(input: {
     headers = table.headers;
     dataRows = table.rows;
   } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-    const table = readXlsxTable(buf);
-    headers = table.headers;
-    dataRows = table.rows;
+    // Prefer the sheet that actually has Brand + Model (skip Instructions / cover sheets)
+    const workbook = XLSX.read(buf, { type: "buffer", cellDates: false });
+    let best:
+      | {
+          headers: string[];
+          rows: string[][];
+          mapped: string[];
+          indexToField: Map<number, string>;
+          sheetWarnings: string[];
+          score: number;
+        }
+      | null = null;
+
+    for (const sheetName of workbook.SheetNames) {
+      const table = readXlsxTable(buf, sheetName);
+      if (!table.headers.length) continue;
+      const mappedInfo = mapHeaders(table.headers);
+      const hasBrand = mappedInfo.mapped.includes("brand");
+      const hasModel = mappedInfo.mapped.includes("model");
+      const score = (hasBrand ? 2 : 0) + (hasModel ? 2 : 0) + mappedInfo.mapped.length * 0.01;
+      if (!best || score > best.score) {
+        best = {
+          headers: table.headers,
+          rows: table.rows,
+          mapped: mappedInfo.mapped,
+          indexToField: mappedInfo.indexToField,
+          sheetWarnings: mappedInfo.warnings,
+          score,
+        };
+      }
+      if (hasBrand && hasModel) {
+        warnings.push(`Using sheet "${sheetName}" for import.`);
+        break;
+      }
+    }
+
+    if (!best) {
+      throw new DealerInventoryError("Missing header row", 400, "MISSING_HEADERS");
+    }
+    headers = best.headers;
+    dataRows = best.rows;
+    warnings.push(...best.sheetWarnings);
+
+    const missing: string[] = [];
+    if (!best.mapped.includes("brand")) missing.push("Brand");
+    if (!best.mapped.includes("model")) missing.push("Model");
+    if (missing.length) {
+      const found = headers.filter((h) => blankToEmpty(h)).slice(0, 20).join(", ");
+      throw new DealerInventoryError(
+        `Required columns missing: ${missing.join(" and ")}. Need columns named Brand (or Make) and Model. Found headers: ${found || "(none)"}. Other columns are optional — leave blank if missing.`,
+        400,
+        "MISSING_REQUIRED_COLUMNS",
+      );
+    }
+
+    if (dataRows.length > MAX_BULK_ROWS) {
+      throw new DealerInventoryError(`Too many rows (max ${MAX_BULK_ROWS})`, 400, "TOO_MANY_ROWS");
+    }
+
+    const rows = rowsFromTable(headers, dataRows, best.indexToField);
+    return { headers, mapped: best.mapped, rows, warnings };
   } else {
     throw new DealerInventoryError("Unsupported format. Use .csv or .xlsx", 400, "UNSUPPORTED_FORMAT");
   }
@@ -52,30 +194,16 @@ export function parseInventorySpreadsheet(input: {
     throw new DealerInventoryError("Missing header row", 400, "MISSING_HEADERS");
   }
 
-  const mapped: string[] = [];
-  const indexToField = new Map<number, string>();
-  headers.forEach((h, i) => {
-    const key = normalizeHeader(h);
-    if (FORBIDDEN_IMPORT_COLUMNS.has(key)) {
-      warnings.push(`Ignored forbidden column: ${h}`);
-      return;
-    }
-    const field = IMPORT_HEADER_ALIASES[key];
-    if (!field) {
-      warnings.push(`Ignored unknown column: ${h}`);
-      return;
-    }
-    indexToField.set(i, field);
-    if (!mapped.includes(field)) mapped.push(field);
-  });
+  const mappedInfo = mapHeaders(headers);
+  warnings.push(...mappedInfo.warnings);
 
   const missing: string[] = [];
-  for (const req of ["brand", "model"] as const) {
-    if (!mapped.includes(req)) missing.push(req);
-  }
+  if (!mappedInfo.mapped.includes("brand")) missing.push("Brand");
+  if (!mappedInfo.mapped.includes("model")) missing.push("Model");
   if (missing.length) {
+    const found = headers.filter((h) => blankToEmpty(h)).slice(0, 20).join(", ");
     throw new DealerInventoryError(
-      `Required columns missing: ${missing.join(", ")}. Need Brand and Model.`,
+      `Required columns missing: ${missing.join(" and ")}. Need columns named Brand (or Make) and Model. Found headers: ${found || "(none)"}. Other columns are optional — leave blank if missing.`,
       400,
       "MISSING_REQUIRED_COLUMNS",
     );
@@ -85,20 +213,8 @@ export function parseInventorySpreadsheet(input: {
     throw new DealerInventoryError(`Too many rows (max ${MAX_BULK_ROWS})`, 400, "TOO_MANY_ROWS");
   }
 
-  const rows = dataRows
-    .map((row, idx) => {
-      const values: Record<string, string> = {};
-      indexToField.forEach((field, col) => {
-        values[field] = blankToEmpty(row[col]);
-      });
-      // Skip placeholder/trailing rows: need Brand or Model to be a real inventory line.
-      // (Bare zeros in KM Driven / Ownership must not keep empty brand/model rows alive.)
-      if (!values.brand && !values.model) return null;
-      return { rowNumber: idx + 2, values };
-    })
-    .filter(Boolean) as Array<{ rowNumber: number; values: Record<string, string> }>;
-
-  return { headers, mapped, rows, warnings };
+  const rows = rowsFromTable(headers, dataRows, mappedInfo.indexToField);
+  return { headers, mapped: mappedInfo.mapped, rows, warnings };
 }
 
 /** Canonical demo headers — petrol/diesel + EV in one sheet (real dealer upload shape). */
@@ -297,7 +413,8 @@ export function inventoryTemplateXlsx(): Buffer {
   const guide = XLSX.utils.aoa_to_sheet([
     ["MotorCart new-car inventory demo"],
     ["Required: Brand, Model"],
-    ["Optional: all other columns"],
+    ["Optional: all other columns — leave blank if you do not have the data"],
+    ["Bad rows are skipped; good rows still import"],
     ["EV: set Fuel=Electric, fill Range Km + Battery kWh, leave Engine CC blank"],
     ["ICE: fill Engine CC + Mileage (kmpl); leave Range/Battery blank"],
     ["Price: exact number or Rs. X Lakh; ranges → Price on request"],

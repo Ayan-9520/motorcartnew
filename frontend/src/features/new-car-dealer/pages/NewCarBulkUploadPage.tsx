@@ -92,10 +92,10 @@ export function NewCarBulkUploadPage() {
     }
   };
 
-  /** One-click: validate then import — what dealers expect as “Upload”. */
+  /** One-click: validate then import ready rows (bad rows are skipped). */
   const runUpload = async () => {
     if (!file || !dealer) {
-      toast.error("Pehle Excel / CSV file choose karo");
+      toast.error("Please choose an Excel / CSV file first");
       return;
     }
     setBusy(true);
@@ -109,14 +109,17 @@ export function NewCarBulkUploadPage() {
       }
       const readyCount = data.valid ?? 0;
       if (readyCount <= 0) {
-        toast.error("Koi row upload ke liye ready nahi — errors check karo");
+        toast.error("No rows ready to upload — check the error list below");
         return;
       }
       const out = await runConfirmRequest(data.batchId);
       setResult(out);
       setPreview(null);
+      const failed = Number(out.failed ?? 0);
       toast.success(
-        `Upload complete — created ${out.created}, updated ${out.updated}, failed ${out.failed}`,
+        failed > 0
+          ? `Uploaded ready rows — created ${out.created}, updated ${out.updated}, skipped bad/duplicate ${out.skipped}, failed ${out.failed}`
+          : `Upload complete — created ${out.created}, updated ${out.updated}, skipped ${out.skipped}`,
       );
     } catch (e) {
       const ax = e as { response?: { data?: { message?: string } } };
@@ -161,7 +164,7 @@ export function NewCarBulkUploadPage() {
   return (
     <NewCarDealerShell
       title="Bulk Excel / CSV upload"
-      description="Required: Brand + Model. ICE: Engine CC + Mileage. EV: Fuel=Electric, Range Km + Battery kWh. Download the demo Excel (petrol + EV rows) and upload as-is."
+      description="Required: Brand + Model only. Other columns optional. Good rows import even if some rows need correction."
       actions={
         <div className="flex flex-wrap gap-2">
           <Button
@@ -223,24 +226,24 @@ export function NewCarBulkUploadPage() {
       }
     >
       <div className="dealer-os-card mb-4 space-y-2 p-4 text-sm">
-        <p className="font-semibold text-foreground">Kaise upload karein</p>
+        <p className="font-semibold text-foreground">How to upload</p>
         <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
-          <li>Demo Excel download karo (ya apni sheet)</li>
-          <li>Neeche file choose karo</li>
+          <li>Download the Demo Excel (or use your own sheet)</li>
+          <li>Choose the file below</li>
           <li>
-            Green <span className="font-medium text-foreground">Upload to inventory</span> dabao — check + import
-            ek saath
+            Click <span className="font-medium text-foreground">Upload to inventory</span> — we validate and
+            import ready rows in one step
           </li>
         </ol>
         <p className="pt-1 text-muted-foreground">
-          <span className="font-medium text-foreground">Required:</span> Brand · Model ·{" "}
-          <span className="font-medium text-foreground">EV:</span> Fuel=Electric, Range Km, Battery kWh
+          <span className="font-medium text-foreground">Required:</span> Brand (or Make) · Model. All other
+          columns are optional — leave blank if missing. If one row has an issue, good rows still upload.
         </p>
       </div>
 
       <div className="dealer-os-card space-y-4 p-4">
         <label className="block text-sm font-medium">
-          1. File choose karo (.csv / .xlsx)
+          1. Choose file (.csv / .xlsx)
           <input
             type="file"
             accept=".csv,.xlsx,.xls"
@@ -257,7 +260,7 @@ export function NewCarBulkUploadPage() {
             Selected: <span className="font-medium">{file.name}</span>
           </p>
         ) : (
-          <p className="text-sm text-muted-foreground">File select karne ke baad Upload button active hoga.</p>
+          <p className="text-sm text-muted-foreground">Select a file to enable Upload.</p>
         )}
         <label className="block text-sm font-medium">
           Import mode
