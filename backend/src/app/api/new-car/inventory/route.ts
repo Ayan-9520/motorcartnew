@@ -1,7 +1,12 @@
 import { NextRequest } from "next/server";
 import { ok } from "@/lib/api-response";
+import { DealerInventoryError } from "@/lib/dealer-inventory/errors";
 import { handleDealerInventoryError, inventoryActorFrom, requireDealerInventoryRole } from "@/lib/dealer-inventory/http";
-import { createDealerInventoryItem, listDealerInventory } from "@/services/dealer-inventory.service";
+import {
+  clearDealerInventory,
+  createDealerInventoryItem,
+  listDealerInventory,
+} from "@/services/dealer-inventory.service";
 
 export async function GET(req: NextRequest) {
   try {
@@ -28,6 +33,23 @@ export async function POST(req: NextRequest) {
     requireDealerInventoryRole(actor);
     const body = (await req.json()) as Record<string, unknown>;
     const data = await createDealerInventoryItem(actor, body);
+    return ok({ data });
+  } catch (e) {
+    return handleDealerInventoryError(e);
+  }
+}
+
+/** DELETE /api/new-car/inventory?all=1&dealer_id=… — wipe showroom stock for re-upload. */
+export async function DELETE(req: NextRequest) {
+  try {
+    const actor = inventoryActorFrom(req);
+    requireDealerInventoryRole(actor);
+    const sp = req.nextUrl.searchParams;
+    const all = sp.get("all") === "1" || sp.get("all") === "true";
+    if (!all) {
+      throw new DealerInventoryError("Pass all=1 to clear entire inventory", 400, "BAD_REQUEST");
+    }
+    const data = await clearDealerInventory(actor, sp.get("dealer_id") ?? sp.get("dealerId"));
     return ok({ data });
   } catch (e) {
     return handleDealerInventoryError(e);

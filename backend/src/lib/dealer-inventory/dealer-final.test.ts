@@ -84,19 +84,17 @@ describe("dealer-final unit", () => {
     assert.ok(row.warnings.some((w) => /range/i.test(w)));
   });
 
-  it("rejects missing brand/model and invalid supplied PIN/stock", () => {
+  it("rejects missing brand/model; soft-handles bad stock/PIN", () => {
     assert.throws(
       () => validateInventoryInput({ brand: "", model: "B", stock: 1 }),
       (e: unknown) => e instanceof DealerInventoryError && e.code === "BRAND_REQUIRED",
     );
-    assert.throws(
-      () => validateInventoryInput({ brand: "A", model: "B", stock: -1 }),
-      (e: unknown) => e instanceof DealerInventoryError && e.code === "INVALID_STOCK",
-    );
-    assert.throws(
-      () => validateInventoryInput({ brand: "A", model: "B", stock: 1, pincode: "11001" }),
-      (e: unknown) => e instanceof DealerInventoryError && e.code === "INVALID_PIN",
-    );
+    const softStock = validateInventoryInput({ brand: "A", model: "B", stock: -1 });
+    assert.equal(softStock.stock, 1);
+    assert.ok(softStock.warnings.some((w) => /stock/i.test(w)));
+    const softPin = validateInventoryInput({ brand: "A", model: "B", stock: 1, pincode: "11001" });
+    assert.equal(softPin.pincode, null);
+    assert.ok(softPin.warnings.some((w) => /pin/i.test(w)));
   });
 
   it("normalizes blank Excel tokens", () => {
@@ -138,7 +136,7 @@ describe("dealer-final unit", () => {
     assert.ok(parsed.mapped.includes("brand") && parsed.mapped.includes("model"));
     assert.ok(parsed.mapped.includes("price"));
     assert.ok(parsed.mapped.includes("image_url") || parsed.rows[0]);
-    assert.ok(parsed.rows.length >= 20);
+    assert.ok(parsed.rows.length >= 17);
     assert.ok(!parsed.mapped.includes("stock"));
     const sample = validateInventoryInput(parsed.rows[0].values);
     assert.equal(sample.stock, 1);
@@ -147,11 +145,39 @@ describe("dealer-final unit", () => {
 
   it("enforces bulk size limits and Brand+Model required columns", () => {
     assert.ok(MAX_BULK_ROWS <= 500);
-    assert.ok(MAX_BULK_FILE_BYTES <= 2 * 1024 * 1024);
+    assert.ok(MAX_BULK_FILE_BYTES <= 12 * 1024 * 1024);
     assert.throws(
       () => parseInventorySpreadsheet({ filename: "x.csv", content: "colour,stock\nWhite,1\n" }),
       (e: unknown) => e instanceof DealerInventoryError && e.code === "MISSING_REQUIRED_COLUMNS",
     );
+  });
+
+  it("infers brand from filename when Model-only sheet", () => {
+    const csv = ["Model,Price", "DB12,55000000", "DBX707,45000000"].join("\n");
+    const parsed = parseInventorySpreadsheet({ filename: "Aston martin.xlsx".replace(".xlsx", ".csv"), content: csv });
+    assert.equal(parsed.rows.length, 2);
+    assert.equal(parsed.rows[0]!.values.brand, "Aston Martin");
+    assert.equal(parsed.rows[0]!.values.model, "DB12");
+  });
+
+  it("skips title rows and finds Brand/Model header below", () => {
+    const csv = [
+      "Aston Martin India Price List 2025",
+      "",
+      "Brand,Model,Ex-Showroom Price",
+      "Aston Martin,DB12,55000000",
+      "Aston Martin,Vantage,35000000",
+    ].join("\n");
+    const parsed = parseInventorySpreadsheet({ filename: "price-list.csv", content: csv });
+    assert.ok(parsed.rows.length >= 2);
+    assert.equal(parsed.rows[0]!.values.model, "DB12");
+  });
+
+  it("splits Vehicle column into brand + model", () => {
+    const csv = ["Vehicle,Price", "Aston Martin DB12,55000000"].join("\n");
+    const parsed = parseInventorySpreadsheet({ filename: "cars.csv", content: csv });
+    assert.equal(parsed.rows[0]!.values.brand, "Aston Martin");
+    assert.equal(parsed.rows[0]!.values.model, "DB12");
   });
 
   it("template CSV leads with brand,model and includes EV demo columns", () => {

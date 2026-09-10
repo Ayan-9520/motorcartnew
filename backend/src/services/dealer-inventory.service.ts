@@ -554,6 +554,71 @@ export async function archiveDealerInventoryItem(actor: SalesActor, id: string) 
   return { id, deleted: true };
 }
 
+/** Wipe all new-car stock for a dealer (hard delete / archive linked rows + hide marketplace). */
+export async function clearDealerInventory(actor: SalesActor, dealerId?: string | null) {
+  const dealer = await requireDealerContext(actor, dealerId);
+  await assertInventoryPermission(actor, dealer.id, "inventory.delete");
+
+  const rows = await prisma.newCarInventory.findMany({ where: { dealerId: dealer.id } });
+  let removed = 0;
+  let archived = 0;
+  const vehicleIds = new Set<string>();
+
+  for (const row of rows) {
+    const meta = metaOf(row);
+    if (typeof meta.vehicle_id === "string" && meta.vehicle_id.trim()) {
+      vehicleIds.add(meta.vehicle_id.trim());
+    }
+    const linked = await prisma.quotation.count({ where: { inventoryId: row.id } });
+    const td = await prisma.testDriveBooking.count({ where: { inventoryId: row.id } });
+    if (linked > 0 || td > 0) {
+      meta.archived = true;
+      await prisma.newCarInventory.update({
+        where: { id: row.id },
+        data: {
+          stock: 0,
+          stockStatus: "out_of_stock",
+          metadata: meta as Prisma.InputJsonValue,
+          lastStockUpdateAt: new Date(),
+        },
+      });
+      archived += 1;
+    } else {
+      await prisma.newCarInventory.delete({ where: { id: row.id } });
+      removed += 1;
+    }
+  }
+
+  if (vehicleIds.size) {
+    await prisma.vehicle
+      .updateMany({
+        where: { id: { in: [...vehicleIds] }, deletedAt: null },
+        data: { deletedAt: new Date(), status: "sold" },
+      })
+      .catch(() => undefined);
+  }
+
+  // Also hide leftover new-car marketplace rows for this dealer (orphan syncs)
+  await prisma.vehicle
+    .updateMany({
+      where: {
+        dealerId: dealer.id,
+        deletedAt: null,
+        OR: [{ condition: "new" }, { category: "new-cars" }],
+      },
+      data: { deletedAt: new Date(), status: "sold" },
+    })
+    .catch(() => undefined);
+
+  await writeAudit(actor, "inventory.clear_all", {
+    dealerId: dealer.id,
+    removed,
+    archived,
+    total: rows.length,
+  });
+  return { dealerId: dealer.id, removed, archived, total: rows.length };
+}
+
 /** Remove NewCarInventory (+ soft-delete marketplace vehicle) when dealer deletes a vehicle listing. */
 export async function purgeInventoryForVehicle(actor: SalesActor, vehicleId: string) {
   const vehicle = await prisma.vehicle.findFirst({

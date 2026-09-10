@@ -1,5 +1,4 @@
 import { readCsvTable } from "@/lib/catalog/import/parser/csv-reader";
-import { readXlsxTable } from "@/lib/catalog/import/parser/xlsx-reader";
 import { FORBIDDEN_IMPORT_COLUMNS, IMPORT_HEADER_ALIASES, MAX_BULK_FILE_BYTES, MAX_BULK_ROWS } from "./constants";
 import { DealerInventoryError } from "./errors";
 import { blankToEmpty } from "./validate";
@@ -10,6 +9,7 @@ function normalizeHeader(h: string): string {
     .trim()
     .toLowerCase()
     .replace(/[()[\]{}]/g, "")
+    .replace(/[\u00a0]/g, " ")
     .replace(/[\s./\\-]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
@@ -26,11 +26,23 @@ function resolveFieldFromHeader(rawHeader: string): string | null {
     return "brand";
   }
   if (/(^|_)model($|_)/.test(key) && !key.includes("year")) return "model";
-  if (key.includes("variant") || key.includes("trim") || key.includes("grade")) return "variant";
+  if (key === "series" || key === "carline" || key === "nameplate" || key === "line") return "model";
+  if (key.includes("variant") || key.includes("trim") || key.includes("grade") || key.includes("derivative")) {
+    return "variant";
+  }
+  if (
+    key === "vehicle" ||
+    key === "car" ||
+    key === "vehicle_name" ||
+    key === "vehicle_description" ||
+    key === "description_of_vehicle"
+  ) {
+    return "vehicle_name";
+  }
   if (key.includes("ex_showroom") || key.includes("exshowroom")) return "ex_showroom_price";
   if (key.includes("on_road") || key.includes("onroad")) return "on_road_price";
   if (key.includes("dealer_price") || key.includes("offer_price")) return "dealer_price";
-  if (key === "price" || key.endsWith("_price")) return "price";
+  if (key === "price" || key.endsWith("_price") || key.includes("mrp")) return "price";
   if (key.includes("pincode") || key.includes("pin_code") || key === "pin") return "pincode";
   if (key.includes("fuel")) return "fuel_type";
   if (key.includes("transmission") || key.includes("gearbox")) return "transmission";
@@ -76,10 +88,199 @@ function mapHeaders(headers: string[]): {
   return { mapped, indexToField, warnings };
 }
 
-function rowsFromTable(
+const MULTI_WORD_BRANDS = [
+  "aston martin",
+  "land rover",
+  "range rover",
+  "rolls royce",
+  "alfa romeo",
+  "mercedes benz",
+  "mercedes-benz",
+  "maruti suzuki",
+  "royal enfield",
+  "force motors",
+  "ashok leyland",
+  "great wall",
+];
+
+const GENERIC_FILENAME_BRANDS = new Set([
+  "inventory",
+  "stock",
+  "upload",
+  "bulk",
+  "demo",
+  "template",
+  "motorcart",
+  "new car",
+  "new cars",
+  "price list",
+  "pricelist",
+  "sheet",
+  "data",
+  "file",
+  "cars",
+  "vehicles",
+]);
+
+/** "Aston martin.xlsx" / "Volvo_XC60_stock.csv" → brand hint when sheet has no Brand column. */
+export function brandFromFilename(filename: string): string {
+  const base = filename.replace(/^.*[\\/]/, "").replace(/\.(xlsx|xls|csv|txt)$/i, "");
+  const cleaned = base
+    .replace(/[_\-.]+/g, " ")
+    .replace(
+      /\b(price|list|stock|inventory|upload|bulk|demo|template|new|cars?|vehicles?|dealer|real|sample|fixture|data|file|sheet)\b/gi,
+      " ",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned || GENERIC_FILENAME_BRANDS.has(cleaned.toLowerCase())) return "";
+  if (cleaned.split(" ").length > 4) return "";
+  if (/^\d+$/.test(cleaned)) return "";
+  return cleaned
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+export function splitVehicleName(raw: string, fallbackBrand = ""): { brand: string; model: string } {
+  const s = blankToEmpty(raw).replace(/\s+/g, " ");
+  if (!s) return { brand: fallbackBrand, model: "" };
+  const lower = s.toLowerCase();
+  for (const b of MULTI_WORD_BRANDS) {
+    if (lower === b) return { brand: titleCase(b), model: "" };
+    if (lower.startsWith(`${b} `)) {
+      return { brand: titleCase(b), model: s.slice(b.length).trim() };
+    }
+  }
+  if (fallbackBrand) {
+    const fb = fallbackBrand.toLowerCase();
+    if (lower.startsWith(`${fb} `)) {
+      return { brand: fallbackBrand, model: s.slice(fallbackBrand.length).trim() };
+    }
+    return { brand: fallbackBrand, model: s };
+  }
+  const parts = s.split(" ");
+  if (parts.length === 1) return { brand: fallbackBrand || parts[0]!, model: fallbackBrand ? parts[0]! : "" };
+  return { brand: parts[0]!, model: parts.slice(1).join(" ") };
+}
+
+function titleCase(s: string): string {
+  return s
+    .split(/[\s-]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(s.includes("-") ? "-" : " ");
+}
+
+function sheetToMatrix(sheet: XLSX.WorkSheet): string[][] {
+  const table = XLSX.utils.sheet_to_json<(string | number | boolean | null)[]>(sheet, {
+    header: 1,
+    raw: false,
+    defval: "",
+    blankrows: false,
+  }) as unknown as string[][];
+  return (table ?? []).map((row) => (row ?? []).map((cell) => String(cell ?? "")));
+}
+
+function scoreHeaderCandidate(
   headers: string[],
+  sampleRows: string[][],
+): { score: number; mapped: string[]; indexToField: Map<number, string>; warnings: string[] } {
+  const mappedInfo = mapHeaders(headers);
+  const hasBrand = mappedInfo.mapped.includes("brand");
+  const hasModel = mappedInfo.mapped.includes("model");
+  const hasVehicle = mappedInfo.mapped.includes("vehicle_name");
+  let score =
+    (hasBrand ? 4 : 0) + (hasModel ? 4 : 0) + (hasVehicle ? 3 : 0) + mappedInfo.mapped.length * 0.05;
+
+  let filled = 0;
+  for (const row of sampleRows.slice(0, 12)) {
+    const values: Record<string, string> = {};
+    mappedInfo.indexToField.forEach((field, col) => {
+      values[field] = blankToEmpty(row[col]);
+    });
+    if (values.brand || values.model || values.vehicle_name) filled += 1;
+  }
+  score += Math.min(filled, 8) * 0.5;
+  return { score, ...mappedInfo };
+}
+
+function pickBestTableFromMatrix(matrix: string[][]): {
+  headers: string[];
+  rows: string[][];
+  mapped: string[];
+  indexToField: Map<number, string>;
+  sheetWarnings: string[];
+  headerRowIndex: number;
+  score: number;
+} | null {
+  if (!matrix.length) return null;
+  let best: {
+    headers: string[];
+    rows: string[][];
+    mapped: string[];
+    indexToField: Map<number, string>;
+    sheetWarnings: string[];
+    headerRowIndex: number;
+    score: number;
+  } | null = null;
+
+  const scanLimit = Math.min(40, matrix.length);
+  for (let i = 0; i < scanLimit; i++) {
+    const headers = matrix[i] ?? [];
+    if (!headers.some((h) => blankToEmpty(h))) continue;
+    const dataRows = matrix.slice(i + 1);
+    const scored = scoreHeaderCandidate(headers, dataRows);
+    if (!scored.mapped.length) continue;
+    if (!best || scored.score > best.score) {
+      best = {
+        headers,
+        rows: dataRows,
+        mapped: scored.mapped,
+        indexToField: scored.indexToField,
+        sheetWarnings: scored.warnings,
+        headerRowIndex: i,
+        score: scored.score,
+      };
+    }
+    if (scored.mapped.includes("brand") && scored.mapped.includes("model") && scored.score >= 8.5) {
+      break;
+    }
+  }
+  return best;
+}
+
+function enrichRowValues(values: Record<string, string>, fallbackBrand: string): Record<string, string> {
+  const next = { ...values };
+  if ((!next.brand || !next.model) && next.vehicle_name) {
+    const split = splitVehicleName(next.vehicle_name, next.brand || fallbackBrand);
+    if (!next.brand) next.brand = split.brand;
+    if (!next.model) next.model = split.model;
+  }
+  if (!next.brand && fallbackBrand) next.brand = fallbackBrand;
+  if (next.brand && next.model) {
+    const lowerModel = next.model.toLowerCase();
+    const lowerBrand = next.brand.toLowerCase();
+    if (lowerModel.startsWith(`${lowerBrand} `)) {
+      next.model = next.model.slice(next.brand.length).trim();
+    }
+  } else if (!next.brand && next.model) {
+    const split = splitVehicleName(next.model, fallbackBrand);
+    if (split.brand && split.model) {
+      next.brand = split.brand;
+      next.model = split.model;
+    } else if (fallbackBrand) {
+      next.brand = fallbackBrand;
+    }
+  }
+  return next;
+}
+
+function rowsFromTable(
   dataRows: string[][],
   indexToField: Map<number, string>,
+  headerRowIndex: number,
+  fallbackBrand: string,
 ): Array<{ rowNumber: number; values: Record<string, string> }> {
   return dataRows
     .map((row, idx) => {
@@ -87,10 +288,30 @@ function rowsFromTable(
       indexToField.forEach((field, col) => {
         values[field] = blankToEmpty(row[col]);
       });
-      if (!values.brand && !values.model) return null;
-      return { rowNumber: idx + 2, values };
+      const enriched = enrichRowValues(values, fallbackBrand);
+      if (!enriched.brand && !enriched.model) return null;
+      // Skip leftover title/section rows that only repeated the brand
+      if (enriched.brand && !enriched.model && !enriched.variant) return null;
+      return { rowNumber: headerRowIndex + idx + 2, values: enriched };
     })
     .filter(Boolean) as Array<{ rowNumber: number; values: Record<string, string> }>;
+}
+
+function assertRequiredColumns(mapped: string[], headers: string[], fallbackBrand: string): void {
+  const hasBrand = mapped.includes("brand");
+  const hasModel = mapped.includes("model");
+  const hasVehicle = mapped.includes("vehicle_name");
+  const missing: string[] = [];
+  if (!hasBrand && !fallbackBrand && !hasVehicle) missing.push("Brand (or Make)");
+  if (!hasModel && !hasVehicle) missing.push("Model");
+  if (missing.length) {
+    const found = headers.filter((h) => blankToEmpty(h)).slice(0, 20).join(", ");
+    throw new DealerInventoryError(
+      `Required columns missing: ${missing.join(" and ")}. Need Brand (or Make) and Model — or put the brand in the file name (e.g. Aston Martin.xlsx) with a Model column. Found headers: ${found || "(none)"}.`,
+      400,
+      "MISSING_REQUIRED_COLUMNS",
+    );
+  }
 }
 
 export type ParsedInventorySheet = {
@@ -116,105 +337,87 @@ export function parseInventorySpreadsheet(input: {
     throw new DealerInventoryError("File too large (max 12MB)", 400, "FILE_TOO_LARGE");
   }
 
+  const fallbackBrand = brandFromFilename(input.filename);
+  const warnings: string[] = [];
+  if (fallbackBrand) {
+    warnings.push(`Using brand hint from file name: ${fallbackBrand}`);
+  }
+
   let headers: string[] = [];
   let dataRows: string[][] = [];
-  const warnings: string[] = [];
+  let mapped: string[] = [];
+  let indexToField = new Map<number, string>();
+  let headerRowIndex = 0;
 
   if (name.endsWith(".csv") || name.endsWith(".txt")) {
     const table = readCsvTable(buf.toString("utf8"));
-    headers = table.headers;
-    dataRows = table.rows;
+    const matrix = [table.headers, ...table.rows];
+    const best = pickBestTableFromMatrix(matrix);
+    if (!best) {
+      throw new DealerInventoryError("Missing header row", 400, "MISSING_HEADERS");
+    }
+    headers = best.headers;
+    dataRows = best.rows;
+    mapped = best.mapped;
+    indexToField = best.indexToField;
+    headerRowIndex = best.headerRowIndex;
+    warnings.push(...best.sheetWarnings);
+    if (best.headerRowIndex > 0) {
+      warnings.push(`Detected header row ${best.headerRowIndex + 1} (skipped title rows above).`);
+    }
   } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-    // Prefer the sheet that actually has Brand + Model (skip Instructions / cover sheets)
     const workbook = XLSX.read(buf, { type: "buffer", cellDates: false });
-    let best:
-      | {
-          headers: string[];
-          rows: string[][];
-          mapped: string[];
-          indexToField: Map<number, string>;
-          sheetWarnings: string[];
-          score: number;
-        }
-      | null = null;
+    let best: (ReturnType<typeof pickBestTableFromMatrix> & { sheetName: string }) | null = null;
 
     for (const sheetName of workbook.SheetNames) {
-      const table = readXlsxTable(buf, sheetName);
-      if (!table.headers.length) continue;
-      const mappedInfo = mapHeaders(table.headers);
-      const hasBrand = mappedInfo.mapped.includes("brand");
-      const hasModel = mappedInfo.mapped.includes("model");
-      const score = (hasBrand ? 2 : 0) + (hasModel ? 2 : 0) + mappedInfo.mapped.length * 0.01;
-      if (!best || score > best.score) {
-        best = {
-          headers: table.headers,
-          rows: table.rows,
-          mapped: mappedInfo.mapped,
-          indexToField: mappedInfo.indexToField,
-          sheetWarnings: mappedInfo.warnings,
-          score,
-        };
+      const sheet = workbook.Sheets[sheetName];
+      if (!sheet) continue;
+      const matrix = sheetToMatrix(sheet);
+      const candidate = pickBestTableFromMatrix(matrix);
+      if (!candidate) continue;
+      if (!best || candidate.score > best.score) {
+        best = { ...candidate, sheetName };
       }
-      if (hasBrand && hasModel) {
+      if (candidate.mapped.includes("brand") && candidate.mapped.includes("model") && candidate.score >= 8.5) {
         warnings.push(`Using sheet "${sheetName}" for import.`);
         break;
       }
     }
 
     if (!best) {
-      throw new DealerInventoryError("Missing header row", 400, "MISSING_HEADERS");
+      throw new DealerInventoryError(
+        "Could not find a header row with Brand/Model (or Vehicle) columns. Download Demo Excel and match those column names.",
+        400,
+        "MISSING_HEADERS",
+      );
     }
     headers = best.headers;
     dataRows = best.rows;
+    mapped = best.mapped;
+    indexToField = best.indexToField;
+    headerRowIndex = best.headerRowIndex;
     warnings.push(...best.sheetWarnings);
-
-    const missing: string[] = [];
-    if (!best.mapped.includes("brand")) missing.push("Brand");
-    if (!best.mapped.includes("model")) missing.push("Model");
-    if (missing.length) {
-      const found = headers.filter((h) => blankToEmpty(h)).slice(0, 20).join(", ");
-      throw new DealerInventoryError(
-        `Required columns missing: ${missing.join(" and ")}. Need columns named Brand (or Make) and Model. Found headers: ${found || "(none)"}. Other columns are optional — leave blank if missing.`,
-        400,
-        "MISSING_REQUIRED_COLUMNS",
-      );
-    }
-
-    if (dataRows.length > MAX_BULK_ROWS) {
-      throw new DealerInventoryError(`Too many rows (max ${MAX_BULK_ROWS})`, 400, "TOO_MANY_ROWS");
-    }
-
-    const rows = rowsFromTable(headers, dataRows, best.indexToField);
-    return { headers, mapped: best.mapped, rows, warnings };
+    warnings.push(`Using sheet "${best.sheetName}" (header row ${best.headerRowIndex + 1}).`);
   } else {
     throw new DealerInventoryError("Unsupported format. Use .csv or .xlsx", 400, "UNSUPPORTED_FORMAT");
   }
 
-  if (!headers.length) {
-    throw new DealerInventoryError("Missing header row", 400, "MISSING_HEADERS");
-  }
-
-  const mappedInfo = mapHeaders(headers);
-  warnings.push(...mappedInfo.warnings);
-
-  const missing: string[] = [];
-  if (!mappedInfo.mapped.includes("brand")) missing.push("Brand");
-  if (!mappedInfo.mapped.includes("model")) missing.push("Model");
-  if (missing.length) {
-    const found = headers.filter((h) => blankToEmpty(h)).slice(0, 20).join(", ");
-    throw new DealerInventoryError(
-      `Required columns missing: ${missing.join(" and ")}. Need columns named Brand (or Make) and Model. Found headers: ${found || "(none)"}. Other columns are optional — leave blank if missing.`,
-      400,
-      "MISSING_REQUIRED_COLUMNS",
-    );
-  }
+  assertRequiredColumns(mapped, headers, fallbackBrand);
 
   if (dataRows.length > MAX_BULK_ROWS) {
     throw new DealerInventoryError(`Too many rows (max ${MAX_BULK_ROWS})`, 400, "TOO_MANY_ROWS");
   }
 
-  const rows = rowsFromTable(headers, dataRows, mappedInfo.indexToField);
-  return { headers, mapped: mappedInfo.mapped, rows, warnings };
+  const rows = rowsFromTable(dataRows, indexToField, headerRowIndex, fallbackBrand);
+  if (!rows.length) {
+    throw new DealerInventoryError(
+      "No data rows found under the header. Add Brand + Model on each row (or Model only if the file name is the brand, e.g. Aston Martin.xlsx).",
+      400,
+      "NO_DATA_ROWS",
+    );
+  }
+
+  return { headers, mapped, rows, warnings };
 }
 
 /** Canonical demo headers — petrol/diesel + EV in one sheet (real dealer upload shape). */

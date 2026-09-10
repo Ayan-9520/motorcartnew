@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FileSpreadsheet, Plus, Search, Upload } from "lucide-react";
+import { FileSpreadsheet, Plus, Search, Trash2, Upload } from "lucide-react";
+import toast from "react-hot-toast";
 import { featureFlags } from "@/config/feature-flags";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { NcdInventoryGrid } from "../components/NcdInventoryGrid";
 import { NewCarAddInventoryDialog } from "../components/NewCarAddInventoryDialog";
 import { NewCarDailyStockDialog } from "../components/NewCarDailyStockDialog";
 import { useNewCarDealerOS } from "../hooks/useNewCarDealerOS";
+import { clearAllNewCarInventory } from "../services/new-car-dealer.service";
 import { useAuthStore } from "@/store/authStore";
 import { setPageMeta } from "@/utils/seo";
 
@@ -18,6 +20,7 @@ export function NewCarInventoryPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     setPageMeta({ title: "New car inventory" });
@@ -35,12 +38,42 @@ export function NewCarInventoryPage() {
     });
   }, [inventory, query]);
 
+  const onClearAll = async () => {
+    if (!dealer?.id) return;
+    if (
+      !window.confirm(
+        `Remove ALL ${inventory.length} cars from showroom stock and public listings? You can re-upload Excel after.`,
+      )
+    ) {
+      return;
+    }
+    setClearing(true);
+    const { error } = await clearAllNewCarInventory(dealer.id);
+    setClearing(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("All stock cleared — ready for fresh upload");
+    void refresh();
+  };
+
   return (
     <NewCarDealerShell
       title="Showroom inventory"
       description="Variants, pricing, stock health, offers & delivery timelines."
       actions={
         <div className="flex flex-wrap gap-2">
+          {inventory.length > 0 ? (
+            <Button
+              className="rounded-xl"
+              variant="outline"
+              disabled={clearing || !dealer?.id}
+              onClick={() => void onClearAll()}
+            >
+              <Trash2 className="mr-1 h-4 w-4" /> Clear all stock
+            </Button>
+          ) : null}
           <Button className="rounded-xl" variant="secondary" asChild>
             <Link to="/dashboard/new-car/inventory/bulk">
               <FileSpreadsheet className="mr-1 h-4 w-4" /> Bulk Excel upload

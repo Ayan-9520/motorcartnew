@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Loader2, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/axios";
 import { useDealer } from "@/features/dealer-crm/hooks/useDealer";
 import { NewCarDealerShell } from "../components/NewCarDealerShell";
+import { clearAllNewCarInventory } from "../services/new-car-dealer.service";
 import { setPageMeta } from "@/utils/seo";
 
 type PreviewRow = {
@@ -66,6 +67,24 @@ export function NewCarBulkUploadPage() {
     return data.data;
   };
 
+  const onClearAllStock = async () => {
+    if (!dealer?.id) return;
+    if (!window.confirm("Remove ALL current showroom stock so you can upload a fresh Excel?")) return;
+    setBusy(true);
+    try {
+      const { error } = await clearAllNewCarInventory(dealer.id);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Stock cleared — upload your Excel now");
+      setPreview(null);
+      setResult(null);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const runPreviewOnly = async () => {
     if (!file || !dealer) return;
     setBusy(true);
@@ -81,7 +100,10 @@ export function NewCarBulkUploadPage() {
       if (readyCount > 0) {
         toast.success(`${readyCount} row(s) ready — click Upload to inventory`);
       } else {
-        toast.error("No rows ready — fix errors and try again");
+        toast.error(
+          data.warnings?.[0] ||
+            "No rows ready — check Brand/Model columns (or name the file like Aston Martin.xlsx).",
+        );
       }
     } catch (e) {
       const ax = e as { response?: { data?: { message?: string } } };
@@ -109,7 +131,10 @@ export function NewCarBulkUploadPage() {
       }
       const readyCount = data.valid ?? 0;
       if (readyCount <= 0) {
-        toast.error("No rows ready to upload — check the error list below");
+        toast.error(
+          data.warnings?.[0] ||
+            "No rows ready to upload — need Brand + Model (or Model only if file name is the brand).",
+        );
         return;
       }
       const out = await runConfirmRequest(data.batchId);
@@ -217,6 +242,9 @@ export function NewCarBulkUploadPage() {
           >
             <Download className="mr-1 h-4 w-4" /> Template CSV
           </Button>
+          <Button variant="outline" size="sm" className="rounded-xl" disabled={busy} onClick={() => void onClearAllStock()}>
+            <Trash2 className="mr-1 h-4 w-4" /> Clear all stock
+          </Button>
           <Button variant="outline" size="sm" className="rounded-xl" asChild>
             <Link to="/dashboard/new-car/inventory">
               <ArrowLeft className="mr-1 h-4 w-4" /> Back to stock
@@ -238,6 +266,10 @@ export function NewCarBulkUploadPage() {
         <p className="pt-1 text-muted-foreground">
           <span className="font-medium text-foreground">Required:</span> Brand (or Make) · Model. All other
           columns are optional — leave blank if missing. If one row has an issue, good rows still upload.
+        </p>
+        <p className="text-muted-foreground">
+          Tip: name the file like <span className="font-medium text-foreground">Aston Martin.xlsx</span> if the
+          sheet only has a Model column. Title rows above headers are auto-skipped.
         </p>
       </div>
 

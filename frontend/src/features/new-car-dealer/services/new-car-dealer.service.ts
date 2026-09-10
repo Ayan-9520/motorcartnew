@@ -559,6 +559,22 @@ export async function removeNewCarInventory(item: NcdInventoryItem) {
   }
 }
 
+/** Wipe all showroom stock for this dealer so a fresh Excel upload can replace it. */
+export async function clearAllNewCarInventory(dealerId: string) {
+  if (!dealerId) return { error: { message: "Dealer required" } };
+  try {
+    if (hasConfiguredApi()) {
+      await api.delete("/api/new-car/inventory", { params: { all: 1, dealer_id: dealerId } });
+    } else {
+      await supabase.from("new_car_inventory").delete().eq("dealer_id", dealerId);
+    }
+    return { error: null as { message: string } | null };
+  } catch (e) {
+    const ax = e as { response?: { data?: { message?: string } }; message?: string };
+    return { error: { message: ax.response?.data?.message ?? ax.message ?? "Clear failed" } };
+  }
+}
+
 export async function uploadDailyNewCarStock(
   dealerId: string,
   inventoryId: string,
