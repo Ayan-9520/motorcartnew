@@ -1,1 +1,11 @@
-
+node_modules
+.expo
+dist
+.git
+.env
+.env*.local
+*.md
+google-play-service-account.json
+_restore_dump
+npm-debug.log*
+.DS_Store

@@ -117,10 +117,17 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    const msg =
+    const raw =
       json && typeof json === "object" && "message" in json && (json as { message: unknown }).message != null
         ? String((json as { message: unknown }).message)
         : `Request failed (${res.status})`;
+    // Nginx HTML error pages must not leak into the login UI
+    const msg =
+      /<\s*html|405 Not Allowed|nginx\//i.test(raw)
+        ? res.status === 405
+          ? "API route blocked — rebuild mobile-app with /api proxy, or set EXPO_PUBLIC_API_URL."
+          : `Server error (${res.status}). Check API URL and Docker backend.`
+        : raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() || `Request failed (${res.status})`;
     const err: ApiError = { message: msg, status: res.status };
     throw err;
   }

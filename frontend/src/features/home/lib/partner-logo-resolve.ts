@@ -74,6 +74,17 @@ const CAR_LOGO_SLUG_ALIASES: Record<string, string> = {
   "ve-commercial": "eicher",
   bharatbenz: "bharatbenz",
   "bharat-benz": "bharatbenz",
+  byd: "byd",
+  mini: "mini",
+  maserati: "maserati",
+  bentley: "bentley",
+  "aston-martin": "aston-martin",
+  astonmartin: "aston-martin",
+  ferrari: "ferrari",
+  lamborghini: "lamborghini",
+  lotus: "lotus",
+  vinfast: "vinfast",
+  "vin-fast": "vinfast",
 };
 
 const BIKE_BRAND_HINTS = [
@@ -110,7 +121,7 @@ export function normalizePartnerSlug(raw: string): string {
 export function resolvePartnerCarLogoPath(slugOrName: string): string {
   const slug = normalizePartnerSlug(slugOrName);
   const file = CAR_LOGO_SLUG_ALIASES[slug] ?? slug;
-  return `/partners/cars/${file}.svg?v20260825auto`;
+  return `/partners/cars/${file}.svg?v20260908brands`;
 }
 
 export function partnerBrandBuyHref(name: string, slug?: string): string {

@@ -6,7 +6,7 @@
 
 | App | Location | Stack | Status |
 |-----|----------|-------|--------|
-| Customer mobile | `apps/mobile-customer/` | Expo / React Native | 🏗️ In development |
+| Customer mobile | `apps/mobile-customer/` | Expo / React Native | ✅ Production path (EAS) · demo logins off |
 | Web (responsive) | `frontend/` | React SPA | ✅ Primary — mobile-first Tailwind |
 
 **Strategy:** Web SPA is the main customer surface; native app extends key workflows (login, vehicles, workspace, profile).
@@ -28,7 +28,9 @@ apps/mobile-customer/
 │   ├── theme.ts
 │   └── ui/MotorcartLogo.tsx
 ├── Dockerfile              # Optional web/nginx build
-├── app.json                # Expo config
+├── app.json                # Expo config (package `in.motorcart.app`)
+├── eas.json                # EAS Build / Play submit profiles
+├── README.md               # Local + Play Store steps
 └── package.json
 ```
 
@@ -49,6 +51,28 @@ apps/mobile-customer/
 ### Env
 
 Copy `apps/mobile-customer/.env.example` — set API URL to backend (local or prod).
+
+Production / store builds inject `https://motorcart.in` via `eas.json`.
+
+### Android identity (Play Store)
+
+| Field | Value |
+|-------|--------|
+| Application ID | `in.motorcart.app` |
+| Version name | `app.json` → `expo.version` |
+| Version code | `android.versionCode` (EAS production auto-increments) |
+| Build artifact | **AAB** (`eas.json` production profile) |
+
+### Play Store release (summary)
+
+1. Play Console: create app with package `in.motorcart.app`
+2. `npx eas login` → `npx eas init` (writes EAS `projectId`)
+3. `npx eas build -p android --profile production` → download AAB
+4. Service account JSON → `google-play-service-account.json` (gitignored)
+5. `npx eas submit -p android --profile production --latest` (internal track first)
+6. Promote Internal → Production after QA
+
+Full steps: `apps/mobile-customer/README.md`
 
 ---
 
@@ -81,7 +105,7 @@ Most users on mobile use the responsive SPA:
 
 `apps/mobile-customer/Dockerfile` + `nginx.conf` — optional static preview.
 
-Primary deploy target remains Expo build (EAS) or app stores — document when ready.
+Primary deploy: **EAS Build** → Google Play (see README). Docker Dockerfile is optional web preview only.
 
 ---
 
@@ -93,7 +117,7 @@ Primary deploy target remains Expo build (EAS) or app stores — document when r
 | M2 | Push notifications via backend |
 | M3 | Lead enquiry from app |
 | M4 | Dealer workspace read-only |
-| M5 | App store release + deep links |
+| M5 | App store release + deep links — **EAS + Play path configured**; first upload pending Expo account + Play Console |
 
 ---
 

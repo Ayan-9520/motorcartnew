@@ -1,0 +1,48 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://motorcart.in",
+        "EXPO_PUBLIC_WEB_URL": "https://motorcart.in",
+        "EXPO_PUBLIC_SHOW_DEMO": "0",
+        "EXPO_PUBLIC_SHOW_DEMO_LOGINS": "false"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://motorcart.in",
+        "EXPO_PUBLIC_WEB_URL": "https://motorcart.in",
+        "EXPO_PUBLIC_SHOW_DEMO": "0",
+        "EXPO_PUBLIC_SHOW_DEMO_LOGINS": "false"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}

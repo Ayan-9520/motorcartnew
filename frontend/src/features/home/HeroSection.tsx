@@ -15,7 +15,7 @@ import { useHomePage } from "@/features/home/context/HomePageContext";
 import { HUB_HERO_IMAGES } from "@/lib/media/india-media-catalog";
 
 /** Local muted cinematic car loop for homepage hero. */
-const HERO_CAR_VIDEO_SRC = "/brand/hero-car-loop.mp4?v=20260908e";
+const HERO_CAR_VIDEO_SRC = "/brand/hero-car-loop.mp4?v=20260910a";
 const HERO_HOME_POSTER = "/brand/hero-automotive-premium-v2.webp?v=20260908e";
 
 const HOME_TAGLINE = "Buy · sell · finance · auction — one automotive operating system.";

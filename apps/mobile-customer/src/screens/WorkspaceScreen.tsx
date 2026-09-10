@@ -80,7 +80,7 @@ function roleDefaultTab(family: string): TabKey {
 
 function workspaceHint(family: string): string {
   if (family === "dealer") return "Your showroom leads only — Call / WhatsApp / status. Submitted → Dealer CRM + Admin leads.";
-  if (family === "customer") return "My enquiries only. Submitted → Dealer CRM + Admin Marketplace leads.";
+  if (family === "customer") return "Open a vehicle → Enquire. Dealer CRM receives your lead (list API is dealer/admin only).";
   if (family === "admin") return "Approvals + marketplace lead inbox. Same table as website Super Admin → Marketplace leads.";
   if (family === "finance") return "Finance applications queue only — not marketplace vehicle leads.";
   if (family === "broker") return "Broker pipeline — Call / WhatsApp / status.";
@@ -157,9 +157,16 @@ export function WorkspaceScreen() {
         );
         setLeads([]);
       } else if (tab === "leads" || tab === "pipeline") {
-        const data = await fetchLeads();
-        setLeads(data);
-        setRows(data);
+        if (family === "customer") {
+          // GET /api/leads is dealer/admin only — customers create leads via POST from vehicle detail
+          setLeads([]);
+          setRows([]);
+          setError(null);
+        } else {
+          const data = await fetchLeads();
+          setLeads(data);
+          setRows(data);
+        }
       } else if (tab === "approvals") {
         const [d, b] = await Promise.all([fetchPendingDealers(), fetchPendingBusiness()]);
         setRows([
@@ -177,7 +184,7 @@ export function WorkspaceScreen() {
     } finally {
       setLoading(false);
     }
-  }, [tab]);
+  }, [tab, family]);
 
   useEffect(() => {
     void load();
@@ -384,7 +391,9 @@ export function WorkspaceScreen() {
       ? "Loading…"
       : tab === "desk"
         ? "No alerts yet — open web desk for full jobs."
-        : "No records yet. Create a lead or wait for enquiries.";
+        : family === "customer" && (tab === "leads" || tab === "pipeline")
+          ? "Open Marketplace → pick a vehicle → Enquire. Your lead goes to dealer CRM."
+          : "No records yet. Create a lead or wait for enquiries.";
 
   const header = (
     <View style={styles.headerBlock}>

@@ -9,10 +9,10 @@ export type BuyBrandItem = {
 };
 
 /** Bump when replacing partner SVGs so browsers skip immutable cache. */
-const LOGO_V = "v20260825auto";
+const LOGO_V = "v20260908brands";
 const carLogo = (file: string) => `/partners/cars/${file}.svg?${LOGO_V}`;
 
-/** Full India OEM set with logos under /partners/cars */
+/** Full India + global OEM set with logos under /partners/cars */
 export const BUY_CAR_BRANDS: BuyBrandItem[] = [
   { id: "maruti", name: "Maruti Suzuki", brand: "Maruti", logo: carLogo("maruti") },
   { id: "hyundai", name: "Hyundai", brand: "Hyundai", logo: carLogo("hyundai") },
@@ -30,6 +30,8 @@ export const BUY_CAR_BRANDS: BuyBrandItem[] = [
   { id: "jeep", name: "Jeep", brand: "Jeep", logo: carLogo("jeep") },
   { id: "ford", name: "Ford", brand: "Ford", logo: carLogo("ford") },
   { id: "isuzu", name: "Isuzu", brand: "Isuzu", logo: carLogo("isuzu") },
+  { id: "byd", name: "BYD", brand: "BYD", logo: carLogo("byd") },
+  { id: "mini", name: "MINI", brand: "MINI", logo: carLogo("mini") },
   { id: "bmw", name: "BMW", brand: "BMW", logo: carLogo("bmw") },
   { id: "mercedes", name: "Mercedes", brand: "Mercedes-Benz", logo: carLogo("mercedes") },
   { id: "audi", name: "Audi", brand: "Audi", logo: carLogo("audi") },
@@ -38,6 +40,13 @@ export const BUY_CAR_BRANDS: BuyBrandItem[] = [
   { id: "landrover", name: "Land Rover", brand: "Land Rover", logo: carLogo("landrover") },
   { id: "lexus", name: "Lexus", brand: "Lexus", logo: carLogo("lexus") },
   { id: "porsche", name: "Porsche", brand: "Porsche", logo: carLogo("porsche") },
+  { id: "maserati", name: "Maserati", brand: "Maserati", logo: carLogo("maserati") },
+  { id: "bentley", name: "Bentley", brand: "Bentley", logo: carLogo("bentley") },
+  { id: "aston-martin", name: "Aston Martin", brand: "Aston Martin", logo: carLogo("aston-martin") },
+  { id: "ferrari", name: "Ferrari", brand: "Ferrari", logo: carLogo("ferrari") },
+  { id: "lamborghini", name: "Lamborghini", brand: "Lamborghini", logo: carLogo("lamborghini") },
+  { id: "lotus", name: "Lotus", brand: "Lotus", logo: carLogo("lotus") },
+  { id: "vinfast", name: "VinFast", brand: "VinFast", logo: carLogo("vinfast") },
 ];
 
 export const BUY_BIKE_BRANDS: BuyBrandItem[] = [
@@ -77,6 +86,8 @@ export const BUY_EV_BRANDS: BuyBrandItem[] = [
   { id: "mg-ev", name: "MG", brand: "MG", logo: carLogo("mg") },
   { id: "mahindra-ev", name: "Mahindra", brand: "Mahindra", logo: carLogo("mahindra") },
   { id: "kia-ev", name: "Kia", brand: "Kia", logo: carLogo("kia") },
+  { id: "byd-ev", name: "BYD", brand: "BYD", logo: carLogo("byd") },
+  { id: "vinfast-ev", name: "VinFast", brand: "VinFast", logo: carLogo("vinfast") },
   { id: "bmw-ev", name: "BMW", brand: "BMW", logo: carLogo("bmw") },
   { id: "mercedes-ev", name: "Mercedes", brand: "Mercedes-Benz", logo: carLogo("mercedes") },
   { id: "ola-ev", name: "Ola", brand: "Ola", logo: carLogo("ola") },

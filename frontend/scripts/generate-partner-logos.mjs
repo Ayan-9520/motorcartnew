@@ -79,6 +79,15 @@ const CARS = [
   { file: "lexus.svg", slug: null, custom: () => wordmark("Lexus", "#1A1A1A", 12) },
   { file: "isuzu.svg", slug: null, custom: () => wordmark("Isuzu", "#E2231A", 12) },
   { file: "volvo.svg", slug: "volvo" },
+  { file: "byd.svg", slug: null, custom: () => wordmark("BYD", "#FF3737", 14) },
+  { file: "mini.svg", slug: null, custom: () => wordmark("MINI", "#000000", 13) },
+  { file: "maserati.svg", slug: null, custom: () => wordmark("Maserati", "#0C2340", 10) },
+  { file: "bentley.svg", slug: null, custom: () => wordmark("Bentley", "#1A1A1A", 11) },
+  { file: "aston-martin.svg", slug: null, custom: () => wordmark("Aston Martin", "#006F62", 7.5) },
+  { file: "ferrari.svg", slug: null, custom: () => wordmark("Ferrari", "#F40000", 11) },
+  { file: "lamborghini.svg", slug: null, custom: () => wordmark("Lamborghini", "#DDB321", 8) },
+  { file: "lotus.svg", slug: null, custom: () => wordmark("Lotus", "#FFD800", 12) },
+  { file: "vinfast.svg", slug: null, custom: () => wordmark("VinFast", "#1464F4", 11) },
 ];
 
 function writeIcons(list, dir) {

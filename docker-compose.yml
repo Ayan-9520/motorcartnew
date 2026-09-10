@@ -148,7 +148,7 @@ services:
       args:
         EXPO_PUBLIC_API_URL: ${MOBILE_EXPO_PUBLIC_API_URL:-}
         EXPO_PUBLIC_WEB_URL: ${VITE_SITE_URL:-http://localhost:3000}
-        EXPO_PUBLIC_SHOW_DEMO: ${MOBILE_SHOW_DEMO:-1}
+        EXPO_PUBLIC_SHOW_DEMO: ${MOBILE_SHOW_DEMO:-0}
     image: motorcart-mobile-app:local
     restart: unless-stopped
     networks: [motorcart_net]
