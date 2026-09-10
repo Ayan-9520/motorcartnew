@@ -7,7 +7,7 @@ import { filtersFromSearchParams } from "@/lib/vehicle-utils";
 import type { VehicleFilters, VehicleListing, VehicleSortOption } from "@/types/vehicle";
 import { parseCategoryParam } from "@/lib/vehicle-utils";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 24;
 
 export function useVehicleSearch(categoryParam?: string) {
   const [searchParams, setSearchParams] = useSearchParams();

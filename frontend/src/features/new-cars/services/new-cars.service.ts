@@ -204,7 +204,8 @@ export async function searchNewCars(params: {
               : filters.city && /^\d{6}$/.test(filters.city)
                 ? filters.city
                 : undefined,
-          limit: 60,
+          // Match dealer showroom scale (was capped at 60 — Buy hub looked empty vs inventory)
+          limit: Math.min(2000, Math.max(pageSize * 50, 500)),
         },
       });
       stock = unwrapStockRows(data).map(stockRowToListing) as VehicleListing[];

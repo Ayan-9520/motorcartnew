@@ -462,15 +462,15 @@ export async function searchServiceCentersPublic(q: string): Promise<UnifiedSear
 export async function searchNewCarStock(q: string): Promise<UnifiedSearchResult[]> {
   const rows = await prisma.newCarInventory.findMany({
     where: {
-      stock: { gt: 0 },
-      stockStatus: "available",
+      stockStatus: { in: ["available", "transit", "upcoming"] },
+      NOT: { metadata: { path: ["archived"], equals: true } },
       OR: [
         { brand: { contains: q, mode: "insensitive" } },
         { model: { contains: q, mode: "insensitive" } },
         { variant: { contains: q, mode: "insensitive" } },
       ],
     },
-    take: PER_PROVIDER,
+    take: Math.max(PER_PROVIDER, 40),
     select: { id: true, brand: true, model: true, variant: true, year: true },
   });
   return rows.map((r) => {

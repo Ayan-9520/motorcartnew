@@ -212,15 +212,29 @@ export function filterVehicles(
   }
   if (filters.fuel) result = result.filter((v) => v.fuelType.toLowerCase() === filters.fuel!.toLowerCase());
   if (filters.transmission) result = result.filter((v) => v.transmission.toLowerCase() === filters.transmission!.toLowerCase());
-  if (filters.priceMin != null) result = result.filter((v) => getDiscountedPrice(v) >= filters.priceMin!);
-  if (filters.priceMax != null) result = result.filter((v) => getDiscountedPrice(v) <= filters.priceMax!);
+  if (filters.priceMin != null) {
+    result = result.filter(
+      (v) => Boolean(v.metadata?.priceOnRequest) || getDiscountedPrice(v) >= filters.priceMin!,
+    );
+  }
+  if (filters.priceMax != null) {
+    result = result.filter(
+      (v) => Boolean(v.metadata?.priceOnRequest) || getDiscountedPrice(v) <= filters.priceMax!,
+    );
+  }
   if (filters.yearMin != null) result = result.filter((v) => v.year >= filters.yearMin!);
   if (filters.yearMax != null) result = result.filter((v) => v.year <= filters.yearMax!);
   if (filters.kmsMax != null) result = result.filter((v) => v.kmsDriven <= filters.kmsMax!);
   if (filters.owners != null) result = result.filter((v) => v.owners <= filters.owners!);
-  if (filters.city) result = result.filter((v) => v.city.toLowerCase() === filters.city!.toLowerCase());
+  if (filters.city) {
+    const city = filters.city.toLowerCase();
+    // Don't drop dealer stock with blank city — only filter when the listing has a city set
+    result = result.filter((v) => !v.city || v.city.toLowerCase() === city);
+  }
   if (filters.color) result = result.filter((v) => (v.color ?? "").toLowerCase() === filters.color!.toLowerCase());
-  if (filters.bodyType) result = result.filter((v) => v.bodyType.toLowerCase() === filters.bodyType!.toLowerCase());
+  if (filters.bodyType) {
+    result = result.filter((v) => !v.bodyType || v.bodyType.toLowerCase() === filters.bodyType!.toLowerCase());
+  }
   if (filters.saleMode) {
     result = result.filter((v) => (v.saleMode ?? "dealer_offer") === filters.saleMode);
   }

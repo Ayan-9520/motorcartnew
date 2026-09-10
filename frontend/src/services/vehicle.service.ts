@@ -182,7 +182,7 @@ export async function fetchVehicleBySlug(slug: string): Promise<VehicleListing |
       // Legacy short slug ncd-XXXXXXXX — resolve via stock list
       if (/^ncd-[0-9a-f-]{8}$/i.test(slug)) {
         const { data } = await api.get<{ data?: Record<string, unknown>[] }>("/api/new-car/stock", {
-          params: { limit: 60 },
+          params: { limit: 2000 },
         });
         const prefix = slug.slice(4).toLowerCase();
         const match = (data?.data ?? []).find((r) => String(r.id ?? "").toLowerCase().startsWith(prefix));

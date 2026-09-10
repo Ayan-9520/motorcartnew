@@ -10,7 +10,8 @@ export async function GET(req: NextRequest) {
     model: sp.get("model") ?? undefined,
     pincode: sp.get("pincode") ?? undefined,
     q: sp.get("q") ?? undefined,
-    limit: sp.get("limit") ? Number(sp.get("limit")) : 24,
+    limit: sp.get("limit") ? Number(sp.get("limit")) : 2000,
+    page: sp.get("page") ? Number(sp.get("page")) : 1,
   });
   return ok({ data });
 }

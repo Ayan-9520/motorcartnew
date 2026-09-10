@@ -1084,8 +1084,11 @@ export async function listPublicNewCarStock(opts: {
   pincode?: string;
   q?: string;
   limit?: number;
+  page?: number;
 }) {
-  const limit = Math.min(60, Math.max(1, opts.limit ?? 24));
+  // Dealers often have 500–2000+ rows — never silently cap at 60 for the Buy hub
+  const limit = Math.min(2000, Math.max(1, opts.limit ?? 48));
+  const page = Math.max(1, opts.page ?? 1);
   let dealerIds: string[] | undefined;
   if (opts.pincode && /^\d{6}$/.test(opts.pincode)) {
     const [pinDealers, orgs] = await Promise.all([
@@ -1108,24 +1111,37 @@ export async function listPublicNewCarStock(opts: {
     if (!dealerIds.length) return [];
   }
 
-  const rows = await prisma.newCarInventory.findMany({
-    where: {
-      stock: { gt: 0 },
-      stockStatus: "available",
-      ...(dealerIds ? { dealerId: { in: dealerIds } } : {}),
-      ...(opts.brand ? { brand: { contains: opts.brand, mode: "insensitive" } } : {}),
-      ...(opts.model ? { model: { contains: opts.model, mode: "insensitive" } } : {}),
-      ...(opts.q
-        ? {
+  const qRaw = (opts.q ?? "").trim();
+  const tokens = qRaw
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1);
+
+  const where: Prisma.NewCarInventoryWhereInput = {
+    // Live showroom rows — hide sold / booked / archived (stock qty 0 still OK if marked available)
+    stockStatus: { in: ["available", "transit", "upcoming"] },
+    NOT: { metadata: { path: ["archived"], equals: true } },
+    ...(dealerIds ? { dealerId: { in: dealerIds } } : {}),
+    ...(opts.brand ? { brand: { contains: opts.brand, mode: "insensitive" } } : {}),
+    ...(opts.model ? { model: { contains: opts.model, mode: "insensitive" } } : {}),
+    ...(tokens.length
+      ? {
+          AND: tokens.map((token) => ({
             OR: [
-              { brand: { contains: opts.q, mode: "insensitive" } },
-              { model: { contains: opts.q, mode: "insensitive" } },
-              { variant: { contains: opts.q, mode: "insensitive" } },
+              { brand: { contains: token, mode: "insensitive" as const } },
+              { model: { contains: token, mode: "insensitive" as const } },
+              { variant: { contains: token, mode: "insensitive" as const } },
             ],
-          }
-        : {}),
-    },
-    orderBy: { updatedAt: "desc" },
+          })),
+        }
+      : {}),
+  };
+
+  const rows = await prisma.newCarInventory.findMany({
+    where,
+    orderBy: [{ updatedAt: "desc" }, { brand: "asc" }, { model: "asc" }],
+    skip: (page - 1) * limit,
     take: limit,
   });
 
