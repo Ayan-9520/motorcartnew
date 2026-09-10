@@ -57,6 +57,8 @@ export type NcdInventoryItem = {
   exShowroomPrice: number;
   onRoadPrice: number;
   discountAmount: number;
+  /** Units on hand (showroom qty). */
+  stock?: number;
   stockStatus: NcdStockStatus;
   stockHealth: NcdStockHealth;
   colors: string[];

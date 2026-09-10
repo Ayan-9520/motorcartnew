@@ -50,6 +50,7 @@ function mapVehicleToNcdItem(v: DbVehicle, fallbackImage: string): NcdInventoryI
     exShowroomPrice: ex,
     onRoadPrice: onRoad,
     discountAmount: Math.max(0, ex - onRoad),
+    stock: 1,
     stockStatus: v.status === "available" ? "available" : "booked",
     stockHealth: "fast_moving",
     colors: v.color ? [v.color] : ["White"],
@@ -98,6 +99,7 @@ function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): Ncd
     exShowroomPrice: ex,
     onRoadPrice: onRoad > 0 ? onRoad : 0,
     discountAmount: Number(r.discount_amount ?? meta.discountAmount ?? 0),
+    stock: Number(r.stock ?? meta.stock ?? 1) || 1,
     stockStatus: (r.stock_status ?? meta.stockStatus ?? "available") as NcdInventoryItem["stockStatus"],
     stockHealth: (r.stock_health ?? meta.stockHealth ?? "fast_moving") as NcdInventoryItem["stockHealth"],
     colors: colors.length ? colors : [],
@@ -510,6 +512,7 @@ export async function updateNewCarInventory(
     transmission?: string;
     exShowroomPrice?: number;
     onRoadPrice?: number;
+    stock?: number;
     stockStatus?: NcdInventoryItem["stockStatus"];
     imageUrl?: string;
     images?: string[];
@@ -529,6 +532,7 @@ export async function updateNewCarInventory(
     transmission: patch.transmission,
     ex_showroom_price: patch.exShowroomPrice,
     on_road_price: patch.onRoadPrice,
+    ...(patch.stock != null ? { stock: Math.max(1, patch.stock) } : {}),
     stock_status: patch.stockStatus,
     image_url: photos?.[0] ?? patch.imageUrl,
     ...(photos ? { images: photos } : {}),
