@@ -277,6 +277,22 @@ export async function listDealerInventory(
   const dealer = await requireDealerContext(actor, opts.dealerId);
   await assertInventoryPermission(actor, dealer.id, "inventory.read");
 
+  // Recover photo-edit bug: qty 0 + save forced out_of_stock and hid cars from Buy
+  await prisma.newCarInventory.updateMany({
+    where: { dealerId: dealer.id, stockStatus: "out_of_stock", stock: { gt: 0 } },
+    data: { stockStatus: "available" },
+  });
+  await prisma.newCarInventory.updateMany({
+    where: {
+      dealerId: dealer.id,
+      stockStatus: "out_of_stock",
+      stock: 0,
+      imageUrl: { not: null },
+      NOT: { imageUrl: "" },
+    },
+    data: { stockStatus: "available", stock: 1 },
+  });
+
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(2000, Math.max(1, opts.pageSize ?? 50));
   const qRaw = (opts.q ?? "").trim();
@@ -504,9 +520,19 @@ export async function updateDealerInventoryItem(actor: SalesActor, id: string, r
       price: input.dealerPrice ?? input.exShowroomPrice,
       discountAmount: input.discountAmount ?? 0,
       stock: input.stock,
-      stockStatus: input.stockStatus,
+      // Never leave photo-updated cars stuck as out_of_stock from legacy qty=0 bug
+      stockStatus:
+        input.stockStatus === "out_of_stock" && input.stock > 0
+          ? "available"
+          : input.stockStatus === "out_of_stock" &&
+              (Boolean(input.imageUrl) ||
+                (Array.isArray(nextMeta.images) && (nextMeta.images as unknown[]).length > 0))
+            ? "available"
+            : input.stockStatus,
       colors: input.colors ?? [],
-      imageUrl: input.imageUrl,
+      imageUrl: input.imageUrl ?? (Array.isArray(clean.images) && clean.images[0] != null
+        ? String(clean.images[0]).trim().slice(0, 2048)
+        : existing.imageUrl),
       expectedDeliveryDays: input.expectedDeliveryDays ?? undefined,
       catalogVariantId,
       lastStockUpdateAt: new Date(),
@@ -1119,9 +1145,18 @@ export async function listPublicNewCarStock(opts: {
     .filter((t) => t.length > 1);
 
   const where: Prisma.NewCarInventoryWhereInput = {
-    // Live showroom rows — hide sold / booked / archived (stock qty 0 still OK if marked available)
-    stockStatus: { in: ["available", "transit", "upcoming"] },
-    NOT: { metadata: { path: ["archived"], equals: true } },
+    // Live showroom — hide only sold/booked/archived (recover rows wrongly flipped to out_of_stock on photo save)
+    NOT: {
+      OR: [
+        { metadata: { path: ["archived"], equals: true } },
+        { stockStatus: { in: ["delivered", "booked", "sold"] } },
+      ],
+    },
+    OR: [
+      { stockStatus: { in: ["available", "transit", "upcoming"] } },
+      // Photo-edit bug recovery: stock 0 forced out_of_stock — still sellable showroom rows
+      { stockStatus: "out_of_stock", OR: [{ imageUrl: { not: null } }, { stock: { gt: 0 } }] },
+    ],
     ...(dealerIds ? { dealerId: { in: dealerIds } } : {}),
     ...(opts.brand ? { brand: { contains: opts.brand, mode: "insensitive" } } : {}),
     ...(opts.model ? { model: { contains: opts.model, mode: "insensitive" } } : {}),

@@ -63,6 +63,19 @@ describe("dealer-final unit", () => {
     assert.ok(ok.warnings.some((w) => /variant/i.test(w)));
   });
 
+  it("keeps stock=0 + available visible (does not force out_of_stock)", () => {
+    const row = validateInventoryInput({
+      brand: "Aston Martin",
+      model: "DB12",
+      stock: 0,
+      stock_status: "available",
+      image_url: "https://cdn.example.com/db12.jpg",
+    });
+    assert.equal(row.stock, 1);
+    assert.equal(row.stockStatus, "available");
+    assert.ok(row.warnings.some((w) => /stock qty was 0/i.test(w)));
+  });
+
   it("parses deterministic Lakh price and refuses ranges", () => {
     const single = parseDealerPriceText("Rs. 13.69 Lakh");
     assert.equal(single.amount, 1_369_000);

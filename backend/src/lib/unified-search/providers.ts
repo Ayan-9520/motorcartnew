@@ -462,16 +462,29 @@ export async function searchServiceCentersPublic(q: string): Promise<UnifiedSear
 export async function searchNewCarStock(q: string): Promise<UnifiedSearchResult[]> {
   const rows = await prisma.newCarInventory.findMany({
     where: {
-      stockStatus: { in: ["available", "transit", "upcoming"] },
-      NOT: { metadata: { path: ["archived"], equals: true } },
+      NOT: {
+        OR: [
+          { metadata: { path: ["archived"], equals: true } },
+          { stockStatus: { in: ["delivered", "booked", "sold"] } },
+        ],
+      },
       OR: [
-        { brand: { contains: q, mode: "insensitive" } },
-        { model: { contains: q, mode: "insensitive" } },
-        { variant: { contains: q, mode: "insensitive" } },
+        { stockStatus: { in: ["available", "transit", "upcoming"] } },
+        { stockStatus: "out_of_stock", OR: [{ imageUrl: { not: null } }, { stock: { gt: 0 } }] },
+      ],
+      AND: [
+        {
+          OR: [
+            { brand: { contains: q, mode: "insensitive" } },
+            { model: { contains: q, mode: "insensitive" } },
+            { variant: { contains: q, mode: "insensitive" } },
+          ],
+        },
       ],
     },
-    take: Math.max(PER_PROVIDER, 40),
-    select: { id: true, brand: true, model: true, variant: true, year: true },
+    take: 80,
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, brand: true, model: true, variant: true, year: true, imageUrl: true },
   });
   return rows.map((r) => {
     const slug = `ncd-${r.id}`;
@@ -480,11 +493,10 @@ export async function searchNewCarStock(q: string): Promise<UnifiedSearchResult[
       result_type: "new_car_stock" as const,
       title: title || `${r.brand} ${r.model}`,
       description: r.variant ? `${r.variant} · dealer stock` : "Dealer stock · new car",
-      // Detail page resolves ncd-{uuid} via /new-cars/:slug and buy hub
       url: `/buy/cars/new/${encodeURIComponent(slug)}`,
       source: "dealer_stock",
-      score: scoreMatch(q, [r.brand, r.model, r.variant]),
-      metadata: { id: r.id, slug },
+      score: scoreMatch(q, [r.brand, r.model, r.variant]) + 8,
+      metadata: { id: r.id, slug, image: r.imageUrl ?? undefined },
     };
   });
 }

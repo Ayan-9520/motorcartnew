@@ -80,7 +80,9 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       transmission,
       exShowroomPrice: ex,
       ...(ex > 0 ? { onRoadPrice: Math.round(ex * 1.12) } : {}),
-      stockStatus,
+      // Keep qty ≥ 1 so photo saves never flip the row to out_of_stock / hide from Buy
+      stock: Math.max(1, Number(item.stock) || 1),
+      stockStatus: stockStatus === "out_of_stock" ? "available" : stockStatus,
       images: photos,
       ...(photos[0] ? { imageUrl: photos[0] } : {}),
       colors,

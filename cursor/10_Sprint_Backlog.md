@@ -104,6 +104,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | Date | Item |
 |------|------|
+| 2026-09-10 | New-car Buy visibility — photo save no longer flips stock to out_of_stock; public stock recovers imaged rows |
 | 2026-07 | Premium hub pages — Services, Insurance, Parts, Community |
 | 2026-07 | Navbar 2-layer, mobile drawer, scroll-to-top |
 | 2026-07 | Community mobile nav fix, footer/FAB hide |

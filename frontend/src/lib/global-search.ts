@@ -143,18 +143,26 @@ export async function runGlobalSearchAsync(query: string, limit = 10): Promise<G
 
   const data = await fetchFederatedSearch({ q, limit });
   const rows = (data?.results ?? []).map((item) => {
-    const meta = (item as { metadata?: { id?: string; slug?: string; category?: string } }).metadata;
+    const meta = (item as { metadata?: { id?: string; slug?: string; category?: string; image?: string } }).metadata;
     return {
       id: `${item.result_type}-${item.url}-${meta?.id ?? ""}`,
       type: mapFederatedType(item.result_type),
       title: item.title,
       subtitle: item.description,
       href: normalizeSearchHref(item.url, meta),
+      image: meta?.image,
       badge: item.result_type.replace(/_/g, " "),
     };
   });
 
-  if (rows.length > 0) return rows.slice(0, limit);
+  // Prefer dealer new-car stock when browsing Buy → New
+  const sorted = [...rows].sort((a, b) => {
+    const aStock = a.badge === "new car stock" ? 1 : 0;
+    const bStock = b.badge === "new car stock" ? 1 : 0;
+    return bStock - aStock;
+  });
+
+  if (sorted.length > 0) return sorted.slice(0, limit);
 
   // Fallback: public new-car stock + vehicle pool
   try {
@@ -172,12 +180,14 @@ export async function runGlobalSearchAsync(query: string, limit = 10): Promise<G
         const variant = r.variant != null ? String(r.variant) : "";
         const year = r.year != null ? String(r.year) : "";
         const slug = `ncd-${id}`;
+        const image = typeof r.image_url === "string" ? r.image_url : typeof r.imageUrl === "string" ? r.imageUrl : undefined;
         return {
           id: `stock-${id}`,
           type: "vehicle" as const,
           title: [year, brand, model, variant].filter(Boolean).join(" ").trim() || `${brand} ${model}`,
           subtitle: "New car · dealer stock",
           href: `/buy/cars/new/${encodeURIComponent(slug)}`,
+          image: image || undefined,
           badge: "new car",
         };
       });

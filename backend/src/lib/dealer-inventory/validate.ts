@@ -255,8 +255,8 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
     }
   }
 
-  const statusRaw = blankToEmpty(raw.stock_status ?? raw.stockStatus);
-  const stockStatus = parseStockStatus(statusRaw, stock === 0 ? "out_of_stock" : "available");
+  const statusRaw = blankToEmpty(raw.stock_status ?? raw.stockStatus ?? raw.status);
+  let stockStatus = parseStockStatus(statusRaw, "available");
   if (
     statusRaw &&
     !(STOCK_STATUSES as readonly string[]).includes(statusRaw.toLowerCase().replace(/\s+/g, "_")) &&
@@ -265,6 +265,17 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
     )
   ) {
     warnings.push(`Unknown stock status "${statusRaw}" — treated as ${stockStatus}.`);
+  }
+  // Showroom cars must stay Buy-visible when dealers upload photos with qty left at 0.
+  // Previously: stock 0 + available → forced out_of_stock → disappeared from /buy/cars/new.
+  if (stock === 0 && (stockStatus === "available" || !statusRaw)) {
+    warnings.push("Stock qty was 0 — set to 1 so the car stays visible on Buy.");
+    stock = 1;
+    stockStatus = "available";
+  }
+  if (stockStatus === "out_of_stock" && stock > 0) {
+    stockStatus = "available";
+    warnings.push("Status was out_of_stock with qty > 0 — set to available.");
   }
 
   const colour = trim(raw.colour ?? raw.color, 60) || undefined;
@@ -295,7 +306,7 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
     colour,
     colors,
     stock,
-    stockStatus: stock === 0 && stockStatus === "available" ? "out_of_stock" : stockStatus,
+    stockStatus,
     exShowroomPrice,
     dealerPrice: safeDealer != null && safeDealer > 0 ? safeDealer : null,
     discountAmount,
@@ -305,7 +316,7 @@ export function validateInventoryInput(raw: Record<string, unknown>, _opts?: { r
     internalReference: trim(raw.internal_reference ?? raw.internalReference ?? raw.sku ?? raw.ref ?? raw.reference, 80) || null,
     expectedAvailability: trim(raw.expected_availability ?? raw.expectedAvailability, 80) || null,
     notes: trim(raw.notes ?? raw.description, 500) || null,
-    imageUrl: trim(raw.image_url ?? raw.imageUrl ?? raw.image ?? raw.main_image_url, 512) || null,
+    imageUrl: trim(raw.image_url ?? raw.imageUrl ?? raw.image ?? raw.main_image_url, 2048) || null,
     expectedDeliveryDays: deliveryNum != null && Number.isFinite(deliveryNum) ? deliveryNum : null,
     priceSourceText,
     priceOnRequest,

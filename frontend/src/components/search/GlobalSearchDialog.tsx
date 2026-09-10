@@ -52,7 +52,7 @@ export function GlobalSearchDialog() {
 
   const { data: asyncResults, isFetching } = useQuery({
     queryKey: ["global-search", query, realDataOnly],
-    queryFn: () => runGlobalSearchAsync(query, 10),
+    queryFn: () => runGlobalSearchAsync(query, preferNew ? 24 : 12),
     enabled: canLiveSearch,
     staleTime: 30_000,
   });
