@@ -72,6 +72,7 @@ import { DealerAcquisitionsPage } from "@/features/sales-os/pages/DealerAcquisit
 import { ValuationDeskPage } from "@/features/sales-os/pages/ValuationDeskPage";
 import { BuyCategoryListingPage } from "@/features/marketplace/pages/BuyCategoryListingPage";
 import { VehicleDetailPage } from "@/features/vehicles/pages/VehicleDetailPage";
+import { VehicleColorsDemoPage } from "@/features/vehicles/pages/VehicleColorsDemoPage";
 import { VehicleComparePage } from "@/features/vehicles/pages/VehicleComparePage";
 import { WishlistPage } from "@/features/vehicles/pages/WishlistPage";
 import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
@@ -284,6 +285,7 @@ export const router = createBrowserRouter([
       { path: "auto", element: <Navigate to="/buy/auto/used" replace /> },
       { path: "new-cars", element: <NewCarsHubPage /> },
       { path: "new-cars/browse", element: <Navigate to="/buy/cars/new" replace /> },
+      { path: "new-cars/colors-demo", element: <VehicleColorsDemoPage /> },
       { path: "new-cars/:slug", element: <VehicleDetailPage /> },
       { path: "used-cars", element: <PreownedCarsHubPage /> },
       { path: "used-cars/browse", element: <Navigate to="/buy/cars/used" replace /> },

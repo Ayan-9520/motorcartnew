@@ -5,9 +5,14 @@ import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { guessHexFromName } from "@/features/vehicles/lib/vehicle-paint";
 import { removeNewCarInventory } from "../services/new-car-dealer.service";
 import { NewCarEditInventoryDialog } from "./NewCarEditInventoryDialog";
 import type { NcdInventoryItem } from "../types";
+
+function colorDot(name: string) {
+  return guessHexFromName(name);
+}
 
 const STATUS_LABELS = {
   available: "Available",
@@ -52,7 +57,7 @@ export function NcdInventoryGrid({ items, onChanged }: Props) {
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {items.map((v) => (
           <article key={v.id} className="ncd-inventory-card">
             <div className="ncd-inventory-card__media">
@@ -61,57 +66,64 @@ export function NcdInventoryGrid({ items, onChanged }: Props) {
                 {v.stockHealth.replace("_", " ")}
               </Badge>
             </div>
-            <div className="p-4">
-              <h3 className="font-semibold">
+            <div className="p-3">
+              <h3 className="line-clamp-1 text-sm font-semibold">
                 {v.brand} {v.model}
               </h3>
-              <p className="text-xs text-muted-foreground">{v.variant}</p>
-              <div className="mt-2 flex flex-wrap gap-1">
+              <p className="line-clamp-1 text-[11px] text-muted-foreground">{v.variant}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1">
                 <Badge variant="outline" className="text-[10px]">
                   {STATUS_LABELS[v.stockStatus]}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">
                   {v.fuelType}
                 </Badge>
-                {v.vehicleId ? (
-                  <Badge variant="outline" className="text-[10px]">
-                    On website
-                  </Badge>
-                ) : null}
               </div>
-              <p className="mt-2 text-lg font-bold text-primary">
+              {v.colors?.length ? (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1" title={v.colors.join(", ")}>
+                  {v.colors.slice(0, 5).map((c) => (
+                    <span
+                      key={c}
+                      className="inline-block h-2.5 w-2.5 rounded-full border border-border/80"
+                      style={{ backgroundColor: colorDot(c) }}
+                      title={c}
+                    />
+                  ))}
+                  {v.colors.length > 5 ? (
+                    <span className="text-[10px] text-muted-foreground">+{v.colors.length - 5}</span>
+                  ) : null}
+                </div>
+              ) : null}
+              <p className="mt-1.5 text-base font-bold text-primary">
                 {v.exShowroomPrice > 0 || v.onRoadPrice > 0
                   ? formatCurrency(v.onRoadPrice > 0 ? v.onRoadPrice : v.exShowroomPrice)
                   : "Price on request"}
               </p>
               {v.exShowroomPrice > 0 ? (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground">
                   Ex-showroom {formatCurrency(v.exShowroomPrice)}
                   {v.discountAmount > 0 ? ` · Save ${formatCurrency(v.discountAmount)}` : ""}
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">No numeric price on file</p>
+                <p className="text-[10px] text-muted-foreground">No numeric price on file</p>
               )}
-              {v.expectedDeliveryDays != null ? (
-                <p className="mt-1 text-[10px] text-muted-foreground">Delivery ~{v.expectedDeliveryDays} days</p>
-              ) : null}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button type="button" size="sm" variant="outline" className="rounded-lg h-8" onClick={() => setEditItem(v)}>
-                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <Button type="button" size="sm" variant="outline" className="h-7 rounded-lg px-2 text-xs" onClick={() => setEditItem(v)}>
+                  <Pencil className="mr-1 h-3 w-3" /> Edit
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="rounded-lg h-8 text-destructive hover:text-destructive"
+                  className="h-7 rounded-lg px-2 text-xs text-destructive hover:text-destructive"
                   disabled={deletingId === v.id}
                   onClick={() => void onDelete(v)}
                 >
-                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+                  <Trash2 className="mr-1 h-3 w-3" /> Remove
                 </Button>
                 {v.vehicleId ? (
-                  <Button size="sm" variant="ghost" className="rounded-lg h-8" asChild>
-                    <Link to="/buy/cars/new">View public</Link>
+                  <Button size="sm" variant="ghost" className="h-7 rounded-lg px-2 text-xs" asChild>
+                    <Link to="/buy/cars/new">Public</Link>
                   </Button>
                 ) : null}
               </div>

@@ -60,6 +60,8 @@ export type NcdInventoryItem = {
   stockStatus: NcdStockStatus;
   stockHealth: NcdStockHealth;
   colors: string[];
+  /** Uploaded photo URLs (real images preferred over stock placeholders). */
+  images?: string[];
   expectedDeliveryDays?: number;
   waitingPeriodDays?: number;
   brochureUrl?: string;

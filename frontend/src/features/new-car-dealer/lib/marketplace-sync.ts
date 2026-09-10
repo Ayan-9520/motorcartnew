@@ -11,6 +11,7 @@ export type NewCarStockInput = {
   exShowroomPrice: number;
   onRoadPrice?: number;
   color?: string;
+  colors?: string[];
   imageUrl?: string;
   images?: string[];
   year?: number;
@@ -74,6 +75,7 @@ export async function updateMarketplaceVehicle(
   if (input.exShowroomPrice != null) patch.originalPrice = input.exShowroomPrice;
   if (input.images?.length) patch.images = input.images;
   else if (input.imageUrl) patch.images = [input.imageUrl];
+  if (input.colors?.length) patch.color = input.colors[0];
   patch.condition = "new";
   patch.category = "new-cars";
   patch.kmsDriven = 0;

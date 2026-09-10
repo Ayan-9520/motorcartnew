@@ -31,6 +31,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
   const [fuelType, setFuelType] = useState("Petrol");
   const [transmission, setTransmission] = useState("Manual");
   const [price, setPrice] = useState("");
+  const [colorsText, setColorsText] = useState("");
   const [stockStatus, setStockStatus] = useState<NcdInventoryItem["stockStatus"]>("available");
   const [imageUrls, setImageUrls] = useState<string[]>([""]);
 
@@ -42,7 +43,9 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
     setTransmission(v.transmission);
     setPrice(v.exShowroomPrice > 0 ? String(v.exShowroomPrice) : "");
     setStockStatus(v.stockStatus);
-    setImageUrls(v.imageUrl?.trim() ? [v.imageUrl.trim()] : [""]);
+    setColorsText((v.colors ?? []).join(", "));
+    const photos = (v.images?.length ? v.images : v.imageUrl?.trim() ? [v.imageUrl.trim()] : []).filter(Boolean);
+    setImageUrls(photos.length ? photos : [""]);
   };
 
   const onOpen = (next: boolean) => {
@@ -64,6 +67,10 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       return;
     }
     const photos = imageUrls.map((u) => u.trim()).filter(Boolean);
+    const colors = colorsText
+      .split(/[,|;]+/)
+      .map((c) => c.trim())
+      .filter(Boolean);
     setLoading(true);
     const { error } = await updateNewCarInventory(item, {
       brand: brand.trim(),
@@ -76,6 +83,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       stockStatus,
       images: photos,
       ...(photos[0] ? { imageUrl: photos[0] } : {}),
+      colors,
     });
     setLoading(false);
     if (error) {
@@ -92,7 +100,9 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit stock</DialogTitle>
-          <DialogDescription>Updates showroom and public listing when synced.</DialogDescription>
+          <DialogDescription>
+            Upload real photos and colour names. For colour swap on the public page, add one photo per colour in the same order.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -122,6 +132,18 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
           <div>
             <Label htmlFor="edit-price">Ex-showroom (₹) — blank = Price on Request</Label>
             <Input id="edit-price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Leave blank for POR" />
+          </div>
+          <div>
+            <Label htmlFor="edit-colors">Colours (comma-separated)</Label>
+            <Input
+              id="edit-colors"
+              value={colorsText}
+              onChange={(e) => setColorsText(e.target.value)}
+              placeholder="Pristine White, Fearless Red, Daytona Grey"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Same order as photos below = real colour gallery on the listing page.
+            </p>
           </div>
           <VehicleImagePicker
             imageUrls={imageUrls}

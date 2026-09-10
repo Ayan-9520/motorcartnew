@@ -190,6 +190,20 @@ function buildMetadata(input: InventoryInput, existing?: Record<string, unknown>
   if (input.brochureUrl) base.brochure_url = input.brochureUrl;
   if (input.onRoadPriceText) base.on_road_price_text = input.onRoadPriceText;
 
+  if (Array.isArray(input.colors) && input.colors.length) {
+    const imgs = Array.isArray(base.images)
+      ? (base.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
+      : [];
+    base.color_options = input.colors.map((name, i) => {
+      const label = String(name ?? "").trim();
+      const photo = imgs[i] ?? imgs[0];
+      return {
+        name: label,
+        images: photo ? [photo] : [],
+      };
+    });
+  }
+
   const specifications: Record<string, string> = {
     ...((base.specifications && typeof base.specifications === "object" && !Array.isArray(base.specifications)
       ? (base.specifications as Record<string, string>)
@@ -254,7 +268,7 @@ export async function listDealerInventory(
   await assertInventoryPermission(actor, dealer.id, "inventory.read");
 
   const page = Math.max(1, opts.page ?? 1);
-  const pageSize = Math.min(100, Math.max(1, opts.pageSize ?? 50));
+  const pageSize = Math.min(500, Math.max(1, opts.pageSize ?? 50));
   const where: Prisma.NewCarInventoryWhereInput = {
     dealerId: dealer.id,
     ...(opts.brand ? { brand: { contains: opts.brand, mode: "insensitive" } } : {}),
@@ -1035,6 +1049,11 @@ export async function listPublicNewCarStock(opts: {
       stock: r.stock,
       stock_status: r.stockStatus,
       colors,
+      color_options: Array.isArray(meta.color_options)
+        ? meta.color_options
+        : Array.isArray(meta.colorOptions)
+          ? meta.colorOptions
+          : undefined,
       image_url: (() => {
         const imgs = Array.isArray(meta.images)
           ? (meta.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
@@ -1051,7 +1070,8 @@ export async function listPublicNewCarStock(opts: {
               t.startsWith("http://") ||
               t.startsWith("https://") ||
               t.includes("/uploads/") ||
-              t.startsWith("/media/")
+              t.startsWith("/media/") ||
+              t.startsWith("/demo/")
             )
           ) {
             return;

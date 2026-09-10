@@ -60,6 +60,18 @@ export interface VehicleMetadata {
   catalogVariantId?: string;
   source?: string;
   pincode?: string;
+  /**
+   * Paint gallery — each entry has name, hex swatch, and per-colour image URLs.
+   * Selecting a swatch swaps gallery images (OEM / CarLelo pattern).
+   */
+  colorOptions?: Array<{
+    name: string;
+    hex: string;
+    images: string[];
+    isDefault?: boolean;
+  }>;
+  /** Colour name list when full paint gallery is not yet uploaded */
+  colors?: string[];
   /** Pre-owned */
   inspectionScore?: number;
   fairPriceLabel?: FairPriceLabel;

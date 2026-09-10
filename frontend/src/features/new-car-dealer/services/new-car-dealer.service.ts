@@ -65,6 +65,26 @@ function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): Ncd
   const model = String(r.model ?? meta.model ?? "Model");
   const ex = Number(r.ex_showroom_price ?? r.price ?? meta.exShowroomPrice ?? 0);
   const onRoad = Number(r.on_road_price ?? r.price ?? ex);
+  const metaImages = Array.isArray(meta.images)
+    ? (meta.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
+    : [];
+  const apiImages = Array.isArray(r.images)
+    ? (r.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
+    : [];
+  const primary = typeof r.image_url === "string" ? r.image_url.trim() : "";
+  const uploaded = [...apiImages, ...metaImages, ...(primary ? [primary] : [])].filter(
+    (u, i, arr) => Boolean(u) && arr.indexOf(u) === i,
+  );
+  const imageUrl =
+    uploaded[0] ||
+    resolveVehicleHero(brand, model, String(r.body_type ?? meta.bodyType ?? "SUV"), [], 0, {
+      category: String(r.category ?? meta.category ?? "new-cars"),
+      fuelType: String(r.fuel_type ?? meta.fuelType ?? "Petrol"),
+    }) ||
+    fallbackImage;
+  const colors = Array.isArray(r.colors)
+    ? (r.colors as unknown[]).map((c) => String(c ?? "").trim()).filter(Boolean)
+    : [];
   return {
     id: String(r.id),
     ncdInventoryId: String(r.id),
@@ -80,16 +100,13 @@ function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): Ncd
     discountAmount: Number(r.discount_amount ?? meta.discountAmount ?? 0),
     stockStatus: (r.stock_status ?? meta.stockStatus ?? "available") as NcdInventoryItem["stockStatus"],
     stockHealth: (r.stock_health ?? meta.stockHealth ?? "fast_moving") as NcdInventoryItem["stockHealth"],
-    colors: Array.isArray(r.colors) ? (r.colors as string[]) : ["White"],
+    colors: colors.length ? colors : [],
+    images: uploaded,
     expectedDeliveryDays: (r.expected_delivery_days as number | undefined) ?? undefined,
     waitingPeriodDays: (r.waiting_period_days as number | undefined) ?? undefined,
     brochureUrl: (r.brochure_url as string | undefined) ?? undefined,
     offers: Array.isArray(r.offers) ? (r.offers as NcdInventoryItem["offers"]) : [],
-    imageUrl: resolveVehicleHero(brand, model, String(r.body_type ?? meta.bodyType ?? "SUV"), 
-      typeof r.image_url === "string" ? [String(r.image_url)] : [],
-      0,
-      { category: String(r.category ?? meta.category ?? "new-cars"), fuelType: String(r.fuel_type ?? meta.fuelType ?? "Petrol") }
-    ) || fallbackImage,
+    imageUrl,
   };
 }
 
@@ -256,7 +273,7 @@ export async function fetchNewCarDealerSnapshot(
       const { data } = await api.get<{
         data?: Record<string, unknown>[];
         kpis?: { totalRows?: number; available?: number; outOfStock?: number; lowStock?: number };
-      }>("/api/new-car/inventory", { params: { dealer_id: dealerId, pageSize: 100 } });
+      }>("/api/new-car/inventory", { params: { dealer_id: dealerId, pageSize: 500 } });
       const rows = Array.isArray(data.data) ? data.data : [];
       const inventory = rows.map((r) => mapInventoryRow(r, fallbackImg));
       const [{ data: marketplaceLeads }, { data: legacyLeads }] = await Promise.all([
@@ -275,10 +292,10 @@ export async function fetchNewCarDealerSnapshot(
 
   const [{ data: inv, error: invErr }, { data: marketplaceLeads }, { data: legacyLeads }, { data: marketplaceVehicles, error: vehErr }] =
     await Promise.all([
-      supabase.from("new_car_inventory").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
+      supabase.from("new_car_inventory").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(500),
       supabase.from("leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
       supabase.from("dealer_leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
-      supabase.from("vehicles").select("*").eq("dealer_id", dealerId).eq("category", "new-cars").neq("status", "sold").order("created_at", { ascending: false }).limit(100),
+      supabase.from("vehicles").select("*").eq("dealer_id", dealerId).eq("category", "new-cars").neq("status", "sold").order("created_at", { ascending: false }).limit(500),
     ]);
 
   const hasInv = !isMissingTable(invErr) && (inv?.length ?? 0) > 0;
@@ -463,12 +480,14 @@ export async function updateNewCarInventory(
     stockStatus?: NcdInventoryItem["stockStatus"];
     imageUrl?: string;
     images?: string[];
+    colors?: string[];
   }
 ) {
   const ncdId = item.ncdInventoryId ?? (item.inventorySource === "ncd" ? item.id : undefined);
   const photos = (patch.images ?? (patch.imageUrl ? [patch.imageUrl] : undefined))
     ?.map((u) => String(u ?? "").trim())
     .filter(Boolean);
+  const colors = patch.colors?.map((c) => c.trim()).filter(Boolean);
   const updates = {
     brand: patch.brand,
     model: patch.model,
@@ -480,6 +499,7 @@ export async function updateNewCarInventory(
     stock_status: patch.stockStatus,
     image_url: photos?.[0] ?? patch.imageUrl,
     ...(photos ? { images: photos } : {}),
+    ...(colors ? { colors } : {}),
   };
 
   if (ncdId) {
@@ -503,6 +523,7 @@ export async function updateNewCarInventory(
       imageUrl: photos?.[0] ?? patch.imageUrl,
       images: photos,
       stockStatus: patch.stockStatus,
+      colors,
     });
   }
 

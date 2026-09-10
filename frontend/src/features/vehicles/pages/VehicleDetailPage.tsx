@@ -29,6 +29,7 @@ import {
 } from "@/lib/vehicle-utils";
 import { buyListingPath, hubCategoryLabel } from "@/features/marketplace/lib/route-utils";
 import { resolveVehicleDetailGallery, resolveVehicleHero } from "@/lib/media/resolve-images";
+import { resolveListingPaintColors } from "../data/demo-punch-ev-colors";
 import toast from "react-hot-toast";
 
 export function VehicleDetailPage() {
@@ -94,6 +95,20 @@ export function VehicleDetailPage() {
     images: vehicle.images,
   });
 
+  const paintColors = resolveListingPaintColors({
+    brand: vehicle.brand,
+    model: vehicle.model,
+    colorOptions: vehicle.metadata.colorOptions,
+    colors: Array.isArray(vehicle.metadata.colors)
+      ? vehicle.metadata.colors
+      : vehicle.color
+        ? [vehicle.color]
+        : undefined,
+    fallbackToDemo:
+      (vehicle.brand ?? "").toLowerCase().includes("tata") &&
+      (vehicle.model ?? "").toLowerCase().includes("punch"),
+  });
+
   return (
     <div className="vm-detail-page min-h-screen bg-background">
       <div className="container mx-auto space-y-6 px-4 py-6 md:py-8">
@@ -115,7 +130,7 @@ export function VehicleDetailPage() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_minmax(17.5rem,20rem)] xl:grid-cols-[1fr_22rem]">
           <div className="space-y-6 min-w-0">
-            <VehicleGallery images={galleryImages} title={vehicle.title} />
+            <VehicleGallery images={galleryImages} title={vehicle.title} colors={paintColors} />
             {vehicle.metadata.viewer360 && (
               <Viewer360 images={vehicle.metadata.viewer360} title={vehicle.title} />
             )}

@@ -8477,6 +8477,12 @@
   @apply relative aspect-[16/10] bg-muted;
 }
 
+@media (min-width: 1024px) {
+  .ncd-inventory-card__media {
+    aspect-ratio: 16 / 11;
+  }
+}
+
 .ncd-ai-card {
   @apply rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4;
 }

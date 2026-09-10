@@ -15,9 +15,13 @@ function asNewCars(vehicles: typeof MOCK_VEHICLES): NewCarListing[] {
 
 function stockRowToListing(r: Record<string, unknown>): NewCarListing {
   const dealer = (r.dealer && typeof r.dealer === "object" ? r.dealer : {}) as Record<string, unknown>;
+  const metaRaw = (r.metadata && typeof r.metadata === "object" ? r.metadata : {}) as Record<string, unknown>;
   const priceOnRequest = Boolean(r.price_on_request) || !(Number(r.price ?? r.ex_showroom_price ?? 0) > 0);
   const price = priceOnRequest ? 0 : Number(r.price ?? r.ex_showroom_price ?? 0);
-  const color = Array.isArray(r.colors) && r.colors[0] ? String(r.colors[0]) : undefined;
+  const colorNames = Array.isArray(r.colors)
+    ? (r.colors as unknown[]).map((c) => String(c ?? "").trim()).filter(Boolean)
+    : [];
+  const color = colorNames[0];
   const city = String(dealer.city ?? "");
   const state = String(dealer.state ?? "");
   const dealerName = dealer.name ? String(dealer.name) : "Dealer";
@@ -30,16 +34,28 @@ function stockRowToListing(r: Record<string, unknown>): NewCarListing {
   const fromApi = Array.isArray(r.images)
     ? (r.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
     : [];
-  const images = [...fromApi, ...(imageRaw ? [imageRaw] : [])]
-    .filter(
-      (u, i, arr) =>
-        (u.startsWith("http://") ||
-          u.startsWith("https://") ||
-          u.includes("/uploads/") ||
-          u.startsWith("/media/")) &&
-        arr.indexOf(u) === i,
-    )
+  const fromMeta = Array.isArray(metaRaw.images)
+    ? (metaRaw.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
+    : [];
+  const isUsableImage = (u: string) =>
+    u.startsWith("http://") ||
+    u.startsWith("https://") ||
+    u.includes("/uploads/") ||
+    u.startsWith("/media/") ||
+    u.startsWith("/demo/");
+  const images = [...fromApi, ...fromMeta, ...(imageRaw ? [imageRaw] : [])]
+    .filter((u, i, arr) => isUsableImage(u) && arr.indexOf(u) === i)
     .slice(0, 8);
+  const colorOptionsRaw = r.color_options ?? r.colorOptions ?? metaRaw.color_options ?? metaRaw.colorOptions;
+  const colorOptions =
+    Array.isArray(colorOptionsRaw) && colorOptionsRaw.length
+      ? colorOptionsRaw
+      : colorNames.length
+        ? colorNames.map((name, i) => ({
+            name,
+            images: images[i] ? [images[i]] : images[0] ? [images[0]] : [],
+          }))
+        : undefined;
   const titleParts = [r.brand, r.model, variant].filter((p) => p != null && String(p).trim());
   const specs =
     r.specifications && typeof r.specifications === "object" && !Array.isArray(r.specifications)
@@ -102,6 +118,8 @@ function stockRowToListing(r: Record<string, unknown>): NewCarListing {
       waitingPeriod: r.waiting_period_days ? String(r.waiting_period_days) : undefined,
       brochureUrl: r.brochure_url ? String(r.brochure_url) : undefined,
       specifications: specs,
+      ...(colorOptions ? { colorOptions } : {}),
+      ...(colorNames.length ? { colors: colorNames } : {}),
     } as VehicleListing["metadata"],
   };
 }

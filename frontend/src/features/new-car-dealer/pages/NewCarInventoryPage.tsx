@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FileSpreadsheet, Plus, Upload } from "lucide-react";
+import { FileSpreadsheet, Plus, Search, Upload } from "lucide-react";
 import { featureFlags } from "@/config/feature-flags";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { NewCarDealerShell } from "../components/NewCarDealerShell";
 import { NcdInventoryGrid } from "../components/NcdInventoryGrid";
 import { NewCarAddInventoryDialog } from "../components/NewCarAddInventoryDialog";
@@ -16,10 +17,23 @@ export function NewCarInventoryPage() {
   const user = useAuthStore((s) => s.user);
   const [addOpen, setAddOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     setPageMeta({ title: "New car inventory" });
   }, []);
+
+  const inventory = data?.inventory ?? [];
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return inventory;
+    return inventory.filter((v) => {
+      const hay = [v.brand, v.model, v.variant, v.fuelType, v.transmission, ...(v.colors ?? [])]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [inventory, query]);
 
   return (
     <NewCarDealerShell
@@ -43,13 +57,30 @@ export function NewCarInventoryPage() {
         </div>
       }
     >
+      {!loading && inventory.length > 0 ? (
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative max-w-md flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search brand, model, variant, colour…"
+              className="rounded-xl pl-9"
+              aria-label="Search inventory"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Showing {filtered.length} of {inventory.length} cars
+          </p>
+        </div>
+      ) : null}
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="ncd-inventory-card h-72 animate-pulse bg-muted/30" />
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="ncd-inventory-card h-56 animate-pulse bg-muted/30" />
           ))}
         </div>
-      ) : (data?.inventory?.length ?? 0) === 0 ? (
+      ) : inventory.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-12 text-center">
           <p className="text-base font-semibold">No new cars in stock yet</p>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -70,8 +101,15 @@ export function NewCarInventoryPage() {
             </Button>
           </div>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
+          <p className="text-sm font-medium">No cars match “{query.trim()}”</p>
+          <Button type="button" variant="outline" className="mt-4 rounded-xl" onClick={() => setQuery("")}>
+            Clear search
+          </Button>
+        </div>
       ) : (
-        <NcdInventoryGrid items={data?.inventory ?? []} onChanged={() => void refresh()} />
+        <NcdInventoryGrid items={filtered} onChanged={() => void refresh()} />
       )}
       {dealer?.id ? (
         <>
