@@ -258,7 +258,8 @@ function emptySnapshot(dealerName: string): NewCarDealerSnapshot {
 
 export async function fetchNewCarDealerSnapshot(
   dealerId?: string,
-  dealerName?: string
+  dealerName?: string,
+  opts?: { q?: string; pageSize?: number }
 ): Promise<NewCarDealerSnapshot> {
   const name = dealerName ?? "Your showroom";
   if (!dealerId) {
@@ -267,13 +268,18 @@ export async function fetchNewCarDealerSnapshot(
   }
 
   const fallbackImg = getVehicleHero({ brand: "Car", model: "Sedan", bodyType: "Sedan" });
+  const pageSize = Math.min(2000, Math.max(50, opts?.pageSize ?? 2000));
+  const q = opts?.q?.trim() || undefined;
 
   if (hasConfiguredApi()) {
     try {
       const { data } = await api.get<{
         data?: Record<string, unknown>[];
+        total?: number;
         kpis?: { totalRows?: number; available?: number; outOfStock?: number; lowStock?: number };
-      }>("/api/new-car/inventory", { params: { dealer_id: dealerId, pageSize: 500 } });
+      }>("/api/new-car/inventory", {
+        params: { dealer_id: dealerId, pageSize, ...(q ? { q } : {}) },
+      });
       const rows = Array.isArray(data.data) ? data.data : [];
       const inventory = rows.map((r) => mapInventoryRow(r, fallbackImg));
       const [{ data: marketplaceLeads }, { data: legacyLeads }] = await Promise.all([
@@ -284,7 +290,13 @@ export async function fetchNewCarDealerSnapshot(
         (marketplaceLeads ?? []).map((r) => mapLeadRow(r as Record<string, unknown>)),
         (legacyLeads ?? []).map((r) => mapLeadRow(r as Record<string, unknown>))
       );
-      return withRealTestDriveCount(buildRealSnapshot(inventory, leads, name, data.kpis));
+      return withRealTestDriveCount(
+        buildRealSnapshot(inventory, leads, name, {
+          ...data.kpis,
+          // Prefer filtered total when searching so UI count matches grid
+          ...(typeof data.total === "number" ? { totalRows: data.total } : {}),
+        }),
+      );
     } catch {
       /* fall through to legacy path */
     }
@@ -292,10 +304,10 @@ export async function fetchNewCarDealerSnapshot(
 
   const [{ data: inv, error: invErr }, { data: marketplaceLeads }, { data: legacyLeads }, { data: marketplaceVehicles, error: vehErr }] =
     await Promise.all([
-      supabase.from("new_car_inventory").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(500),
+      supabase.from("new_car_inventory").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(pageSize),
       supabase.from("leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
       supabase.from("dealer_leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
-      supabase.from("vehicles").select("*").eq("dealer_id", dealerId).eq("category", "new-cars").neq("status", "sold").order("created_at", { ascending: false }).limit(500),
+      supabase.from("vehicles").select("*").eq("dealer_id", dealerId).eq("category", "new-cars").neq("status", "sold").order("created_at", { ascending: false }).limit(pageSize),
     ]);
 
   const hasInv = !isMissingTable(invErr) && (inv?.length ?? 0) > 0;
@@ -310,13 +322,34 @@ export async function fetchNewCarDealerSnapshot(
     return { ...buildMockNewCarDealerSnapshot(name), showroom: { ...buildMockNewCarDealerSnapshot(name).showroom, name } };
   }
 
-  const inventory = hasInv
+  let inventory = hasInv
     ? (inv as Record<string, unknown>[]).map((r) => mapInventoryRow(r, fallbackImg))
     : hasMarketplace
       ? (marketplaceVehicles as DbVehicle[]).map((v) => mapVehicleToNcdItem(v, fallbackImg))
       : [];
 
+  if (q) {
+    const tokens = q
+      .toLowerCase()
+      .split(/[^a-z0-9]+/i)
+      .filter((t) => t.length > 1);
+    inventory = inventory.filter((v) => matchesInventoryTokens(v, tokens));
+  }
+
   return withRealTestDriveCount(buildRealSnapshot(inventory, leads, name));
+}
+
+function matchesInventoryTokens(
+  v: NcdInventoryItem,
+  tokens: string[],
+): boolean {
+  if (!tokens.length) return true;
+  const hay = [v.brand, v.model, v.variant, v.fuelType, v.transmission, ...(v.colors ?? [])]
+    .join(" ")
+    .toLowerCase();
+  if (tokens.every((t) => hay.includes(t))) return true;
+  if (tokens.length >= 3 && tokens.slice(0, -1).every((t) => hay.includes(t))) return true;
+  return false;
 }
 
 async function withRealTestDriveCount(snapshot: NewCarDealerSnapshot): Promise<NewCarDealerSnapshot> {

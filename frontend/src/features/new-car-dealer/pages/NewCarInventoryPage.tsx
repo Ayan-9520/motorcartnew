@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileSpreadsheet, Plus, Search, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
@@ -15,34 +15,33 @@ import { useAuthStore } from "@/store/authStore";
 import { setPageMeta } from "@/utils/seo";
 
 export function NewCarInventoryPage() {
-  const { data, loading, refresh, dealer } = useNewCarDealerOS();
   const user = useAuthStore((s) => s.user);
   const [addOpen, setAddOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     setPageMeta({ title: "New car inventory" });
   }, []);
 
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedQ(query.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [query]);
+
+  const { data, loading, refresh, dealer } = useNewCarDealerOS({ q: debouncedQ });
+
   const inventory = data?.inventory ?? [];
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return inventory;
-    return inventory.filter((v) => {
-      const hay = [v.brand, v.model, v.variant, v.fuelType, v.transmission, ...(v.colors ?? [])]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
-    });
-  }, [inventory, query]);
+  const totalInDb =
+    data?.metrics?.find((m) => m.key === "stock")?.value ?? inventory.length;
 
   const onClearAll = async () => {
     if (!dealer?.id) return;
     if (
       !window.confirm(
-        `Remove ALL ${inventory.length} cars from showroom stock and public listings? You can re-upload Excel after.`,
+        `Remove ALL stock from showroom and public listings? You can re-upload Excel after.`,
       )
     ) {
       return;
@@ -55,6 +54,7 @@ export function NewCarInventoryPage() {
       return;
     }
     toast.success("All stock cleared — ready for fresh upload");
+    setQuery("");
     void refresh();
   };
 
@@ -64,7 +64,7 @@ export function NewCarInventoryPage() {
       description="Variants, pricing, stock health, offers & delivery timelines."
       actions={
         <div className="flex flex-wrap gap-2">
-          {inventory.length > 0 ? (
+          {(inventory.length > 0 || Number(totalInDb) > 0) && !debouncedQ ? (
             <Button
               className="rounded-xl"
               variant="outline"
@@ -90,20 +90,21 @@ export function NewCarInventoryPage() {
         </div>
       }
     >
-      {!loading && inventory.length > 0 ? (
+      {!loading || inventory.length > 0 || debouncedQ ? (
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-md flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search brand, model, variant, colour…"
+              placeholder="Search brand, model, variant… (e.g. Aston Martin DB12)"
               className="rounded-xl pl-9"
               aria-label="Search inventory"
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Showing {filtered.length} of {inventory.length} cars
+            Showing {inventory.length}
+            {debouncedQ ? ` match(es) for “${debouncedQ}”` : ` of ${totalInDb} cars`}
           </p>
         </div>
       ) : null}
@@ -113,11 +114,11 @@ export function NewCarInventoryPage() {
             <div key={i} className="ncd-inventory-card h-56 animate-pulse bg-muted/30" />
           ))}
         </div>
-      ) : inventory.length === 0 ? (
+      ) : inventory.length === 0 && !debouncedQ ? (
         <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-12 text-center">
           <p className="text-base font-semibold">No new cars in stock yet</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Upload your price list (30+ models) or add vehicles one by one. Stock appears here and on{" "}
+            Upload your price list or add vehicles one by one. Stock appears here and on{" "}
             <Link to="/buy/cars/new" className="font-medium text-primary hover:underline">
               /buy/cars/new
             </Link>
@@ -134,15 +135,15 @@ export function NewCarInventoryPage() {
             </Button>
           </div>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : inventory.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
-          <p className="text-sm font-medium">No cars match “{query.trim()}”</p>
+          <p className="text-sm font-medium">No cars match “{debouncedQ}”</p>
           <Button type="button" variant="outline" className="mt-4 rounded-xl" onClick={() => setQuery("")}>
             Clear search
           </Button>
         </div>
       ) : (
-        <NcdInventoryGrid items={filtered} onChanged={() => void refresh()} />
+        <NcdInventoryGrid items={inventory} onChanged={() => void refresh()} />
       )}
       {dealer?.id ? (
         <>
@@ -159,7 +160,7 @@ export function NewCarInventoryPage() {
             open={stockOpen}
             onOpenChange={setStockOpen}
             dealerId={dealer.id}
-            items={data?.inventory ?? []}
+            items={inventory}
             onSaved={() => void refresh()}
           />
         </>

@@ -39,7 +39,7 @@ export function NewCarBulkUploadPage() {
   const { dealer, loading } = useDealer();
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
-  const [mode, setMode] = useState<"create_only" | "create_update">("create_only");
+  const [mode, setMode] = useState<"create_only" | "create_update">("create_update");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
@@ -97,12 +97,16 @@ export function NewCarBulkUploadPage() {
         return;
       }
       const readyCount = data.valid ?? 0;
+      const skipped = data.skipped ?? 0;
       if (readyCount > 0) {
         toast.success(`${readyCount} row(s) ready — click Upload to inventory`);
+      } else if (skipped > 0 && (data.needCorrection ?? data.invalid ?? 0) === 0) {
+        toast.success(
+          `All ${skipped} row(s) already in stock. Open Inventory, or use “Create + update existing”.`,
+        );
       } else {
         toast.error(
-          data.warnings?.[0] ||
-            "No rows ready — check Brand/Model columns (or name the file like Aston Martin.xlsx).",
+          "No rows ready — check Brand/Model columns (or name the file like Aston Martin.xlsx).",
         );
       }
     } catch (e) {
@@ -130,11 +134,14 @@ export function NewCarBulkUploadPage() {
         return;
       }
       const readyCount = data.valid ?? 0;
+      const skipped = data.skipped ?? 0;
       if (readyCount <= 0) {
-        toast.error(
-          data.warnings?.[0] ||
-            "No rows ready to upload — need Brand + Model (or Model only if file name is the brand).",
-        );
+        if (skipped > 0 && (data.needCorrection ?? data.invalid ?? 0) === 0) {
+          toast.success(`Already in stock (${skipped}). Opening inventory…`);
+          navigate("/dashboard/new-car/inventory");
+          return;
+        }
+        toast.error("No rows ready to upload — need Brand + Model columns.");
         return;
       }
       const out = await runConfirmRequest(data.batchId);
@@ -143,9 +150,12 @@ export function NewCarBulkUploadPage() {
       const failed = Number(out.failed ?? 0);
       toast.success(
         failed > 0
-          ? `Uploaded ready rows — created ${out.created}, updated ${out.updated}, skipped bad/duplicate ${out.skipped}, failed ${out.failed}`
+          ? `Uploaded — created ${out.created}, updated ${out.updated}, skipped ${out.skipped}, failed ${out.failed}`
           : `Upload complete — created ${out.created}, updated ${out.updated}, skipped ${out.skipped}`,
       );
+      if (Number(out.created ?? 0) + Number(out.updated ?? 0) > 0) {
+        navigate("/dashboard/new-car/inventory");
+      }
     } catch (e) {
       const ax = e as { response?: { data?: { message?: string } } };
       toast.error(ax.response?.data?.message ?? "Upload failed");
@@ -301,8 +311,8 @@ export function NewCarBulkUploadPage() {
             value={mode}
             onChange={(e) => setMode(e.target.value as "create_only" | "create_update")}
           >
+            <option value="create_update">Create + update existing (recommended)</option>
             <option value="create_only">Create only (duplicates skipped)</option>
-            <option value="create_update">Create + update existing</option>
           </select>
         </label>
         <div className="flex flex-wrap gap-2">
@@ -356,23 +366,29 @@ export function NewCarBulkUploadPage() {
           ) : null}
           <ul className="max-h-72 space-y-2 overflow-auto border-t pt-2">
             {preview.rows
-              .filter((r) => r.action === "error" || (r.warnings && r.warnings.length > 0))
+              .filter(
+                (r) =>
+                  r.action === "error" ||
+                  r.action === "skip" ||
+                  (r.warnings && r.warnings.length > 0),
+              )
               .slice(0, 50)
               .map((r) => (
                 <li
                   key={`${r.rowNumber}-${r.action}`}
-                  className={r.action === "error" ? "text-destructive" : "text-amber-700 dark:text-amber-400"}
+                  className={
+                    r.action === "error"
+                      ? "text-destructive"
+                      : r.action === "skip"
+                        ? "text-muted-foreground"
+                        : "text-amber-700 dark:text-amber-400"
+                  }
                 >
                   <span className="font-medium">Row {r.rowNumber}</span>
                   {r.action === "error" ? (
-                    <span>
-                      : {r.errors.join("; ")}
-                      {/pin/i.test(r.errors.join(" ")) ? (
-                        <span className="mt-0.5 block text-xs text-muted-foreground">
-                          Suggested: enter a 6-digit PIN or leave blank.
-                        </span>
-                      ) : null}
-                    </span>
+                    <span>: {r.errors.join("; ")}</span>
+                  ) : r.action === "skip" ? (
+                    <span>: Already in stock (duplicate) — {r.warnings?.[0] ?? "skipped"}</span>
                   ) : (
                     <span>: {r.warnings?.join("; ")}</span>
                   )}

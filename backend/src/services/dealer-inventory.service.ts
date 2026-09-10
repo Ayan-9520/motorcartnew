@@ -144,10 +144,17 @@ function duplicateKey(dealerId: string, catalogVariantId: string | null, input: 
 }
 
 async function findDuplicate(dealerId: string, catalogVariantId: string | null, input: InventoryInput) {
+  const variantNorm = (input.variant ?? "").trim();
   const rows = await prisma.newCarInventory.findMany({
     where: {
       dealerId,
-      ...(catalogVariantId ? { catalogVariantId } : { brand: input.brand, model: input.model, variant: input.variant, year: input.year }),
+      ...(catalogVariantId
+        ? { catalogVariantId }
+        : {
+            brand: { equals: input.brand, mode: "insensitive" },
+            model: { equals: input.model, mode: "insensitive" },
+            year: input.year,
+          }),
     },
     take: 50,
   });
@@ -155,6 +162,9 @@ async function findDuplicate(dealerId: string, catalogVariantId: string | null, 
   const ref = (input.internalReference ?? "").toLowerCase();
   return (
     rows.find((r) => {
+      const rowVariant = (r.variant ?? "").trim();
+      // Null/blank variants are equivalent; otherwise require exact (case-insensitive)
+      if (variantNorm.toLowerCase() !== rowVariant.toLowerCase()) return false;
       const meta = metaOf(r);
       const colors = Array.isArray(r.colors) ? (r.colors as string[]) : [];
       const rowColour = (colors[0] ?? "").toLowerCase();
@@ -268,31 +278,66 @@ export async function listDealerInventory(
   await assertInventoryPermission(actor, dealer.id, "inventory.read");
 
   const page = Math.max(1, opts.page ?? 1);
-  const pageSize = Math.min(500, Math.max(1, opts.pageSize ?? 50));
+  const pageSize = Math.min(2000, Math.max(1, opts.pageSize ?? 50));
+  const qRaw = (opts.q ?? "").trim();
+  const tokens = qRaw
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1);
+
   const where: Prisma.NewCarInventoryWhereInput = {
     dealerId: dealer.id,
     ...(opts.brand ? { brand: { contains: opts.brand, mode: "insensitive" } } : {}),
     ...(opts.stockStatus ? { stockStatus: opts.stockStatus } : {}),
-    ...(opts.q
+    // Soft-archived rows stay out of the live showroom grid
+    NOT: { metadata: { path: ["archived"], equals: true } },
+    ...(tokens.length
       ? {
-          OR: [
-            { brand: { contains: opts.q, mode: "insensitive" } },
-            { model: { contains: opts.q, mode: "insensitive" } },
-            { variant: { contains: opts.q, mode: "insensitive" } },
-          ],
+          // Each token must appear in brand OR model OR variant (so "Aston Martin DB12 Coupe" works)
+          AND: tokens.map((token) => ({
+            OR: [
+              { brand: { contains: token, mode: "insensitive" as const } },
+              { model: { contains: token, mode: "insensitive" as const } },
+              { variant: { contains: token, mode: "insensitive" as const } },
+            ],
+          })),
         }
       : {}),
   };
 
-  const [total, rows] = await Promise.all([
-    prisma.newCarInventory.count({ where }),
-    prisma.newCarInventory.findMany({
-      where,
-      orderBy: { updatedAt: "desc" },
+  // If full-token AND returns nothing (e.g. extra body-style word), retry without the last token
+  let total = await prisma.newCarInventory.count({ where });
+  let rows = await prisma.newCarInventory.findMany({
+    where,
+    orderBy: [{ updatedAt: "desc" }, { brand: "asc" }, { model: "asc" }],
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  });
+
+  if (tokens.length >= 3 && total === 0) {
+    const softTokens = tokens.slice(0, -1);
+    const softWhere: Prisma.NewCarInventoryWhereInput = {
+      dealerId: dealer.id,
+      ...(opts.brand ? { brand: { contains: opts.brand, mode: "insensitive" } } : {}),
+      ...(opts.stockStatus ? { stockStatus: opts.stockStatus } : {}),
+      NOT: { metadata: { path: ["archived"], equals: true } },
+      AND: softTokens.map((token) => ({
+        OR: [
+          { brand: { contains: token, mode: "insensitive" as const } },
+          { model: { contains: token, mode: "insensitive" as const } },
+          { variant: { contains: token, mode: "insensitive" as const } },
+        ],
+      })),
+    };
+    total = await prisma.newCarInventory.count({ where: softWhere });
+    rows = await prisma.newCarInventory.findMany({
+      where: softWhere,
+      orderBy: [{ updatedAt: "desc" }, { brand: "asc" }, { model: "asc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
-    }),
-  ]);
+    });
+  }
 
   return {
     dealerId: dealer.id,
@@ -306,7 +351,10 @@ export async function listDealerInventory(
 
 async function inventoryKpis(dealerId: string) {
   const rows = await prisma.newCarInventory.findMany({
-    where: { dealerId },
+    where: {
+      dealerId,
+      NOT: { metadata: { path: ["archived"], equals: true } },
+    },
     select: { stock: true, stockStatus: true, brand: true },
   });
   let available = 0;
@@ -854,6 +902,8 @@ export async function previewDealerInventoryImport(
         existingId = dup.id;
         if (mode === "create_only") {
           action = "skip";
+          rowWarnings.push("Already in your showroom stock (duplicate) — switch mode to Create + update, or open Inventory.");
+          severity = "warning";
         } else {
           action = "update";
         }
