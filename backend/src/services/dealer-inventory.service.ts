@@ -461,6 +461,7 @@ export async function updateDealerInventoryItem(actor: SalesActor, id: string, r
   await assertInventoryPermission(actor, existing.dealerId, "inventory.update");
 
   const clean = stripClientOwnedInventoryFields(raw);
+  const existingMeta = metaOf(existing);
   const merged = {
     brand: clean.brand ?? existing.brand,
     model: clean.model ?? existing.model,
@@ -471,17 +472,25 @@ export async function updateDealerInventoryItem(actor: SalesActor, id: string, r
     stock: clean.stock ?? existing.stock,
     stock_status: clean.stock_status ?? clean.stockStatus ?? existing.stockStatus,
     ex_showroom_price: clean.ex_showroom_price ?? clean.exShowroomPrice ?? existing.exShowroomPrice,
-    dealer_price: clean.dealer_price ?? clean.dealerPrice ?? existing.price,
+    dealer_price:
+      clean.dealer_price ??
+      clean.dealerPrice ??
+      clean.on_road_price ??
+      clean.onRoadPrice ??
+      existing.price,
     discount: clean.discount ?? clean.discount_amount ?? existing.discountAmount,
     colours: clean.colour ?? clean.color,
     colors: clean.colors ?? existing.colors,
-    branch_id: clean.branch_id ?? clean.branchId ?? metaOf(existing).branch_id,
-    branch: clean.branch ?? clean.branch_name ?? metaOf(existing).branch_name,
-    pincode: clean.pincode ?? metaOf(existing).pincode,
-    internal_reference: clean.internal_reference ?? metaOf(existing).internal_reference,
-    notes: clean.notes ?? metaOf(existing).notes,
+    branch_id: clean.branch_id ?? clean.branchId ?? existingMeta.branch_id,
+    branch: clean.branch ?? clean.branch_name ?? existingMeta.branch_name,
+    pincode: clean.pincode ?? existingMeta.pincode,
+    internal_reference: clean.internal_reference ?? existingMeta.internal_reference,
+    notes: clean.notes ?? existingMeta.notes,
     image_url: clean.image_url ?? clean.imageUrl ?? existing.imageUrl,
     expected_delivery_days: clean.expected_delivery_days ?? clean.expectedDeliveryDays ?? existing.expectedDeliveryDays,
+    waiting_period_days:
+      clean.waiting_period_days ?? clean.waitingPeriodDays ?? existingMeta.waiting_period_days,
+    brochure_url: clean.brochure_url ?? clean.brochureUrl ?? existingMeta.brochure_url,
   };
 
   const input = validateInventoryInput(merged as Record<string, unknown>);

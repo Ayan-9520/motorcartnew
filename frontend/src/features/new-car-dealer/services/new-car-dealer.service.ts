@@ -513,10 +513,14 @@ export async function updateNewCarInventory(
     exShowroomPrice?: number;
     onRoadPrice?: number;
     stock?: number;
+    discountAmount?: number;
     stockStatus?: NcdInventoryItem["stockStatus"];
     imageUrl?: string;
     images?: string[];
     colors?: string[];
+    expectedDeliveryDays?: number;
+    waitingPeriodDays?: number;
+    brochureUrl?: string;
   }
 ) {
   const ncdId = item.ncdInventoryId ?? (item.inventorySource === "ncd" ? item.id : undefined);
@@ -533,10 +537,16 @@ export async function updateNewCarInventory(
     ex_showroom_price: patch.exShowroomPrice,
     on_road_price: patch.onRoadPrice,
     ...(patch.stock != null ? { stock: Math.max(1, patch.stock) } : {}),
+    ...(patch.discountAmount != null ? { discount_amount: Math.max(0, patch.discountAmount) } : {}),
     stock_status: patch.stockStatus,
     image_url: photos?.[0] ?? patch.imageUrl,
     ...(photos ? { images: photos } : {}),
     ...(colors ? { colors } : {}),
+    ...(patch.expectedDeliveryDays != null
+      ? { expected_delivery_days: patch.expectedDeliveryDays }
+      : {}),
+    ...(patch.waitingPeriodDays != null ? { waiting_period_days: patch.waitingPeriodDays } : {}),
+    ...(patch.brochureUrl !== undefined ? { brochure_url: patch.brochureUrl || null } : {}),
   };
 
   if (ncdId) {
