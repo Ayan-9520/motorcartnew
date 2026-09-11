@@ -49,8 +49,10 @@ services:
       dockerfile: Dockerfile
       args:
         EXPO_PUBLIC_API_URL: ${MOBILE_EXPO_PUBLIC_API_URL:-}
-        EXPO_PUBLIC_WEB_URL: ${VITE_SITE_URL:-http://localhost}
+        EXPO_PUBLIC_WEB_URL: ${MOBILE_EXPO_PUBLIC_WEB_URL:-${VITE_SITE_URL:-https://motorcart.in}}
         EXPO_PUBLIC_SHOW_DEMO: ${MOBILE_SHOW_DEMO:-0}
+        MOBILE_API_UPSTREAM: ${MOBILE_API_UPSTREAM:-http://backend:3001}
+        MOBILE_API_HOST: ${MOBILE_API_HOST:-backend}
     image: motorcart-mobile-app:local
     restart: unless-stopped
     ports:

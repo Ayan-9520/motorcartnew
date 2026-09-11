@@ -146,9 +146,14 @@ services:
       context: ./apps/mobile-customer
       dockerfile: Dockerfile
       args:
+        # Keep empty so the app uses same-origin /api (nginx proxy) — avoids CORS
         EXPO_PUBLIC_API_URL: ${MOBILE_EXPO_PUBLIC_API_URL:-}
-        EXPO_PUBLIC_WEB_URL: ${VITE_SITE_URL:-http://localhost:3000}
+        EXPO_PUBLIC_WEB_URL: ${MOBILE_EXPO_PUBLIC_WEB_URL:-${VITE_SITE_URL:-https://motorcart.in}}
         EXPO_PUBLIC_SHOW_DEMO: ${MOBILE_SHOW_DEMO:-0}
+        # Local Docker DB: http://backend:3001 + Host backend
+        # Live motorcart.in from PC: https://motorcart.in + Host motorcart.in
+        MOBILE_API_UPSTREAM: ${MOBILE_API_UPSTREAM:-http://backend:3001}
+        MOBILE_API_HOST: ${MOBILE_API_HOST:-backend}
     image: motorcart-mobile-app:local
     restart: unless-stopped
     networks: [motorcart_net]

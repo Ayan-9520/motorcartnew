@@ -52,6 +52,25 @@ apps/mobile-customer/
 
 **Rule of thumb:** heavy showroom work (inventory CRUD, 1031 rows) = website. Quick leads / Call / WhatsApp on the go = mobile app.
 
+### Local Docker (:8090) vs live website
+
+| Surface | What it is | Data |
+|---------|------------|------|
+| `motorcart.in` | Full web New Car OS | Live production DB |
+| `localhost:8090` (Docker mobile) | Phone companion UI | **Whatever nginx proxies** — local backend by default, or live if `MOBILE_API_UPSTREAM=https://motorcart.in` |
+| Chrome iPhone DevTools | Phone layout preview | Same as :8090 |
+
+**Desktop browser on :8090:** after rebuild, width ≥900px → left side rail. iPhone emulator → bottom tabs (correct). It will **not** become the full `motorcart.in` sidebar OS.
+
+**See live 1031 stock on local :8090** — in `.env.docker`:
+```
+MOBILE_API_UPSTREAM=https://motorcart.in
+MOBILE_API_HOST=motorcart.in
+MOBILE_EXPO_PUBLIC_WEB_URL=https://motorcart.in
+MOBILE_EXPO_PUBLIC_API_URL=
+```
+Then rebuild: `docker compose --env-file .env.docker --profile mobile up -d --build mobile-app`
+
 ### API integration
 
 - Uses same backend JWT auth as web
