@@ -42,6 +42,16 @@ apps/mobile-customer/
 - Workspace
 - Profile
 
+### Where each UI lives
+
+| Surface | URL / install | What you see |
+|---------|---------------|--------------|
+| **Phone app** | Play Store / Expo | Bottom tabs · leads / stock glance · companion CRM |
+| **App on desktop browser** | `localhost:8090` or VPS mobile web | Same companion app — **side rail** (≥900px), not full New Car OS |
+| **Full MotorCart web** | `motorcart.in` | Navbar + dealer sidebar · 1000+ inventory · Edit stock · Bulk upload |
+
+**Rule of thumb:** heavy showroom work (inventory CRUD, 1031 rows) = website. Quick leads / Call / WhatsApp on the go = mobile app.
+
 ### API integration
 
 - Uses same backend JWT auth as web

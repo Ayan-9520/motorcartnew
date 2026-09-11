@@ -59,7 +59,7 @@ const shared = {
   radiusSm: 14,
   radiusXs: 10,
   radiusLg: 24,
-  maxContent: 1120,
+  maxContent: 1280,
 } as const;
 
 /** Light — matches website :root (#f0f2f5 surface, white cards, brand green) */

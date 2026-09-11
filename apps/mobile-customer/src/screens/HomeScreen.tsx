@@ -204,31 +204,50 @@ export function HomeScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <McContent style={styles.content}>
-          <View style={[styles.greetRow, desktop && styles.greetRowDesktop]}>
-            <McAvatar name={user?.fullName ?? "User"} size={desktop ? 52 : 46} />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <McSectionLabel>
-                {ws.label} · {family} desk
-              </McSectionLabel>
-              <McTitle>Hi, {name}</McTitle>
-              <McMuted>{ws.subtitle}</McMuted>
+          {desktop ? (
+            <View style={[styles.webBanner, { backgroundColor: c.primarySoft, borderColor: c.primaryGlow }]}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[styles.webBannerTitle, { color: c.text }]}>Desktop browser · Companion layout</Text>
+                <Text style={[styles.webBannerBody, { color: c.muted }]}>
+                  Full New Car OS (1031 stock, sidebar CRM) lives on motorcart.in. This app is for phone + quick leads.
+                </Text>
+              </View>
+              <McButton
+                label="Open web OS"
+                variant="outline"
+                onPress={() => void Linking.openURL(`${WEB_SITE_URL}${ws.webPath}`)}
+              />
+            </View>
+          ) : null}
+
+          <View style={[styles.topGrid, desktop && styles.topGridDesktop]}>
+            <View style={[styles.greetRow, desktop && styles.greetRowDesktop, desktop && styles.topMain]}>
+              <McAvatar name={user?.fullName ?? "User"} size={desktop ? 52 : 46} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <McSectionLabel>
+                  {ws.label} · {family} desk
+                </McSectionLabel>
+                <McTitle>Hi, {name}</McTitle>
+                <McMuted>{ws.subtitle}</McMuted>
+              </View>
+            </View>
+
+            <View style={desktop ? styles.topSide : undefined}>
+              <McHero
+                eyebrow={`${family.toUpperCase()} DESK`}
+                title={ws.headline}
+                body={user?.email ?? undefined}
+                right={desktop ? undefined : <McAvatar name={user?.fullName ?? "U"} size={40} />}
+              />
+              {desktop ? (
+                <McCard style={styles.sideCard}>
+                  <Text style={styles.sideTitle}>Connected account</Text>
+                  <Text style={styles.sideBody}>{user?.email}</Text>
+                  <Text style={styles.sideMeta}>JWT + refresh · pull to refresh · live /api</Text>
+                </McCard>
+              ) : null}
             </View>
           </View>
-
-          <McHero
-            eyebrow={`${family.toUpperCase()} DESK`}
-            title={ws.headline}
-            body={user?.email ?? undefined}
-            right={desktop ? undefined : <McAvatar name={user?.fullName ?? "U"} size={40} />}
-          />
-
-          {desktop ? (
-            <McCard style={styles.sideCard}>
-              <Text style={styles.sideTitle}>Connected account</Text>
-              <Text style={styles.sideBody}>{user?.email}</Text>
-              <Text style={styles.sideMeta}>JWT + refresh · pull to refresh · live /api</Text>
-            </McCard>
-          ) : null}
 
           <McSectionLabel>Live KPIs</McSectionLabel>
           <View style={styles.stats}>
@@ -276,14 +295,29 @@ export function HomeScreen() {
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
     content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 48 },
+    webBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      borderWidth: 1,
+      borderRadius: 16,
+      padding: 14,
+      marginBottom: 16,
+    },
+    webBannerTitle: { fontSize: 14, fontWeight: "800" },
+    webBannerBody: { marginTop: 4, fontSize: 12, lineHeight: 17 },
+    topGrid: { marginBottom: 8 },
+    topGridDesktop: { flexDirection: "row", alignItems: "stretch", gap: 16, marginBottom: 16 },
+    topMain: { flex: 1.1, minWidth: 0, marginBottom: 0 },
+    topSide: { flex: 1, minWidth: 280, gap: 12 },
     greetRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: 14,
       marginBottom: 16,
     },
-    greetRowDesktop: { marginBottom: 20 },
-    sideCard: { marginBottom: 20, backgroundColor: c.panel, borderColor: c.borderStrong },
+    greetRowDesktop: { marginBottom: 0, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: c.border, backgroundColor: c.card },
+    sideCard: { marginBottom: 0, backgroundColor: c.panel, borderColor: c.borderStrong },
     sideTitle: { color: c.text, fontSize: 17, fontWeight: "800" },
     sideBody: { color: c.textSecondary, marginTop: 8, fontSize: 13 },
     sideMeta: { color: c.muted, marginTop: 10, fontSize: 11 },

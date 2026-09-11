@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ActivityIndicator, Platform, Text, View, useWindowDimensions } from "react-native";
 import { NavigationContainer, DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { BottomTabBar, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuth } from "../auth/AuthContext";
 import { getRoleWorkspace } from "../roles";
 import { useCRM, useTheme } from "../ThemeContext";
@@ -15,6 +15,7 @@ import { ProfileScreen } from "../screens/ProfileScreen";
 import { VehicleDetailScreen } from "../screens/VehicleDetailScreen";
 import type { MainTabParamList, RootStackParamList } from "./types";
 import { AppMenuButton, AppMenuSheet } from "./AppMenuSheet";
+import { DESKTOP_RAIL_WIDTH, DesktopSideRail } from "./DesktopSideRail";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<MainTabParamList>();
@@ -55,25 +56,23 @@ function HeaderBrand({ subtitle }: { subtitle: string }) {
   const desktop = width >= 900;
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginLeft: Platform.OS === "web" ? 4 : 0 }}>
-      <MotorcartLogo variant="full" height={desktop ? 30 : 26} tone={resolved === "dark" ? "dark" : "light"} />
-      {desktop ? (
-        <Text style={{ color: c.muted, fontSize: 13, fontWeight: "700" }}>{subtitle}</Text>
-      ) : (
-        <View
-          style={{
-            backgroundColor: c.primarySoft,
-            borderRadius: 999,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
-            borderWidth: 1,
-            borderColor: c.primaryGlow,
-          }}
-        >
-          <Text style={{ color: c.primary, fontSize: 9, fontWeight: "800", letterSpacing: 0.8, textTransform: "uppercase" }}>
-            {subtitle}
-          </Text>
-        </View>
+      {desktop ? null : (
+        <MotorcartLogo variant="full" height={26} tone={resolved === "dark" ? "dark" : "light"} />
       )}
+      <View
+        style={{
+          backgroundColor: c.primarySoft,
+          borderRadius: 999,
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+          borderWidth: 1,
+          borderColor: c.primaryGlow,
+        }}
+      >
+        <Text style={{ color: c.primary, fontSize: desktop ? 11 : 9, fontWeight: "800", letterSpacing: 0.6, textTransform: "uppercase" }}>
+          {subtitle}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -89,6 +88,7 @@ function MainTabs() {
   return (
     <>
       <Tabs.Navigator
+        tabBar={(props) => (desktop ? <DesktopSideRail {...props} /> : <BottomTabBar {...props} />)}
         screenOptions={({ route }) => {
           const titles: Record<string, string> = {
             Home: ws.tabs.home,
@@ -99,12 +99,18 @@ function MainTabs() {
           const subtitle = titles[route.name] ?? "Motorcart";
           return {
             title: subtitle,
-            sceneStyle: { flex: 1, backgroundColor: c.bg, minHeight: 0 },
+            sceneStyle: {
+              flex: 1,
+              backgroundColor: c.bg,
+              minHeight: 0,
+              ...(desktop ? { marginLeft: DESKTOP_RAIL_WIDTH } : null),
+            },
             headerStyle: {
               backgroundColor: c.header,
               borderBottomWidth: 1,
               borderBottomColor: c.border,
               ...(Platform.OS === "web" ? ({ height: desktop ? 64 : 58 } as object) : null),
+              ...(desktop ? ({ marginLeft: DESKTOP_RAIL_WIDTH } as object) : null),
             },
             headerShadowVisible: false,
             headerTintColor: c.text,
@@ -114,16 +120,27 @@ function MainTabs() {
             tabBarIcon: ({ focused, color }) => <TabIcon route={route.name} focused={focused} color={color} />,
             tabBarActiveTintColor: c.primary,
             tabBarInactiveTintColor: c.muted,
-            tabBarStyle: {
-              backgroundColor: c.tabBar,
-              borderTopWidth: 1,
-              borderTopColor: c.border,
-              height: Platform.OS === "web" ? 76 : 64,
-              paddingBottom: Platform.OS === "web" ? 16 : Platform.OS === "ios" ? 12 : 10,
-              paddingTop: 8,
-              width: "100%",
-              ...c.shadowLg,
-            },
+            tabBarStyle: desktop
+              ? {
+                  position: "absolute" as const,
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: DESKTOP_RAIL_WIDTH,
+                  borderTopWidth: 0,
+                  elevation: 0,
+                  backgroundColor: "transparent",
+                }
+              : {
+                  backgroundColor: c.tabBar,
+                  borderTopWidth: 1,
+                  borderTopColor: c.border,
+                  height: Platform.OS === "web" ? 76 : 64,
+                  paddingBottom: Platform.OS === "web" ? 16 : Platform.OS === "ios" ? 12 : 10,
+                  paddingTop: 8,
+                  width: "100%",
+                  ...c.shadowLg,
+                },
             tabBarLabelStyle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.3, marginTop: 2 },
             tabBarItemStyle: { flex: 1, paddingVertical: 2 },
           };
