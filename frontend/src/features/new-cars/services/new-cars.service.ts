@@ -37,16 +37,29 @@ function stockRowToListing(r: Record<string, unknown>): NewCarListing {
   const fromMeta = Array.isArray(metaRaw.images)
     ? (metaRaw.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
     : [];
+  const colorOptionsRaw = r.color_options ?? r.colorOptions ?? metaRaw.color_options ?? metaRaw.colorOptions;
+  const fromColorOpts: string[] = [];
+  if (Array.isArray(colorOptionsRaw)) {
+    for (const opt of colorOptionsRaw) {
+      if (!opt || typeof opt !== "object") continue;
+      const imgs = (opt as { images?: unknown }).images;
+      if (Array.isArray(imgs)) {
+        for (const u of imgs) {
+          const t = String(u ?? "").trim();
+          if (t) fromColorOpts.push(t);
+        }
+      }
+    }
+  }
   const isUsableImage = (u: string) =>
     u.startsWith("http://") ||
     u.startsWith("https://") ||
     u.includes("/uploads/") ||
     u.startsWith("/media/") ||
     u.startsWith("/demo/");
-  const images = [...fromApi, ...fromMeta, ...(imageRaw ? [imageRaw] : [])]
+  const images = [...fromApi, ...fromMeta, ...fromColorOpts, ...(imageRaw ? [imageRaw] : [])]
     .filter((u, i, arr) => isUsableImage(u) && arr.indexOf(u) === i)
-    .slice(0, 8);
-  const colorOptionsRaw = r.color_options ?? r.colorOptions ?? metaRaw.color_options ?? metaRaw.colorOptions;
+    .slice(0, 12);
   const colorOptions =
     Array.isArray(colorOptionsRaw) && colorOptionsRaw.length
       ? colorOptionsRaw

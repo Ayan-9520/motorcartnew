@@ -1224,11 +1224,51 @@ export async function listPublicNewCarStock(opts: {
       stock: r.stock,
       stock_status: r.stockStatus,
       colors,
-      color_options: Array.isArray(meta.color_options)
-        ? meta.color_options
-        : Array.isArray(meta.colorOptions)
-          ? meta.colorOptions
-          : undefined,
+      color_options: (() => {
+        const raw = Array.isArray(meta.color_options)
+          ? meta.color_options
+          : Array.isArray(meta.colorOptions)
+            ? meta.colorOptions
+            : null;
+        const imgs: string[] = [];
+        const addImg = (rawU: unknown) => {
+          const t = String(rawU ?? "").trim();
+          if (!t) return;
+          if (
+            !(
+              t.startsWith("http://") ||
+              t.startsWith("https://") ||
+              t.includes("/uploads/") ||
+              t.startsWith("/media/") ||
+              t.startsWith("/demo/")
+            )
+          ) {
+            return;
+          }
+          if (!imgs.includes(t)) imgs.push(t);
+        };
+        if (Array.isArray(meta.images)) for (const u of meta.images) addImg(u);
+        addImg(r.imageUrl);
+        if (Array.isArray(raw) && raw.length) {
+          return raw.map((item, i) => {
+            if (!item || typeof item !== "object") return item;
+            const o = item as Record<string, unknown>;
+            const name = String(o.name ?? o.color ?? "").trim();
+            const own = Array.isArray(o.images)
+              ? (o.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
+              : [];
+            return {
+              name,
+              images: own.length ? own : imgs[i] ? [imgs[i]] : imgs[0] ? [imgs[0]] : [],
+            };
+          });
+        }
+        if (!colors.length) return undefined;
+        return colors.map((name, i) => ({
+          name,
+          images: imgs[i] ? [imgs[i]] : imgs[0] ? [imgs[0]] : [],
+        }));
+      })(),
       image_url: (() => {
         const imgs = Array.isArray(meta.images)
           ? (meta.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
@@ -1255,7 +1295,17 @@ export async function listPublicNewCarStock(opts: {
         };
         if (Array.isArray(meta.images)) for (const u of meta.images) add(u);
         add(r.imageUrl);
-        return out.slice(0, 8);
+        const opts = Array.isArray(meta.color_options)
+          ? meta.color_options
+          : Array.isArray(meta.colorOptions)
+            ? meta.colorOptions
+            : [];
+        for (const opt of opts) {
+          if (!opt || typeof opt !== "object") continue;
+          const imgs = (opt as { images?: unknown }).images;
+          if (Array.isArray(imgs)) for (const u of imgs) add(u);
+        }
+        return out.slice(0, 12);
       })(),
       catalog_variant_id: r.catalogVariantId,
       body_type: meta.body_type ? String(meta.body_type) : undefined,

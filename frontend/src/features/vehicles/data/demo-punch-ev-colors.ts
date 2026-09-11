@@ -50,12 +50,29 @@ export function resolveListingPaintColors(opts: {
   model?: string;
   colorOptions?: unknown;
   colors?: unknown;
+  /** Hero / gallery uploads — fill swatches that have names but no per-colour photo yet */
+  listingImages?: string[];
   fallbackToDemo?: boolean;
 }): VehiclePaintColor[] {
-  const fromMeta = normalizePaintColors(opts.colorOptions);
+  const listing = (opts.listingImages ?? [])
+    .map((u) => String(u ?? "").trim())
+    .filter(Boolean);
+  const fill = (colors: VehiclePaintColor[]): VehiclePaintColor[] =>
+    colors.map((c, i) => ({
+      ...c,
+      images: c.images.length
+        ? c.images
+        : listing[i]
+          ? [listing[i]!]
+          : listing[0]
+            ? [listing[0]]
+            : [],
+    }));
+
+  const fromMeta = fill(normalizePaintColors(opts.colorOptions));
   if (fromMeta.length && fromMeta.some((c) => c.images.length > 0)) return fromMeta;
 
-  const named = normalizePaintColors(opts.colors);
+  const named = fill(normalizePaintColors(opts.colors));
   const brand = (opts.brand ?? "").toLowerCase();
   const model = (opts.model ?? "").toLowerCase();
   const isPunchEv = brand.includes("tata") && model.includes("punch");

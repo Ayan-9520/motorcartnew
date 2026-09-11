@@ -104,6 +104,7 @@ export function VehicleDetailPage() {
       : vehicle.color
         ? [vehicle.color]
         : undefined,
+    listingImages: galleryImages.length ? galleryImages : vehicle.images,
     fallbackToDemo:
       (vehicle.brand ?? "").toLowerCase().includes("tata") &&
       (vehicle.model ?? "").toLowerCase().includes("punch"),

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { ok, err } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 function collectPublicImages(
   imageUrl: string | null | undefined,
@@ -11,7 +12,15 @@ function collectPublicImages(
   const add = (raw: unknown) => {
     const t = String(raw ?? "").trim();
     if (!t) return;
-    if (!(t.startsWith("http://") || t.startsWith("https://") || t.includes("/uploads/") || t.startsWith("/media/"))) {
+    if (
+      !(
+        t.startsWith("http://") ||
+        t.startsWith("https://") ||
+        t.includes("/uploads/") ||
+        t.startsWith("/media/") ||
+        t.startsWith("/demo/")
+      )
+    ) {
       return;
     }
     if (!out.includes(t)) out.push(t);
@@ -23,12 +32,57 @@ function collectPublicImages(
   if (Array.isArray(vehicleImages)) {
     for (const u of vehicleImages) add(u);
   }
-  return out.slice(0, 8);
+  // Per-colour photos stored on color_options
+  const opts = Array.isArray(meta.color_options)
+    ? meta.color_options
+    : Array.isArray(meta.colorOptions)
+      ? meta.colorOptions
+      : [];
+  for (const opt of opts) {
+    if (!opt || typeof opt !== "object") continue;
+    const imgs = (opt as { images?: unknown }).images;
+    if (Array.isArray(imgs)) for (const u of imgs) add(u);
+  }
+  return out.slice(0, 12);
+}
+
+function buildColorOptions(
+  meta: Record<string, unknown>,
+  colors: string[],
+  images: string[],
+): Array<{ name: string; images: string[] }> | undefined {
+  const raw = Array.isArray(meta.color_options)
+    ? meta.color_options
+    : Array.isArray(meta.colorOptions)
+      ? meta.colorOptions
+      : null;
+  if (Array.isArray(raw) && raw.length) {
+    return raw
+      .map((item, i) => {
+        if (!item || typeof item !== "object") return null;
+        const o = item as Record<string, unknown>;
+        const name = String(o.name ?? o.color ?? o.colour ?? "").trim();
+        if (!name) return null;
+        const imgs = Array.isArray(o.images)
+          ? (o.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
+          : o.image_url || o.imageUrl || o.image
+            ? [String(o.image_url ?? o.imageUrl ?? o.image)]
+            : [];
+        const fallback = imgs.length ? imgs : images[i] ? [images[i]!] : images[0] ? [images[0]] : [];
+        return { name, images: fallback.slice(0, 8) };
+      })
+      .filter((x): x is { name: string; images: string[] } => Boolean(x));
+  }
+  if (!colors.length) return undefined;
+  return colors.map((name, i) => ({
+    name,
+    images: images[i] ? [images[i]!] : images[0] ? [images[0]] : [],
+  }));
 }
 
 /**
  * Public single new-car stock row by inventory UUID (accepts optional ncd- prefix).
- * Only available stock with qty > 0.
+ * Matches Buy hub visibility (available / transit / upcoming + recovered photo rows).
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: raw } = await params;
@@ -37,13 +91,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     .replace(/^ncd-/i, "");
   if (!id) return err("id required", 400);
 
-  const row = await prisma.newCarInventory.findFirst({
-    where: {
-      id,
-      stock: { gt: 0 },
-      stockStatus: "available",
+  const where: Prisma.NewCarInventoryWhereInput = {
+    id,
+    NOT: {
+      OR: [
+        { metadata: { path: ["archived"], equals: true } },
+        { stockStatus: { in: ["delivered", "booked", "sold"] } },
+      ],
     },
-  });
+    OR: [
+      { stockStatus: { in: ["available", "transit", "upcoming"] } },
+      { stockStatus: "out_of_stock", OR: [{ imageUrl: { not: null } }, { stock: { gt: 0 } }] },
+    ],
+  };
+
+  const row = await prisma.newCarInventory.findFirst({ where });
   if (!row) return err("Vehicle not found", 404);
 
   const d = await prisma.dealer.findFirst({
@@ -68,6 +130,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const images = collectPublicImages(row.imageUrl, meta, vehicleImages);
+  const colors = Array.isArray(row.colors)
+    ? (row.colors as unknown[]).map((c) => String(c ?? "").trim()).filter(Boolean)
+    : [];
+  const colorOptions = buildColorOptions(meta, colors, images);
 
   return ok({
     data: {
@@ -86,7 +152,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       discount_amount: Number(row.discountAmount),
       stock: row.stock,
       stock_status: row.stockStatus,
-      colors: Array.isArray(row.colors) ? row.colors : [],
+      colors,
+      color_options: colorOptions,
       image_url: images[0] ?? row.imageUrl,
       images,
       catalog_variant_id: row.catalogVariantId,
