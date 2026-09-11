@@ -246,7 +246,16 @@ function buildRealSnapshot(
         status: "pending" as const,
         bookedAt: l.createdAt,
       })),
-    deliveries: [],
+    deliveries: leads
+      .filter((l) => l.stage === "delivered")
+      .map((l) => ({
+        id: l.id,
+        customerName: l.customerName,
+        vehicleLabel: l.preferredModel ?? "TBD",
+        pdiComplete: true,
+        rcStatus: "pending",
+        deliveryDate: l.createdAt,
+      })),
     staff: [],
     insights,
     salesChart: [],

@@ -86,11 +86,21 @@ export function DesktopSideRail({ state, descriptors, navigation, insets }: Bott
                   { backgroundColor: focused ? c.primary : c.bgElevated, borderColor: c.border },
                 ]}
               >
-                <Text style={{ color: focused ? c.primaryOn : c.text, fontWeight: "800", fontSize: 15 }}>
+                <Text
+                  style={{
+                    color: focused ? c.primaryOn : c.text,
+                    fontWeight: "700",
+                    fontSize: 15,
+                    fontFamily: c.fontFamily,
+                  }}
+                >
                   {GLYPH[route.name] ?? "•"}
                 </Text>
               </View>
-              <Text style={[styles.itemLabel, { color: focused ? c.text : c.muted }]} numberOfLines={1}>
+              <Text
+                style={[styles.itemLabel, { color: focused ? c.primary : c.muted, fontFamily: c.fontFamily }]}
+                numberOfLines={1}
+              >
                 {label}
               </Text>
             </Pressable>
@@ -112,7 +122,9 @@ export function DesktopSideRail({ state, descriptors, navigation, insets }: Bott
           onPress={() => void Linking.openURL(`${WEB_SITE_URL}${ws.webPath}`)}
           style={[styles.webCta, { backgroundColor: c.primary }]}
         >
-          <Text style={[styles.webCtaText, { color: c.primaryOn }]}>Open full web OS →</Text>
+          <Text style={[styles.webCtaText, { color: c.primaryOn, fontFamily: c.fontFamily }]}>
+            Open full web OS →
+          </Text>
         </Pressable>
         <Text style={[styles.hint, { color: c.muted }]}>
           Phone = this app. Full inventory / New Car OS = motorcart.in

@@ -50,7 +50,11 @@ export function DealerAnalyticsPage() {
       crumbs={[{ label: "Analytics" }]}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total views" value={analytics.totalViews.toLocaleString()} icon={Eye} />
+        <StatCard
+          label="Total views"
+          value={analytics.totalViews > 0 ? analytics.totalViews.toLocaleString() : "—"}
+          icon={Eye}
+        />
         <StatCard label="Enquiries" value={analytics.totalEnquiries} icon={BarChart3} />
         <StatCard label="Conversion" value={`${analytics.conversionPct}%`} icon={Percent} trend="up" />
         <StatCard label="Sold listings value" value={formatCurrency(stats.revenueMtd)} icon={TrendingUp} />
@@ -111,9 +115,9 @@ export function DealerAnalyticsPage() {
               {analytics.hotInventory.map((p) => (
                 <tr key={p.vehicleId}>
                   <td className="font-medium max-w-[180px] truncate">{p.title}</td>
-                  <td>{p.views.toLocaleString()}</td>
+                  <td>{p.views > 0 ? p.views.toLocaleString() : "—"}</td>
                   <td>{p.enquiries}</td>
-                  <td>{p.whatsappClicks}</td>
+                  <td>{p.whatsappClicks > 0 ? p.whatsappClicks : "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -153,7 +157,7 @@ export function DealerAnalyticsPage() {
             {listingPerformance.map((p) => (
               <tr key={p.vehicleId}>
                 <td className="font-medium max-w-xs truncate">{p.title}</td>
-                <td>{p.views.toLocaleString()}</td>
+                <td>{p.views > 0 ? p.views.toLocaleString() : "—"}</td>
                 <td>{p.enquiries}</td>
                 <td className="capitalize">{p.status}</td>
               </tr>

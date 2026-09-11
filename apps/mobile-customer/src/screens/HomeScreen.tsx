@@ -216,7 +216,7 @@ export function HomeScreen() {
       >
         <McContent style={styles.content}>
           {desktop ? (
-            <View style={[styles.webBanner, { backgroundColor: c.primarySoft, borderColor: c.primaryGlow }]}>
+            <View style={[styles.webBanner, { backgroundColor: c.card, borderColor: c.border }]}>
               <Text style={[styles.webBannerTitle, { color: c.text }]} numberOfLines={2}>
                 Desktop companion · full New Car OS is on motorcart.in
               </Text>
@@ -310,7 +310,7 @@ function makeStyles(c: ThemeColors) {
       marginBottom: 16,
       gap: 12,
     },
-    webBannerTitle: { fontSize: 14, fontWeight: "800", lineHeight: 20, width: "100%" },
+    webBannerTitle: { fontSize: 14, fontWeight: "600", lineHeight: 20, width: "100%", fontFamily: c.fontFamily },
     webBannerActions: { alignSelf: "flex-start" },
     greetRow: {
       flexDirection: "row",
@@ -321,9 +321,9 @@ function makeStyles(c: ThemeColors) {
     },
     greetText: { flexShrink: 1, flexGrow: 1, minWidth: 0 },
     sideCard: { marginBottom: 16, backgroundColor: c.panel, borderColor: c.borderStrong, width: "100%" },
-    sideTitle: { color: c.text, fontSize: 17, fontWeight: "800" },
-    sideBody: { color: c.textSecondary, marginTop: 8, fontSize: 13 },
-    sideMeta: { color: c.muted, marginTop: 10, fontSize: 11 },
+    sideTitle: { color: c.text, fontSize: 17, fontWeight: "700", fontFamily: c.fontFamily },
+    sideBody: { color: c.textSecondary, marginTop: 8, fontSize: 13, fontFamily: c.fontFamily },
+    sideMeta: { color: c.muted, marginTop: 10, fontSize: 11, fontFamily: c.fontFamily },
     stats: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -337,8 +337,8 @@ function makeStyles(c: ThemeColors) {
     modulesDesktop: { flexDirection: "row", flexWrap: "wrap" },
     moduleCard: { flexGrow: 1, minWidth: 200, maxWidth: "100%" },
     moduleCardPhone: { backgroundColor: c.panel, borderColor: c.borderStrong },
-    moduleTitle: { color: c.text, fontWeight: "800", fontSize: 15 },
-    moduleBody: { color: c.muted, marginTop: 6, fontSize: 13, lineHeight: 18 },
+    moduleTitle: { color: c.text, fontWeight: "700", fontSize: 15, fontFamily: c.fontFamily },
+    moduleBody: { color: c.muted, marginTop: 6, fontSize: 13, lineHeight: 18, fontFamily: c.fontFamily },
     actions: { marginTop: 4, width: "100%" },
     actionsDesktop: { flexDirection: "row", alignItems: "stretch", gap: 12, flexWrap: "wrap" },
     actionCol: { flexGrow: 1, minWidth: 160 },

@@ -117,8 +117,19 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 | Feature | Data source | Notes |
 |---------|-------------|-------|
 | Inventory add | **REAL** | Insert paths work |
-| Leads | **PARTIAL** | `dealer_leads` |
-| Bookings/deliveries/marketing | **PLACEHOLDER** | `NcdModulePlaceholder` pages |
+| Leads | **REAL** | Marketplace `leads` + legacy `dealer_leads` |
+| Bookings / deliveries | **REAL** | Derived from lead stages (`booking` / `delivered`) |
+| WhatsApp / team / finance | **SHARED** | Uses `/dashboard/dealer/*` shared paths (not remapped away) |
+| Marketing / RTO depth | **PARTIAL** | UI hubs; some outbound to web tools |
+
+### Partner desks — honesty gates (2026-09-11)
+
+| Feature | Data source | Notes |
+|---------|-------------|-------|
+| Parts supplier empty ERP | **REAL / EMPTY** | Zeros when no catalog; mock only if `VITE_REAL_DATA_ONLY=false` |
+| Service partner misc KPIs | **REAL / EMPTY** | No fabricated members/revenue/invoices |
+| DSA desk empty pipeline | **REAL / EMPTY** | Demo applications gated by `realDataOnly` |
+| Loan apply mock success | **BLOCKED** | Fails honestly when RPC/API unavailable under real-data |
 
 ---
 

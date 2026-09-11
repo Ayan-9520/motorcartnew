@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { Appearance, Platform, useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  FONT_FAMILY,
   THEME_STORAGE_KEY,
   colorsFor,
   type ResolvedTheme,
@@ -19,21 +20,72 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+const INTER_HREF =
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap";
+
+function ensureWebBrandAssets() {
+  if (Platform.OS !== "web" || typeof document === "undefined") return;
+
+  if (!document.getElementById("mc-inter-font")) {
+    const pre1 = document.createElement("link");
+    pre1.rel = "preconnect";
+    pre1.href = "https://fonts.googleapis.com";
+    document.head.appendChild(pre1);
+    const pre2 = document.createElement("link");
+    pre2.rel = "preconnect";
+    pre2.href = "https://fonts.gstatic.com";
+    pre2.crossOrigin = "anonymous";
+    document.head.appendChild(pre2);
+    const link = document.createElement("link");
+    link.id = "mc-inter-font";
+    link.rel = "stylesheet";
+    link.href = INTER_HREF;
+    document.head.appendChild(link);
+  }
+
+  if (!document.getElementById("mc-brand-font-css")) {
+    const style = document.createElement("style");
+    style.id = "mc-brand-font-css";
+    style.textContent = `
+      html, body, #root, #root * {
+        font-family: ${FONT_FAMILY} !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body { margin: 0; }
+      input, button, textarea, select {
+        font-family: inherit !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
 function applyWebDocument(resolved: ResolvedTheme) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
+  ensureWebBrandAssets();
   const root = document.documentElement;
   root.classList.toggle("dark", resolved === "dark");
   root.dataset.theme = resolved;
   root.style.colorScheme = resolved;
-  root.style.backgroundColor = resolved === "dark" ? "#0b141a" : "#f0f2f5";
+  // Match website --mc-surface
+  root.style.backgroundColor = resolved === "dark" ? "#000000" : "#f0f2f5";
+  if (document.body) {
+    document.body.style.backgroundColor = resolved === "dark" ? "#000000" : "#f0f2f5";
+    document.body.style.fontFamily = FONT_FAMILY;
+  }
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", resolved === "dark" ? "#0b141a" : "#f0f2f5");
+  if (meta) meta.setAttribute("content", resolved === "dark" ? "#000000" : "#f0f2f5");
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const system = useColorScheme();
   const [mode, setModeState] = useState<ThemeMode>("system");
   const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    ensureWebBrandAssets();
+  }, []);
 
   useEffect(() => {
     let alive = true;

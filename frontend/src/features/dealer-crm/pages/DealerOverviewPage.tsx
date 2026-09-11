@@ -189,9 +189,9 @@ export function DealerOverviewPage() {
             {analytics.hotInventory.slice(0, 5).map((p) => (
               <tr key={p.vehicleId}>
                 <td className="font-medium max-w-[200px] truncate">{p.title}</td>
-                <td>{p.views.toLocaleString()}</td>
+                <td>{p.views > 0 ? p.views.toLocaleString() : "—"}</td>
                 <td>{p.enquiries}</td>
-                <td>{p.whatsappClicks}</td>
+                <td>{p.whatsappClicks > 0 ? p.whatsappClicks : "—"}</td>
               </tr>
             ))}
           </tbody>

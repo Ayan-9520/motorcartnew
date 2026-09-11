@@ -139,7 +139,14 @@ export async function submitLoanApplication(payload: {
     return { ok: true, data: data as Record<string, unknown> };
   }
 
-  // Mock fallback
+  if (realDataOnly) {
+    return {
+      ok: false,
+      error: error?.message ?? "Loan application could not be submitted. Please try again.",
+    };
+  }
+
+  // Demo fallback (local / non–real-data builds only)
   return {
     ok: true,
     data: {
@@ -196,7 +203,7 @@ export async function fetchDsaApplications(dsaAgentId: string): Promise<LoanAppl
 
   const rows = (data ?? []).map((r) => mapApplication(r as DbFinanceApplication & { banks?: { name: string } }));
   if (rows.length) return rows;
-  return buildDsaDemoApplications();
+  return realDataOnly ? [] : buildDsaDemoApplications();
 }
 
 export async function fetchDsaDeskLeads(dsaAgentId?: string): Promise<FinanceLead[]> {
@@ -227,11 +234,11 @@ export async function fetchDsaDeskLeads(dsaAgentId?: string): Promise<FinanceLea
       createdAt: r.created_at,
     }));
   }
-  return buildDsaDemoLeads();
+  return realDataOnly ? [] : buildDsaDemoLeads();
 }
 
 export async function fetchDsaTeam(): Promise<DsaTeamMember[]> {
-  return buildDsaDemoTeam();
+  return realDataOnly ? [] : buildDsaDemoTeam();
 }
 
 export async function fetchLenderApplications(): Promise<LoanApplication[]> {
@@ -341,7 +348,7 @@ export async function fetchCommissions(dsaAgentId?: string): Promise<FinanceComm
   if (dsaAgentId) q = q.eq("dsa_agent_id", dsaAgentId);
   const { data } = await q.limit(100);
   if (!data?.length) {
-    if (dsaAgentId) return buildDsaDemoCommissions(buildDsaDemoApplications());
+    if (dsaAgentId) return realDataOnly ? [] : buildDsaDemoCommissions(buildDsaDemoApplications());
     return [];
   }
   return data.map((r) => ({
@@ -417,7 +424,7 @@ export async function fetchBankIntegrations(): Promise<BankIntegrationConfig[]> 
     .from("bank_integration_configs")
     .select("*, banks(name)")
     .order("created_at", { ascending: false });
-  if (!data?.length) return buildMockBankIntegrations();
+  if (!data?.length) return realDataOnly ? [] : buildMockBankIntegrations();
   return data.map((r) => {
     const row = r as Record<string, unknown> & { banks?: { name: string } };
     return {

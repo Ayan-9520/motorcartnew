@@ -119,6 +119,8 @@ export function normalizePathForWorkspace(
   pathname: string
 ): string {
   if (isNewCarDealerWorkspace(user) && pathname.startsWith("/dashboard/dealer")) {
+    // Shared finance / WhatsApp / team / settings stay on dealer OS routes (not remapped to /new-car/*).
+    if (isNewCarSharedDealerPath(pathname)) return pathname;
     return pathname.replace(/^\/dashboard\/dealer/, "/dashboard/new-car") || "/dashboard/new-car";
   }
   return pathname;

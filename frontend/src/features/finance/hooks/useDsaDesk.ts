@@ -29,8 +29,8 @@ export function useDsaDesk() {
     const agent = await fetchDsaAgentByUserId(user.id);
     const agentId = agent?.id as string | undefined;
     const [apps, comms, leadRows, teamRows] = await Promise.all([
-      agentId ? fetchDsaApplications(agentId) : fetchDsaApplications("demo"),
-      agentId ? fetchCommissions(agentId) : fetchCommissions("demo-dsa-agent"),
+      agentId ? fetchDsaApplications(agentId) : Promise.resolve([] as LoanApplication[]),
+      agentId ? fetchCommissions(agentId) : Promise.resolve([] as FinanceCommission[]),
       fetchDsaDeskLeads(agentId),
       fetchDsaTeam(),
     ]);

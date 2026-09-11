@@ -23,18 +23,6 @@ export function McScreen({ children, style }: { children: React.ReactNode; style
   const c = useCRM();
   return (
     <View style={[{ flex: 1, backgroundColor: c.bg, width: "100%", minHeight: 0, overflow: "hidden" }, webFill, style]}>
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          backgroundColor: c.primary,
-          opacity: 0.85,
-        }}
-      />
       {children}
     </View>
   );
@@ -127,10 +115,11 @@ export function McTitle({ children, size = "lg" }: { children: React.ReactNode; 
     <Text
       style={{
         fontSize: size === "md" ? (compact ? 20 : 22) : compact ? 24 : 28,
-        fontWeight: "800",
+        fontWeight: "700",
         color: c.text,
-        letterSpacing: -0.7,
+        letterSpacing: -0.5,
         lineHeight: compact ? 30 : 34,
+        fontFamily: c.fontFamily,
       }}
     >
       {children}
@@ -140,7 +129,7 @@ export function McTitle({ children, size = "lg" }: { children: React.ReactNode; 
 
 export function McMuted({ children }: { children: React.ReactNode }) {
   const c = useCRM();
-  return <Text style={{ fontSize: 14, color: c.muted, lineHeight: 21 }}>{children}</Text>;
+  return <Text style={{ fontSize: 14, color: c.muted, lineHeight: 21, fontFamily: c.fontFamily }}>{children}</Text>;
 }
 
 export function McBadge({
@@ -240,7 +229,9 @@ export function McButton({
       {busy ? (
         <ActivityIndicator color={variant === "primary" ? c.primaryOn : c.primary} />
       ) : (
-        <Text style={{ fontWeight: "800", fontSize: compact ? 13 : 15, color: labelColor, letterSpacing: 0.1 }}>{label}</Text>
+        <Text style={{ fontWeight: "700", fontSize: compact ? 13 : 15, color: labelColor, letterSpacing: 0.1, fontFamily: c.fontFamily }}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
@@ -432,16 +423,26 @@ export function McStat({
         ...c.shadowSm,
       }}
     >
-      <Text style={{ fontSize: 10, fontWeight: "800", color: c.muted, textTransform: "uppercase", letterSpacing: 0.8 }}>
+      <Text
+        style={{
+          fontSize: 10,
+          fontWeight: "700",
+          color: c.muted,
+          textTransform: "uppercase",
+          letterSpacing: 0.8,
+          fontFamily: c.fontFamily,
+        }}
+      >
         {label}
       </Text>
       <Text
         style={{
           marginTop: 8,
           fontSize: 26,
-          fontWeight: "800",
+          fontWeight: "700",
           color: accent ? c.primary : c.text,
           letterSpacing: -0.5,
+          fontFamily: c.fontFamily,
         }}
       >
         {value}
@@ -624,12 +625,13 @@ export function McSectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <Text
       style={{
-        fontSize: 10,
-        fontWeight: "800",
-        color: c.primary,
-        letterSpacing: 1.6,
+        fontSize: 11,
+        fontWeight: "600",
+        color: c.muted,
+        letterSpacing: 1.2,
         textTransform: "uppercase",
         marginBottom: 8,
+        fontFamily: c.fontFamily,
       }}
     >
       {children}
@@ -649,41 +651,52 @@ export function McHero({
   right?: React.ReactNode;
 }) {
   const c = useCRM();
-  const { resolved } = useTheme();
-  const dark = resolved === "dark";
   return (
     <View
       style={{
         marginBottom: 16,
         padding: 18,
         borderRadius: c.radius,
-        backgroundColor: dark ? "#0f1c24" : c.panel,
+        backgroundColor: c.card,
         borderWidth: 1,
-        borderColor: dark ? "rgba(37, 211, 102, 0.22)" : c.borderStrong,
+        borderColor: c.border,
         ...c.shadowSm,
       }}
     >
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          borderTopLeftRadius: c.radius,
-          borderTopRightRadius: c.radius,
-          backgroundColor: c.primary,
-          opacity: 0.9,
-        }}
-      />
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ fontSize: 10, fontWeight: "800", color: c.primary, letterSpacing: 1.4, textTransform: "uppercase" }}>
+          <Text
+            style={{
+              fontSize: 10,
+              fontWeight: "700",
+              color: c.primary,
+              letterSpacing: 1.2,
+              textTransform: "uppercase",
+              fontFamily: c.fontFamily,
+            }}
+          >
             {eyebrow}
           </Text>
-          <Text style={{ marginTop: 6, fontSize: 20, fontWeight: "800", color: c.text, letterSpacing: -0.5 }}>{title}</Text>
-          {body ? <Text style={{ marginTop: 8, fontSize: 13, color: c.muted, lineHeight: 19 }} numberOfLines={2}>{body}</Text> : null}
+          <Text
+            style={{
+              marginTop: 6,
+              fontSize: 20,
+              fontWeight: "700",
+              color: c.text,
+              letterSpacing: -0.4,
+              fontFamily: c.fontFamily,
+            }}
+          >
+            {title}
+          </Text>
+          {body ? (
+            <Text
+              style={{ marginTop: 8, fontSize: 13, color: c.muted, lineHeight: 19, fontFamily: c.fontFamily }}
+              numberOfLines={2}
+            >
+              {body}
+            </Text>
+          ) : null}
         </View>
         {right}
       </View>

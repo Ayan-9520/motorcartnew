@@ -1,3 +1,4 @@
+import { realDataOnly } from "@/config/real-data";
 import {
   computeSupplierAnalytics,
   fetchSellerPartOrders,
@@ -5,7 +6,11 @@ import {
   fetchSupplierProfile,
 } from "@/features/parts/services/parts.service";
 import type { PartProduct } from "@/features/parts/types";
-import { buildMockPartsSupplierSnapshot, getMockOrderDetail } from "../data/mock-ps-data";
+import {
+  buildMockPartsSupplierSnapshot,
+  emptyPartsSupplierSnapshot,
+  getMockOrderDetail,
+} from "../data/mock-ps-data";
 import type { PartsSupplierSnapshot, PsCatalogProduct, PsSupplierOrder, PsSupplierOrderDetail } from "../types";
 
 function mapPartToCatalog(p: PartProduct): PsCatalogProduct {
@@ -41,9 +46,9 @@ export async function fetchPartsSupplierSnapshot(
   sellerId: string,
   displayName?: string
 ): Promise<PartsSupplierSnapshot> {
-  const mock = buildMockPartsSupplierSnapshot(
-    displayName ? `${displayName} Auto Parts` : undefined
-  );
+  const businessName = displayName ? `${displayName} Auto Parts` : "Your parts business";
+  const empty = emptyPartsSupplierSnapshot(businessName);
+  const mock = realDataOnly ? empty : buildMockPartsSupplierSnapshot(businessName);
 
   try {
     const [parts, orders, profile] = await Promise.all([
@@ -53,14 +58,18 @@ export async function fetchPartsSupplierSnapshot(
     ]);
 
     if (parts.length === 0 && orders.length === 0 && !profile) {
-      return mock;
+      return realDataOnly ? empty : mock;
     }
 
+    const base = emptyPartsSupplierSnapshot(
+      profile?.businessName ?? businessName,
+      empty.profile.city
+    );
     const analytics = computeSupplierAnalytics(parts, orders);
 
     if (profile) {
-      mock.profile = {
-        ...mock.profile,
+      base.profile = {
+        ...base.profile,
         id: profile.id,
         businessName: profile.businessName,
         gstin: profile.gstin,
@@ -71,8 +80,8 @@ export async function fetchPartsSupplierSnapshot(
     }
 
     if (parts.length > 0) {
-      mock.catalog = parts.map(mapPartToCatalog);
-      mock.metrics = mock.metrics.map((m) => {
+      base.catalog = parts.map(mapPartToCatalog);
+      base.metrics = base.metrics.map((m) => {
         if (m.key === "skus") return { ...m, value: analytics.activeSkus };
         if (m.key === "low_stock") return { ...m, value: analytics.lowStock };
         return m;
@@ -92,20 +101,26 @@ export async function fetchPartsSupplierSnapshot(
         paymentMode: o.paymentMethod,
         createdAt: o.createdAt,
       }));
-      mock.orders = mapped;
-      mock.pendingDispatch = orders.filter((x) =>
+      base.orders = mapped;
+      base.pendingDispatch = orders.filter((x) =>
         ["pending", "confirmed", "packed"].includes(x.status)
       ).length;
+      base.metrics = base.metrics.map((m) => {
+        if (m.key === "dispatch") return { ...m, value: base.pendingDispatch };
+        if (m.key === "orders_today") return { ...m, value: orders.length };
+        return m;
+      });
     }
 
-    return mock;
+    return base;
   } catch {
-    return mock;
+    return realDataOnly ? empty : mock;
   }
 }
 
 export async function fetchPartsSupplierOrderDetail(
   orderId: string
 ): Promise<PsSupplierOrderDetail | null> {
+  if (realDataOnly) return null;
   return getMockOrderDetail(orderId);
 }

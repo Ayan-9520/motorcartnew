@@ -1,4 +1,4 @@
-/** Motorcart app theme — mirrors website light/dark tokens (WhatsApp-fintech green). */
+/** Motorcart companion theme — same tokens as website `global.css` (:root / .dark). */
 
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
@@ -26,6 +26,7 @@ export type ThemeColors = {
   primaryHover: string;
   primarySoft: string;
   primaryGlow: string;
+  /** Text on primary buttons — website uses white */
   primaryOn: string;
   navy: string;
   navyDeep: string;
@@ -36,6 +37,8 @@ export type ThemeColors = {
   warning: string;
   success: string;
   plate: string;
+  /** Inter — same as motorcart.in */
+  fontFamily: string;
   radius: number;
   radiusSm: number;
   radiusXs: number;
@@ -46,15 +49,20 @@ export type ThemeColors = {
   shadowLg: ShadowStyle;
 };
 
+/** Website brand: --mc-green #25d366 · --primary-foreground white · Inter */
+export const FONT_FAMILY =
+  'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
 const shared = {
   primary: "#25D366",
   primaryHover: "#1ebe5d",
-  primaryOn: "#04120a",
+  primaryOn: "#ffffff",
   accent: "#3b82f6",
   danger: "#ef4444",
   warning: "#f59e0b",
   success: "#25D366",
   plate: "#ffffff",
+  fontFamily: FONT_FAMILY,
   radius: 20,
   radiusSm: 14,
   radiusXs: 10,
@@ -62,10 +70,10 @@ const shared = {
   maxContent: 1280,
 } as const;
 
-/** Light — matches website :root (#f0f2f5 surface, white cards, brand green) */
+/** Light — website :root / --mc-surface #f0f2f5 */
 export const lightColors: ThemeColors = {
   ...shared,
-  bg: "#eef1f6",
+  bg: "#f0f2f5",
   bgElevated: "#ffffff",
   card: "#ffffff",
   cardHover: "#f8fafc",
@@ -73,8 +81,8 @@ export const lightColors: ThemeColors = {
   text: "#0f172a",
   textSecondary: "#334155",
   muted: "#64748b",
-  border: "rgba(15, 23, 42, 0.06)",
-  borderStrong: "#e2e8f0",
+  border: "#e5e7eb",
+  borderStrong: "#e5e7eb",
   primarySoft: "rgba(37, 211, 102, 0.1)",
   primaryGlow: "rgba(37, 211, 102, 0.22)",
   navy: "#0f172a",
@@ -84,65 +92,65 @@ export const lightColors: ThemeColors = {
   shadow: {
     shadowColor: "#0f172a",
     shadowOpacity: 0.06,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   shadowSm: {
     shadowColor: "#0f172a",
     shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   shadowLg: {
     shadowColor: "#0f172a",
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
 };
 
-/** Dark — matches website .dark (#0b141a / elevated surfaces) */
+/** Dark — website .dark pure black / charcoal cards */
 export const darkColors: ThemeColors = {
   ...shared,
-  bg: "#0b141a",
-  bgElevated: "#111b21",
-  card: "#1a242d",
-  cardHover: "#202c33",
-  panel: "#111b21",
-  text: "#f4f7fb",
-  textSecondary: "#d1d7db",
-  muted: "#8696a0",
-  border: "rgba(255, 255, 255, 0.06)",
-  borderStrong: "#2a3942",
+  bg: "#000000",
+  bgElevated: "#171717",
+  card: "#171717",
+  cardHover: "#1f1f1f",
+  panel: "#0a0a0a",
+  text: "#ffffff",
+  textSecondary: "#e5e5e5",
+  muted: "#a3a3a3",
+  border: "#2e2e2e",
+  borderStrong: "#2e2e2e",
   primarySoft: "rgba(37, 211, 102, 0.12)",
   primaryGlow: "rgba(37, 211, 102, 0.28)",
-  navy: "#111b21",
-  navyDeep: "#0b141a",
-  header: "#111b21",
-  tabBar: "#111b21",
+  navy: "#171717",
+  navyDeep: "#000000",
+  header: "#0a0a0a",
+  tabBar: "#0a0a0a",
   shadow: {
     shadowColor: "#000",
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   shadowSm: {
     shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   shadowLg: {
     shadowColor: "#000",
-    shadowOpacity: 0.45,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
   },
 };
 
@@ -150,7 +158,7 @@ export function colorsFor(resolved: ResolvedTheme): ThemeColors {
   return resolved === "dark" ? darkColors : lightColors;
 }
 
-/** @deprecated Prefer useCRM() — kept as light default for any stray static refs */
+/** @deprecated Prefer useCRM() */
 export const CRM = lightColors;
 
 export const BRAND = {

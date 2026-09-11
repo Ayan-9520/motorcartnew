@@ -7,6 +7,53 @@ export function greetingForSupplier(name: string): string {
   return `Good ${slot} ${first} 👋`;
 }
 
+/** Honest empty ERP shell — production when catalog/orders are empty. */
+export function emptyPartsSupplierSnapshot(
+  businessName = "Your parts business",
+  city = "India"
+): PartsSupplierSnapshot {
+  return {
+    profile: {
+      id: "",
+      businessName,
+      gstin: "",
+      isGstVerified: false,
+      tier: "standard",
+      city,
+      warehouseCount: 0,
+      activeDealers: 0,
+      isVerified: false,
+    },
+    pendingDispatch: 0,
+    revenueTarget: 0,
+    revenueAchieved: 0,
+    grossMarginPct: 0,
+    topCategory: "—",
+    fastMovingSku: "—",
+    b2bRevenuePct: 0,
+    metrics: [
+      { key: "revenue", label: "Revenue", value: "₹0", href: "/dashboard/parts/finance/revenue" },
+      { key: "skus", label: "Active SKUs", value: 0, href: "/dashboard/parts/catalog" },
+      { key: "orders_today", label: "Orders today", value: 0, href: "/dashboard/parts/orders" },
+      { key: "dispatch", label: "Pending dispatch", value: 0, href: "/dashboard/parts/logistics/dispatch" },
+      { key: "low_stock", label: "Low stock", value: 0, href: "/dashboard/parts/low-stock" },
+    ],
+    alerts: [],
+    insights: [],
+    pipeline: [
+      { stage: "pending", label: "New", count: 0 },
+      { stage: "confirmed", label: "Processing", count: 0 },
+      { stage: "packed", label: "Packed", count: 0 },
+      { stage: "shipped", label: "Dispatched", count: 0 },
+      { stage: "delivered", label: "Delivered", count: 0 },
+    ],
+    catalog: [],
+    orders: [],
+    warehouses: [],
+    b2bCustomers: [],
+  };
+}
+
 export function buildMockPartsSupplierSnapshot(
   businessName = "AutoParts Hub India",
   city = "Delhi NCR"
