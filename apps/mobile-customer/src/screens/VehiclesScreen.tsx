@@ -11,12 +11,15 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import * as Linking from "expo-linking";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { WEB_SITE_URL } from "../config";
 import type { ThemeColors } from "../theme";
 import { fetchVehicles, type Vehicle } from "../api/vehicles";
+import { fetchNewCarInventory, type NewCarStockItem } from "../api/inventory";
 import type { ApiError } from "../api/client";
-import { McChip, McContent, McMuted, McScreen, McSectionLabel, useThemedStyles } from "../ui/crm";
+import { McChip, McContent, McMuted, McScreen, McSectionLabel, McSegmentRow, useThemedStyles } from "../ui/crm";
 import { getRoleFamily, getRoleWorkspace } from "../roles";
 import { useAuth } from "../auth/AuthContext";
 import { useCRM } from "../ThemeContext";
@@ -24,12 +27,49 @@ import type { RootStackParamList } from "../navigation/types";
 import { resolveVehicleImage } from "../lib/vehicleImage";
 import { MotorcartLogo } from "../ui/MotorcartLogo";
 
-function formatPrice(n?: number) {
-  if (n == null || Number.isNaN(n)) return "Price on request";
+function formatPrice(n?: number | null) {
+  if (n == null || Number.isNaN(n) || n <= 0) return "Price on request";
   return `₹${Number(n).toLocaleString("en-IN")}`;
 }
 
 const CATEGORIES = ["All", "car", "bike", "suv", "truck", "ev"];
+
+type BrowseMode = "showroom" | "market";
+
+type Row = {
+  id: string;
+  title: string;
+  sub: string;
+  price?: number | null;
+  image?: string | null;
+  kind: BrowseMode;
+  status?: string | null;
+};
+
+function vehicleToRow(v: Vehicle): Row {
+  return {
+    id: v.id,
+    title: v.title || [v.brand, v.model].filter(Boolean).join(" ") || "Vehicle",
+    sub: [v.year, v.city, v.fuel_type].filter(Boolean).join(" · "),
+    price: v.price,
+    image: v.images?.[0] ?? null,
+    kind: "market",
+  };
+}
+
+function stockToRow(s: NewCarStockItem): Row {
+  return {
+    id: s.id,
+    title: [s.brand, s.model, s.variant].filter(Boolean).join(" ") || "Stock unit",
+    sub: [s.year, s.fuel_type, s.stock_status, s.stock != null ? `qty ${s.stock}` : null]
+      .filter(Boolean)
+      .join(" · "),
+    price: s.ex_showroom_price && s.ex_showroom_price > 0 ? s.ex_showroom_price : s.price,
+    image: s.image_url ?? s.images?.[0] ?? null,
+    kind: "showroom",
+    status: s.stock_status,
+  };
+}
 
 export function VehiclesScreen() {
   const { user } = useAuth();
@@ -37,11 +77,14 @@ export function VehiclesScreen() {
   const styles = useThemedStyles(makeStyles);
   const ws = useMemo(() => getRoleWorkspace(user?.role), [user?.role]);
   const family = getRoleFamily(user?.role);
+  const isDealer = family === "dealer";
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width } = useWindowDimensions();
   const desktop = width >= 900;
   const cols = desktop ? 3 : width >= 640 ? 2 : 1;
-  const [items, setItems] = useState<Vehicle[]>([]);
+  const [mode, setMode] = useState<BrowseMode>(isDealer ? "showroom" : "market");
+  const [rows, setRows] = useState<Row[]>([]);
+  const [stockTotal, setStockTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -51,19 +94,27 @@ export function VehiclesScreen() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const list = await fetchVehicles({
-        limit: 60,
-        category: category === "All" ? undefined : category,
-        q: q.trim() || undefined,
-      });
-      setItems(list);
+      if (isDealer && mode === "showroom") {
+        const inv = await fetchNewCarInventory({ q: q.trim() || undefined, pageSize: 200 });
+        setRows(inv.items.map(stockToRow));
+        setStockTotal(inv.kpis.totalRows || inv.total);
+      } else {
+        const list = await fetchVehicles({
+          limit: 60,
+          category: category === "All" ? undefined : category,
+          q: q.trim() || undefined,
+        });
+        setRows(list.map(vehicleToRow));
+        setStockTotal(null);
+      }
     } catch (e) {
-      setError((e as ApiError)?.message ?? "Could not load vehicles");
+      setError((e as ApiError)?.message ?? "Could not load stock");
+      setRows([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [category, q]);
+  }, [category, isDealer, mode, q]);
 
   useEffect(() => {
     setLoading(true);
@@ -71,7 +122,15 @@ export function VehiclesScreen() {
     return () => clearTimeout(t);
   }, [load, q]);
 
-  if (loading && !items.length) {
+  function openRow(item: Row) {
+    if (item.kind === "showroom") {
+      void Linking.openURL(`${WEB_SITE_URL}/buy/cars/new/${encodeURIComponent(`ncd-${item.id}`)}`);
+      return;
+    }
+    nav.navigate("VehicleDetail", { id: item.id, title: item.title });
+  }
+
+  if (loading && !rows.length) {
     return (
       <McScreen>
         <View style={styles.center}>
@@ -86,13 +145,13 @@ export function VehiclesScreen() {
     <McScreen>
       <McContent style={styles.fill}>
         <FlatList
-          key={`cols-${cols}`}
+          key={`cols-${cols}-${mode}`}
           numColumns={cols}
           style={styles.fill}
           contentContainerStyle={styles.list}
           columnWrapperStyle={cols > 1 ? styles.colWrap : undefined}
-          data={items}
-          keyExtractor={(item) => item.id}
+          data={rows}
+          keyExtractor={(item) => `${item.kind}-${item.id}`}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -106,63 +165,89 @@ export function VehiclesScreen() {
           ListHeaderComponent={
             <View style={styles.headerBlock}>
               <McSectionLabel>{ws.tabs.browse}</McSectionLabel>
-              <Text style={styles.h}>{family === "dealer" ? "Stock & market" : "Marketplace"}</Text>
-              <McMuted>Search · filter · open detail · enquire creates a real lead</McMuted>
+              <Text style={styles.h}>
+                {isDealer && mode === "showroom" ? "Your showroom stock" : isDealer ? "Marketplace" : "Marketplace"}
+              </Text>
+              <McMuted>
+                {isDealer && mode === "showroom"
+                  ? "Live new-car inventory — same API as motorcart.in New Car OS"
+                  : "Search · filter · open detail · enquire creates a real lead"}
+              </McMuted>
+
+              {isDealer ? (
+                <View style={{ marginTop: 12 }}>
+                  <McSegmentRow
+                    options={["showroom", "market"] as const}
+                    value={mode}
+                    onChange={setMode}
+                    labels={{ showroom: "My stock", market: "Market" }}
+                  />
+                </View>
+              ) : null}
 
               <TextInput
                 value={q}
                 onChangeText={setQ}
-                placeholder="Search brand, model, city…"
+                placeholder={mode === "showroom" ? "Search brand, model, variant…" : "Search brand, model, city…"}
                 placeholderTextColor={c.muted}
                 style={styles.search}
               />
 
-              <FlatList
-                horizontal
-                data={CATEGORIES}
-                keyExtractor={(cat) => cat}
-                showsHorizontalScrollIndicator={false}
-                style={styles.catScroll}
-                contentContainerStyle={styles.catRow}
-                renderItem={({ item: cat }) => (
-                  <McChip
-                    label={cat === "All" ? "All" : cat.toUpperCase()}
-                    active={category === cat}
-                    onPress={() => setCategory(cat)}
-                  />
-                )}
-              />
+              {mode === "market" ? (
+                <FlatList
+                  horizontal
+                  data={CATEGORIES}
+                  keyExtractor={(cat) => cat}
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.catScroll}
+                  contentContainerStyle={styles.catRow}
+                  renderItem={({ item: cat }) => (
+                    <McChip
+                      label={cat === "All" ? "All" : cat.toUpperCase()}
+                      active={category === cat}
+                      onPress={() => setCategory(cat)}
+                    />
+                  )}
+                />
+              ) : null}
 
               {error ? <Text style={styles.error}>{error}</Text> : null}
-              <Text style={styles.meta}>{items.length} listings</Text>
+              <Text style={styles.meta}>
+                {stockTotal != null ? `${rows.length} shown · ${stockTotal} total in showroom` : `${rows.length} listings`}
+              </Text>
+              {isDealer && mode === "showroom" ? (
+                <Pressable onPress={() => void Linking.openURL(`${WEB_SITE_URL}${ws.webPath}/inventory`)} style={{ marginTop: 8 }}>
+                  <Text style={{ color: c.primary, fontWeight: "800", fontSize: 13 }}>Edit stock on website →</Text>
+                </Pressable>
+              ) : null}
             </View>
           }
-          ListEmptyComponent={<Text style={styles.empty}>{error ?? "No vehicles match your filters."}</Text>}
+          ListEmptyComponent={
+            <Text style={styles.empty}>{error ?? (mode === "showroom" ? "No showroom stock yet." : "No vehicles match your filters.")}</Text>
+          }
           renderItem={({ item }) => {
-            const title = item.title || [item.brand, item.model].filter(Boolean).join(" ") || "Vehicle";
-            const img = resolveVehicleImage(item.images?.[0]);
+            const img = resolveVehicleImage(item.image);
             return (
-              <Pressable
-                style={[styles.card, cols > 1 && styles.cardGrid]}
-                onPress={() => nav.navigate("VehicleDetail", { id: item.id, title })}
-              >
+              <Pressable style={[styles.card, cols > 1 && styles.cardGrid]} onPress={() => openRow(item)}>
                 {img ? (
                   <Image source={{ uri: img }} style={styles.image} resizeMode="cover" />
                 ) : (
                   <View style={[styles.image, styles.fallback]}>
                     <View style={styles.fallbackBadge}>
-                      <Text style={styles.fallbackText}>{(item.brand || "MC").slice(0, 2).toUpperCase()}</Text>
+                      <Text style={styles.fallbackText}>{(item.title || "MC").slice(0, 2).toUpperCase()}</Text>
                     </View>
                   </View>
                 )}
                 <View style={styles.metaBox}>
                   <Text style={styles.title} numberOfLines={1}>
-                    {title}
+                    {item.title}
                   </Text>
-                  <Text style={styles.sub}>{[item.year, item.city, item.fuel_type].filter(Boolean).join(" · ")}</Text>
+                  <Text style={styles.sub} numberOfLines={2}>
+                    {item.sub}
+                  </Text>
                   <View style={styles.priceRow}>
                     <Text style={styles.price}>{formatPrice(item.price)}</Text>
-                    <Text style={styles.open}>Details →</Text>
+                    <Text style={styles.open}>{item.kind === "showroom" ? "Open →" : "Details →"}</Text>
                   </View>
                 </View>
               </Pressable>

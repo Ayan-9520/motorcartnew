@@ -18,6 +18,7 @@ import {
   fetchWishlist,
 } from "../api/crm";
 import { fetchVehicles } from "../api/vehicles";
+import { fetchNewCarInventorySafe } from "../api/inventory";
 import {
   McAvatar,
   McButton,
@@ -46,7 +47,7 @@ function familyModules(family: RoleFamily): { title: string; body: string }[] {
       return [
         { title: "Lead pipeline", body: "New → contacted → qualified → won/lost from your phone." },
         { title: "Call / WhatsApp", body: "One-tap triage on every enquiry row." },
-        { title: "Stock glance", body: "Marketplace inventory; full CRUD stays on web Dealer OS." },
+        { title: "Live showroom stock", body: "Same /api/new-car/inventory KPIs as website New Car OS." },
       ];
     case "finance":
       return [
@@ -116,17 +117,29 @@ export function HomeScreen() {
           { label: "KYC pending", value: Number(o.pendingKyc ?? 0) },
         ]);
       } else if (family === "dealer") {
-        const [leads, vehicles] = await Promise.all([
+        const [leads, inventory, vehicles] = await Promise.all([
           fetchLeads().catch(() => []),
+          fetchNewCarInventorySafe({ pageSize: 1 }),
           fetchVehicles(50).catch(() => []),
         ]);
         const open = leads.filter((l) => !["converted", "lost"].includes(String(l.status ?? "new")));
-        setStats([
-          { label: "Total leads", value: leads.length, accent: true },
-          { label: "Open pipeline", value: open.length },
-          { label: "New", value: leads.filter((l) => String(l.status ?? "new") === "new").length, accent: true },
-          { label: "Inventory", value: vehicles.length },
-        ]);
+        if (inventory) {
+          setStats([
+            { label: "Showroom stock", value: inventory.kpis.totalRows, accent: true },
+            { label: "Available", value: inventory.kpis.available },
+            { label: "Low stock", value: inventory.kpis.lowStock, accent: true },
+            { label: "Open leads", value: open.length },
+            { label: "New leads", value: leads.filter((l) => String(l.status ?? "new") === "new").length, accent: true },
+            { label: "Out of stock", value: inventory.kpis.outOfStock },
+          ]);
+        } else {
+          setStats([
+            { label: "Total leads", value: leads.length, accent: true },
+            { label: "Open pipeline", value: open.length },
+            { label: "New", value: leads.filter((l) => String(l.status ?? "new") === "new").length, accent: true },
+            { label: "Market listings", value: vehicles.length },
+          ]);
+        }
       } else if (family === "finance") {
         const [apps, leads] = await Promise.all([
           fetchFinanceApplications().catch(() => []),

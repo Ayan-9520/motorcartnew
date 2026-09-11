@@ -124,9 +124,9 @@ export const ROLE_WORKSPACES: Record<string, RoleWorkspace> = {
     webPath: "/dashboard/new-car",
     headline: "New car OS",
     subtitle: "Showroom enquiries, test-drives, and stock.",
-    tabs: { home: "Showroom", browse: "Market", workspace: "Leads", profile: "Account" },
+    tabs: { home: "Showroom", browse: "Stock", workspace: "Leads", profile: "Account" },
     modules: [
-      { id: "stock", title: "Showroom stock", body: "New car inventory API", tab: "Workspace", apiPath: "/api/new-car/inventory" },
+      { id: "stock", title: "Showroom stock", body: "Live /api/new-car/inventory (same as website)", tab: "Browse", apiPath: "/api/new-car/inventory" },
       { id: "leads", title: "Leads", body: "Dealer enquiries", tab: "Workspace", apiPath: "/api/leads" },
       { id: "browse", title: "Marketplace", body: "Public listings", tab: "Browse" },
     ],
