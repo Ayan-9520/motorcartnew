@@ -89,8 +89,6 @@ export function HomeScreen() {
   const name = user?.fullName?.split(" ")[0] || "there";
   const { width } = useWindowDimensions();
   const desktop = width >= 900;
-  const statCols = width >= 640 ? (desktop ? 4 : 2) : 2;
-  const statBasis = `${Math.floor(100 / statCols) - 2}%` as `${number}%`;
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{ label: string; value: string | number; accent?: boolean }[]>([]);
   const modules = useMemo(() => familyModules(family), [family]);
@@ -211,7 +209,7 @@ export function HomeScreen() {
     <McScreen>
       <ScrollView
         style={mcListStyle()}
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 108 }}
+        contentContainerStyle={{ paddingBottom: desktop ? 32 : 108 }}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void load()} tintColor={c.primary} />}
         showsVerticalScrollIndicator
         keyboardShouldPersistTaps="handled"
@@ -219,53 +217,49 @@ export function HomeScreen() {
         <McContent style={styles.content}>
           {desktop ? (
             <View style={[styles.webBanner, { backgroundColor: c.primarySoft, borderColor: c.primaryGlow }]}>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.webBannerTitle, { color: c.text }]}>Desktop browser · Companion layout</Text>
-                <Text style={[styles.webBannerBody, { color: c.muted }]}>
-                  Full New Car OS (1031 stock, sidebar CRM) lives on motorcart.in. This app is for phone + quick leads.
-                </Text>
+              <Text style={[styles.webBannerTitle, { color: c.text }]} numberOfLines={2}>
+                Desktop companion · full New Car OS is on motorcart.in
+              </Text>
+              <View style={styles.webBannerActions}>
+                <McButton
+                  label="Open web OS"
+                  variant="outline"
+                  onPress={() => void Linking.openURL(`${WEB_SITE_URL}${ws.webPath}`)}
+                />
               </View>
-              <McButton
-                label="Open web OS"
-                variant="outline"
-                onPress={() => void Linking.openURL(`${WEB_SITE_URL}${ws.webPath}`)}
-              />
             </View>
           ) : null}
 
-          <View style={[styles.topGrid, desktop && styles.topGridDesktop]}>
-            <View style={[styles.greetRow, desktop && styles.greetRowDesktop, desktop && styles.topMain]}>
-              <McAvatar name={user?.fullName ?? "User"} size={desktop ? 52 : 46} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <McSectionLabel>
-                  {ws.label} · {family} desk
-                </McSectionLabel>
-                <McTitle>Hi, {name}</McTitle>
-                <McMuted>{ws.subtitle}</McMuted>
-              </View>
-            </View>
-
-            <View style={desktop ? styles.topSide : undefined}>
-              <McHero
-                eyebrow={`${family.toUpperCase()} DESK`}
-                title={ws.headline}
-                body={user?.email ?? undefined}
-                right={desktop ? undefined : <McAvatar name={user?.fullName ?? "U"} size={40} />}
-              />
-              {desktop ? (
-                <McCard style={styles.sideCard}>
-                  <Text style={styles.sideTitle}>Connected account</Text>
-                  <Text style={styles.sideBody}>{user?.email}</Text>
-                  <Text style={styles.sideMeta}>JWT + refresh · pull to refresh · live /api</Text>
-                </McCard>
-              ) : null}
+          <View style={styles.greetRow}>
+            <McAvatar name={user?.fullName ?? "User"} size={desktop ? 52 : 46} />
+            <View style={styles.greetText}>
+              <McSectionLabel>
+                {ws.label} · {family} desk
+              </McSectionLabel>
+              <McTitle>Hi, {name}</McTitle>
+              <McMuted>{ws.subtitle}</McMuted>
             </View>
           </View>
+
+          <McHero
+            eyebrow={`${family.toUpperCase()} DESK`}
+            title={ws.headline}
+            body={user?.email ?? undefined}
+            right={desktop ? undefined : <McAvatar name={user?.fullName ?? "U"} size={40} />}
+          />
+
+          {desktop ? (
+            <McCard style={styles.sideCard}>
+              <Text style={styles.sideTitle}>Connected account</Text>
+              <Text style={styles.sideBody}>{user?.email}</Text>
+              <Text style={styles.sideMeta}>JWT + refresh · pull to refresh · live /api</Text>
+            </McCard>
+          ) : null}
 
           <McSectionLabel>Live KPIs</McSectionLabel>
           <View style={styles.stats}>
             {stats.map((s) => (
-              <View key={s.label} style={[styles.statCell, { flexBasis: statBasis, maxWidth: statBasis }]}>
+              <View key={s.label} style={[styles.statCell, desktop ? styles.statCellDesktop : null]}>
                 <McStat label={s.label} value={s.value} accent={s.accent} />
               </View>
             ))}
@@ -307,51 +301,47 @@ export function HomeScreen() {
 
 function makeStyles(c: ThemeColors) {
   return StyleSheet.create({
-    content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 48 },
+    content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 48, width: "100%" },
     webBanner: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 14,
+      width: "100%",
       borderWidth: 1,
       borderRadius: 16,
       padding: 14,
       marginBottom: 16,
+      gap: 12,
     },
-    webBannerTitle: { fontSize: 14, fontWeight: "800" },
-    webBannerBody: { marginTop: 4, fontSize: 12, lineHeight: 17 },
-    topGrid: { marginBottom: 8 },
-    topGridDesktop: { flexDirection: "row", alignItems: "stretch", gap: 16, marginBottom: 16 },
-    topMain: { flex: 1.1, minWidth: 0, marginBottom: 0 },
-    topSide: { flex: 1, minWidth: 280, gap: 12 },
+    webBannerTitle: { fontSize: 14, fontWeight: "800", lineHeight: 20, width: "100%" },
+    webBannerActions: { alignSelf: "flex-start" },
     greetRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: 14,
       marginBottom: 16,
+      width: "100%",
     },
-    greetRowDesktop: { marginBottom: 0, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: c.border, backgroundColor: c.card },
-    sideCard: { marginBottom: 0, backgroundColor: c.panel, borderColor: c.borderStrong },
+    greetText: { flexShrink: 1, flexGrow: 1, minWidth: 0 },
+    sideCard: { marginBottom: 16, backgroundColor: c.panel, borderColor: c.borderStrong, width: "100%" },
     sideTitle: { color: c.text, fontSize: 17, fontWeight: "800" },
     sideBody: { color: c.textSecondary, marginTop: 8, fontSize: 13 },
     sideMeta: { color: c.muted, marginTop: 10, fontSize: 11 },
     stats: {
       flexDirection: "row",
       flexWrap: "wrap",
-      justifyContent: "space-between",
       marginBottom: 12,
       width: "100%",
       gap: 10,
     },
-    statCell: { flexGrow: 1, flexShrink: 0, minWidth: 140 },
-    modules: { gap: 10, marginBottom: 16 },
+    statCell: { width: "47%", flexGrow: 1 },
+    statCellDesktop: { width: "23%", minWidth: 140, flexGrow: 1 },
+    modules: { gap: 10, marginBottom: 16, width: "100%" },
     modulesDesktop: { flexDirection: "row", flexWrap: "wrap" },
-    moduleCard: { flexGrow: 1, flexBasis: 220, minWidth: 200 },
+    moduleCard: { flexGrow: 1, minWidth: 200, maxWidth: "100%" },
     moduleCardPhone: { backgroundColor: c.panel, borderColor: c.borderStrong },
     moduleTitle: { color: c.text, fontWeight: "800", fontSize: 15 },
     moduleBody: { color: c.muted, marginTop: 6, fontSize: 13, lineHeight: 18 },
     actions: { marginTop: 4, width: "100%" },
-    actionsDesktop: { flexDirection: "row", alignItems: "stretch", gap: 12 },
-    actionCol: { flex: 1, minWidth: 0 },
+    actionsDesktop: { flexDirection: "row", alignItems: "stretch", gap: 12, flexWrap: "wrap" },
+    actionCol: { flexGrow: 1, minWidth: 160 },
     actionPhone: { width: "100%" },
   });
 }

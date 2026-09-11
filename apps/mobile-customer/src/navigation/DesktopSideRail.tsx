@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import * as Linking from "expo-linking";
 import { WEB_SITE_URL } from "../config";
@@ -33,11 +33,8 @@ export function DesktopSideRail({ state, descriptors, navigation, insets }: Bott
         {
           backgroundColor: c.header,
           borderRightColor: c.border,
-          paddingTop: Math.max(insets.top, 16),
-          paddingBottom: Math.max(insets.bottom, 14),
-          ...(Platform.OS === "web"
-            ? ({ position: "fixed", left: 0, top: 0, bottom: 0, height: "100vh" } as object)
-            : { position: "absolute", left: 0, top: 0, bottom: 0 }),
+          paddingTop: Math.max(insets?.top ?? 0, 16),
+          paddingBottom: Math.max(insets?.bottom ?? 0, 14),
           ...c.shadowSm,
         },
       ]}
@@ -128,10 +125,10 @@ export function DesktopSideRail({ state, descriptors, navigation, insets }: Bott
 const styles = StyleSheet.create({
   rail: {
     width: DESKTOP_RAIL_WIDTH,
+    flex: 1,
     borderRightWidth: 1,
     paddingHorizontal: 14,
     justifyContent: "space-between",
-    zIndex: 50,
   },
   brandBlock: { gap: 10, paddingHorizontal: 4, marginBottom: 18 },
   brandMeta: { fontSize: 11, fontWeight: "700", letterSpacing: 0.4, textTransform: "uppercase" },
@@ -147,7 +144,7 @@ const styles = StyleSheet.create({
   },
   liveDot: { width: 6, height: 6, borderRadius: 99 },
   liveText: { fontSize: 10, fontWeight: "800", letterSpacing: 0.4, textTransform: "uppercase" },
-  nav: { flex: 1, gap: 6 },
+  nav: { flexGrow: 1, gap: 6 },
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -165,7 +162,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
   },
-  itemLabel: { fontSize: 14, fontWeight: "700", flex: 1 },
+  itemLabel: { fontSize: 14, fontWeight: "700", flexShrink: 1 },
   footer: { borderTopWidth: 1, paddingTop: 14, gap: 12 },
   userRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   userName: { fontSize: 13, fontWeight: "800" },

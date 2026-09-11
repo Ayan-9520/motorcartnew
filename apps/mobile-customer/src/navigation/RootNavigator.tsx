@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ActivityIndicator, Platform, Text, View, useWindowDimensions } from "react-native";
 import { NavigationContainer, DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { BottomTabBar, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { BottomTabBar, createBottomTabNavigator, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useAuth } from "../auth/AuthContext";
 import { getRoleWorkspace } from "../roles";
 import { useCRM, useTheme } from "../ThemeContext";
@@ -69,12 +69,34 @@ function HeaderBrand({ subtitle }: { subtitle: string }) {
           borderColor: c.primaryGlow,
         }}
       >
-        <Text style={{ color: c.primary, fontSize: desktop ? 11 : 9, fontWeight: "800", letterSpacing: 0.6, textTransform: "uppercase" }}>
+        <Text
+          style={{
+            color: c.primary,
+            fontSize: desktop ? 11 : 9,
+            fontWeight: "800",
+            letterSpacing: 0.6,
+            textTransform: "uppercase",
+          }}
+        >
           {subtitle}
         </Text>
       </View>
     </View>
   );
+}
+
+/** Captures tab bar props so desktop rail can sit in a real row (not under the scene). */
+function HiddenTabBarCapture({
+  props,
+  onProps,
+}: {
+  props: BottomTabBarProps;
+  onProps: (p: BottomTabBarProps) => void;
+}) {
+  React.useEffect(() => {
+    onProps(props);
+  }, [props, onProps]);
+  return <View style={{ width: 0, height: 0, overflow: "hidden" }} />;
 }
 
 function MainTabs() {
@@ -84,75 +106,105 @@ function MainTabs() {
   const { width } = useWindowDimensions();
   const desktop = width >= 900;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [railProps, setRailProps] = useState<BottomTabBarProps | null>(null);
+
+  const onRailProps = React.useCallback((p: BottomTabBarProps) => {
+    setRailProps((prev) => {
+      if (
+        prev &&
+        prev.state.index === p.state.index &&
+        prev.state.routes.length === p.state.routes.length &&
+        prev.state.routes.every((r, i) => r.key === p.state.routes[i]?.key)
+      ) {
+        return prev;
+      }
+      return p;
+    });
+  }, []);
 
   return (
-    <>
-      <Tabs.Navigator
-        tabBar={(props) => (desktop ? <DesktopSideRail {...props} /> : <BottomTabBar {...props} />)}
-        screenOptions={({ route }) => {
-          const titles: Record<string, string> = {
-            Home: ws.tabs.home,
-            Browse: ws.tabs.browse,
-            Workspace: ws.tabs.workspace,
-            Profile: ws.tabs.profile,
-          };
-          const subtitle = titles[route.name] ?? "Motorcart";
-          return {
-            title: subtitle,
-            sceneStyle: {
-              flex: 1,
-              backgroundColor: c.bg,
-              minHeight: 0,
-              ...(desktop ? { marginLeft: DESKTOP_RAIL_WIDTH } : null),
-            },
-            headerStyle: {
-              backgroundColor: c.header,
-              borderBottomWidth: 1,
-              borderBottomColor: c.border,
-              ...(Platform.OS === "web" ? ({ height: desktop ? 64 : 58 } as object) : null),
-              ...(desktop ? ({ marginLeft: DESKTOP_RAIL_WIDTH } as object) : null),
-            },
-            headerShadowVisible: false,
-            headerTintColor: c.text,
-            headerTitleAlign: "left" as const,
-            headerTitle: () => <HeaderBrand subtitle={subtitle} />,
-            headerRight: () => <AppMenuButton onPress={() => setMenuOpen(true)} />,
-            tabBarIcon: ({ focused, color }) => <TabIcon route={route.name} focused={focused} color={color} />,
-            tabBarActiveTintColor: c.primary,
-            tabBarInactiveTintColor: c.muted,
-            tabBarStyle: desktop
-              ? {
-                  position: "absolute" as const,
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: DESKTOP_RAIL_WIDTH,
-                  borderTopWidth: 0,
-                  elevation: 0,
-                  backgroundColor: "transparent",
-                }
-              : {
-                  backgroundColor: c.tabBar,
-                  borderTopWidth: 1,
-                  borderTopColor: c.border,
-                  height: Platform.OS === "web" ? 76 : 64,
-                  paddingBottom: Platform.OS === "web" ? 16 : Platform.OS === "ios" ? 12 : 10,
-                  paddingTop: 8,
-                  width: "100%",
-                  ...c.shadowLg,
-                },
-            tabBarLabelStyle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.3, marginTop: 2 },
-            tabBarItemStyle: { flex: 1, paddingVertical: 2 },
-          };
-        }}
-      >
-        <Tabs.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: ws.tabs.home }} />
-        <Tabs.Screen name="Browse" component={VehiclesScreen} options={{ tabBarLabel: ws.tabs.browse }} />
-        <Tabs.Screen name="Workspace" component={WorkspaceScreen} options={{ tabBarLabel: ws.tabs.workspace }} />
-        <Tabs.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: ws.tabs.profile }} />
-      </Tabs.Navigator>
+    <View
+      style={{
+        flex: 1,
+        minHeight: 0,
+        width: "100%",
+        flexDirection: desktop ? "row" : "column",
+        backgroundColor: c.bg,
+      }}
+    >
+      {desktop && railProps ? (
+        <View style={{ width: DESKTOP_RAIL_WIDTH, flexShrink: 0, height: "100%" as unknown as number, zIndex: 2 }}>
+          <DesktopSideRail {...railProps} />
+        </View>
+      ) : null}
+
+      <View style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
+        <Tabs.Navigator
+          tabBar={(props) =>
+            desktop ? <HiddenTabBarCapture props={props} onProps={onRailProps} /> : <BottomTabBar {...props} />
+          }
+          screenOptions={({ route }) => {
+            const titles: Record<string, string> = {
+              Home: ws.tabs.home,
+              Browse: ws.tabs.browse,
+              Workspace: ws.tabs.workspace,
+              Profile: ws.tabs.profile,
+            };
+            const subtitle = titles[route.name] ?? "Motorcart";
+            return {
+              title: subtitle,
+              sceneStyle: {
+                flex: 1,
+                backgroundColor: c.bg,
+                minHeight: 0,
+                minWidth: 0,
+              },
+              headerStyle: {
+                backgroundColor: c.header,
+                borderBottomWidth: 1,
+                borderBottomColor: c.border,
+                ...(Platform.OS === "web" ? ({ height: desktop ? 64 : 58 } as object) : null),
+              },
+              headerShadowVisible: false,
+              headerTintColor: c.text,
+              headerTitleAlign: "left" as const,
+              headerTitle: () => <HeaderBrand subtitle={subtitle} />,
+              headerRight: () => <AppMenuButton onPress={() => setMenuOpen(true)} />,
+              tabBarIcon: ({ focused, color }) => <TabIcon route={route.name} focused={focused} color={color} />,
+              tabBarActiveTintColor: c.primary,
+              tabBarInactiveTintColor: c.muted,
+              tabBarStyle: desktop
+                ? {
+                    display: "none" as unknown as undefined,
+                    height: 0,
+                    width: 0,
+                    opacity: 0,
+                    borderTopWidth: 0,
+                    position: "absolute" as const,
+                  }
+                : {
+                    backgroundColor: c.tabBar,
+                    borderTopWidth: 1,
+                    borderTopColor: c.border,
+                    height: Platform.OS === "web" ? 76 : 64,
+                    paddingBottom: Platform.OS === "web" ? 16 : Platform.OS === "ios" ? 12 : 10,
+                    paddingTop: 8,
+                    width: "100%",
+                    ...c.shadowLg,
+                  },
+              tabBarLabelStyle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.3, marginTop: 2 },
+              tabBarItemStyle: { flex: 1, paddingVertical: 2 },
+            };
+          }}
+        >
+          <Tabs.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: ws.tabs.home }} />
+          <Tabs.Screen name="Browse" component={VehiclesScreen} options={{ tabBarLabel: ws.tabs.browse }} />
+          <Tabs.Screen name="Workspace" component={WorkspaceScreen} options={{ tabBarLabel: ws.tabs.workspace }} />
+          <Tabs.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: ws.tabs.profile }} />
+        </Tabs.Navigator>
+      </View>
       <AppMenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />
-    </>
+    </View>
   );
 }
 
@@ -187,7 +239,7 @@ export function RootNavigator() {
   }
 
   return (
-    <View style={[{ flex: 1, minHeight: 0 }, Platform.OS === "web" ? ({ height: "100%" } as object) : null]}>
+    <View style={[{ flex: 1, minHeight: 0, width: "100%" }, Platform.OS === "web" ? ({ height: "100%" } as object) : null]}>
       <NavigationContainer
         theme={navTheme}
         documentTitle={{
