@@ -11,6 +11,9 @@ type VehicleImagePickerProps = {
   imageUrls: string[];
   uploadPrefix: string;
   onChange: (urls: string[]) => void;
+  /** Optional paint names aligned with each photo (horizontal under thumbnails). */
+  colorNames?: string[];
+  onColorNamesChange?: (names: string[]) => void;
 };
 
 function moveItem<T>(list: T[], from: number, to: number): T[] {
@@ -22,7 +25,13 @@ function moveItem<T>(list: T[], from: number, to: number): T[] {
   return next;
 }
 
-export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: VehicleImagePickerProps) {
+export function VehicleImagePicker({
+  imageUrls,
+  uploadPrefix,
+  onChange,
+  colorNames,
+  onColorNamesChange,
+}: VehicleImagePickerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -30,18 +39,21 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
 
   const urls = imageUrls.length ? imageUrls : [""];
   const filled = urls.map((u) => u.trim()).filter(Boolean);
+  const showPaint = Boolean(onColorNamesChange);
+  const names = colorNames ?? [];
 
   const onFiles = async (files: FileList | null) => {
     if (!files?.length) return;
-    // Preserve OS selection order (first clicked / first in multi-select = main)
     const ordered = Array.from(files);
     setUploading(true);
     try {
       const uploaded = await uploadMultiple("vehicle-images", ordered, uploadPrefix);
       const newUrls = uploaded.map((u) => u.publicUrl).filter(Boolean);
-      // First selected file becomes listing hero (index 0); older photos follow
       const next = [...newUrls, ...filled];
       onChange(next.length ? next : [""]);
+      if (onColorNamesChange) {
+        onColorNamesChange([...newUrls.map(() => ""), ...names.slice(0, filled.length)]);
+      }
       toast.success(
         newUrls.length === 1
           ? "Main photo set (1st selected)"
@@ -54,29 +66,45 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
     }
   };
 
+  const emitReorder = (nextFilled: string[]) => {
+    onChange(nextFilled);
+  };
+
   const setAsMain = (index: number) => {
     if (index <= 0 || index >= filled.length) return;
     const next = moveItem(filled, index, 0);
-    onChange(next);
+    emitReorder(next);
+    if (onColorNamesChange) {
+      onColorNamesChange(moveItem(names.length ? names : filled.map(() => ""), index, 0));
+    }
     toast.success("Main photo updated");
   };
 
   const reorder = (from: number, to: number) => {
     if (from === to) return;
     const next = moveItem(filled, from, to);
-    onChange(next);
+    emitReorder(next);
+    if (onColorNamesChange) {
+      onColorNamesChange(moveItem(names.length ? names : filled.map(() => ""), from, to));
+    }
     if (to === 0 || from === 0) toast.success("Photo order updated — 1st is Main");
+  };
+
+  const setNameAt = (index: number, value: string) => {
+    if (!onColorNamesChange) return;
+    const base = filled.map((_, i) => names[i] ?? "");
+    base[index] = value;
+    onColorNamesChange(base);
   };
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>Photos</Label>
+        <Label>Photos{showPaint ? " + colours" : ""}</Label>
         <div className="flex gap-2">
           <input
             ref={fileRef}
             type="file"
-            // Intentionally no accept= — Windows hides extensionless images (named 1, 2, 3) under Custom Files
             multiple
             className="sr-only"
             onChange={(e) => {
@@ -98,12 +126,12 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
         </div>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        Drag thumbnails left/right to reorder. First photo = main on Buy page. Same order as colour names = paint
-        gallery. JPG/PNG/WebP/AVIF/GIF/BMP · HD.
+        Drag cards left/right to reorder. First = Main. Type paint name under each photo (one line). Leave blank for
+        interior / extra shots.
       </p>
 
       {filled.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
           {filled.map((url, i) => (
             <div
               key={`${url}-${i}`}
@@ -133,42 +161,57 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
                 setOverIndex(null);
               }}
               className={cn(
-                "relative h-16 w-24 cursor-grab overflow-hidden rounded-lg border bg-muted active:cursor-grabbing",
+                "w-[7.5rem] shrink-0 cursor-grab rounded-xl border bg-card p-1.5 shadow-sm active:cursor-grabbing",
                 dragIndex === i && "opacity-60",
                 overIndex === i && dragIndex !== i && "ring-2 ring-primary",
               )}
               title="Drag to reorder"
             >
-              <img src={url} alt="" className="pointer-events-none h-full w-full object-cover" draggable={false} />
-              <span className="absolute bottom-0.5 left-0.5 rounded bg-black/55 p-0.5 text-white">
-                <GripVertical className="h-3 w-3" />
-              </span>
-              {i === 0 ? (
-                <span className="absolute left-0.5 top-0.5 rounded bg-primary px-1 py-0.5 text-[9px] font-bold text-primary-foreground">
-                  Main
+              <div className="relative h-20 w-full overflow-hidden rounded-lg bg-muted">
+                <img src={url} alt="" className="pointer-events-none h-full w-full object-cover" draggable={false} />
+                <span className="absolute bottom-0.5 left-0.5 rounded bg-black/55 p-0.5 text-white">
+                  <GripVertical className="h-3 w-3" />
                 </span>
-              ) : (
+                {i === 0 ? (
+                  <span className="absolute left-0.5 top-0.5 rounded bg-primary px-1 py-0.5 text-[9px] font-bold text-primary-foreground">
+                    Main
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="absolute left-0.5 top-0.5 rounded bg-background/90 p-0.5 shadow"
+                    title="Set as main photo"
+                    onClick={() => setAsMain(i)}
+                    aria-label="Set as main photo"
+                  >
+                    <Star className="h-3 w-3 text-amber-500" />
+                  </button>
+                )}
                 <button
                   type="button"
-                  className="absolute left-0.5 top-0.5 rounded bg-background/90 p-0.5 shadow"
-                  title="Set as main photo"
-                  onClick={() => setAsMain(i)}
-                  aria-label="Set as main photo"
+                  className="absolute right-0.5 top-0.5 rounded bg-background/90 p-0.5 shadow"
+                  onClick={() => {
+                    const next = filled.filter((_, j) => j !== i);
+                    onChange(next.length ? next : [""]);
+                    if (onColorNamesChange) {
+                      onColorNamesChange(names.filter((_, j) => j !== i));
+                    }
+                  }}
+                  aria-label="Remove image"
                 >
-                  <Star className="h-3 w-3 text-amber-500" />
+                  <Trash2 className="h-3 w-3 text-destructive" />
                 </button>
-              )}
-              <button
-                type="button"
-                className="absolute right-0.5 top-0.5 rounded bg-background/90 p-0.5 shadow"
-                onClick={() => {
-                  const next = filled.filter((_, j) => j !== i);
-                  onChange(next.length ? next : [""]);
-                }}
-                aria-label="Remove image"
-              >
-                <Trash2 className="h-3 w-3 text-destructive" />
-              </button>
+              </div>
+              {showPaint ? (
+                <Input
+                  className="mt-1.5 h-8 px-1.5 text-[11px]"
+                  value={names[i] ?? ""}
+                  onChange={(e) => setNameAt(i, e.target.value)}
+                  placeholder={i === 0 ? "Paint name" : "Paint / blank"}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onDragStart={(e) => e.preventDefault()}
+                />
+              ) : null}
             </div>
           ))}
         </div>

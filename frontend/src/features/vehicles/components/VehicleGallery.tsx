@@ -125,12 +125,12 @@ export function VehicleGallery({ images, title, colors = [] }: VehicleGalleryPro
         </Button>
       </div>
 
+      {/* CarLelo order: hero → colour line → thumbs */}
       {colors.length > 0 ? (
         <VehicleColorSwatches colors={colors} selectedIndex={colorIdx} onSelect={setColorIdx} />
       ) : (
         <p className="rounded-xl border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          Paint colours not listed yet. Dealer: Edit stock → name each paint photo (e.g. Mythos Black) → Save — then
-          colour circles appear here.
+          Paint colours not listed yet. Dealer: Edit stock → type paint name under each photo → Save.
         </p>
       )}
 

@@ -80,15 +80,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
   }, [open, item]);
 
   function onPhotosChange(next: string[]) {
-    setImageUrls((prevUrls) => {
-      setColorNames((prevNames) =>
-        next.map((url) => {
-          const oldIdx = prevUrls.findIndex((u) => u.trim() === url.trim() && Boolean(url.trim()));
-          return oldIdx >= 0 ? (prevNames[oldIdx] ?? "") : "";
-        }),
-      );
-      return next;
-    });
+    setImageUrls(next);
   }
 
   const previewSrc = imageUrls.map((u) => u.trim()).find(Boolean) || item?.imageUrl || "";
@@ -347,42 +339,16 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
           </section>
 
           <section className="grid gap-3 rounded-2xl border border-border/70 bg-card/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Photos + paint names</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Photos + paint (one line)
+            </p>
             <VehicleImagePicker
               imageUrls={imageUrls}
               uploadPrefix={`ncd/${item?.id ?? "edit"}`}
               onChange={onPhotosChange}
+              colorNames={colorNames}
+              onColorNamesChange={setColorNames}
             />
-            <div className="space-y-2">
-              {imageUrls.map((url, i) => {
-                const src = url.trim();
-                if (!src) return null;
-                return (
-                  <div
-                    key={`${src}-${i}`}
-                    className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/80 p-2"
-                  >
-                    <img src={src} alt="" className="h-12 w-16 rounded-lg object-cover" />
-                    <div className="min-w-0 flex-1">
-                      <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                        Colour name {i === 0 ? "(main / hero)" : ""}
-                      </Label>
-                      <Input
-                        value={colorNames[i] ?? ""}
-                        onChange={(e) =>
-                          setColorNames((prev) => {
-                            const next = [...prev];
-                            next[i] = e.target.value;
-                            return next;
-                          })
-                        }
-                        placeholder={i === 0 ? "e.g. Navarra Blue Metallic" : "Leave blank if not a paint"}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </section>
 
           <DialogFooter className="sticky bottom-0 -mx-5 border-t border-border/70 bg-card/95 px-5 py-3 backdrop-blur sm:-mx-6 sm:px-6">

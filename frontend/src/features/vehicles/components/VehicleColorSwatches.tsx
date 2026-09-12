@@ -9,31 +9,32 @@ type Props = {
   className?: string;
 };
 
-/** Circular paint swatches — selected colour drives gallery image swap. */
+/** Circular paint swatches in one horizontal line (CarLelo-style). */
 export function VehicleColorSwatches({ colors, selectedIndex, onSelect, className }: Props) {
   if (!colors.length) return null;
   const selected = colors[selectedIndex] ?? colors[0];
 
   return (
-    <div className={cn("space-y-3", className)}>
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <p className="text-sm font-semibold text-foreground">
-            {colors.length} colour{colors.length === 1 ? "" : "s"} available
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Tap a circle to change the car photo · Selected:{" "}
-            <span className="font-medium text-foreground">{selected?.name}</span>
-          </p>
-        </div>
+    <div className={cn("space-y-2", className)}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="text-sm font-semibold text-foreground">
+          {colors.length} colour{colors.length === 1 ? "" : "s"}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Selected: <span className="font-medium text-foreground">{selected?.name}</span>
+        </p>
       </div>
-      <div className="flex flex-wrap gap-3" role="listbox" aria-label="Paint colours">
+      <div
+        className="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-1"
+        role="listbox"
+        aria-label="Paint colours"
+      >
         {colors.map((c, i) => {
           const active = i === selectedIndex;
           const light = isLightHex(c.hex);
           return (
             <button
-              key={`${c.name}-${c.hex}`}
+              key={`${c.name}-${c.hex}-${i}`}
               type="button"
               role="option"
               aria-selected={active}
@@ -41,7 +42,7 @@ export function VehicleColorSwatches({ colors, selectedIndex, onSelect, classNam
               title={c.name}
               onClick={() => onSelect(i)}
               className={cn(
-                "relative h-11 w-11 rounded-full border-2 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                "relative h-10 w-10 shrink-0 rounded-full border-2 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                 active ? "border-foreground ring-2 ring-primary/40 scale-105" : "border-border/80",
               )}
               style={{ backgroundColor: c.hex }}
@@ -60,9 +61,6 @@ export function VehicleColorSwatches({ colors, selectedIndex, onSelect, classNam
           );
         })}
       </div>
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        Each swatch loads a different car photo for that paint — same as OEM / CarLelo sites.
-      </p>
     </div>
   );
 }
