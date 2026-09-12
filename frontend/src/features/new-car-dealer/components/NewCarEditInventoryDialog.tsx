@@ -80,8 +80,15 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
   }, [open, item]);
 
   function onPhotosChange(next: string[]) {
-    setImageUrls(next);
-    setColorNames((prev) => next.map((_, i) => prev[i] ?? ""));
+    setImageUrls((prevUrls) => {
+      setColorNames((prevNames) =>
+        next.map((url) => {
+          const oldIdx = prevUrls.findIndex((u) => u.trim() === url.trim() && Boolean(url.trim()));
+          return oldIdx >= 0 ? (prevNames[oldIdx] ?? "") : "";
+        }),
+      );
+      return next;
+    });
   }
 
   const previewSrc = imageUrls.map((u) => u.trim()).find(Boolean) || item?.imageUrl || "";

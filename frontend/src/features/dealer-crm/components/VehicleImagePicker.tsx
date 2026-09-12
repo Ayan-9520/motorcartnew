@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import { ImagePlus, Loader2, Star, Trash2 } from "lucide-react";
+import { GripVertical, ImagePlus, Loader2, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { uploadMultiple } from "@/services/storage.service";
 import toast from "react-hot-toast";
 
@@ -12,9 +13,20 @@ type VehicleImagePickerProps = {
   onChange: (urls: string[]) => void;
 };
 
+function moveItem<T>(list: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
+  const next = [...list];
+  const [picked] = next.splice(from, 1);
+  if (picked === undefined) return list;
+  next.splice(to, 0, picked);
+  return next;
+}
+
 export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: VehicleImagePickerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const urls = imageUrls.length ? imageUrls : [""];
   const filled = urls.map((u) => u.trim()).filter(Boolean);
@@ -44,12 +56,16 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
 
   const setAsMain = (index: number) => {
     if (index <= 0 || index >= filled.length) return;
-    const next = [...filled];
-    const [picked] = next.splice(index, 1);
-    if (!picked) return;
-    next.unshift(picked);
+    const next = moveItem(filled, index, 0);
     onChange(next);
     toast.success("Main photo updated");
+  };
+
+  const reorder = (from: number, to: number) => {
+    if (from === to) return;
+    const next = moveItem(filled, from, to);
+    onChange(next);
+    if (to === 0 || from === 0) toast.success("Photo order updated — 1st is Main");
   };
 
   return (
@@ -82,14 +98,51 @@ export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: Vehicl
         </div>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        First photo you select = main image on Buy page. Same order as colours = colour gallery. JPG/PNG/WebP/AVIF/GIF/BMP · HD.
+        Drag thumbnails left/right to reorder. First photo = main on Buy page. Same order as colour names = paint
+        gallery. JPG/PNG/WebP/AVIF/GIF/BMP · HD.
       </p>
 
       {filled.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {filled.map((url, i) => (
-            <div key={`${url}-${i}`} className="relative h-16 w-24 overflow-hidden rounded-lg border bg-muted">
-              <img src={url} alt="" className="h-full w-full object-cover" />
+            <div
+              key={`${url}-${i}`}
+              draggable
+              onDragStart={(e) => {
+                setDragIndex(i);
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(i));
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                if (overIndex !== i) setOverIndex(i);
+              }}
+              onDragLeave={() => {
+                if (overIndex === i) setOverIndex(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const from = dragIndex ?? Number(e.dataTransfer.getData("text/plain"));
+                setDragIndex(null);
+                setOverIndex(null);
+                if (Number.isFinite(from)) reorder(from, i);
+              }}
+              onDragEnd={() => {
+                setDragIndex(null);
+                setOverIndex(null);
+              }}
+              className={cn(
+                "relative h-16 w-24 cursor-grab overflow-hidden rounded-lg border bg-muted active:cursor-grabbing",
+                dragIndex === i && "opacity-60",
+                overIndex === i && dragIndex !== i && "ring-2 ring-primary",
+              )}
+              title="Drag to reorder"
+            >
+              <img src={url} alt="" className="pointer-events-none h-full w-full object-cover" draggable={false} />
+              <span className="absolute bottom-0.5 left-0.5 rounded bg-black/55 p-0.5 text-white">
+                <GripVertical className="h-3 w-3" />
+              </span>
               {i === 0 ? (
                 <span className="absolute left-0.5 top-0.5 rounded bg-primary px-1 py-0.5 text-[9px] font-bold text-primary-foreground">
                   Main
