@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { ImageIcon, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   Dialog,
@@ -13,19 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VehicleImagePicker } from "@/features/dealer-crm/components/VehicleImagePicker";
-import { guessHexFromName } from "@/features/vehicles/lib/vehicle-paint";
 import { cn, formatCurrency } from "@/lib/utils";
 import { updateNewCarInventory } from "../services/new-car-dealer.service";
 import type { NcdInventoryItem } from "../types";
-
-function isLightHex(hex: string): boolean {
-  const h = hex.replace("#", "");
-  if (h.length < 6) return true;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 > 170;
-}
 
 type Props = {
   item: NcdInventoryItem | null;
@@ -54,8 +44,6 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
   const [price, setPrice] = useState("");
   const [onRoad, setOnRoad] = useState("");
   const [discount, setDiscount] = useState("");
-  const [paintNames, setPaintNames] = useState<string[]>([]);
-  const [paintIdx, setPaintIdx] = useState(0);
   const [deliveryDays, setDeliveryDays] = useState("");
   const [waitingDays, setWaitingDays] = useState("");
   const [brochureUrl, setBrochureUrl] = useState("");
@@ -76,9 +64,6 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
     setDiscount(item.discountAmount > 0 ? String(Math.round(item.discountAmount)) : "");
     setStockStatus(item.stockStatus || "available");
     setImageUrls(collectPhotos(item));
-    const paints = (item.colors ?? []).map((c) => String(c ?? "").trim()).filter(Boolean);
-    setPaintNames(paints);
-    setPaintIdx(0);
     setDeliveryDays(
       item.expectedDeliveryDays != null && item.expectedDeliveryDays > 0
         ? String(item.expectedDeliveryDays)
@@ -111,7 +96,6 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       return;
     }
     const photos = imageUrls.map((u) => u.trim()).filter(Boolean);
-    const colors = paintNames.map((n) => n.trim()).filter(Boolean);
     const delivery = deliveryDays.trim() ? Number(deliveryDays.replace(/\D/g, "")) : undefined;
     const waiting = waitingDays.trim() ? Number(waitingDays.replace(/\D/g, "")) : undefined;
     setLoading(true);
@@ -128,7 +112,6 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       stockStatus: stockStatus === "out_of_stock" ? "available" : stockStatus,
       images: photos,
       ...(photos[0] ? { imageUrl: photos[0] } : {}),
-      colors,
       expectedDeliveryDays: delivery != null && Number.isFinite(delivery) ? delivery : undefined,
       waitingPeriodDays: waiting != null && Number.isFinite(waiting) ? waiting : undefined,
       brochureUrl: brochureUrl.trim() || undefined,
@@ -293,97 +276,6 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
                 </select>
               </div>
             </div>
-          </section>
-
-          <section className="grid gap-3 rounded-2xl border border-border/70 bg-card/60 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Paint colours</p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 gap-1"
-                onClick={() => {
-                  setPaintNames((prev) => [...prev, ""]);
-                  setPaintIdx(paintNames.length);
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add colour
-              </Button>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Same as Buy page — tap a circle, type the OEM paint name (e.g. Mythos Black). Photo order matches colour
-              order (1st colour ↔ 1st photo).
-            </p>
-            {paintNames.length ? (
-              <>
-                <div className="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-1" role="listbox" aria-label="Paint colours">
-                  {paintNames.map((name, i) => {
-                    const hex = guessHexFromName(name.trim() || "Grey");
-                    const active = i === paintIdx;
-                    const light = isLightHex(hex);
-                    return (
-                      <button
-                        key={`paint-${i}`}
-                        type="button"
-                        role="option"
-                        aria-selected={active}
-                        title={name.trim() || `Colour ${i + 1}`}
-                        onClick={() => setPaintIdx(i)}
-                        className={cn(
-                          "relative h-10 w-10 shrink-0 rounded-full border-2 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                          active ? "scale-105 border-foreground ring-2 ring-primary/40" : "border-border/80",
-                        )}
-                        style={{ backgroundColor: hex }}
-                      >
-                        {active ? (
-                          <span
-                            className={cn(
-                              "absolute inset-0 flex items-center justify-center",
-                              light ? "text-slate-900" : "text-white",
-                            )}
-                          >
-                            <Check className="h-4 w-4" strokeWidth={3} />
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="flex items-end gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Label htmlFor="edit-paint-name">Colour name</Label>
-                    <Input
-                      id="edit-paint-name"
-                      value={paintNames[paintIdx] ?? ""}
-                      onChange={(e) => {
-                        const next = [...paintNames];
-                        next[paintIdx] = e.target.value;
-                        setPaintNames(next);
-                      }}
-                      placeholder="e.g. Navarra Blue Metallic"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 shrink-0"
-                    title="Remove colour"
-                    onClick={() => {
-                      const next = paintNames.filter((_, i) => i !== paintIdx);
-                      setPaintNames(next);
-                      setPaintIdx((idx) => Math.max(0, Math.min(idx, next.length - 1)));
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">No colours yet — add paint options for the Buy page swatches.</p>
-            )}
           </section>
 
           <section className="grid gap-3 rounded-2xl border border-border/70 bg-card/60 p-4">
