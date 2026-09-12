@@ -11,9 +11,6 @@ type VehicleImagePickerProps = {
   imageUrls: string[];
   uploadPrefix: string;
   onChange: (urls: string[]) => void;
-  /** Optional paint names aligned with each photo (horizontal under thumbnails). */
-  colorNames?: string[];
-  onColorNamesChange?: (names: string[]) => void;
 };
 
 function moveItem<T>(list: T[], from: number, to: number): T[] {
@@ -25,22 +22,15 @@ function moveItem<T>(list: T[], from: number, to: number): T[] {
   return next;
 }
 
-export function VehicleImagePicker({
-  imageUrls,
-  uploadPrefix,
-  onChange,
-  colorNames,
-  onColorNamesChange,
-}: VehicleImagePickerProps) {
+export function VehicleImagePicker({ imageUrls, uploadPrefix, onChange }: VehicleImagePickerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
+  const [showUrls, setShowUrls] = useState(false);
 
   const urls = imageUrls.length ? imageUrls : [""];
   const filled = urls.map((u) => u.trim()).filter(Boolean);
-  const showPaint = Boolean(onColorNamesChange);
-  const names = colorNames ?? [];
 
   const onFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -51,9 +41,6 @@ export function VehicleImagePicker({
       const newUrls = uploaded.map((u) => u.publicUrl).filter(Boolean);
       const next = [...newUrls, ...filled];
       onChange(next.length ? next : [""]);
-      if (onColorNamesChange) {
-        onColorNamesChange([...newUrls.map(() => ""), ...names.slice(0, filled.length)]);
-      }
       toast.success(
         newUrls.length === 1
           ? "Main photo set (1st selected)"
@@ -66,41 +53,22 @@ export function VehicleImagePicker({
     }
   };
 
-  const emitReorder = (nextFilled: string[]) => {
-    onChange(nextFilled);
-  };
-
   const setAsMain = (index: number) => {
     if (index <= 0 || index >= filled.length) return;
-    const next = moveItem(filled, index, 0);
-    emitReorder(next);
-    if (onColorNamesChange) {
-      onColorNamesChange(moveItem(names.length ? names : filled.map(() => ""), index, 0));
-    }
+    onChange(moveItem(filled, index, 0));
     toast.success("Main photo updated");
   };
 
   const reorder = (from: number, to: number) => {
     if (from === to) return;
-    const next = moveItem(filled, from, to);
-    emitReorder(next);
-    if (onColorNamesChange) {
-      onColorNamesChange(moveItem(names.length ? names : filled.map(() => ""), from, to));
-    }
+    onChange(moveItem(filled, from, to));
     if (to === 0 || from === 0) toast.success("Photo order updated — 1st is Main");
-  };
-
-  const setNameAt = (index: number, value: string) => {
-    if (!onColorNamesChange) return;
-    const base = filled.map((_, i) => names[i] ?? "");
-    base[index] = value;
-    onColorNamesChange(base);
   };
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>Photos{showPaint ? " + colours" : ""}</Label>
+        <Label>Photos</Label>
         <div className="flex gap-2">
           <input
             ref={fileRef}
@@ -126,8 +94,7 @@ export function VehicleImagePicker({
         </div>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        Drag cards left/right to reorder. First = Main. Type paint name under each photo (one line). Leave blank for
-        interior / extra shots.
+        Drag left/right to reorder. First photo = Buy page hero.
       </p>
 
       {filled.length > 0 && (
@@ -161,13 +128,13 @@ export function VehicleImagePicker({
                 setOverIndex(null);
               }}
               className={cn(
-                "w-[7.5rem] shrink-0 cursor-grab rounded-xl border bg-card p-1.5 shadow-sm active:cursor-grabbing",
+                "w-[7.5rem] shrink-0 cursor-grab overflow-hidden rounded-xl border bg-card shadow-sm active:cursor-grabbing",
                 dragIndex === i && "opacity-60",
                 overIndex === i && dragIndex !== i && "ring-2 ring-primary",
               )}
               title="Drag to reorder"
             >
-              <div className="relative h-20 w-full overflow-hidden rounded-lg bg-muted">
+              <div className="relative h-20 w-full bg-muted">
                 <img src={url} alt="" className="pointer-events-none h-full w-full object-cover" draggable={false} />
                 <span className="absolute bottom-0.5 left-0.5 rounded bg-black/55 p-0.5 text-white">
                   <GripVertical className="h-3 w-3" />
@@ -193,46 +160,40 @@ export function VehicleImagePicker({
                   onClick={() => {
                     const next = filled.filter((_, j) => j !== i);
                     onChange(next.length ? next : [""]);
-                    if (onColorNamesChange) {
-                      onColorNamesChange(names.filter((_, j) => j !== i));
-                    }
                   }}
                   aria-label="Remove image"
                 >
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </button>
               </div>
-              {showPaint ? (
-                <Input
-                  className="mt-1.5 h-8 px-1.5 text-[11px]"
-                  value={names[i] ?? ""}
-                  onChange={(e) => setNameAt(i, e.target.value)}
-                  placeholder={i === 0 ? "Paint name" : "Paint / blank"}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onDragStart={(e) => e.preventDefault()}
-                />
-              ) : null}
             </div>
           ))}
         </div>
       )}
 
-      <div className="mt-3 space-y-2">
-        {urls.map((url, i) => (
-          <Input
-            key={i}
-            placeholder={i === 0 ? "Main image URL (1st = Buy page hero)" : `Image URL ${i + 1} (optional)`}
-            value={url}
-            onChange={(e) => {
-              const next = [...urls];
-              next[i] = e.target.value;
-              onChange(next);
-            }}
-          />
-        ))}
-        <Button type="button" variant="ghost" size="sm" onClick={() => onChange([...urls, ""])}>
-          + Add URL field
+      <div className="mt-2">
+        <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setShowUrls((v) => !v)}>
+          {showUrls ? "Hide URL fields" : "Paste image URLs"}
         </Button>
+        {showUrls ? (
+          <div className="mt-2 space-y-2">
+            {urls.map((url, i) => (
+              <Input
+                key={i}
+                placeholder={i === 0 ? "Main image URL" : `Image URL ${i + 1}`}
+                value={url}
+                onChange={(e) => {
+                  const next = [...urls];
+                  next[i] = e.target.value;
+                  onChange(next);
+                }}
+              />
+            ))}
+            <Button type="button" variant="ghost" size="sm" onClick={() => onChange([...urls, ""])}>
+              + Add URL field
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
