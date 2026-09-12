@@ -162,7 +162,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
                       )}
                     </>
                   ) : (
-                    "Update showroom details, colours, and photos."
+                    "Update showroom details and photos."
                   )}
                 </DialogDescription>
               </div>
