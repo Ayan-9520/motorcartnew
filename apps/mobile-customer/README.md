@@ -1,39 +1,54 @@
-# Motorcart Customer App (Expo) — production-ready companion
+# Motorcart Customer App (Expo) — Play Store ready
 
 Package: `in.motorcart.app` · Same JWT API as [motorcart.in](https://motorcart.in)
 
-## Real login (no demo accounts)
+## What is ready in this repo
 
-Demo role picker is **removed**. Use a real account:
+- Production EAS profile → API `https://motorcart.in`, demos **off**, **AAB** output
+- 1024×1024 icons + adaptive assets + splash
+- Play listing pack in `store/` (512 icon + 1024×500 feature graphic + copy)
+- Privacy / Terms links on Login + Profile → `motorcart.in`
+- Minimal Android permissions (`INTERNET`, `ACCESS_NETWORK_STATE`)
+- HTTPS cleartext disabled automatically for production builds (`app.config.js`)
 
-### Option A — New user (recommended)
-1. Open app → **Sign up**
-2. Enter full name, email, password (customer)
-3. Or choose **Business** for dealer-style signup (may need admin approval)
-4. Sign in with the same email + password
+## What only you do (outside code)
 
-**Local Docker:** `.env.docker` has `MAILER_AUTOCONFIRM=true` so new accounts can sign in without email link.  
-**Production (`motorcart.in`):** email verification may be required (`MAILER_AUTOCONFIRM=false`) — check inbox, then sign in.
+1. Buy / open **Google Play Console** → create app `in.motorcart.app`
+2. Paste listing from `store/LISTING.md` + upload `store/*` graphics + 2+ screenshots
+3. Set privacy URL: `https://motorcart.in/privacy`
+4. On this machine:
 
-### Option B — Existing website account
-1. Use the **same email + password** you use on https://motorcart.in
-2. App → **Sign in** → enter email & password → Sign in
+```powershell
+npm install -g eas-cli
+cd apps/mobile-customer
+npx eas login
+npx eas init
+npx eas build -p android --profile production
+```
 
-### Local Docker test
-1. Stack up: `docker compose --env-file .env.docker up -d`
-2. Mobile preview: `docker compose --env-file .env.docker --profile mobile up -d --build mobile-app`
-3. Open http://127.0.0.1:8090 → Sign up with **your** email (e.g. `you@gmail.com`) or sign in with an account already in the local DB
-
-Password reset: use the website login flow (link on the sign-in screen).
+5. Download **AAB** → Play Console → **Internal testing** → QA → Production
 
 ---
 
-## Local Expo (phone / emulator)
+## Real login (no demo accounts)
+
+Demo role picker is **off** in production builds.
+
+### Option A — New user
+1. App → **Sign up**
+2. Customer or Business signup
+3. Sign in (production may require email verification)
+
+### Option B — Existing website account
+Use the same email + password as https://motorcart.in
+
+---
+
+## Local Expo (dev)
 
 ```powershell
 cd apps/mobile-customer
 copy .env.example .env
-# Set EXPO_PUBLIC_API_URL to your PC LAN IP :3000 for a physical phone
 npm install
 npx expo start
 ```
@@ -44,37 +59,23 @@ npx expo start
 | Android emulator | `http://10.0.2.2:3000` |
 | Physical phone | `http://YOUR_LAN_IP:3000` |
 
----
-
-## Play Store (production)
-
-```powershell
-npm install -g eas-cli
-cd apps/mobile-customer
-npx eas login
-npx eas init
-npx eas build -p android --profile production
-npx eas submit -p android --profile production --latest
-```
-
-Production profile already sets:
-- API → `https://motorcart.in`
-- Demo logins → **off**
-- AAB + auto version bump
-- Cleartext HTTP off when API is HTTPS (`app.config.js`)
-
-Service account JSON: `google-play-service-account.json` (gitignored).
+Docker web preview `:8090` is **not** the Play binary — use EAS AAB for store.
 
 ---
 
-## Checklist before store release
+## Checklist
 
-- [ ] Privacy policy + terms live on motorcart.in
-- [ ] Play Console app created (`in.motorcart.app`)
-- [ ] EAS `projectId` via `eas init`
-- [ ] Internal track QA with real accounts
-- [ ] Screenshots + feature graphic
+- [x] Privacy + terms live on motorcart.in
+- [x] Store icons 1024 / 512 + feature graphic
+- [x] Production EAS env + AAB profile
+- [x] In-app Privacy / Terms links
+- [ ] Play Console app created (`in.motorcart.app`) — **you**
+- [ ] `npx eas init` → commit `projectId` — **you**
+- [ ] `eas build` production AAB — **you**
+- [ ] Screenshots from device/emulator — **you**
+- [ ] Upload AAB + promote Internal → Production — **you**
 
 ## Related
 
+- `store/LISTING.md` — Console paste pack
 - `cursor/19_Mobile_Applications.md`

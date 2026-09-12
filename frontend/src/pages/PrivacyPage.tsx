@@ -4,7 +4,7 @@ import { ContentDocPage, DocSection } from "@/components/marketing/ContentDocPag
 import { SITE_CONTACT } from "@/content/site-content";
 import { setPageMeta } from "@/utils/seo";
 
-const UPDATED = "May 2026";
+const UPDATED = "September 2026";
 
 export function PrivacyPage() {
   useEffect(() => {
@@ -18,15 +18,15 @@ export function PrivacyPage() {
     <ContentDocPage
       eyebrow="Legal"
       title="Privacy Policy"
-      lead="Your privacy matters. This policy explains what we collect on Motorcart.in and how we use it."
+      lead="Your privacy matters. This policy explains what we collect on Motorcart.in and the Motorcart Android companion app (package in.motorcart.app), and how we use it."
       updated={UPDATED}
       compact
     >
       <DocSection title="1. Who we are">
         <p>
           Motorcart.in (&quot;Motorcart&quot;, &quot;we&quot;, &quot;us&quot;) operates an automotive
-          marketplace, dealer tools, finance journeys, auctions, parts, services, and community features
-          in India. For privacy questions contact{" "}
+          marketplace, dealer tools, finance journeys, auctions, parts, services, community features,
+          and the Motorcart mobile companion app in India. For privacy questions contact{" "}
           <a href={`mailto:${SITE_CONTACT.email}`} className="text-primary hover:underline">
             {SITE_CONTACT.email}
           </a>

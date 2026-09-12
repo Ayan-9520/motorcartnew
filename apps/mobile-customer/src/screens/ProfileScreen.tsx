@@ -175,6 +175,16 @@ export function ProfileScreen() {
               label="Open web CRM"
               hint={ws.webPath}
               onPress={() => void Linking.openURL(`${WEB_SITE_URL}${ws.webPath}`)}
+            />
+            <McSettingsRow
+              label="Privacy policy"
+              hint="motorcart.in/privacy"
+              onPress={() => void Linking.openURL(`${WEB_SITE_URL}/privacy`)}
+            />
+            <McSettingsRow
+              label="Terms of use"
+              hint="motorcart.in/terms"
+              onPress={() => void Linking.openURL(`${WEB_SITE_URL}/terms`)}
               last
             />
           </McSettingsGroup>

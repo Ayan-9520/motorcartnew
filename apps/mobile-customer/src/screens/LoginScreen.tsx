@@ -273,6 +273,23 @@ export function LoginScreen() {
                   </Pressable>
                 </>
               )}
+
+              <View style={styles.legalRow}>
+                <Pressable onPress={() => void Linking.openURL(`${WEB_SITE_URL}/privacy`)}>
+                  <Text style={styles.legalLink}>Privacy</Text>
+                </Pressable>
+                <Text style={styles.legalSep}>·</Text>
+                <Pressable onPress={() => void Linking.openURL(`${WEB_SITE_URL}/terms`)}>
+                  <Text style={styles.legalLink}>Terms</Text>
+                </Pressable>
+                <Text style={styles.legalSep}>·</Text>
+                <Pressable onPress={() => void Linking.openURL(WEB_SITE_URL)}>
+                  <Text style={styles.legalLink}>motorcart.in</Text>
+                </Pressable>
+              </View>
+              <Text style={styles.legalHint}>
+                By continuing you agree to Motorcart Privacy Policy and Terms on motorcart.in.
+              </Text>
             </McCard>
           </View>
         </McContent>
@@ -350,6 +367,23 @@ function makeStyles(c: ThemeColors) {
     },
     brandSub: { marginTop: 10, fontSize: 15, lineHeight: 22, color: "rgba(226, 232, 240, 0.78)", maxWidth: 420 },
     trustRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 18 },
+    legalRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      marginTop: 18,
+    },
+    legalLink: { fontSize: 13, fontWeight: "700", color: c.primary },
+    legalSep: { fontSize: 13, color: c.muted },
+    legalHint: {
+      marginTop: 8,
+      fontSize: 11,
+      lineHeight: 16,
+      color: c.muted,
+      textAlign: "center",
+    },
     trustChip: {
       borderWidth: 1,
       borderColor: "rgba(37, 211, 102, 0.28)",
