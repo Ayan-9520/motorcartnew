@@ -17,6 +17,30 @@ import {
 
 type ImportMode = "create_only" | "create_update";
 
+/** Swatch hex for public Buy colour picker (CarLelo-style). */
+function guessPaintHex(name: string): string {
+  const n = name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const map: Record<string, string> = {
+    white: "#F5F5F5",
+    black: "#1A1A1A",
+    red: "#B91C1C",
+    grey: "#6B7280",
+    gray: "#6B7280",
+    silver: "#C0C0C0",
+    blue: "#1D4ED8",
+    green: "#166534",
+    orange: "#EA580C",
+    brown: "#78350F",
+    yellow: "#CA8A04",
+    gold: "#B45309",
+  };
+  if (map[n]) return map[n];
+  for (const [k, v] of Object.entries(map)) {
+    if (n.includes(k)) return v;
+  }
+  return "#64748B";
+}
+
 type PreviewRow = {
   rowNumber: number;
   action: "create" | "update" | "skip" | "error";
@@ -209,9 +233,13 @@ function buildMetadata(input: InventoryInput, existing?: Record<string, unknown>
       const photo = imgs[i] ?? imgs[0];
       return {
         name: label,
+        hex: guessPaintHex(label),
         images: photo ? [photo] : [],
       };
     });
+  } else if (Array.isArray(input.colors) && input.colors.length === 0) {
+    delete base.color_options;
+    delete base.colorOptions;
   }
 
   const specifications: Record<string, string> = {
@@ -1258,8 +1286,10 @@ export async function listPublicNewCarStock(opts: {
             const own = Array.isArray(o.images)
               ? (o.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
               : [];
+            const hexRaw = String(o.hex ?? "").trim();
             return {
               name,
+              hex: hexRaw || guessPaintHex(name),
               images: own.length ? own : imgs[i] ? [imgs[i]] : imgs[0] ? [imgs[0]] : [],
             };
           });
@@ -1267,6 +1297,7 @@ export async function listPublicNewCarStock(opts: {
         if (!colors.length) return undefined;
         return colors.map((name, i) => ({
           name,
+          hex: guessPaintHex(name),
           images: imgs[i] ? [imgs[i]] : imgs[0] ? [imgs[0]] : [],
         }));
       })(),

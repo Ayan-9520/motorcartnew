@@ -50,7 +50,7 @@ function buildColorOptions(
   meta: Record<string, unknown>,
   colors: string[],
   images: string[],
-): Array<{ name: string; images: string[] }> | undefined {
+): Array<{ name: string; hex?: string; images: string[] }> | undefined {
   const raw = Array.isArray(meta.color_options)
     ? meta.color_options
     : Array.isArray(meta.colorOptions)
@@ -69,9 +69,14 @@ function buildColorOptions(
             ? [String(o.image_url ?? o.imageUrl ?? o.image)]
             : [];
         const fallback = imgs.length ? imgs : images[i] ? [images[i]!] : images[0] ? [images[0]] : [];
-        return { name, images: fallback.slice(0, 8) };
+        const hexRaw = String(o.hex ?? "").trim();
+        return {
+          name,
+          hex: hexRaw || undefined,
+          images: fallback.slice(0, 8),
+        };
       })
-      .filter((x): x is { name: string; images: string[] } => Boolean(x));
+      .filter((x): x is { name: string; hex?: string; images: string[] } => Boolean(x));
   }
   if (!colors.length) return undefined;
   return colors.map((name, i) => ({

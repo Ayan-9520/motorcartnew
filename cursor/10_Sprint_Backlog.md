@@ -104,6 +104,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | Date | Item |
 |------|------|
+| 2026-09-12 | Buy colour swatches — per-photo paint names in Edit stock; public gallery hint when colours missing |
 | 2026-09-12 | Mobile Play Store pack — 1024 icons, feature graphic, Privacy/Terms in-app, assetlinks template, listing copy |
 | 2026-09-12 | Buy New Cars — Newest uses real inventory timestamps + photo-first (fix fake Date.now sort) |
 | 2026-09-11 | Production honesty — NCD shared-path remap fix; DSA/parts/service fake KPIs gated; deliveries from delivered leads |

@@ -22,7 +22,8 @@ export function VehicleColorSwatches({ colors, selectedIndex, onSelect, classNam
             {colors.length} colour{colors.length === 1 ? "" : "s"} available
           </p>
           <p className="text-xs text-muted-foreground">
-            Selected: <span className="font-medium text-foreground">{selected?.name}</span>
+            Tap a circle to change the car photo · Selected:{" "}
+            <span className="font-medium text-foreground">{selected?.name}</span>
           </p>
         </div>
       </div>

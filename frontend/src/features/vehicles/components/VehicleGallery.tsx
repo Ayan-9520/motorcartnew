@@ -127,7 +127,12 @@ export function VehicleGallery({ images, title, colors = [] }: VehicleGalleryPro
 
       {colors.length > 0 ? (
         <VehicleColorSwatches colors={colors} selectedIndex={colorIdx} onSelect={setColorIdx} />
-      ) : null}
+      ) : (
+        <p className="rounded-xl border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          Paint colours not listed yet. Dealer: Edit stock → name each paint photo (e.g. Mythos Black) → Save — then
+          colour circles appear here.
+        </p>
+      )}
 
       {list.length > 1 ? (
         <div className="flex gap-2 overflow-x-auto pb-1">

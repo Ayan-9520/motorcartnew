@@ -44,7 +44,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
   const [price, setPrice] = useState("");
   const [onRoad, setOnRoad] = useState("");
   const [discount, setDiscount] = useState("");
-  const [colorsText, setColorsText] = useState("");
+  const [colorNames, setColorNames] = useState<string[]>([]);
   const [deliveryDays, setDeliveryDays] = useState("");
   const [waitingDays, setWaitingDays] = useState("");
   const [brochureUrl, setBrochureUrl] = useState("");
@@ -64,7 +64,10 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
     setOnRoad(item.onRoadPrice > 0 ? String(Math.round(item.onRoadPrice)) : "");
     setDiscount(item.discountAmount > 0 ? String(Math.round(item.discountAmount)) : "");
     setStockStatus(item.stockStatus || "available");
-    setColorsText((item.colors ?? []).join(", "));
+    const photos = collectPhotos(item);
+    setImageUrls(photos);
+    const existingColors = (item.colors ?? []).map((c) => String(c ?? "").trim());
+    setColorNames(photos.map((_, i) => existingColors[i] ?? ""));
     setDeliveryDays(
       item.expectedDeliveryDays != null && item.expectedDeliveryDays > 0
         ? String(item.expectedDeliveryDays)
@@ -74,8 +77,12 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       item.waitingPeriodDays != null && item.waitingPeriodDays > 0 ? String(item.waitingPeriodDays) : "",
     );
     setBrochureUrl(item.brochureUrl?.trim() || "");
-    setImageUrls(collectPhotos(item));
   }, [open, item]);
+
+  function onPhotosChange(next: string[]) {
+    setImageUrls(next);
+    setColorNames((prev) => next.map((_, i) => prev[i] ?? ""));
+  }
 
   const previewSrc = imageUrls.map((u) => u.trim()).find(Boolean) || item?.imageUrl || "";
 
@@ -98,10 +105,18 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       return;
     }
     const photos = imageUrls.map((u) => u.trim()).filter(Boolean);
-    const colors = colorsText
-      .split(/[,|;]+/)
-      .map((c) => c.trim())
-      .filter(Boolean);
+    // Paint order = photo order (CarLelo). Keep only named paints, re-order photos to match.
+    const paired = photos
+      .map((url, i) => ({ url, name: (colorNames[i] ?? "").trim() }))
+      .filter((p) => p.name);
+    if (photos.length > 0 && paired.length === 0) {
+      toast.error("Add colour names under each paint photo — then Buy page shows colour swatches");
+      return;
+    }
+    const colors = paired.map((p) => p.name);
+    const orderedPhotos = paired.length
+      ? [...paired.map((p) => p.url), ...photos.filter((u) => !paired.some((p) => p.url === u))]
+      : photos;
     const delivery = deliveryDays.trim() ? Number(deliveryDays.replace(/\D/g, "")) : undefined;
     const waiting = waitingDays.trim() ? Number(waitingDays.replace(/\D/g, "")) : undefined;
     setLoading(true);
@@ -116,8 +131,8 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       stock: stockN,
       discountAmount: disc,
       stockStatus: stockStatus === "out_of_stock" ? "available" : stockStatus,
-      images: photos,
-      ...(photos[0] ? { imageUrl: photos[0] } : {}),
+      images: orderedPhotos,
+      ...(orderedPhotos[0] ? { imageUrl: orderedPhotos[0] } : {}),
       colors,
       expectedDeliveryDays: delivery != null && Number.isFinite(delivery) ? delivery : undefined,
       waitingPeriodDays: waiting != null && Number.isFinite(waiting) ? waiting : undefined,
@@ -128,7 +143,7 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
       toast.error(error.message ?? "Update failed");
       return;
     }
-    toast.success("Stock updated");
+    toast.success("Stock updated — colour swatches will show on Buy page");
     onOpenChange(false);
     onSaved();
   };
@@ -287,18 +302,10 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
 
           <section className="grid gap-3 rounded-2xl border border-border/70 bg-card/60 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Colours & delivery</p>
-            <div>
-              <Label htmlFor="edit-colors">Colours (comma-separated)</Label>
-              <Input
-                id="edit-colors"
-                value={colorsText}
-                onChange={(e) => setColorsText(e.target.value)}
-                placeholder="Pristine White, Fearless Red, Daytona Grey"
-              />
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Same order as photos below = colour gallery on the public listing.
-              </p>
-            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Name each paint photo below (e.g. Mythos Black). Same order = colour circles on the public Buy page
+              (CarLelo style). Interior photos can stay unnamed.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label htmlFor="edit-delivery">Expected delivery (days)</Label>
@@ -333,12 +340,42 @@ export function NewCarEditInventoryDialog({ item, open, onOpenChange, onSaved }:
           </section>
 
           <section className="grid gap-3 rounded-2xl border border-border/70 bg-card/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Photos</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Photos + paint names</p>
             <VehicleImagePicker
               imageUrls={imageUrls}
               uploadPrefix={`ncd/${item?.id ?? "edit"}`}
-              onChange={setImageUrls}
+              onChange={onPhotosChange}
             />
+            <div className="space-y-2">
+              {imageUrls.map((url, i) => {
+                const src = url.trim();
+                if (!src) return null;
+                return (
+                  <div
+                    key={`${src}-${i}`}
+                    className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/80 p-2"
+                  >
+                    <img src={src} alt="" className="h-12 w-16 rounded-lg object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Colour name {i === 0 ? "(main / hero)" : ""}
+                      </Label>
+                      <Input
+                        value={colorNames[i] ?? ""}
+                        onChange={(e) =>
+                          setColorNames((prev) => {
+                            const next = [...prev];
+                            next[i] = e.target.value;
+                            return next;
+                          })
+                        }
+                        placeholder={i === 0 ? "e.g. Navarra Blue Metallic" : "Leave blank if not a paint"}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </section>
 
           <DialogFooter className="sticky bottom-0 -mx-5 border-t border-border/70 bg-card/95 px-5 py-3 backdrop-blur sm:-mx-6 sm:px-6">
