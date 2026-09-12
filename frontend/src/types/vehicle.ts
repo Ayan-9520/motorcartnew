@@ -55,11 +55,15 @@ export interface VehicleMetadata {
   priceDisplay?: string;
   priceSourceText?: string;
   ncdInventoryId?: string;
+  vehicleId?: string;
   stock?: number;
   stockStatus?: string;
   catalogVariantId?: string;
   source?: string;
   pincode?: string;
+  /** NewCarInventory.createdAt / updatedAt for Buy "Newest" sort */
+  inventoryCreatedAt?: string;
+  inventoryUpdatedAt?: string;
   /**
    * Paint gallery — each entry has name, hex swatch, and per-colour image URLs.
    * Selecting a swatch swaps gallery images (OEM / CarLelo pattern).

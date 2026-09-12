@@ -260,6 +260,14 @@ export function filterVehicles(
 
 export function sortVehicles(vehicles: VehicleListing[], sort: VehicleSortOption): VehicleListing[] {
   const sorted = [...vehicles];
+  const hasPhoto = (v: VehicleListing) =>
+    Array.isArray(v.images) && v.images.some((u) => typeof u === "string" && u.trim().length > 0);
+  const newestTs = (v: VehicleListing) => {
+    const meta = v.metadata as { inventoryUpdatedAt?: string } | undefined;
+    const raw = meta?.inventoryUpdatedAt || v.createdAt;
+    const t = new Date(raw).getTime();
+    return Number.isFinite(t) ? t : 0;
+  };
   switch (sort) {
     case "price-asc":
       return sorted.sort((a, b) => getDiscountedPrice(a) - getDiscountedPrice(b));
@@ -273,7 +281,12 @@ export function sortVehicles(vehicles: VehicleListing[], sort: VehicleSortOption
       return sorted.sort((a, b) => (b.aiPriceScore ?? 0) - (a.aiPriceScore ?? 0));
     case "newest":
     default:
-      return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      // Photos first so Buy hub is not a wall of "No image", then real upload/update time
+      return sorted.sort((a, b) => {
+        const photoDiff = Number(hasPhoto(b)) - Number(hasPhoto(a));
+        if (photoDiff !== 0) return photoDiff;
+        return newestTs(b) - newestTs(a);
+      });
   }
 }
 

@@ -112,7 +112,8 @@ function stockRowToListing(r: Record<string, unknown>): NewCarListing {
     dealerName,
     dealerSlug: dealer.slug ? String(dealer.slug) : undefined,
     dealerVerified: Boolean(dealer.is_verified),
-    createdAt: new Date().toISOString(),
+    // Real inventory timestamps — never Date.now() (that reversed Newest sort while mapping 1000+ rows)
+    createdAt: String(r.updated_at ?? r.created_at ?? r.updatedAt ?? r.createdAt ?? "1970-01-01T00:00:00.000Z"),
     metadata: {
       ncdInventoryId: String(r.id),
       vehicleId: r.vehicle_id ? String(r.vehicle_id) : undefined,
@@ -124,6 +125,8 @@ function stockRowToListing(r: Record<string, unknown>): NewCarListing {
       priceOnRequest,
       priceDisplay: priceOnRequest ? "Price on request" : undefined,
       priceSourceText: r.price_source_text ? String(r.price_source_text) : undefined,
+      inventoryCreatedAt: r.created_at ? String(r.created_at) : undefined,
+      inventoryUpdatedAt: r.updated_at ? String(r.updated_at) : undefined,
       onRoadPrice:
         !priceOnRequest && r.on_road_price != null && Number(r.on_road_price) > 0
           ? Number(r.on_road_price)

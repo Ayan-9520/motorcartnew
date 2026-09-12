@@ -104,6 +104,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | Date | Item |
 |------|------|
+| 2026-09-12 | Buy New Cars — Newest uses real inventory timestamps + photo-first (fix fake Date.now sort) |
 | 2026-09-11 | Production honesty — NCD shared-path remap fix; DSA/parts/service fake KPIs gated; deliveries from delivered leads |
 | 2026-09-11 | Mobile companion — Inter + website CRM light/dark tokens (`#25D366`, `#f0f2f5` / `#000`) |
 | 2026-09-11 | Public new-car detail — emit color_options + paint/image merge so live gallery/swatches match dealer uploads |

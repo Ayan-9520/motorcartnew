@@ -1184,7 +1184,8 @@ export async function listPublicNewCarStock(opts: {
 
   const rows = await prisma.newCarInventory.findMany({
     where,
-    orderBy: [{ updatedAt: "desc" }, { brand: "asc" }, { model: "asc" }],
+    // Newest uploads/edits first — public Buy hub relies on these timestamps
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }, { brand: "asc" }, { model: "asc" }],
     skip: (page - 1) * limit,
     take: limit,
   });
@@ -1316,6 +1317,8 @@ export async function listPublicNewCarStock(opts: {
         meta.specifications && typeof meta.specifications === "object" ? meta.specifications : undefined,
       features: Array.isArray(meta.features) ? meta.features : undefined,
       notes: meta.notes ? String(meta.notes) : undefined,
+      created_at: r.createdAt.toISOString(),
+      updated_at: r.updatedAt.toISOString(),
       dealer: d
         ? {
             id: d.id,
