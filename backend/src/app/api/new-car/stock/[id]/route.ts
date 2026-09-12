@@ -57,26 +57,26 @@ function buildColorOptions(
       ? meta.colorOptions
       : null;
   if (Array.isArray(raw) && raw.length) {
-    return raw
-      .map((item, i) => {
-        if (!item || typeof item !== "object") return null;
-        const o = item as Record<string, unknown>;
-        const name = String(o.name ?? o.color ?? o.colour ?? "").trim();
-        if (!name) return null;
-        const imgs = Array.isArray(o.images)
-          ? (o.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
-          : o.image_url || o.imageUrl || o.image
-            ? [String(o.image_url ?? o.imageUrl ?? o.image)]
-            : [];
-        const fallback = imgs.length ? imgs : images[i] ? [images[i]!] : images[0] ? [images[0]] : [];
-        const hexRaw = String(o.hex ?? "").trim();
-        return {
-          name,
-          hex: hexRaw || undefined,
-          images: fallback.slice(0, 8),
-        };
-      })
-      .filter((x): x is { name: string; hex?: string; images: string[] } => Boolean(x));
+    const out: Array<{ name: string; hex?: string; images: string[] }> = [];
+    raw.forEach((item, i) => {
+      if (!item || typeof item !== "object") return;
+      const o = item as Record<string, unknown>;
+      const name = String(o.name ?? o.color ?? o.colour ?? "").trim();
+      if (!name) return;
+      const imgs = Array.isArray(o.images)
+        ? (o.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
+        : o.image_url || o.imageUrl || o.image
+          ? [String(o.image_url ?? o.imageUrl ?? o.image)]
+          : [];
+      const fallback = imgs.length ? imgs : images[i] ? [images[i]!] : images[0] ? [images[0]] : [];
+      const hexRaw = String(o.hex ?? "").trim();
+      out.push({
+        name,
+        ...(hexRaw ? { hex: hexRaw } : {}),
+        images: fallback.slice(0, 8),
+      });
+    });
+    return out.length ? out : undefined;
   }
   if (!colors.length) return undefined;
   return colors.map((name, i) => ({
