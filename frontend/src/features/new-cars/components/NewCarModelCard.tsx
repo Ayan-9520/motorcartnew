@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Fuel, GitBranch, Layers } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ChevronRight, Fuel, ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { VehicleImage } from "@/features/vehicles/components/VehicleImage";
 import { buyModelVariantsPath } from "@/features/marketplace/lib/buy-catalog-flow";
@@ -17,6 +15,7 @@ type Props = {
   condition?: "new" | "used";
 };
 
+/** Model card only — variants open after click (no footer CTA). */
 export function NewCarModelCard({
   group,
   index = 0,
@@ -28,16 +27,20 @@ export function NewCarModelCard({
     group.primarySlug && group.listingCount === 1
       ? buyDetailPath(hub, condition, group.primarySlug)
       : variantsHref;
-  const variantLabel =
-    group.variantCount > 0
-      ? `${group.variantCount} variant${group.variantCount === 1 ? "" : "s"}`
-      : `${group.listingCount} listing${group.listingCount === 1 ? "" : "s"}`;
   const priceLabel =
     group.priceOnRequest || group.priceFrom == null
       ? "Price on request"
       : group.priceTo != null && group.priceTo > group.priceFrom
         ? `${formatCurrency(group.priceFrom)} – ${formatCurrency(group.priceTo)}`
         : `From ${formatCurrency(group.priceFrom)}`;
+  const variantHint =
+    group.variantCount > 1
+      ? `${group.variantCount} variants`
+      : group.variantCount === 1
+        ? "1 variant"
+        : group.listingCount > 1
+          ? `${group.listingCount} in stock`
+          : null;
 
   return (
     <motion.div
@@ -47,9 +50,9 @@ export function NewCarModelCard({
       transition={{ delay: index * 0.03 }}
       className="min-w-0"
     >
-      <Card className="premium-card group overflow-hidden border-border p-0">
-        <Link to={href} className="block">
-          <div className="relative aspect-[16/11] overflow-hidden bg-muted">
+      <Card className="premium-card group overflow-hidden border-border/80 p-0 transition-shadow hover:shadow-md">
+        <Link to={href} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <div className="relative aspect-[16/10] overflow-hidden bg-muted">
             <VehicleImage
               images={group.image ? [group.image] : []}
               meta={{
@@ -60,61 +63,51 @@ export function NewCarModelCard({
                 fuelType: group.fuelTypes[0],
               }}
               alt={`${group.brand} ${group.model}`}
-              className="transition-transform duration-500 group-hover:scale-[1.02]"
+              className="transition-transform duration-500 group-hover:scale-[1.03]"
             />
-            <div className="vehicle-card-overlay opacity-70" aria-hidden />
-            <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-              <Badge className="border-0 bg-foreground/80 px-1.5 py-0 text-[9px] text-primary-foreground">
-                <Layers className="mr-0.5 h-2.5 w-2.5" />
-                {variantLabel}
-              </Badge>
-              {group.dealerVerified ? (
-                <Badge className="border-0 bg-primary px-1.5 py-0 text-[9px] text-primary-foreground">
-                  Dealer verified
-                </Badge>
-              ) : null}
-            </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
+            {variantHint ? (
+              <span className="absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                {variantHint}
+              </span>
+            ) : null}
+            {group.dealerVerified ? (
+              <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground">
+                <ShieldCheck className="h-2.5 w-2.5" />
+                Verified
+              </span>
+            ) : null}
           </div>
-          <CardContent className="space-y-1.5 p-4">
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary">
-              {group.brand} {group.model}
-            </h3>
+          <CardContent className="space-y-2 p-4">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-foreground group-hover:text-primary">
+                {group.brand} {group.model}
+              </h3>
+              <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+            </div>
             <div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                 {group.priceOnRequest || group.priceFrom == null ? "Pricing" : "Ex-showroom"}
               </p>
-              <p className="text-lg font-bold text-primary">{priceLabel}</p>
+              <p className="text-lg font-bold tabular-nums text-primary">{priceLabel}</p>
             </div>
-            <div className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
-              {group.fuelTypes.slice(0, 2).map((f) => (
-                <span
-                  key={f}
-                  className="inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5"
-                >
-                  <Fuel className="h-2.5 w-2.5 text-primary" />
-                  {f}
-                </span>
-              ))}
-              {group.variants.length > 0 ? (
-                <span className="inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5">
-                  <GitBranch className="h-2.5 w-2.5 text-primary" />
-                  {group.variants.slice(0, 2).join(" · ")}
-                  {group.variants.length > 2 ? ` +${group.variants.length - 2}` : ""}
-                </span>
-              ) : null}
-            </div>
-            <p className={cn("text-xs text-muted-foreground")}>
-              {group.listingCount === 1
-                ? "Tap to view listing"
-                : `Tap to choose variant · ${group.listingCount} in stock`}
-            </p>
+            {group.fuelTypes.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {group.fuelTypes.slice(0, 2).map((f) => (
+                  <span
+                    key={f}
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[11px] text-muted-foreground",
+                    )}
+                  >
+                    <Fuel className="h-3 w-3 text-primary/80" />
+                    {f}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </CardContent>
         </Link>
-        <div className="flex gap-1 border-t border-border p-3">
-          <Button size="sm" className="h-8 flex-1 rounded-md text-[10px]" asChild>
-            <Link to={href}>{group.listingCount === 1 ? "View listing" : "View variants"}</Link>
-          </Button>
-        </div>
       </Card>
     </motion.div>
   );
