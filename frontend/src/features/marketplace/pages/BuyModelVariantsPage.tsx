@@ -19,6 +19,7 @@ import {
   resolveBrandLabel,
   type CatalogVariantCard,
 } from "../lib/buy-catalog-flow";
+import { buyDetailPath } from "../lib/route-utils";
 import { useVehicleHubStore } from "@/store/vehicleHubStore";
 
 export function BuyModelVariantsPage() {
@@ -139,14 +140,19 @@ export function BuyModelVariantsPage() {
               </Link>
             )}
             <div className="buy-flow-grid">
-              {variants.map((v) => (
+              {variants.map((v) => {
+                const href =
+                  v.detailSlug && v.count === 1
+                    ? buyDetailPath(hub, condition, v.detailSlug)
+                    : buyFilteredListingsPath(hub, condition, {
+                        brand,
+                        model: displayModel,
+                        variant: v.variant,
+                      });
+                return (
                 <Link
                   key={v.slug}
-                  to={buyFilteredListingsPath(hub, condition, {
-                    brand,
-                    model: displayModel,
-                    variant: v.variant,
-                  })}
+                  to={href}
                   className="buy-flow-card"
                 >
                   <span className="buy-flow-card-media buy-flow-card-media-sm">
@@ -170,7 +176,8 @@ export function BuyModelVariantsPage() {
                     </span>
                   </span>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

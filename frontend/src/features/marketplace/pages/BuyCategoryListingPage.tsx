@@ -15,6 +15,7 @@ import { BUY_HUB_CATEGORIES } from "../data/buy-hub-categories";
 import { buyListingPath, hubCategoryLabel } from "../lib/route-utils";
 import { VEHICLE_SEGMENT_LABELS } from "@/lib/media/vehicle-media-registry";
 import type { VehicleSegment } from "@/lib/media/vehicle-media-registry";
+import { NewCarModelCard } from "@/features/new-cars/components/NewCarModelCard";
 import { useBuyCategoryListing } from "../hooks/useBuyCategoryListing";
 import type { VehicleConditionSlug } from "../types";
 
@@ -40,6 +41,8 @@ export function BuyCategoryListingPage() {
     searchParams,
     switchConditionPath,
     switchHubPath,
+    useModelGroups,
+    modelGroups,
   } = useBuyCategoryListing();
 
   const filterRecord = Object.fromEntries(searchParams.entries());
@@ -76,7 +79,9 @@ export function BuyCategoryListingPage() {
                 : title}
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            {total}+ listings · verified dealers · filters for brand, budget, fuel, EMI & city
+            {useModelGroups
+              ? `${total}+ models · pick a model to see variants · verified dealers & EMI`
+              : `${total}+ listings · verified dealers · filters for brand, budget, fuel, EMI & city`}
           </p>
         </div>
       </div>
@@ -200,6 +205,7 @@ export function BuyCategoryListingPage() {
               layout={layout}
               onSort={setSort}
               onLayout={setLayout}
+              totalLabel={useModelGroups ? "models" : "vehicles"}
             />
 
             {loading ? (
@@ -221,6 +227,34 @@ export function BuyCategoryListingPage() {
                   />
                 ))}
               </div>
+            ) : useModelGroups ? (
+              modelGroups.length === 0 ? (
+              <div className="rounded-xl border border-border bg-card p-10 text-center">
+                <p className="text-base font-semibold">No models found</p>
+                <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filters</p>
+                <Link to="/buy" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
+                  ← Back to buy hub
+                </Link>
+              </div>
+              ) : (
+              <div
+                className={
+                  layout === "grid"
+                    ? "vehicle-listing-grid marketplace-results-grid"
+                    : "space-y-3"
+                }
+              >
+                {modelGroups.map((g, i) => (
+                  <NewCarModelCard
+                    key={g.id}
+                    group={g}
+                    index={i}
+                    hub={hub === "ev" ? "ev" : "cars"}
+                    condition={condition}
+                  />
+                ))}
+              </div>
+              )
             ) : vehicles.length === 0 ? (
               <div className="rounded-xl border border-border bg-card p-10 text-center">
                 <p className="text-base font-semibold">No vehicles found</p>
@@ -244,7 +278,7 @@ export function BuyCategoryListingPage() {
             )}
 
             <VehiclePagination page={page} totalPages={totalPages} onPage={setPage} />
-            <AIRecommendations pool={vehicles} />
+            {!useModelGroups ? <AIRecommendations pool={vehicles} /> : null}
           </div>
         </div>
       </div>

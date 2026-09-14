@@ -21,3 +21,26 @@ export type NewCarListing = VehicleListing & {
   category: "new-cars";
   condition: "new";
 };
+
+/** One card on Buy New Cars grid — brand+model with variants behind the open. */
+export type NewCarModelGroup = {
+  id: string;
+  brand: string;
+  model: string;
+  brandSlug: string;
+  modelSlug: string;
+  image?: string;
+  priceFrom: number | null;
+  priceTo: number | null;
+  priceOnRequest: boolean;
+  variantCount: number;
+  variants: string[];
+  listingCount: number;
+  fuelTypes: string[];
+  transmissions: string[];
+  bodyType?: string;
+  createdAt: string;
+  dealerVerified: boolean;
+  /** When only one stock row exists, open detail directly. */
+  primarySlug?: string;
+};

@@ -9,7 +9,11 @@ import { parseCategoryParam } from "@/lib/vehicle-utils";
 
 const PAGE_SIZE = 24;
 
-export function useVehicleSearch(categoryParam?: string) {
+export function useVehicleSearch(
+  categoryParam?: string,
+  options?: { enabled?: boolean },
+) {
+  const enabled = options?.enabled !== false;
   const [searchParams, setSearchParams] = useSearchParams();
   const [vehicles, setVehicles] = useState<VehicleListing[]>([]);
   const [total, setTotal] = useState(0);
@@ -29,6 +33,13 @@ export function useVehicleSearch(categoryParam?: string) {
   }, [searchParams, category]);
 
   const load = useCallback(async () => {
+    if (!enabled) {
+      setVehicles([]);
+      setTotal(0);
+      setTotalPages(1);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       // New cars: only dealer NewCarInventory / stock API — never invent mock or leftover used rows.
@@ -46,7 +57,7 @@ export function useVehicleSearch(categoryParam?: string) {
     } finally {
       setLoading(false);
     }
-  }, [filters, sort, page]);
+  }, [filters, sort, page, enabled]);
 
   useEffect(() => {
     void load();

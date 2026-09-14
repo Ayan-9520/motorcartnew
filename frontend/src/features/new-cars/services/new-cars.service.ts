@@ -3,10 +3,18 @@ import { realDataOnly } from "@/config/real-data";
 import { api } from "@/lib/api/axios";
 import { hasConfiguredApi } from "@/lib/api/base-url";
 import { searchVehicles } from "@/services/vehicle.service";
-import { filterVehicles, paginateVehicles, sortVehicles } from "@/lib/vehicle-utils";
+import { filterVehicles, getDiscountedPrice, paginateVehicles, sortVehicles } from "@/lib/vehicle-utils";
 import type { VehicleFilters, VehicleListing, VehicleSearchResult, VehicleSortOption } from "@/types/vehicle";
-import type { NewCarListing } from "../types";
+import type { NewCarListing, NewCarModelGroup } from "../types";
 
+function slugifyLabel(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 function asNewCars(vehicles: typeof MOCK_VEHICLES): NewCarListing[] {
   return vehicles
     .filter((v) => v.category === "new-cars" || (v.condition === "new" && v.category !== "bikes" && v.category !== "trucks"))
@@ -271,6 +279,137 @@ export async function searchNewCars(params: {
 
   return {
     vehicles: pageResult.items,
+    total: pageResult.total,
+    page: pageResult.page,
+    pageSize: pageResult.pageSize,
+    totalPages: pageResult.totalPages,
+  };
+}
+
+function hasUsablePhoto(v: VehicleListing): boolean {
+  return (v.images ?? []).some((u) => {
+    const t = String(u ?? "").trim();
+    return (
+      t.startsWith("http://") ||
+      t.startsWith("https://") ||
+      t.includes("/uploads/") ||
+      t.startsWith("/media/") ||
+      t.startsWith("/demo/")
+    );
+  });
+}
+
+function listingSortKey(v: VehicleListing): number {
+  const t = Date.parse(String(v.createdAt ?? ""));
+  return Number.isFinite(t) ? t : 0;
+}
+
+/** Collapse stock rows into brand+model cards (CarWale-style). */
+export function groupNewCarsByModel(vehicles: VehicleListing[]): NewCarModelGroup[] {
+  const map = new Map<string, VehicleListing[]>();
+  for (const v of vehicles) {
+    const brand = (v.brand || "").trim();
+    const model = (v.model || "").trim();
+    if (!brand || !model) continue;
+    const key = `${brand.toLowerCase()}|${model.toLowerCase()}`;
+    const bucket = map.get(key);
+    if (bucket) bucket.push(v);
+    else map.set(key, [v]);
+  }
+
+  const groups: NewCarModelGroup[] = [];
+  for (const rows of map.values()) {
+    const brand = rows[0]!.brand.trim();
+    const model = rows[0]!.model.trim();
+    const variants = [
+      ...new Set(rows.map((r) => (r.variant || "").trim()).filter(Boolean)),
+    ].sort((a, b) => a.localeCompare(b));
+    const fuelTypes = [
+      ...new Set(rows.map((r) => (r.fuelType || "").trim()).filter(Boolean)),
+    ];
+    const transmissions = [
+      ...new Set(rows.map((r) => (r.transmission || "").trim()).filter(Boolean)),
+    ];
+
+    let priceFrom: number | null = null;
+    let priceTo: number | null = null;
+    let priceOnRequest = true;
+    for (const r of rows) {
+      const por = Boolean(r.metadata?.priceOnRequest) || !(r.price > 0);
+      if (por) continue;
+      const p = getDiscountedPrice(r);
+      if (!(p > 0)) continue;
+      priceOnRequest = false;
+      if (priceFrom == null || p < priceFrom) priceFrom = p;
+      if (priceTo == null || p > priceTo) priceTo = p;
+    }
+
+    const withPhoto = rows.filter(hasUsablePhoto).sort((a, b) => listingSortKey(b) - listingSortKey(a));
+    const hero = withPhoto[0] ?? [...rows].sort((a, b) => listingSortKey(b) - listingSortKey(a))[0];
+    const newest = Math.max(...rows.map(listingSortKey));
+
+    groups.push({
+      id: `${slugifyLabel(brand)}--${slugifyLabel(model)}`,
+      brand,
+      model,
+      brandSlug: slugifyLabel(brand),
+      modelSlug: slugifyLabel(model),
+      image: hero?.images?.[0],
+      priceFrom,
+      priceTo: priceTo != null && priceFrom != null && priceTo > priceFrom ? priceTo : null,
+      priceOnRequest: priceOnRequest || priceFrom == null,
+      variantCount: variants.length,
+      variants,
+      listingCount: rows.length,
+      fuelTypes,
+      transmissions,
+      bodyType: hero?.bodyType || undefined,
+      createdAt: new Date(newest || 0).toISOString(),
+      dealerVerified: rows.some((r) => Boolean(r.dealerVerified)),
+      primarySlug: rows.length === 1 ? rows[0]!.slug : undefined,
+    });
+  }
+
+  return groups;
+}
+
+function sortModelGroups(groups: NewCarModelGroup[], sort: VehicleSortOption): NewCarModelGroup[] {
+  const next = [...groups];
+  switch (sort) {
+    case "price-asc":
+      return next.sort((a, b) => (a.priceFrom ?? Number.POSITIVE_INFINITY) - (b.priceFrom ?? Number.POSITIVE_INFINITY));
+    case "price-desc":
+      return next.sort((a, b) => (b.priceFrom ?? -1) - (a.priceFrom ?? -1));
+    case "newest":
+    default:
+      return next.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  }
+}
+
+/** Buy New Cars grid: one card per brand+model; open → variants. */
+export async function searchNewCarModelGroups(params: {
+  filters?: Omit<VehicleFilters, "category"> & { pincode?: string };
+  sort?: VehicleSortOption;
+  page?: number;
+  pageSize?: number;
+}): Promise<{
+  groups: NewCarModelGroup[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const { filters = {}, sort = "newest", page = 1, pageSize = 24 } = params;
+  const result = await searchNewCars({
+    filters,
+    sort: "newest",
+    page: 1,
+    pageSize: 2000,
+  });
+  const grouped = sortModelGroups(groupNewCarsByModel(result.vehicles), sort);
+  const pageResult = paginateVehicles(grouped, page, pageSize);
+  return {
+    groups: pageResult.items,
     total: pageResult.total,
     page: pageResult.page,
     pageSize: pageResult.pageSize,

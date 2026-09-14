@@ -10,14 +10,16 @@ import { VehiclePagination } from "@/features/vehicles/components/VehiclePaginat
 import { CompareFloatingBar } from "@/features/vehicles/components/CompareFloatingBar";
 import { StockByPinPanel } from "@/features/inventory/components/StockByPinPanel";
 import { NewCarCard } from "../components/NewCarCard";
+import { NewCarModelCard } from "../components/NewCarModelCard";
 import { useNewCarSearch } from "../hooks/useNewCarSearch";
 import { setPageMeta } from "@/utils/seo";
 
 export function NewCarsListingPage() {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const {
     vehicles,
+    modelGroups,
+    useModelGroups,
     total,
     totalPages,
     page,
@@ -55,7 +57,11 @@ export function NewCarsListingPage() {
         </div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold md:text-4xl">Browse new cars</h1>
-          <p className="mt-1 text-muted-foreground">{total}+ models · OEM dealers · instant EMI</p>
+          <p className="mt-1 text-muted-foreground">
+            {useModelGroups
+              ? `${total}+ models · open a model to see variants`
+              : `${total}+ listings · OEM dealers · instant EMI`}
+          </p>
         </motion.div>
 
         <StockByPinPanel />
@@ -71,6 +77,7 @@ export function NewCarsListingPage() {
               layout={layout}
               onSort={setSort}
               onLayout={setLayout}
+              totalLabel={useModelGroups ? "models" : "vehicles"}
             />
             {loading ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -78,6 +85,16 @@ export function NewCarsListingPage() {
                   <Skeleton key={i} className="aspect-[16/10] w-full rounded-xl" />
                 ))}
               </div>
+            ) : useModelGroups ? (
+              modelGroups.length === 0 ? (
+                <p className="py-16 text-center text-muted-foreground">No new cars match your filters.</p>
+              ) : (
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {modelGroups.map((g, i) => (
+                    <NewCarModelCard key={g.id} group={g} index={i} />
+                  ))}
+                </div>
+              )
             ) : vehicles.length === 0 ? (
               <p className="py-16 text-center text-muted-foreground">No new cars match your filters.</p>
             ) : (
