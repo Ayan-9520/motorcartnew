@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { VehicleImage } from "@/features/vehicles/components/VehicleImage";
 import { buyModelVariantsPath } from "@/features/marketplace/lib/buy-catalog-flow";
 import { buyDetailPath } from "@/features/marketplace/lib/route-utils";
-import { cn, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type { NewCarModelGroup } from "../types";
 
 type Props = {
@@ -15,7 +15,7 @@ type Props = {
   condition?: "new" | "used";
 };
 
-/** Model card only — variants open after click (no footer CTA). */
+/** Uniform premium model card — fixed media + content slots (same height/width in grid). */
 export function NewCarModelCard({
   group,
   index = 0,
@@ -38,9 +38,8 @@ export function NewCarModelCard({
       ? `${group.variantCount} variants`
       : group.variantCount === 1
         ? "1 variant"
-        : group.listingCount > 1
-          ? `${group.listingCount} in stock`
-          : null;
+        : `${Math.max(1, group.listingCount)} in stock`;
+  const fuel = group.fuelTypes[0]?.trim() || "";
 
   return (
     <motion.div
@@ -48,29 +47,35 @@ export function NewCarModelCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.03 }}
-      className="min-w-0"
+      className="flex h-full min-w-0"
     >
-      <Card className="premium-card group overflow-hidden border-border/80 p-0 transition-shadow hover:shadow-md">
-        <Link to={href} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-            <VehicleImage
-              images={group.image ? [group.image] : []}
-              meta={{
-                brand: group.brand,
-                model: group.model,
-                bodyType: group.bodyType ?? "",
-                category: "new-cars",
-                fuelType: group.fuelTypes[0],
-              }}
-              alt={`${group.brand} ${group.model}`}
-              className="transition-transform duration-500 group-hover:scale-[1.03]"
+      <Card className="premium-card group flex h-full w-full flex-col overflow-hidden border-border/80 p-0 transition-shadow hover:shadow-md">
+        <Link
+          to={href}
+          className="flex h-full flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-muted">
+            <div className="absolute inset-0">
+              <VehicleImage
+                images={group.image ? [group.image] : []}
+                meta={{
+                  brand: group.brand,
+                  model: group.model,
+                  bodyType: group.bodyType ?? "",
+                  category: "new-cars",
+                  fuelType: fuel || undefined,
+                }}
+                alt={`${group.brand} ${group.model}`}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+            </div>
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent"
+              aria-hidden
             />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
-            {variantHint ? (
-              <span className="absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                {variantHint}
-              </span>
-            ) : null}
+            <span className="absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+              {variantHint}
+            </span>
             {group.dealerVerified ? (
               <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground">
                 <ShieldCheck className="h-2.5 w-2.5" />
@@ -78,34 +83,26 @@ export function NewCarModelCard({
               </span>
             ) : null}
           </div>
-          <CardContent className="space-y-2 p-4">
-            <div className="flex items-start justify-between gap-2">
+
+          <CardContent className="flex flex-1 flex-col gap-2 p-4">
+            <div className="flex min-h-[2.75rem] items-start justify-between gap-2">
               <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-foreground group-hover:text-primary">
                 {group.brand} {group.model}
               </h3>
               <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
             </div>
-            <div>
+
+            <div className="min-h-[3.1rem]">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                 {group.priceOnRequest || group.priceFrom == null ? "Pricing" : "Ex-showroom"}
               </p>
-              <p className="text-lg font-bold tabular-nums text-primary">{priceLabel}</p>
+              <p className="line-clamp-2 text-lg font-bold leading-snug tabular-nums text-primary">{priceLabel}</p>
             </div>
-            {group.fuelTypes.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {group.fuelTypes.slice(0, 2).map((f) => (
-                  <span
-                    key={f}
-                    className={cn(
-                      "inline-flex items-center gap-1 text-[11px] text-muted-foreground",
-                    )}
-                  >
-                    <Fuel className="h-3 w-3 text-primary/80" />
-                    {f}
-                  </span>
-                ))}
-              </div>
-            ) : null}
+
+            <div className="mt-auto flex min-h-[1.25rem] items-center gap-1 text-[11px] text-muted-foreground">
+              <Fuel className="h-3 w-3 shrink-0 text-primary/80" />
+              <span className="truncate">{fuel || "—"}</span>
+            </div>
           </CardContent>
         </Link>
       </Card>
