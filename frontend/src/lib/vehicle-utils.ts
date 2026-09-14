@@ -9,6 +9,32 @@ import type { HubCategorySlug, VehicleConditionSlug } from "@/features/marketpla
 import { buyDetailPath, buyListingPath } from "@/features/marketplace/lib/route-utils";
 import { inferVehicleSegment } from "@/lib/media/vehicle-media-registry";
 
+/**
+ * OEM names vary in dealer uploads (Maruti vs Maruti Suzuki, Mercedes vs Mercedes-Benz).
+ * Exact string match empties Buy brand pages even when stock exists.
+ */
+export function brandsMatch(listingBrand: string, filterBrand: string): boolean {
+  const a = listingBrand.trim().toLowerCase().replace(/\s+/g, " ");
+  const b = filterBrand.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.startsWith(`${b} `) || b.startsWith(`${a} `)) return true;
+  const shorter = a.length <= b.length ? a : b;
+  if (shorter.length >= 3 && (a.includes(b) || b.includes(a))) return true;
+  if (shorter.length === 2 && (a === shorter || b === shorter || a.startsWith(`${shorter} `) || b.startsWith(`${shorter} `))) {
+    return true;
+  }
+  const token = (s: string) =>
+    s
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)[0] ?? "";
+  const ta = token(a);
+  const tb = token(b);
+  return ta.length >= 2 && ta === tb;
+}
+
 const CATEGORY_MAP: Record<VehicleCategory, { condition?: string; fuel?: string; bodyTypes?: string[] }> = {
   "new-cars": { condition: "new" },
   "used-cars": { condition: "used" },
@@ -205,7 +231,7 @@ export function filterVehicles(
     if (filters.category === "used-cars") result = result.filter((v) => v.category === "used-cars" || (v.condition === "used" && !["bikes", "trucks", "buses", "ev"].includes(v.category)));
   }
 
-  if (filters.brand) result = result.filter((v) => v.brand.toLowerCase() === filters.brand!.toLowerCase());
+  if (filters.brand) result = result.filter((v) => brandsMatch(v.brand, filters.brand!));
   if (filters.model) result = result.filter((v) => v.model.toLowerCase().includes(filters.model!.toLowerCase()));
   if (filters.variant) {
     result = result.filter((v) => (v.variant ?? "").toLowerCase().includes(filters.variant!.toLowerCase()));

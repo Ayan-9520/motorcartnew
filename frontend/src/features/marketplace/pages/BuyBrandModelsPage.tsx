@@ -43,7 +43,7 @@ export function BuyBrandModelsPage() {
     if (!hub || !condition || !brand) return;
     let cancelled = false;
     setLoading(true);
-    void loadBrandModels(hub, condition, brand).then((rows) => {
+    void loadBrandModels(hub, condition, brand, brandSlug).then((rows) => {
       if (cancelled) return;
       setModels(rows);
       setLoading(false);
@@ -51,7 +51,7 @@ export function BuyBrandModelsPage() {
     return () => {
       cancelled = true;
     };
-  }, [hub, condition, brand]);
+  }, [hub, condition, brand, brandSlug]);
 
   useEffect(() => {
     if (!brand) return;

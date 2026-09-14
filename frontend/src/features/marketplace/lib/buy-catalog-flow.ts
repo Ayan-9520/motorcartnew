@@ -1,6 +1,6 @@
 import { searchNewCars } from "@/features/new-cars/services/new-cars.service";
 import { searchVehicles } from "@/services/vehicle.service";
-import { getDiscountedPrice } from "@/lib/vehicle-utils";
+import { brandsMatch, getDiscountedPrice } from "@/lib/vehicle-utils";
 import { buyListingPath, hubCategoryToFilters } from "../lib/route-utils";
 import { getBuyBrandsForHub } from "../data/buy-brands";
 import type { HubCategorySlug, VehicleConditionSlug } from "../types";
@@ -52,11 +52,24 @@ export function resolveBrandLabel(hub: HubCategorySlug, brandSlug: string): stri
       slugifyLabel(b.brand) === brandSlug ||
       slugifyLabel(b.name) === brandSlug,
   );
-  if (hit) return hit.brand;
+  if (hit) return hit.name || hit.brand;
   return brandSlug
     .split("-")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+/** Shorter OEM token for API `contains` (Maruti matches Maruti Suzuki stock). */
+export function resolveBrandApiFilter(hub: HubCategorySlug, brandSlug: string): string {
+  const brands = getBuyBrandsForHub(hub);
+  const hit = brands.find(
+    (b) =>
+      b.id === brandSlug ||
+      slugifyLabel(b.brand) === brandSlug ||
+      slugifyLabel(b.name) === brandSlug,
+  );
+  if (hit?.brand) return hit.brand;
+  return resolveBrandLabel(hub, brandSlug);
 }
 
 export type CatalogModelCard = {
@@ -86,11 +99,13 @@ async function fetchBrandListings(
   condition: VehicleConditionSlug,
   brand: string,
   model?: string,
+  brandSlug?: string,
 ): Promise<VehicleListing[]> {
   const base = hubCategoryToFilters(hub, condition);
+  const apiBrand = brandSlug ? resolveBrandApiFilter(hub, brandSlug) : brand;
   const filters = {
     ...base,
-    brand,
+    brand: apiBrand,
     ...(model ? { model } : {}),
   };
 
@@ -101,7 +116,8 @@ async function fetchBrandListings(
       page: 1,
       pageSize: 200,
     });
-    return result.vehicles;
+    // Keep rows that match marketing label OR API token (Maruti Suzuki ↔ Maruti)
+    return result.vehicles.filter((v) => brandsMatch(v.brand, brand) || brandsMatch(v.brand, apiBrand));
   }
 
   const result = await searchVehicles({
@@ -110,15 +126,16 @@ async function fetchBrandListings(
     page: 1,
     pageSize: 200,
   });
-  return result.vehicles;
+  return result.vehicles.filter((v) => brandsMatch(v.brand, brand) || brandsMatch(v.brand, apiBrand));
 }
 
 export async function loadBrandModels(
   hub: HubCategorySlug,
   condition: VehicleConditionSlug,
   brand: string,
+  brandSlug?: string,
 ): Promise<CatalogModelCard[]> {
-  const vehicles = await fetchBrandListings(hub, condition, brand);
+  const vehicles = await fetchBrandListings(hub, condition, brand, undefined, brandSlug);
   const map = new Map<string, CatalogModelCard>();
 
   for (const v of vehicles) {
@@ -157,8 +174,9 @@ export async function loadModelVariants(
   condition: VehicleConditionSlug,
   brand: string,
   model: string,
+  brandSlug?: string,
 ): Promise<{ variants: CatalogVariantCard[]; listingsWithoutVariant: number }> {
-  const vehicles = await fetchBrandListings(hub, condition, brand, model);
+  const vehicles = await fetchBrandListings(hub, condition, brand, model, brandSlug);
   const map = new Map<string, CatalogVariantCard>();
   let listingsWithoutVariant = 0;
 

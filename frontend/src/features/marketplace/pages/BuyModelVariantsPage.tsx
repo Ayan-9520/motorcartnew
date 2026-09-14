@@ -69,7 +69,7 @@ export function BuyModelVariantsPage() {
     setLoading(true);
 
     void (async () => {
-      const models = await loadBrandModels(hub, condition, brand);
+      const models = await loadBrandModels(hub, condition, brand, brandSlug);
       if (cancelled) return;
       const match = models.find((m) => m.slug === modelSlug);
       const resolvedModel = match?.model ?? modelSlug.replace(/-/g, " ");
@@ -78,7 +78,7 @@ export function BuyModelVariantsPage() {
       setBodyType(match?.bodyType);
       setPriceFrom(match?.priceFrom ?? null);
 
-      const result = await loadModelVariants(hub, condition, brand, resolvedModel);
+      const result = await loadModelVariants(hub, condition, brand, resolvedModel, brandSlug);
       if (cancelled) return;
       setVariants(result.variants);
       setNoVariantCount(result.listingsWithoutVariant);
@@ -91,7 +91,7 @@ export function BuyModelVariantsPage() {
     return () => {
       cancelled = true;
     };
-  }, [hub, condition, brand, modelSlug]);
+  }, [hub, condition, brand, brandSlug, modelSlug]);
 
   useEffect(() => {
     if (!brand || !modelName) return;
