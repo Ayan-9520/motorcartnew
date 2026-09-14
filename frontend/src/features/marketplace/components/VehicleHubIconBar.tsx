@@ -114,13 +114,13 @@ export function VehicleHubIconBar({
             <span className="vehicle-hub-icon-glyph">
               <Icon
                 className={
-                  variant === "inline" ? "h-3.5 w-3.5" : variant === "nav" ? "h-4 w-4" : "h-5 w-5"
+                  variant === "inline" ? "h-4 w-4" : variant === "nav" ? "h-4 w-4" : "h-5 w-5"
                 }
                 strokeWidth={
                   variant === "inline"
                     ? isActive
-                      ? 2.25
-                      : 1.75
+                      ? 2.35
+                      : 2
                     : variant === "nav"
                       ? isActive
                         ? 2.25

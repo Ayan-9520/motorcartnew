@@ -1323,17 +1323,25 @@
     @apply mx-auto grid w-full max-w-3xl grid-cols-6 gap-0 rounded-xl border border-border/60 bg-card/90 p-0.5 shadow-sm ring-1 ring-black/[0.02] dark:border-border/50 dark:bg-card/70 dark:ring-white/[0.04];
   }
 
-  /* Inline strip: logo row — compact pills */
+  /* Inline strip: logo row — equal icon pills */
   .vehicle-hub-icon-bar-inline {
-    @apply inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-border/60 bg-muted/30 px-1.5 py-1 scrollbar-none;
+    @apply inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-border/70 bg-card px-1.5 py-1.5 shadow-sm scrollbar-none;
   }
 
   .vehicle-hub-icon-bar-inline .vehicle-hub-icon-btn {
-    @apply min-h-0 shrink-0 flex-row items-center gap-0 rounded-full px-1.5 py-1;
+    @apply min-h-0 shrink-0 flex-row items-center gap-0 rounded-full px-1 py-1;
   }
 
   .vehicle-hub-icon-bar-inline .vehicle-hub-icon-glyph {
-    @apply h-7 w-7 rounded-full;
+    @apply flex h-8 w-8 items-center justify-center rounded-full bg-muted/70 text-foreground transition-colors;
+  }
+
+  .vehicle-hub-icon-bar-inline .vehicle-hub-icon-btn-active .vehicle-hub-icon-glyph {
+    @apply bg-primary text-primary-foreground shadow-sm;
+  }
+
+  .vehicle-hub-icon-bar-inline .vehicle-hub-icon-btn:not(.vehicle-hub-icon-btn-active):hover .vehicle-hub-icon-glyph {
+    @apply bg-primary/15 text-primary;
   }
 
   .vehicle-hub-icon-bar-inline .vehicle-hub-icon-label {
@@ -3480,32 +3488,60 @@
   }
 
   .buy-brands-grid {
-    @apply grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8;
+    @apply grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8;
   }
 
-  /* Logo only + name below (CarLelo-style) */
+  /* Logo tile — fixed media box so every brand matches (CarLelo-style) */
   .buy-brand-tile {
-    @apply flex flex-col items-center gap-2.5 rounded-2xl border border-border/60 bg-card px-2 pb-3 pt-4 text-center transition-all duration-200 hover:border-primary/30 hover:shadow-sm;
+    @apply flex h-full flex-col items-center gap-2.5 rounded-2xl border border-border/70 bg-card px-2.5 pb-3.5 pt-3.5 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md;
   }
 
   .buy-brand-tile-icon {
-    @apply flex h-14 w-14 items-center justify-center sm:h-16 sm:w-16;
+    @apply flex h-[4.5rem] w-full items-center justify-center rounded-xl bg-[#f3f5f7] sm:h-20;
+  }
+
+  .dark .buy-brand-tile-icon {
+    @apply bg-muted/60;
   }
 
   .buy-brand-tile-img {
-    @apply h-full w-full object-contain p-1.5;
+    @apply h-[2.75rem] w-[2.75rem] object-contain sm:h-12 sm:w-12;
   }
 
   .buy-brand-tile-fallback {
-    @apply flex h-12 w-12 items-center justify-center rounded-full bg-muted text-lg font-bold text-foreground sm:h-14 sm:w-14;
+    @apply flex h-12 w-12 items-center justify-center rounded-xl bg-background text-base font-extrabold text-foreground shadow-sm sm:h-14 sm:w-14 sm:text-lg;
   }
 
   .buy-brand-tile-name {
-    @apply line-clamp-1 max-w-full px-1 text-[11px] font-medium text-muted-foreground sm:text-xs;
+    @apply line-clamp-1 max-w-full px-0.5 text-[11px] font-semibold text-foreground/80 sm:text-xs;
   }
 
   .buy-brand-tile:hover .buy-brand-tile-name {
     @apply text-foreground;
+  }
+
+  .buy-types-title {
+    @apply text-xl font-extrabold tracking-tight text-foreground md:text-2xl;
+  }
+
+  .buy-types-pills {
+    @apply mt-4 flex flex-wrap gap-2;
+  }
+
+  .buy-types-pill {
+    @apply rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:border-primary/40 hover:shadow-md;
+  }
+
+  .buy-types-pill-active {
+    @apply border-primary bg-primary text-primary-foreground shadow-[var(--shadow-primary)] hover:border-primary hover:bg-primary;
+  }
+
+  .buy-budget-row {
+    @apply mt-4 flex flex-wrap gap-2.5;
+  }
+
+  .buy-budget-chip {
+    @apply rounded-xl border border-border/80 bg-card px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:border-primary/40 hover:shadow-md;
   }
 
   /* Brand → Model → Variant browse flow */
@@ -3586,30 +3622,6 @@
 
   .buy-flow-skip {
     @apply block rounded-xl border border-border/70 bg-card px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground;
-  }
-
-  .buy-types-title {
-    @apply text-xl font-extrabold tracking-tight text-foreground md:text-2xl;
-  }
-
-  .buy-types-pills {
-    @apply mt-4 flex flex-wrap gap-2;
-  }
-
-  .buy-types-pill {
-    @apply rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-all hover:border-primary/40;
-  }
-
-  .buy-types-pill-active {
-    @apply border-primary bg-primary text-primary-foreground shadow-[var(--shadow-primary)] hover:border-primary hover:bg-primary;
-  }
-
-  .buy-budget-row {
-    @apply mt-4 flex flex-wrap gap-2;
-  }
-
-  .buy-budget-chip {
-    @apply rounded-xl border border-border/80 bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground;
   }
 
   .buy-hub-top {

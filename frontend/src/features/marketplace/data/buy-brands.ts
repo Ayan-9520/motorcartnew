@@ -9,7 +9,7 @@ export type BuyBrandItem = {
 };
 
 /** Bump when replacing partner SVGs so browsers skip immutable cache. */
-const LOGO_V = "v20260908brands";
+const LOGO_V = "v20260914brands";
 const carLogo = (file: string) => `/partners/cars/${file}.svg?${LOGO_V}`;
 
 /** Full India + global OEM set with logos under /partners/cars */
