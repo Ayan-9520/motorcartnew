@@ -7,13 +7,20 @@ import { VehicleImageSkeleton } from "./VehicleImageSkeleton";
 
 export type VehicleImageMeta = VehicleResolveInput;
 
-/** Prefer first real http(s) /uploads URL only — never invent stock brand photos. */
+/** Prefer first real http(s) /uploads /media /demo /brand URL — never invent stock brand photos. */
 export function vehicleImageSrc(images?: string[] | null, _meta?: VehicleImageMeta, _seed = 0): string | null {
   const list = Array.isArray(images) ? images : [];
   for (const raw of list) {
     const u = String(raw ?? "").trim();
     if (!u) continue;
-    if (u.startsWith("http://") || u.startsWith("https://") || u.includes("/uploads/") || u.startsWith("/media/")) {
+    if (
+      u.startsWith("http://") ||
+      u.startsWith("https://") ||
+      u.includes("/uploads/") ||
+      u.startsWith("/media/") ||
+      u.startsWith("/demo/") ||
+      u.startsWith("/brand/")
+    ) {
       return u;
     }
   }
@@ -50,7 +57,12 @@ export function VehicleImage({
   const fromList = vehicleImageSrc(images, meta);
   const fromSrc =
     src &&
-    (src.startsWith("http://") || src.startsWith("https://") || src.includes("/uploads/") || src.startsWith("/media/"))
+    (src.startsWith("http://") ||
+      src.startsWith("https://") ||
+      src.includes("/uploads/") ||
+      src.startsWith("/media/") ||
+      src.startsWith("/demo/") ||
+      src.startsWith("/brand/"))
       ? src
       : null;
   const resolved = fromList || fromSrc;

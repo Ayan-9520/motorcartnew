@@ -2,11 +2,11 @@ import type { NewCarModelGroup } from "@/features/new-cars/types";
 import type { PreownedCarListing } from "@/features/preowned-cars/types";
 import type { NewCarListing } from "@/features/new-cars/types";
 
-/** Local assets only — looks real when live inventory is empty. */
+/** Model-matched studio assets (wrong OEM photos under /media were replaced). */
 const IMG = {
-  creta: "/media/vehicles/cars/Hyundai/Creta/01.webp",
-  swift: "/media/vehicles/cars/Maruti/Swift/01.webp",
-  hero: "/brand/hero-automotive-premium-v2.webp",
+  creta: "/demo/cars/creta/studio.svg",
+  swift: "/demo/cars/swift/studio.svg",
+  xuv700: "/demo/cars/xuv700/studio.svg",
   punch: "/demo/cars/punch-ev/pristine-white.svg",
   punchRed: "/demo/cars/punch-ev/fearless-red.svg",
   bike: "/media/vehicles/bikes/Royal Enfield/Classic 350/01.webp",
@@ -78,7 +78,7 @@ export const HOME_DEMO_NEW_MODELS: NewCarModelGroup[] = [
     model: "XUV700",
     brandSlug: "mahindra",
     modelSlug: "xuv700",
-    image: IMG.hero,
+    image: IMG.xuv700,
     priceFrom: 13_99_000,
     priceTo: 26_99_000,
     priceOnRequest: false,
@@ -192,7 +192,7 @@ export const HOME_DEMO_PREOWNED: PreownedCarListing[] = [
     year: 2020,
     kms: 41_000,
     city: "Mumbai",
-    image: IMG.hero,
+    image: IMG.xuv700,
     fuel: "Diesel",
   }),
 ];
