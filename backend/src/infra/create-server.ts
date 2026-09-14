@@ -1,7 +1,7 @@
 import { createServer, type Server } from "http";
 import { parse } from "url";
 import path from "path";
-import express, { type Express } from "express";
+import express, { type Express, type Request } from "express";
 import helmet from "helmet";
 import compression from "compression";
 import cors from "cors";
@@ -17,6 +17,17 @@ export type MotorcartServer = {
   io: SocketServer;
   shutdown: () => Promise<void>;
 };
+
+function apiPath(req: Request): string {
+  return String(req.originalUrl || req.url || "").split("?")[0] || "";
+}
+
+function envInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
 
 export async function createMotorcartServer(): Promise<MotorcartServer> {
   const dev = process.env.NODE_ENV !== "production";
@@ -50,14 +61,36 @@ export async function createMotorcartServer(): Promise<MotorcartServer> {
     })
   );
   expressApp.use(morgan(dev ? "dev" : "combined"));
+
+  /**
+   * Auth has its own bucket so inventory/home SPA traffic cannot lock users out of login.
+   * Previous global max=400/15m was too low for a dealer dashboard session.
+   */
+  expressApp.use(
+    "/api/auth/",
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: envInt("AUTH_RATE_LIMIT_MAX", dev ? 500 : 120),
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { message: "Too many auth attempts. Please wait a few minutes and try again." },
+    })
+  );
+
   expressApp.use(
     "/api/",
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      max: dev ? 2000 : 400,
+      max: envInt("API_RATE_LIMIT_MAX", dev ? 10000 : 3000),
       standardHeaders: true,
       legacyHeaders: false,
       message: { message: "Too many requests. Please try again later." },
+      skip: (req) => {
+        const p = apiPath(req);
+        if (p === "/api/health" || p === "/api/ready" || p.startsWith("/api/health/")) return true;
+        if (p.startsWith("/api/auth/")) return true;
+        return false;
+      },
     })
   );
 
