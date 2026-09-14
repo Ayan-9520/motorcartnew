@@ -29,6 +29,20 @@ function envInt(name: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+/** Prefer nginx X-Real-IP so all Docker traffic is not counted as one shared IP. */
+function clientIp(req: Request): string {
+  const realIp = req.headers["x-real-ip"];
+  if (typeof realIp === "string" && realIp.trim()) return realIp.trim();
+  const xf = req.headers["x-forwarded-for"];
+  if (typeof xf === "string" && xf.trim()) return xf.split(",")[0]!.trim();
+  if (Array.isArray(xf) && xf[0]) return String(xf[0]).split(",")[0]!.trim();
+  return req.ip || req.socket.remoteAddress || "unknown";
+}
+
+function rateLimitKey(req: Request): string {
+  return clientIp(req);
+}
+
 export async function createMotorcartServer(): Promise<MotorcartServer> {
   const dev = process.env.NODE_ENV !== "production";
   const hostname = "0.0.0.0";
@@ -64,16 +78,24 @@ export async function createMotorcartServer(): Promise<MotorcartServer> {
 
   /**
    * Auth has its own bucket so inventory/home SPA traffic cannot lock users out of login.
-   * Previous global max=400/15m was too low for a dealer dashboard session.
+   * GET settings/me are polled heavily — do not burn the login budget on them.
    */
   expressApp.use(
     "/api/auth/",
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      max: envInt("AUTH_RATE_LIMIT_MAX", dev ? 500 : 120),
+      max: envInt("AUTH_RATE_LIMIT_MAX", dev ? 2000 : 600),
       standardHeaders: true,
       legacyHeaders: false,
+      keyGenerator: rateLimitKey,
+      skipSuccessfulRequests: true,
+      validate: { trustProxy: false, xForwardedForHeader: false },
       message: { message: "Too many auth attempts. Please wait a few minutes and try again." },
+      skip: (req) => {
+        const p = apiPath(req);
+        if (req.method === "GET" && (p === "/api/auth/settings" || p === "/api/auth/me")) return true;
+        return false;
+      },
     })
   );
 
@@ -81,9 +103,11 @@ export async function createMotorcartServer(): Promise<MotorcartServer> {
     "/api/",
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      max: envInt("API_RATE_LIMIT_MAX", dev ? 10000 : 3000),
+      max: envInt("API_RATE_LIMIT_MAX", dev ? 20000 : 12000),
       standardHeaders: true,
       legacyHeaders: false,
+      keyGenerator: rateLimitKey,
+      validate: { trustProxy: false, xForwardedForHeader: false },
       message: { message: "Too many requests. Please try again later." },
       skip: (req) => {
         const p = apiPath(req);

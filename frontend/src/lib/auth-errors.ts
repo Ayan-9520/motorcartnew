@@ -101,7 +101,12 @@ export function classifyAuthError(
     return "signup_database";
   }
 
-  if (m.includes("rate limit") || m.includes("over_email_send_rate_limit")) {
+  if (
+    m.includes("rate limit") ||
+    m.includes("over_email_send_rate_limit") ||
+    m.includes("too many requests") ||
+    m.includes("too many auth")
+  ) {
     return "rate_limit";
   }
 
