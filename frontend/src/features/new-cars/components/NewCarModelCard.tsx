@@ -55,7 +55,7 @@ export function NewCarModelCard({
               meta={{
                 brand: group.brand,
                 model: group.model,
-                bodyType: group.bodyType,
+                bodyType: group.bodyType ?? "",
                 category: "new-cars",
                 fuelType: group.fuelTypes[0],
               }}
