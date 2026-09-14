@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, Gavel, MapPin, Users } from "lucide-react";
 import { useHomePage } from "@/features/home/context/HomePageContext";
+import { HOME_DEMO_AUCTIONS } from "@/features/home/data/home-demo-showcase";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,49 +24,30 @@ function formatTimeLeft(endsAt: string): string {
 export function AuctionsSection() {
   const { auctions } = useHomePage();
   const [, setTick] = useState(0);
+  const isDemo = !auctions.length;
+  const list = auctions.length ? auctions : HOME_DEMO_AUCTIONS;
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
 
-  if (!auctions.length) {
-    return (
-      <section className="home-section-alt">
-        <div className="container home-stack">
-          <SectionHeader
-            eyebrow="Live now"
-            title="Live auctions — cars, bikes & commercial"
-            description="Dealer inventory, bank repo & fleet disposals. Transparent bidding with AI fair-value for bankers and buyers."
-            href="/auctions"
-            linkLabel="All auctions"
-          />
-          <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 px-6 py-10 text-center">
-            <p className="text-sm font-semibold text-foreground">No live auctions right now</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Check back soon, or browse the full auction floor.
-            </p>
-            <Button size="sm" className="mt-4 rounded-xl" asChild>
-              <Link to="/auctions">Open auctions</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="home-section-alt">
       <div className="container home-stack">
         <SectionHeader
-          eyebrow="Live now"
+          eyebrow={isDemo ? "Auctions · demo showcase" : "Live now"}
           title="Live auctions — cars, bikes & commercial"
-          description="Dealer inventory, bank repo & fleet disposals. Transparent bidding with AI fair-value for bankers and buyers."
+          description={
+            isDemo
+              ? "Sample auction cards for demo — live lots appear when the auction floor has active events."
+              : "Dealer inventory, bank repo & fleet disposals. Transparent bidding with AI fair-value."
+          }
           href="/auctions"
           linkLabel="All auctions"
         />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {auctions.map((auction, index) => (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {list.map((auction, index) => (
             <motion.div
               key={auction.id}
               initial={{ opacity: 0, y: 12 }}
@@ -79,6 +61,7 @@ export function AuctionsSection() {
                     src={auction.image}
                     alt={auction.title}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    loading="lazy"
                   />
                   <Badge className="absolute left-2 top-2 gap-1 border-0 bg-red-600 px-1.5 py-0 text-[10px] text-white">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
@@ -111,20 +94,20 @@ export function AuctionsSection() {
                         Start {formatCurrency(auction.startingBid)}
                       </p>
                     </div>
-                    <Button variant="default" size="sm" className="h-8 shrink-0 px-2.5 text-xs" asChild>
+                    <Button variant="default" size="sm" className="h-8 shrink-0 gap-1 px-2.5 text-xs" asChild>
                       <Link
                         to={
-                          "slug" in auction || "id" in auction
-                            ? auctionDetailPath({
-                                slug: "slug" in auction ? String(auction.slug) : undefined,
+                          isDemo
+                            ? "/auctions"
+                            : auctionDetailPath({
+                                slug: auction.slug,
                                 id: auction.id,
-                                status: "status" in auction ? String(auction.status) : "live",
+                                status: "live",
                               })
-                            : "/auctions"
                         }
                       >
                         <Gavel className="h-3.5 w-3.5" />
-                        Bid
+                        {isDemo ? "Floor" : "Bid"}
                       </Link>
                     </Button>
                   </div>
@@ -133,6 +116,11 @@ export function AuctionsSection() {
             </motion.div>
           ))}
         </div>
+        {isDemo ? (
+          <p className="text-center text-[11px] text-muted-foreground">
+            Demo auctions for presentation — not live bidding events.
+          </p>
+        ) : null}
       </div>
     </section>
   );
