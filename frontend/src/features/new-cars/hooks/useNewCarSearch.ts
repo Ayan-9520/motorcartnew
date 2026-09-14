@@ -2,30 +2,43 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { filtersFromSearchParams } from "@/lib/vehicle-utils";
 import type { VehicleSortOption } from "@/types/vehicle";
-import { searchNewCars } from "../services/new-cars.service";
-import type { NewCarListing } from "../types";
+import { searchNewCarModelGroups, searchNewCars } from "../services/new-cars.service";
+import type { NewCarListing, NewCarModelGroup } from "../types";
 
 const PAGE_SIZE = 12;
 
 export function useNewCarSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [vehicles, setVehicles] = useState<NewCarListing[]>([]);
+  const [modelGroups, setModelGroups] = useState<NewCarModelGroup[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const sort = (searchParams.get("sort") as VehicleSortOption) || "newest";
   const page = Number(searchParams.get("page") || "1");
+  const modelQ = searchParams.get("model");
+  const variantQ = searchParams.get("variant");
+  const useModelGroups = !modelQ && !variantQ;
   const filters = { ...filtersFromSearchParams(searchParams), category: undefined as never };
 
   const load = useCallback(async () => {
     setLoading(true);
-    const result = await searchNewCars({ filters, sort, page, pageSize: PAGE_SIZE });
-    setVehicles(result.vehicles as NewCarListing[]);
-    setTotal(result.total);
-    setTotalPages(result.totalPages);
+    if (useModelGroups) {
+      const result = await searchNewCarModelGroups({ filters, sort, page, pageSize: PAGE_SIZE });
+      setModelGroups(result.groups);
+      setVehicles([]);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    } else {
+      const result = await searchNewCars({ filters, sort, page, pageSize: PAGE_SIZE });
+      setVehicles(result.vehicles as NewCarListing[]);
+      setModelGroups([]);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    }
     setLoading(false);
-  }, [JSON.stringify(filters), sort, page]);
+  }, [JSON.stringify(filters), sort, page, useModelGroups]);
 
   useEffect(() => {
     load();
@@ -56,6 +69,8 @@ export function useNewCarSearch() {
 
   return {
     vehicles,
+    modelGroups,
+    useModelGroups,
     total,
     totalPages,
     page,

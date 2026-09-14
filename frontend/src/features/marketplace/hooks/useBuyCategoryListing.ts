@@ -1,7 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useVehicleSearch } from "@/hooks/useVehicleSearch";
 import { useVehicleHubStore } from "@/store/vehicleHubStore";
+import { searchNewCarModelGroups } from "@/features/new-cars/services/new-cars.service";
+import type { NewCarModelGroup } from "@/features/new-cars/types";
+import { filtersFromSearchParams } from "@/lib/vehicle-utils";
+import type { VehicleSortOption } from "@/types/vehicle";
 import {
   hubCategoryToFilters,
   listingPageTitle,
@@ -28,6 +32,12 @@ export function useBuyCategoryListing() {
 
   const vehicleCategory = hubFilters?.category;
   const setBuyContext = useVehicleHubStore((s) => s.setBuyContext);
+
+  const modelQ = searchParams.get("model");
+  const variantQ = searchParams.get("variant");
+  /** Flat stock rows once a model (or variant) is chosen; otherwise group by brand+model. */
+  const useModelGroups =
+    condition === "new" && (hub === "cars" || hub === "ev") && !modelQ && !variantQ;
 
   useEffect(() => {
     if (!hub || !condition) return;
@@ -99,7 +109,47 @@ export function useBuyCategoryListing() {
     setSearchParams(next, { replace: true });
   };
 
-  const search = useVehicleSearch(vehicleCategory);
+  const search = useVehicleSearch(vehicleCategory, { enabled: !useModelGroups });
+
+  const [modelGroups, setModelGroups] = useState<NewCarModelGroup[]>([]);
+  const [groupTotal, setGroupTotal] = useState(0);
+  const [groupTotalPages, setGroupTotalPages] = useState(1);
+  const [groupLoading, setGroupLoading] = useState(false);
+
+  const sort = (searchParams.get("sort") as VehicleSortOption) || "newest";
+  const page = Number(searchParams.get("page") || "1");
+  const filterKey = searchParams.toString();
+
+  const loadGroups = useCallback(async () => {
+    if (!useModelGroups) return;
+    setGroupLoading(true);
+    try {
+      const fromUrl = filtersFromSearchParams(searchParams);
+      const result = await searchNewCarModelGroups({
+        filters: {
+          ...fromUrl,
+          ...(hubFilters ?? {}),
+          condition: "new",
+        },
+        sort,
+        page,
+        pageSize: 24,
+      });
+      setModelGroups(result.groups);
+      setGroupTotal(result.total);
+      setGroupTotalPages(result.totalPages);
+    } finally {
+      setGroupLoading(false);
+    }
+  }, [useModelGroups, filterKey, sort, page, hubFilters, searchParams]);
+
+  useEffect(() => {
+    if (!useModelGroups) {
+      setModelGroups([]);
+      return;
+    }
+    void loadGroups();
+  }, [useModelGroups, loadGroups]);
 
   const title =
     hub && condition ? listingPageTitle(hub, condition) : "Vehicles";
@@ -119,6 +169,16 @@ export function useBuyCategoryListing() {
     switchHubPath,
     invalid: !hub || !condition,
     resetHubFilters,
+    useModelGroups,
+    modelGroups,
     ...search,
+    ...(useModelGroups
+      ? {
+          vehicles: [] as typeof search.vehicles,
+          total: groupTotal,
+          totalPages: groupTotalPages,
+          loading: groupLoading,
+        }
+      : {}),
   };
 }

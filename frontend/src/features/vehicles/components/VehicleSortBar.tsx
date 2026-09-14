@@ -18,13 +18,22 @@ interface VehicleSortBarProps {
   layout: "grid" | "list";
   onSort: (s: VehicleSortOption) => void;
   onLayout: (l: "grid" | "list") => void;
+  /** Override “vehicles found” label (e.g. “models”). */
+  totalLabel?: string;
 }
 
-export function VehicleSortBar({ sort, total, layout, onSort, onLayout }: VehicleSortBarProps) {
+export function VehicleSortBar({
+  sort,
+  total,
+  layout,
+  onSort,
+  onLayout,
+  totalLabel = "vehicles",
+}: VehicleSortBarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
       <p className="text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">{total}</span> vehicles found
+        <span className="font-semibold text-foreground">{total}</span> {totalLabel} found
       </p>
       <div className="flex items-center gap-2">
         <select

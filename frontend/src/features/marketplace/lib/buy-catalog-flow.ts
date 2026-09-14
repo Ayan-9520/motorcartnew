@@ -77,6 +77,8 @@ export type CatalogVariantCard = {
   priceFrom: number | null;
   fuelType?: string;
   transmission?: string;
+  /** When only one stock row, open detail directly. */
+  detailSlug?: string;
 };
 
 async function fetchBrandListings(
@@ -178,9 +180,11 @@ export async function loadModelVariants(
         priceFrom: price > 0 ? price : null,
         fuelType: v.fuelType || undefined,
         transmission: v.transmission || undefined,
+        detailSlug: v.slug,
       });
     } else {
       existing.count += 1;
+      existing.detailSlug = undefined;
       if (!existing.image && v.images?.[0]) existing.image = v.images[0];
       if (price > 0 && (existing.priceFrom == null || price < existing.priceFrom)) {
         existing.priceFrom = price;
