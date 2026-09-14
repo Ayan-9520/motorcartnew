@@ -30,13 +30,13 @@ export type PlatformPillar = {
   accent?: "primary" | "auction" | "community" | "finance";
 };
 
-/** Full Motorcart platform — balanced for homepage (not car/truck only) */
+/** Full Motorcart platform — one homepage grid (canonical buy / hub routes). */
 export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
   {
     id: "cars-new",
     title: "New Cars",
     description: "OEM launches, on-road price, test drives & dealer offers.",
-    href: "/new-cars",
+    href: "/buy/cars/new",
     icon: Car,
     stat: "Browse new car catalog",
     size: "featured",
@@ -46,7 +46,7 @@ export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
     id: "cars-used",
     title: "Pre-Owned Cars",
     description: "200+ point inspection, 7-day return, certified dealers.",
-    href: "/used-cars",
+    href: "/buy/cars/used",
     icon: CarFront,
     stat: "Certified pre-owned listings",
     size: "wide",
@@ -56,7 +56,7 @@ export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
     id: "bikes",
     title: "Bikes & Scooters",
     description: "New & used two-wheelers with finance & service.",
-    href: "/bikes",
+    href: "/buy/bikes/used",
     icon: Bike,
     stat: "Two-wheeler listings",
   },
@@ -64,7 +64,7 @@ export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
     id: "trucks",
     title: "Trucks & LCV",
     description: "Commercial vehicles, fleet finance & spare parts.",
-    href: "/trucks",
+    href: "/buy/trucks/used",
     icon: Truck,
     stat: "Commercial listings",
   },
@@ -72,7 +72,7 @@ export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
     id: "buses",
     title: "Buses & Coaches",
     description: "Staff transport, luxury coaches & fleet loans.",
-    href: "/buses",
+    href: "/buy/buses/used",
     icon: BusFront,
     stat: "Fleet & coach listings",
   },
@@ -80,7 +80,7 @@ export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
     id: "auto",
     title: "Auto",
     description: "Passenger & cargo three-wheelers nationwide.",
-    href: "/auto",
+    href: "/buy/auto/used",
     icon: CarTaxiFront,
     stat: "Auto listings",
   },
@@ -88,7 +88,7 @@ export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
     id: "ev",
     title: "Electric Vehicles",
     description: "EV cars & 2W with range, subsidy & charging partners.",
-    href: "/ev",
+    href: "/buy/ev/used",
     icon: Zap,
     stat: "EV listings",
   },
@@ -165,11 +165,11 @@ export const HOME_PLATFORM_PILLARS: PlatformPillar[] = [
   },
   {
     id: "dealers",
-    title: "Dealer Workspace",
-    description: "CRM, inventory, leads & storefront for verified dealers.",
-    href: "/signup",
+    title: "Dealer Network",
+    description: "Find verified dealers near you — CRM workspace for partners.",
+    href: "/dealers",
     icon: Store,
-    stat: "Dealer network",
+    stat: "Verified dealers",
   },
   {
     id: "compare",

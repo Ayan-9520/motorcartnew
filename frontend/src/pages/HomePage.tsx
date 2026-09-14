@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { HeroSection } from "@/features/home/HeroSection";
-import { QuickAccessSection } from "@/features/home/QuickAccessSection";
 import { HomePlatformMatrix } from "@/features/home/HomePlatformMatrix";
 import { HomeTrustBand } from "@/features/home/HomeTrustBand";
 import { HomePartnersPremium } from "@/features/home/HomePartnersPremium";
@@ -26,7 +25,7 @@ import { SITE_TAGLINE } from "@/lib/constants";
 import { useVehicleHubStore } from "@/store/vehicleHubStore";
 
 /**
- * Premium marketing homepage — one inventory pass, no duplicate vehicle rails in hero.
+ * Premium marketing homepage — one ecosystem grid (no duplicate quick-access).
  */
 export function HomePage() {
   useEffect(() => {
@@ -44,7 +43,7 @@ export function HomePage() {
           <HeroSearchProvider>
             <HeroSection />
             <HomeTrustBand />
-            <QuickAccessSection />
+            <HomePlatformMatrix />
             <FeaturedVehicles />
             <NewCarsHomeSection />
             <PreownedCarsHomeSection />
@@ -55,7 +54,6 @@ export function HomePage() {
             <HomePartnersPremium />
             <PartsSection />
             <ServicesSection />
-            <HomePlatformMatrix />
             <AIFeaturesSection />
             <DealerCTA />
             <StatsSection />

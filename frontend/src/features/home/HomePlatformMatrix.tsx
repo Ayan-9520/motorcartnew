@@ -9,9 +9,9 @@ export function HomePlatformMatrix() {
     <section className="home-platform-section border-b border-border bg-gradient-to-b from-muted/20 to-background py-8 md:py-12">
       <div className="container home-stack">
         <SectionHeader
-          eyebrow="One platform"
-          title="Everything Motorcart does — for every vehicle segment"
-          description="Cars, bikes, trucks, buses, auto & EV — plus buy, sell, auctions, finance, parts, service, community & AI. Built for India's dealers, bankers & buyers."
+          eyebrow="Explore"
+          title="What do you want to do?"
+          description="One tap to the right place — buy, sell, finance, auctions, parts & more."
           align="center"
           className="mx-auto"
         />

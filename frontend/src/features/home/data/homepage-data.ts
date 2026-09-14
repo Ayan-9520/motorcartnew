@@ -458,13 +458,13 @@ export interface QuickAccessItem {
 }
 
 export const QUICK_ACCESS: QuickAccessItem[] = [
-  { label: "New Cars", href: "/new-cars", icon: Car, description: "New car catalog" },
-  { label: "Pre-Owned", href: "/used-cars", icon: CarFront, description: "Certified pre-owned listings" },
-  { label: "Bikes", href: "/bikes", icon: Bike, description: "Bikes & scooters" },
-  { label: "Trucks", href: "/trucks", icon: Truck, description: "Commercial" },
-  { label: "Buses", href: "/buses", icon: BusFront, description: "Fleet" },
-  { label: "Auto", href: "/auto", icon: CarTaxiFront, description: "3W" },
-  { label: "EV", href: "/ev", icon: Zap, description: "Electric" },
+  { label: "New Cars", href: "/buy/cars/new", icon: Car, description: "New car catalog" },
+  { label: "Pre-Owned", href: "/buy/cars/used", icon: CarFront, description: "Certified pre-owned listings" },
+  { label: "Bikes", href: "/buy/bikes/used", icon: Bike, description: "Bikes & scooters" },
+  { label: "Trucks", href: "/buy/trucks/used", icon: Truck, description: "Commercial" },
+  { label: "Buses", href: "/buy/buses/used", icon: BusFront, description: "Fleet" },
+  { label: "Auto", href: "/buy/auto/used", icon: CarTaxiFront, description: "3W" },
+  { label: "EV", href: "/buy/ev/used", icon: Zap, description: "Electric" },
   { label: "Auctions", href: "/auctions", icon: Gavel, description: "Auction listings" },
   { label: "Community", href: "/community", icon: MessageCircle, description: "Community feed" },
   { label: "Car Loans", href: "/finance", icon: Landmark, description: "14 lenders" },
@@ -472,7 +472,7 @@ export const QUICK_ACCESS: QuickAccessItem[] = [
   { label: "Parts", href: "/parts", icon: Package, description: "OEM parts" },
   { label: "Service", href: "/services", icon: Wrench, description: "Book online" },
   { label: "AI", href: "/ai", icon: Bot, description: "Smart search" },
-  { label: "Dealers", href: "/signup", icon: Store, description: "CRM" },
+  { label: "Dealers", href: "/dealers", icon: Store, description: "Verified dealers" },
   { label: "Compare", href: "/vehicles/compare", icon: GitCompare },
 ];
 

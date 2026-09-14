@@ -81,8 +81,8 @@ const BUS_BRANDS = ["Tata", "Ashok Leyland", "Mahindra", "Force", "Volvo", "Eich
 const AUTO_BRANDS = ["Bajaj", "Piaggio", "Mahindra", "TVS"];
 
 const CAR_QUICK: HeroHubQuickLink[] = [
-  { label: "New Cars", href: "/new-cars", icon: Car, description: "Latest models" },
-  { label: "Pre-Owned Cars", href: "/used-cars", icon: CarFront, description: "Certified pre-owned" },
+  { label: "New Cars", href: "/buy/cars/new", icon: Car, description: "Latest models" },
+  { label: "Pre-Owned Cars", href: "/buy/cars/used", icon: CarFront, description: "Certified pre-owned" },
   { label: "Car Parts", href: "/parts", icon: Package, description: "OEM & aftermarket" },
   { label: "Car Auctions", href: "/auctions", icon: Gavel, description: "Live bidding" },
   { label: "Car Loans", href: "/finance", icon: Landmark, description: "Compare banks" },
