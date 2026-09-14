@@ -1,0 +1,36 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8eef5"/>
+      <stop offset="55%" stop-color="#f3f6fa"/>
+      <stop offset="100%" stop-color="#d5dde8"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="45%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bfdbfe" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#475569" stop-opacity="0.65"/>
+    </linearGradient>
+    <filter id="sh" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <ellipse cx="800" cy="820" rx="520" ry="36" fill="#0f172a" opacity="0.14"/>
+  <g filter="url(#sh)" transform="translate(120,250) scale(1.7)">
+    <path d="M70 230 C95 155 170 105 290 92 L540 78 C650 74 740 115 810 165 L870 230 L895 265 L895 320 L55 320 Z" fill="url(#body)"/>
+    <path d="M255 100 L330 98 L430 168 L290 178 Z" fill="url(#glass)"/>
+    <path d="M450 92 L670 82 L760 155 L560 172 Z" fill="url(#glass)"/>
+    <path d="M70 228 L895 228" stroke="#0f172a" stroke-opacity="0.12" stroke-width="3"/>
+    <rect x="55" y="268" width="840" height="22" rx="5" fill="#0f172a" opacity="0.2"/>
+    <rect x="380" y="278" width="140" height="8" rx="3" fill="#002C5F"/>
+    <circle cx="230" cy="320" r="62" fill="#111827"/><circle cx="230" cy="320" r="30" fill="#94a3b8"/>
+    <circle cx="730" cy="320" r="62" fill="#111827"/><circle cx="730" cy="320" r="30" fill="#94a3b8"/>
+    <ellipse cx="870" cy="255" rx="26" ry="16" fill="#fde68a"/>
+    <ellipse cx="80" cy="258" rx="16" ry="12" fill="#fca5a5"/>
+  </g>
+  <text x="64" y="940" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600">Hyundai Creta SX · auction demo</text>
+</svg>

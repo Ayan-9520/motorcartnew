@@ -56,11 +56,11 @@ export function AuctionsSection() {
               transition={{ delay: index * 0.06 }}
             >
               <Card className="group overflow-hidden hover:shadow-card-hover">
-                <div className="relative aspect-[16/11] bg-muted">
+                <div className="relative aspect-[16/11] overflow-hidden bg-[#eef2f7]">
                   <img
                     src={auction.image}
                     alt={auction.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
                     loading="lazy"
                   />
                   <Badge className="absolute left-2 top-2 gap-1 border-0 bg-red-600 px-1.5 py-0 text-[10px] text-white">

@@ -9,8 +9,10 @@ const IMG = {
   xuv700: "/demo/cars/xuv700/studio.svg",
   punch: "/demo/cars/punch-ev/pristine-white.svg",
   punchRed: "/demo/cars/punch-ev/fearless-red.svg",
-  bike: "/media/vehicles/bikes/Royal Enfield/Classic 350/01.webp",
-  truck: "/media/vehicles/trucks/Tata/Prima/01.webp",
+  /** Auction rail — frame-filled studio art (bad cabin / street photos removed). */
+  auctionCreta: "/demo/auctions/creta.svg",
+  auctionPrima: "/demo/auctions/prima.svg",
+  auctionClassic350: "/demo/auctions/classic-350.svg",
 } as const;
 
 /** CarLelo-style model cards for homepage New Cars rail. */
@@ -201,7 +203,7 @@ export const HOME_DEMO_AUCTIONS = [
   {
     id: "demo-auction-1",
     title: "2021 Hyundai Creta SX — Bank repo",
-    image: IMG.creta,
+    image: IMG.auctionCreta,
     endsAt: new Date(Date.now() + 1000 * 60 * 60 * 6).toISOString(),
     location: "Delhi NCR",
     bidCount: 14,
@@ -212,7 +214,7 @@ export const HOME_DEMO_AUCTIONS = [
   {
     id: "demo-auction-2",
     title: "Tata Prima fleet lot (3 units)",
-    image: IMG.truck,
+    image: IMG.auctionPrima,
     endsAt: new Date(Date.now() + 1000 * 60 * 60 * 18).toISOString(),
     location: "Pune",
     bidCount: 7,
@@ -223,7 +225,7 @@ export const HOME_DEMO_AUCTIONS = [
   {
     id: "demo-auction-3",
     title: "Royal Enfield Classic 350 — Dealer stock",
-    image: IMG.bike,
+    image: IMG.auctionClassic350,
     endsAt: new Date(Date.now() + 1000 * 60 * 45).toISOString(),
     location: "Bengaluru",
     bidCount: 22,
