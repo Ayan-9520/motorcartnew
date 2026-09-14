@@ -3,8 +3,7 @@ import { api } from "@/lib/api/axios";
 import { hasConfiguredApi } from "@/lib/api/base-url";
 import { featureFlags } from "@/config/feature-flags";
 import { realDataOnly } from "@/config/real-data";
-import { getVehicleHero } from "@/lib/media/vehicle-media-registry";
-import { resolveVehicleHero } from "@/lib/media/resolve-images";
+import { isBlockedImageUrl, isUserMediaUrl } from "@/lib/media/vehicle-media-registry";
 import { buildMockNewCarDealerSnapshot } from "../data/mock-ncd-data";
 import type { NewCarDealerSnapshot, NcdInventoryItem, NcdLead, NcdLeadDetail, NcdLeadStage } from "../types";
 import type { DbVehicle } from "@/types/database";
@@ -14,6 +13,23 @@ function isMissingTable(err: { code?: string; message?: string } | null): boolea
   if (!err) return false;
   const m = (err.message ?? "").toLowerCase();
   return err.code === "42P01" || err.code === "PGRST205" || m.includes("does not exist") || m.includes("unknown table");
+}
+
+/** Showroom stock: only real dealer photos — never invent Pexels / bundled /media cars. */
+function dealerOwnedPhotos(urls: unknown[]): string[] {
+  const out: string[] = [];
+  for (const raw of urls) {
+    const u = String(raw ?? "").trim();
+    if (!u || isBlockedImageUrl(u)) continue;
+    if (isUserMediaUrl(u)) {
+      out.push(u);
+      continue;
+    }
+    if (/^https?:\/\//i.test(u) && !/pexels\.com/i.test(u)) {
+      out.push(u);
+    }
+  }
+  return out.filter((u, i, arr) => arr.indexOf(u) === i);
 }
 
 const HOT_STAGES = new Set<NcdLeadStage>(["new", "interested", "test_drive", "contacted"]);
@@ -29,15 +45,11 @@ function mapLeadStatusToStage(status: string, meta?: Record<string, unknown>): N
   return "new";
 }
 
-function mapVehicleToNcdItem(v: DbVehicle, fallbackImage: string): NcdInventoryItem {
-  const imgs = Array.isArray(v.images) ? v.images : [];
+function mapVehicleToNcdItem(v: DbVehicle): NcdInventoryItem {
+  const imgs = dealerOwnedPhotos(Array.isArray(v.images) ? v.images : []);
   const meta = (v.metadata ?? {}) as Record<string, unknown>;
   const ex = v.original_price != null ? Number(v.original_price) : Number(v.price);
   const onRoad = Number(v.price);
-  const imageUrl = resolveVehicleHero(v.brand, v.model, v.body_type ?? "SUV", imgs, 0, {
-    category: v.category,
-    fuelType: v.fuel_type,
-  });
   return {
     id: String(v.id),
     vehicleId: String(v.id),
@@ -54,35 +66,23 @@ function mapVehicleToNcdItem(v: DbVehicle, fallbackImage: string): NcdInventoryI
     stockStatus: v.status === "available" ? "available" : "booked",
     stockHealth: "fast_moving",
     colors: v.color ? [v.color] : ["White"],
+    images: imgs,
     expectedDeliveryDays: 14,
-    imageUrl: imageUrl || fallbackImage,
+    imageUrl: imgs[0] ?? "",
     ncdInventoryId: typeof meta.ncd_inventory_id === "string" ? meta.ncd_inventory_id : undefined,
   };
 }
 
-function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): NcdInventoryItem {
+function mapInventoryRow(r: Record<string, unknown>): NcdInventoryItem {
   const meta = (r.metadata && typeof r.metadata === "object" ? r.metadata : {}) as Record<string, unknown>;
   const brand = String(r.brand ?? meta.brand ?? "Brand");
   const model = String(r.model ?? meta.model ?? "Model");
   const ex = Number(r.ex_showroom_price ?? r.price ?? meta.exShowroomPrice ?? 0);
   const onRoad = Number(r.on_road_price ?? r.price ?? ex);
-  const metaImages = Array.isArray(meta.images)
-    ? (meta.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
-    : [];
-  const apiImages = Array.isArray(r.images)
-    ? (r.images as unknown[]).map((u) => String(u ?? "").trim()).filter(Boolean)
-    : [];
+  const metaImages = Array.isArray(meta.images) ? meta.images : [];
+  const apiImages = Array.isArray(r.images) ? r.images : [];
   const primary = typeof r.image_url === "string" ? r.image_url.trim() : "";
-  const uploaded = [...apiImages, ...metaImages, ...(primary ? [primary] : [])].filter(
-    (u, i, arr) => Boolean(u) && arr.indexOf(u) === i,
-  );
-  const imageUrl =
-    uploaded[0] ||
-    resolveVehicleHero(brand, model, String(r.body_type ?? meta.bodyType ?? "SUV"), [], 0, {
-      category: String(r.category ?? meta.category ?? "new-cars"),
-      fuelType: String(r.fuel_type ?? meta.fuelType ?? "Petrol"),
-    }) ||
-    fallbackImage;
+  const uploaded = dealerOwnedPhotos([...apiImages, ...metaImages, ...(primary ? [primary] : [])]);
   const colors = Array.isArray(r.colors)
     ? (r.colors as unknown[]).map((c) => String(c ?? "").trim()).filter(Boolean)
     : [];
@@ -108,7 +108,7 @@ function mapInventoryRow(r: Record<string, unknown>, fallbackImage: string): Ncd
     waitingPeriodDays: (r.waiting_period_days as number | undefined) ?? undefined,
     brochureUrl: (r.brochure_url as string | undefined) ?? undefined,
     offers: Array.isArray(r.offers) ? (r.offers as NcdInventoryItem["offers"]) : [],
-    imageUrl,
+    imageUrl: uploaded[0] ?? "",
   };
 }
 
@@ -278,7 +278,6 @@ export async function fetchNewCarDealerSnapshot(
     return buildMockNewCarDealerSnapshot(name);
   }
 
-  const fallbackImg = getVehicleHero({ brand: "Car", model: "Sedan", bodyType: "Sedan" });
   const pageSize = Math.min(2000, Math.max(50, opts?.pageSize ?? 2000));
   const q = opts?.q?.trim() || undefined;
 
@@ -292,7 +291,7 @@ export async function fetchNewCarDealerSnapshot(
         params: { dealer_id: dealerId, pageSize, ...(q ? { q } : {}) },
       });
       const rows = Array.isArray(data.data) ? data.data : [];
-      const inventory = rows.map((r) => mapInventoryRow(r, fallbackImg));
+      const inventory = rows.map((r) => mapInventoryRow(r));
       const [{ data: marketplaceLeads }, { data: legacyLeads }] = await Promise.all([
         supabase.from("leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
         supabase.from("dealer_leads").select("*").eq("dealer_id", dealerId).order("created_at", { ascending: false }).limit(100),
@@ -334,9 +333,9 @@ export async function fetchNewCarDealerSnapshot(
   }
 
   let inventory = hasInv
-    ? (inv as Record<string, unknown>[]).map((r) => mapInventoryRow(r, fallbackImg))
+    ? (inv as Record<string, unknown>[]).map((r) => mapInventoryRow(r))
     : hasMarketplace
-      ? (marketplaceVehicles as DbVehicle[]).map((v) => mapVehicleToNcdItem(v, fallbackImg))
+      ? (marketplaceVehicles as DbVehicle[]).map((v) => mapVehicleToNcdItem(v))
       : [];
 
   if (q) {

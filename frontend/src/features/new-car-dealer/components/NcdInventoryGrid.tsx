@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
+import { Car, Pencil, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,14 @@ export function NcdInventoryGrid({ items, onChanged }: Props) {
         {items.map((v) => (
           <article key={v.id} className="ncd-inventory-card">
             <div className="ncd-inventory-card__media">
-              <img src={v.imageUrl} alt={`${v.brand} ${v.model}`} className="h-full w-full object-cover" loading="lazy" />
+              {v.imageUrl ? (
+                <img src={v.imageUrl} alt={`${v.brand} ${v.model}`} className="h-full w-full object-cover" loading="lazy" />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-muted via-muted/80 to-primary/5 text-muted-foreground">
+                  <Car className="h-9 w-9 opacity-35" strokeWidth={1.25} />
+                  <span className="text-[10px] font-medium">No image</span>
+                </div>
+              )}
               <Badge className="absolute left-2 top-2 text-[10px]" variant={HEALTH_VARIANT[v.stockHealth]}>
                 {v.stockHealth.replace("_", " ")}
               </Badge>
