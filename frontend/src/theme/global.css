@@ -8564,26 +8564,181 @@
 
 .ncd-pipeline {
   @apply flex gap-3 overflow-x-auto pb-2;
+  scrollbar-width: thin;
+}
+
+.ncd-pipeline--full .ncd-pipeline__col {
+  @apply min-w-[200px];
+}
+
+.ncd-pipeline--compact .ncd-pipeline__col {
+  @apply min-w-[160px];
 }
 
 .ncd-pipeline__col {
-  @apply min-w-[160px] flex-1;
+  @apply flex min-w-[180px] flex-1 flex-col rounded-2xl border border-border/50 bg-muted/20 p-2;
+}
+
+.ncd-pipeline__col--new {
+  @apply border-sky-500/20 bg-sky-500/[0.04];
+}
+.ncd-pipeline__col--contacted {
+  @apply border-violet-500/20 bg-violet-500/[0.04];
+}
+.ncd-pipeline__col--interested {
+  @apply border-primary/25 bg-primary/[0.05];
+}
+.ncd-pipeline__col--test-drive {
+  @apply border-amber-500/25 bg-amber-500/[0.05];
+}
+.ncd-pipeline__col--negotiation {
+  @apply border-orange-500/20 bg-orange-500/[0.04];
+}
+.ncd-pipeline__col--finance {
+  @apply border-cyan-500/20 bg-cyan-500/[0.04];
+}
+.ncd-pipeline__col--booking {
+  @apply border-emerald-500/25 bg-emerald-500/[0.06];
+}
+.ncd-pipeline__col--delivered {
+  @apply border-emerald-600/20 bg-emerald-600/[0.04];
 }
 
 .ncd-pipeline__head {
-  @apply mb-2 flex items-center text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  @apply mb-2 flex items-center gap-2 px-1 pt-1;
+}
+
+.ncd-pipeline__stage-dot {
+  @apply h-2 w-2 shrink-0 rounded-full bg-primary;
+}
+
+.ncd-pipeline__col--new .ncd-pipeline__stage-dot {
+  @apply bg-sky-500;
+}
+.ncd-pipeline__col--contacted .ncd-pipeline__stage-dot {
+  @apply bg-violet-500;
+}
+.ncd-pipeline__col--interested .ncd-pipeline__stage-dot {
+  @apply bg-primary;
+}
+.ncd-pipeline__col--test-drive .ncd-pipeline__stage-dot {
+  @apply bg-amber-500;
+}
+.ncd-pipeline__col--negotiation .ncd-pipeline__stage-dot {
+  @apply bg-orange-500;
+}
+.ncd-pipeline__col--finance .ncd-pipeline__stage-dot {
+  @apply bg-cyan-500;
+}
+.ncd-pipeline__col--booking .ncd-pipeline__stage-dot {
+  @apply bg-emerald-500;
+}
+.ncd-pipeline__col--delivered .ncd-pipeline__stage-dot {
+  @apply bg-emerald-600;
+}
+
+.ncd-pipeline__stage-label {
+  @apply flex-1 text-[11px] font-bold uppercase tracking-[0.12em] text-foreground;
+}
+
+.ncd-pipeline__count {
+  @apply rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-muted-foreground shadow-sm;
 }
 
 .ncd-pipeline__cards {
-  @apply space-y-2;
+  @apply min-h-[120px] flex-1 space-y-2;
+}
+
+.ncd-pipeline__empty {
+  @apply flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border/60 bg-background/40 py-8 text-[11px] text-muted-foreground;
 }
 
 .ncd-pipeline__card {
-  @apply block rounded-xl border border-border/70 bg-card/80 p-3 transition hover:border-emerald-500/40;
+  @apply overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition hover:border-primary/30 hover:shadow-md;
 }
 
 .dark .ncd-pipeline__card {
-  @apply border-border bg-card/80;
+  @apply border-border bg-card;
+}
+
+.ncd-pipeline__card-link {
+  @apply block px-3 pb-2 pt-3 transition hover:bg-muted/20;
+}
+
+.ncd-pipeline__card-top {
+  @apply flex items-start gap-2.5;
+}
+
+.ncd-pipeline__avatar {
+  @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary;
+}
+
+.ncd-pipeline__name {
+  @apply truncate text-sm font-semibold text-foreground;
+}
+
+.ncd-pipeline__meta {
+  @apply mt-0.5 truncate text-[10px] text-muted-foreground;
+}
+
+.ncd-pipeline__city {
+  @apply mt-1.5 truncate px-3 text-[10px] text-muted-foreground;
+}
+
+.ncd-pipeline__score {
+  @apply inline-flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums;
+}
+
+.ncd-pipeline__score--hot {
+  @apply bg-amber-500/15 text-amber-700;
+}
+
+.ncd-pipeline__score--warm {
+  @apply bg-primary/10 text-primary;
+}
+
+.ncd-pipeline__score--cold {
+  @apply bg-muted text-muted-foreground;
+}
+
+.ncd-pipeline__move {
+  @apply relative border-t border-border/50 bg-muted/20 px-2 py-1.5;
+}
+
+.ncd-pipeline__select {
+  @apply w-full appearance-none rounded-lg border border-border/60 bg-background px-2 py-1.5 pr-7 text-[10px] font-medium text-foreground;
+}
+
+.ncd-pipeline__select-icon {
+  @apply pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground;
+}
+
+.ncd-crm-stats {
+  @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-4;
+}
+
+.ncd-crm-stat {
+  @apply flex items-center gap-3 rounded-2xl border border-border/60 bg-card/90 px-4 py-3 shadow-sm;
+}
+
+.ncd-crm-stat--hot {
+  @apply border-amber-500/25 bg-gradient-to-br from-amber-500/10 to-transparent;
+}
+
+.ncd-crm-stat__value {
+  @apply text-2xl font-bold tabular-nums tracking-tight text-foreground;
+}
+
+.ncd-crm-stat__label {
+  @apply text-[10px] font-semibold uppercase tracking-wide text-muted-foreground;
+}
+
+.ncd-crm-board {
+  @apply overflow-hidden;
+}
+
+.ncd-crm-board .ncd-pipeline {
+  @apply px-0.5 pb-1;
 }
 
 .ncd-inventory-card {
