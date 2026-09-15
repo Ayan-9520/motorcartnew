@@ -56,7 +56,7 @@ export function AuctionsSection() {
               transition={{ delay: index * 0.06 }}
             >
               <Card className="group overflow-hidden hover:shadow-card-hover">
-                <div className="relative aspect-[16/11] overflow-hidden bg-[#eef2f7]">
+                <div className="relative aspect-[16/11] overflow-hidden bg-muted">
                   <img
                     src={auction.image}
                     alt={auction.title}
