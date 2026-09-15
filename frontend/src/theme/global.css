@@ -8331,19 +8331,46 @@
 }
 
 .ncd-hero {
-  @apply relative overflow-hidden rounded-2xl border border-border/70 bg-card p-6 md:p-8;
+  @apply relative overflow-hidden rounded-3xl border border-border/60 bg-card p-6 shadow-sm md:p-8;
+}
+
+.ncd-hero--premium {
+  background:
+    linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted) / 0.55) 48%, hsl(var(--primary) / 0.08) 100%);
 }
 
 .dark .ncd-hero {
   @apply border-border/60 bg-card;
 }
 
+.dark .ncd-hero--premium {
+  background:
+    linear-gradient(135deg, hsl(var(--card)) 0%, hsl(142 30% 12% / 0.9) 55%, hsl(142 76% 36% / 0.18) 100%);
+}
+
 .ncd-hero__glow {
-  @apply pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl;
+  @apply pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-primary/20 blur-3xl;
+}
+
+.ncd-hero__mesh {
+  @apply pointer-events-none absolute inset-0 opacity-[0.35];
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 70% 60% at 30% 40%, #000 20%, transparent 75%);
 }
 
 .ncd-hero__grid {
-  @apply relative grid gap-6 lg:grid-cols-[1fr_280px];
+  @apply relative grid gap-6 lg:grid-cols-[1fr_300px] lg:items-stretch;
+}
+
+.ncd-hero__eyebrow {
+  @apply inline-flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary;
+}
+
+.ncd-hero__live-pill {
+  @apply rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary;
 }
 
 .ncd-hero__brand {
@@ -8355,7 +8382,7 @@
 }
 
 .ncd-hero__title {
-  @apply mt-1 text-2xl font-bold text-foreground md:text-3xl;
+  @apply mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl;
 }
 
 .dark .ncd-hero__title {
@@ -8363,7 +8390,7 @@
 }
 
 .ncd-hero__alert {
-  @apply mt-3 flex items-center gap-2 text-muted-foreground;
+  @apply mt-4 flex items-start gap-2 text-sm text-muted-foreground;
 }
 
 .dark .ncd-hero__alert {
@@ -8371,19 +8398,51 @@
 }
 
 .ncd-hero__alert-dot {
-  @apply inline-block h-2 w-2 rounded-full bg-amber-400 animate-pulse;
+  @apply mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-amber-400 animate-pulse;
 }
 
 .ncd-hero__ai {
-  @apply mt-2;
+  @apply mt-3 flex max-w-2xl items-start gap-2 rounded-xl border border-border/60 bg-background/60 px-3 py-2.5 text-sm backdrop-blur;
+}
+
+.ncd-hero__actions {
+  @apply mt-5 flex flex-wrap gap-2;
 }
 
 .ncd-hero__target-card {
-  @apply rounded-xl border border-border bg-muted/50 p-4;
+  @apply flex flex-col justify-between rounded-2xl border border-border/70 bg-background/80 p-5 shadow-sm backdrop-blur;
 }
 
 .dark .ncd-hero__target-card {
-  @apply border-border/80 bg-muted/50;
+  @apply border-border/80 bg-card/80;
+}
+
+.ncd-hero__target-head {
+  @apply flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground;
+}
+
+.ncd-hero__target-value {
+  @apply mt-3 text-3xl font-bold tracking-tight text-foreground;
+}
+
+.ncd-hero__target-den {
+  @apply text-base font-medium text-muted-foreground;
+}
+
+.ncd-hero__target-bar {
+  @apply mt-4 h-2.5 overflow-hidden rounded-full bg-muted;
+}
+
+.ncd-hero__target-fill {
+  @apply h-full rounded-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-500;
+}
+
+.ncd-hero__target-meta {
+  @apply mt-2 text-xs text-muted-foreground;
+}
+
+.ncd-hero__target-name {
+  @apply mt-3 truncate text-sm font-semibold text-foreground;
 }
 
 .ncd-metric-grid {
@@ -8391,7 +8450,20 @@
 }
 
 .ncd-metric {
-  @apply rounded-2xl border border-border/60 bg-card/95 p-4 shadow-sm transition hover:border-emerald-500/30 hover:shadow-md;
+  @apply rounded-2xl border border-border/60 bg-card/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md;
+}
+
+.ncd-metric--premium-tile {
+  @apply relative overflow-hidden;
+}
+
+.ncd-metric--premium-tile::after {
+  content: "";
+  @apply pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 transition;
+}
+
+.ncd-metric--premium-tile:hover::after {
+  @apply opacity-100;
 }
 
 .dark .ncd-metric {
@@ -8399,11 +8471,11 @@
 }
 
 .ncd-metric--skeleton {
-  @apply min-h-[100px] animate-pulse bg-muted/20;
+  @apply min-h-[112px] animate-pulse bg-muted/20;
 }
 
 .ncd-metric--premium {
-  @apply border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 to-transparent;
+  @apply border-primary/25 bg-gradient-to-br from-primary/10 to-transparent;
 }
 
 .ncd-metric--success {
@@ -8414,16 +8486,24 @@
   @apply border-amber-500/30;
 }
 
+.ncd-metric__top {
+  @apply flex items-start justify-between gap-2;
+}
+
+.ncd-metric__icon {
+  @apply inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary;
+}
+
 .ncd-metric__label {
   @apply text-[10px] font-bold uppercase tracking-wider text-muted-foreground;
 }
 
 .ncd-metric__value {
-  @apply mt-1 text-2xl font-bold tabular-nums tracking-tight text-foreground;
+  @apply mt-2 text-2xl font-bold tabular-nums tracking-tight text-foreground;
 }
 
 .ncd-metric__sub {
-  @apply text-xs text-muted-foreground;
+  @apply mt-0.5 text-xs text-muted-foreground;
 }
 
 .ncd-metric__trend {
@@ -8442,20 +8522,44 @@
   @apply rounded-2xl border border-border/70 bg-card/90 p-5 shadow-sm;
 }
 
+.ncd-panel--premium {
+  @apply rounded-3xl border-border/60 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)];
+}
+
 .dark .ncd-panel {
   @apply border-border/60 bg-card;
+}
+
+.ncd-panel__head {
+  @apply mb-4 flex items-center justify-between gap-3;
 }
 
 .ncd-panel__title {
   @apply mb-4 text-sm font-semibold text-foreground;
 }
 
+.ncd-panel__badge {
+  @apply rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground;
+}
+
+.ncd-chart-empty {
+  @apply flex h-full items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center text-sm text-muted-foreground;
+}
+
 .ncd-section-head {
-  @apply mb-4 flex flex-wrap items-center justify-between gap-2;
+  @apply mb-4 flex flex-wrap items-end justify-between gap-2;
+}
+
+.ncd-section-eyebrow {
+  @apply mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-primary;
 }
 
 .ncd-section-title {
-  @apply text-lg font-bold text-foreground;
+  @apply text-lg font-bold tracking-tight text-foreground md:text-xl;
+}
+
+.ncd-page--premium {
+  @apply pb-4;
 }
 
 .ncd-pipeline {

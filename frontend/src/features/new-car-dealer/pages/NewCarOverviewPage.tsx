@@ -17,20 +17,36 @@ export function NewCarOverviewPage() {
   }, []);
 
   const topInsight = data?.insights[0];
+  const sales = data?.salesChart ?? [];
+  const sources = data?.leadSourceChart ?? [];
 
   return (
-    <div className="ncd-page space-y-8">
+    <div className="ncd-page ncd-page--premium space-y-8">
       <NewCarDealerHero
         userName={userName}
-        showroom={data?.showroom ?? { id: "", name: "Showroom", brand: "Hyundai", city: "Pune", status: "live", monthlyTarget: 85, monthlyAchieved: 0, carsSoldMtd: 0 }}
+        showroom={
+          data?.showroom ?? {
+            id: "",
+            name: "Showroom",
+            brand: "Motorcart",
+            city: "India",
+            status: "live",
+            monthlyTarget: 0,
+            monthlyAchieved: 0,
+            carsSoldMtd: 0,
+          }
+        }
         hotLeadsCount={data?.hotLeadsCount ?? 0}
         topInsight={topInsight}
       />
 
       <section>
         <div className="ncd-section-head">
-          <h2 className="ncd-section-title">Showroom performance</h2>
-          <Button variant="ghost" size="sm" asChild>
+          <div>
+            <p className="ncd-section-eyebrow">Command center</p>
+            <h2 className="ncd-section-title">Showroom performance</h2>
+          </div>
+          <Button variant="ghost" size="sm" className="rounded-lg" asChild>
             <Link to="/dashboard/new-car/analytics">
               Analytics <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
@@ -40,37 +56,51 @@ export function NewCarOverviewPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="ncd-panel">
-          <h3 className="ncd-panel__title">Monthly sales</h3>
+        <section className="ncd-panel ncd-panel--premium">
+          <div className="ncd-panel__head">
+            <h3 className="ncd-panel__title mb-0">Monthly sales</h3>
+            <span className="ncd-panel__badge">Units</span>
+          </div>
           <div className="h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data?.salesChart ?? []}>
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="units" stroke="hsl(142 76% 45%)" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+            {sales.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={sales}>
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="units" stroke="hsl(142 76% 36%)" strokeWidth={2.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="ncd-chart-empty">No sales data for this month yet.</div>
+            )}
           </div>
         </section>
-        <section className="ncd-panel">
-          <h3 className="ncd-panel__title">Lead sources</h3>
+        <section className="ncd-panel ncd-panel--premium">
+          <div className="ncd-panel__head">
+            <h3 className="ncd-panel__title mb-0">Lead sources</h3>
+            <span className="ncd-panel__badge">CRM</span>
+          </div>
           <div className="h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data?.leadSourceChart ?? []}>
-                <XAxis dataKey="source" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="count" fill="hsl(142 76% 45%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {sources.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={sources}>
+                  <XAxis dataKey="source" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="hsl(142 76% 36%)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="ncd-chart-empty">Lead sources appear when CRM activity starts.</div>
+            )}
           </div>
         </section>
       </div>
 
-      <section className="ncd-panel">
-        <div className="flex items-center justify-between">
-          <h3 className="ncd-panel__title">Lead pipeline</h3>
+      <section className="ncd-panel ncd-panel--premium">
+        <div className="ncd-panel__head">
+          <h3 className="ncd-panel__title mb-0">Lead pipeline</h3>
           <Button size="sm" variant="outline" className="rounded-lg" asChild>
             <Link to="/dashboard/new-car/leads">Full CRM</Link>
           </Button>
@@ -79,9 +109,9 @@ export function NewCarOverviewPage() {
       </section>
 
       {data?.insights.length ? (
-        <section className="ncd-panel">
+        <section className="ncd-panel ncd-panel--premium">
           <h3 className="ncd-panel__title flex items-center gap-2">
-            <Bot className="h-4 w-4 text-emerald-500" /> AI business assistant
+            <Bot className="h-4 w-4 text-primary" /> AI business assistant
           </h3>
           <ul className="grid gap-3 md:grid-cols-3">
             {data.insights.map((ins) => (
@@ -89,7 +119,7 @@ export function NewCarOverviewPage() {
                 <p className="font-medium">{ins.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{ins.summary}</p>
                 {ins.actionUrl ? (
-                  <Link to={ins.actionUrl} className="mt-2 text-xs font-semibold text-emerald-600 hover:underline">
+                  <Link to={ins.actionUrl} className="mt-2 inline-block text-xs font-semibold text-primary hover:underline">
                     {ins.actionLabel}
                   </Link>
                 ) : null}
