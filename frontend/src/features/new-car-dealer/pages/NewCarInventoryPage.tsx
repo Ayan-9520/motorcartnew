@@ -9,6 +9,7 @@ import { NewCarDealerShell } from "../components/NewCarDealerShell";
 import { NcdInventoryGrid } from "../components/NcdInventoryGrid";
 import { NewCarAddInventoryDialog } from "../components/NewCarAddInventoryDialog";
 import { NewCarDailyStockDialog } from "../components/NewCarDailyStockDialog";
+import { ClearAllStockConfirmDialog } from "../components/ClearAllStockConfirmDialog";
 import { useNewCarDealerOS } from "../hooks/useNewCarDealerOS";
 import { clearAllNewCarInventory } from "../services/new-car-dealer.service";
 import { useAuthStore } from "@/store/authStore";
@@ -18,6 +19,7 @@ export function NewCarInventoryPage() {
   const user = useAuthStore((s) => s.user);
   const [addOpen, setAddOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
+  const [clearOpen, setClearOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [clearing, setClearing] = useState(false);
@@ -39,13 +41,6 @@ export function NewCarInventoryPage() {
 
   const onClearAll = async () => {
     if (!dealer?.id) return;
-    if (
-      !window.confirm(
-        `Remove ALL stock from showroom and public listings? You can re-upload Excel after.`,
-      )
-    ) {
-      return;
-    }
     setClearing(true);
     const { error } = await clearAllNewCarInventory(dealer.id);
     setClearing(false);
@@ -53,6 +48,7 @@ export function NewCarInventoryPage() {
       toast.error(error.message);
       return;
     }
+    setClearOpen(false);
     toast.success("All stock cleared — ready for fresh upload");
     setQuery("");
     void refresh();
@@ -69,7 +65,7 @@ export function NewCarInventoryPage() {
               className="rounded-xl"
               variant="outline"
               disabled={clearing || !dealer?.id}
-              onClick={() => void onClearAll()}
+              onClick={() => setClearOpen(true)}
             >
               <Trash2 className="mr-1 h-4 w-4" /> Clear all stock
             </Button>
@@ -162,6 +158,14 @@ export function NewCarInventoryPage() {
             dealerId={dealer.id}
             items={inventory}
             onSaved={() => void refresh()}
+          />
+          <ClearAllStockConfirmDialog
+            open={clearOpen}
+            onOpenChange={setClearOpen}
+            stockCount={totalInDb}
+            showroomName={dealer.name}
+            loading={clearing}
+            onConfirm={() => void onClearAll()}
           />
         </>
       ) : null}

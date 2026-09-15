@@ -7,6 +7,7 @@ import { api } from "@/lib/api/axios";
 import { useDealer } from "@/features/dealer-crm/hooks/useDealer";
 import { NewCarDealerShell } from "../components/NewCarDealerShell";
 import { clearAllNewCarInventory } from "../services/new-car-dealer.service";
+import { ClearAllStockConfirmDialog } from "../components/ClearAllStockConfirmDialog";
 import { setPageMeta } from "@/utils/seo";
 
 type PreviewRow = {
@@ -41,6 +42,7 @@ export function NewCarBulkUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<"create_only" | "create_update">("create_update");
   const [busy, setBusy] = useState(false);
+  const [clearOpen, setClearOpen] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
@@ -69,7 +71,6 @@ export function NewCarBulkUploadPage() {
 
   const onClearAllStock = async () => {
     if (!dealer?.id) return;
-    if (!window.confirm("Remove ALL current showroom stock so you can upload a fresh Excel?")) return;
     setBusy(true);
     try {
       const { error } = await clearAllNewCarInventory(dealer.id);
@@ -77,6 +78,7 @@ export function NewCarBulkUploadPage() {
         toast.error(error.message);
         return;
       }
+      setClearOpen(false);
       toast.success("Stock cleared — upload your Excel now");
       setPreview(null);
       setResult(null);
@@ -252,7 +254,7 @@ export function NewCarBulkUploadPage() {
           >
             <Download className="mr-1 h-4 w-4" /> Template CSV
           </Button>
-          <Button variant="outline" size="sm" className="rounded-xl" disabled={busy} onClick={() => void onClearAllStock()}>
+          <Button variant="outline" size="sm" className="rounded-xl" disabled={busy} onClick={() => setClearOpen(true)}>
             <Trash2 className="mr-1 h-4 w-4" /> Clear all stock
           </Button>
           <Button variant="outline" size="sm" className="rounded-xl" asChild>
@@ -409,6 +411,16 @@ export function NewCarBulkUploadPage() {
             Open inventory
           </Button>
         </div>
+      ) : null}
+
+      {dealer?.id ? (
+        <ClearAllStockConfirmDialog
+          open={clearOpen}
+          onOpenChange={setClearOpen}
+          showroomName={dealer.name}
+          loading={busy}
+          onConfirm={() => void onClearAllStock()}
+        />
       ) : null}
     </NewCarDealerShell>
   );
