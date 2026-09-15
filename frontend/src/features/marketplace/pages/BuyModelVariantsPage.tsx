@@ -157,8 +157,8 @@ export function BuyModelVariantsPage() {
   const variantsAnchor = "#variants";
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa]">
-      <div className="sticky top-0 z-30 border-b border-border/60 bg-card/95 backdrop-blur">
+    <div className="buy-variants-page min-h-screen bg-background">
+      <div className="sticky top-0 z-30 border-b border-border/60 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container flex gap-1 overflow-x-auto py-0 text-sm">
           {[
             { id: "overview", label: displayModel || "Overview", href: "#overview" },
@@ -201,7 +201,7 @@ export function BuyModelVariantsPage() {
           </nav>
 
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)]">
-            <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-border/50 bg-[#eef1f4] shadow-sm">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-border/50 bg-muted/50 shadow-sm">
               {loading ? (
                 <Skeleton className="h-full w-full" />
               ) : heroImage ? (

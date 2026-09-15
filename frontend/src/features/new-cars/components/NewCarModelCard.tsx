@@ -44,7 +44,7 @@ export function NewCarModelCard({
     >
       <Card className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card p-0 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg">
         <Link to={href} className="flex h-full flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#f4f6f8]">
+          <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-muted/40">
             <div className="absolute inset-0">
               <VehicleImage
                 images={group.image ? [group.image] : []}
