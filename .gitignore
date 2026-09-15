@@ -21,6 +21,13 @@ backend/out/
 !frontend/.env.example
 !backend/.env.example
 
+# Google Play / EAS secrets (never commit)
+**/google-play-service-account.json
+apps/mobile-customer/google-play-service-account.json
+apps/mobile-customer/credentials.json
+apps/mobile-customer/*.keystore
+apps/mobile-customer/*.jks
+
 # Uploads & logs
 backend/uploads/
 backend/.data/

@@ -94,14 +94,14 @@ Production / store builds inject `https://motorcart.in` via `eas.json`.
 
 ### Play Store release (summary)
 
-1. Play Console: create app with package `in.motorcart.app`
-2. `npx eas login` → `npx eas init` (writes EAS `projectId`)
-3. `npx eas build -p android --profile production` → download AAB
-4. Service account JSON → `google-play-service-account.json` (gitignored)
-5. `npx eas submit -p android --profile production --latest` (internal track first)
-6. Promote Internal → Production after QA
+1. **Buy** Google Play Console ($25 one-time) → create app package `in.motorcart.app`
+2. **Expo** account → `npx eas login` → `npx eas init` (writes EAS `projectId`)
+3. `npx eas build -p android --profile production` → download **AAB**
+4. Optional: service account JSON → `google-play-service-account.json` (gitignored)
+5. Upload AAB to **Internal testing** first → then Production
+6. After signing: put SHA-256 in `frontend/public/.well-known/assetlinks.json` → redeploy frontend
 
-Full steps: `apps/mobile-customer/README.md`
+Full step-by-step (services + linking): `apps/mobile-customer/README.md`
 
 ---
 
