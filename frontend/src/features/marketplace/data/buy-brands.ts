@@ -1,3 +1,4 @@
+import { resolvePartnerCarLogoPath } from "@/features/home/lib/partner-logo-resolve";
 import type { HubCategorySlug } from "../types";
 
 export type BuyBrandItem = {
@@ -8,9 +9,7 @@ export type BuyBrandItem = {
   logo?: string;
 };
 
-/** Bump when replacing partner SVGs so browsers skip immutable cache. */
-const LOGO_V = "v20260914brands";
-const carLogo = (file: string) => `/partners/cars/${file}.svg?${LOGO_V}`;
+const carLogo = (file: string) => resolvePartnerCarLogoPath(file);
 
 /** Full India + global OEM set with logos under /partners/cars */
 export const BUY_CAR_BRANDS: BuyBrandItem[] = [

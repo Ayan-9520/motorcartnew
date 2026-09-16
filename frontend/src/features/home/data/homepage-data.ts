@@ -352,6 +352,15 @@ export const PARTNER_CAR_LOGOS: PartnerLogoItem[] = [
   "Volvo",
   "Ashok Leyland",
   "Royal Enfield",
+  "BYD",
+  "MINI",
+  "Aston Martin",
+  "Ferrari",
+  "Lamborghini",
+  "Bentley",
+  "Maserati",
+  "Lotus",
+  "VinFast",
 ].map((name) => {
   const id = normalizePartnerSlug(name);
   return {

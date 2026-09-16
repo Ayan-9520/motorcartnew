@@ -87,6 +87,22 @@ const CAR_LOGO_SLUG_ALIASES: Record<string, string> = {
   "vin-fast": "vinfast",
 };
 
+/** Uploaded OEM marks (PNG/JPG) — fallback to SVG when not listed. */
+const CAR_LOGO_RASTER_EXT: Record<string, "png" | "jpg" | "webp"> = {
+  byd: "png",
+  "aston-martin": "png",
+  vinfast: "png",
+  mini: "jpg",
+  lotus: "jpg",
+  ferrari: "jpg",
+  maserati: "jpg",
+  bentley: "jpg",
+  mahindra: "jpg",
+  lamborghini: "jpg",
+};
+
+const LOGO_CACHE_BUST = "v20260916brands";
+
 const BIKE_BRAND_HINTS = [
   "royal",
   "enfield",
@@ -121,7 +137,8 @@ export function normalizePartnerSlug(raw: string): string {
 export function resolvePartnerCarLogoPath(slugOrName: string): string {
   const slug = normalizePartnerSlug(slugOrName);
   const file = CAR_LOGO_SLUG_ALIASES[slug] ?? slug;
-  return `/partners/cars/${file}.svg?v20260908brands`;
+  const ext = CAR_LOGO_RASTER_EXT[file] ?? "svg";
+  return `/partners/cars/${file}.${ext}?${LOGO_CACHE_BUST}`;
 }
 
 export function partnerBrandBuyHref(name: string, slug?: string): string {
