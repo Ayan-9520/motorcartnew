@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { ChevronRight, GitBranch, Images, Palette } from "lucide-react";
+import { ChevronRight, GitBranch, Images } from "lucide-react";
 import { setPageMeta } from "@/utils/seo";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -252,22 +252,13 @@ export function BuyModelVariantsPage() {
                 </Link>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-border/70 bg-background px-3 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Colours</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Palette className="h-5 w-5 text-primary/70" />
-                    <span className="text-sm font-semibold text-foreground">See on listing</span>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background px-3 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gallery</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Images className="h-5 w-5 text-primary/70" />
-                    <span className="text-sm font-semibold text-foreground">
-                      {variants.filter((v) => v.image).length || 0}+ photos
-                    </span>
-                  </div>
+              <div className="mt-5 rounded-2xl border border-border/70 bg-background px-3 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gallery</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <Images className="h-5 w-5 text-primary/70" />
+                  <span className="text-sm font-semibold text-foreground">
+                    {variants.filter((v) => v.image).length || 0}+ photos
+                  </span>
                 </div>
               </div>
 

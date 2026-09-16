@@ -5,14 +5,9 @@ import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { guessHexFromName } from "@/features/vehicles/lib/vehicle-paint";
 import { removeNewCarInventory } from "../services/new-car-dealer.service";
 import { NewCarEditInventoryDialog } from "./NewCarEditInventoryDialog";
 import type { NcdInventoryItem } from "../types";
-
-function colorDot(name: string) {
-  return guessHexFromName(name);
-}
 
 const STATUS_LABELS = {
   available: "Available",
@@ -86,21 +81,6 @@ export function NcdInventoryGrid({ items, onChanged }: Props) {
                   {v.fuelType}
                 </Badge>
               </div>
-              {v.colors?.length ? (
-                <div className="mt-1.5 flex flex-wrap items-center gap-1" title={v.colors.join(", ")}>
-                  {v.colors.slice(0, 5).map((c) => (
-                    <span
-                      key={c}
-                      className="inline-block h-2.5 w-2.5 rounded-full border border-border/80"
-                      style={{ backgroundColor: colorDot(c) }}
-                      title={c}
-                    />
-                  ))}
-                  {v.colors.length > 5 ? (
-                    <span className="text-[10px] text-muted-foreground">+{v.colors.length - 5}</span>
-                  ) : null}
-                </div>
-              ) : null}
               <p className="mt-1.5 text-base font-bold text-primary">
                 {v.exShowroomPrice > 0 || v.onRoadPrice > 0
                   ? formatCurrency(v.onRoadPrice > 0 ? v.onRoadPrice : v.exShowroomPrice)
