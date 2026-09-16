@@ -1,4 +1,3 @@
-import { resolvePartnerCarLogoPath } from "@/features/home/lib/partner-logo-resolve";
 import type { HubCategorySlug } from "../types";
 
 export type BuyBrandItem = {
@@ -9,7 +8,21 @@ export type BuyBrandItem = {
   logo?: string;
 };
 
-const carLogo = (file: string) => resolvePartnerCarLogoPath(file);
+/** Keep local — do not import partner-logo-resolve (circular via buy-catalog-flow). */
+const LOGO_V = "v20260916brands";
+const RASTER_EXT: Record<string, "png" | "jpg" | "webp"> = {
+  byd: "png",
+  "aston-martin": "png",
+  vinfast: "png",
+  mini: "jpg",
+  lotus: "jpg",
+  ferrari: "jpg",
+  maserati: "jpg",
+  bentley: "jpg",
+  mahindra: "jpg",
+  lamborghini: "jpg",
+};
+const carLogo = (file: string) => `/partners/cars/${file}.${RASTER_EXT[file] ?? "svg"}?${LOGO_V}`;
 
 /** Full India + global OEM set with logos under /partners/cars */
 export const BUY_CAR_BRANDS: BuyBrandItem[] = [
