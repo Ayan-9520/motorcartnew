@@ -92,16 +92,16 @@ const CAR_LOGO_RASTER_EXT: Record<string, "png" | "jpg" | "webp"> = {
   byd: "png",
   "aston-martin": "png",
   vinfast: "png",
-  mini: "jpg",
-  lotus: "jpg",
-  ferrari: "jpg",
-  maserati: "jpg",
-  bentley: "jpg",
-  mahindra: "jpg",
-  lamborghini: "jpg",
+  mini: "png",
+  lotus: "png",
+  ferrari: "png",
+  maserati: "png",
+  bentley: "png",
+  mahindra: "png",
+  lamborghini: "png",
 };
 
-const LOGO_CACHE_BUST = "v20260916brands";
+const LOGO_CACHE_BUST = "v20260917nobg";
 
 const BIKE_BRAND_HINTS = [
   "royal",

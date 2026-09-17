@@ -9,18 +9,18 @@ export type BuyBrandItem = {
 };
 
 /** Keep local — do not import partner-logo-resolve (circular via buy-catalog-flow). */
-const LOGO_V = "v20260916brands";
+const LOGO_V = "v20260917nobg";
 const RASTER_EXT: Record<string, "png" | "jpg" | "webp"> = {
   byd: "png",
   "aston-martin": "png",
   vinfast: "png",
-  mini: "jpg",
-  lotus: "jpg",
-  ferrari: "jpg",
-  maserati: "jpg",
-  bentley: "jpg",
-  mahindra: "jpg",
-  lamborghini: "jpg",
+  mini: "png",
+  lotus: "png",
+  ferrari: "png",
+  maserati: "png",
+  bentley: "png",
+  mahindra: "png",
+  lamborghini: "png",
 };
 const carLogo = (file: string) => `/partners/cars/${file}.${RASTER_EXT[file] ?? "svg"}?${LOGO_V}`;
 
