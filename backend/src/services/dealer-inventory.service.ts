@@ -1222,7 +1222,18 @@ export async function listPublicNewCarStock(opts: {
     (
       await prisma.dealer.findMany({
         where: { id: { in: [...new Set(rows.map((r) => r.dealerId))] }, deletedAt: null },
-        select: { id: true, name: true, slug: true, city: true, state: true, pincode: true, isVerified: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          city: true,
+          state: true,
+          pincode: true,
+          phone: true,
+          isVerified: true,
+          storefront: { select: { contactWhatsapp: true, contactPhone: true } },
+          owner: { select: { phone: true } },
+        },
       })
     ).map((d) => [d.id, d]),
   );
@@ -1358,6 +1369,12 @@ export async function listPublicNewCarStock(opts: {
             city: d.city,
             state: d.state,
             pincode: d.pincode,
+            phone:
+              d.storefront?.contactWhatsapp ||
+              d.storefront?.contactPhone ||
+              d.phone ||
+              d.owner?.phone ||
+              null,
             is_verified: d.isVerified,
           }
         : null,

@@ -170,8 +170,32 @@ export function getVehicleEmi(vehicle: VehicleListing, tenureMonths = 60): numbe
   return calculateEmi(principal, rate, tenureMonths);
 }
 
-export function whatsAppVehicleUrl(vehicle: VehicleListing, phone?: string): string {
-  const num = (phone ?? vehicle.dealerPhone ?? "919876543210").replace(/\D/g, "");
+export function normalizeWhatsAppDigits(raw: string | undefined | null): string {
+  let d = String(raw ?? "").replace(/\D/g, "");
+  if (!d) return "";
+  // India: 10-digit mobile → add country code
+  if (d.length === 10) d = `91${d}`;
+  // Leading 0 + 10 digits
+  if (d.length === 11 && d.startsWith("0")) d = `91${d.slice(1)}`;
+  // Strip accidental 00 prefix
+  if (d.startsWith("00")) d = d.slice(2);
+  return d;
+}
+
+/** Prefer dealer listing phone; never silently use the old demo 98765… number. */
+export function resolveVehicleWhatsAppDigits(vehicle: VehicleListing, phone?: string): string {
+  const fromArg = normalizeWhatsAppDigits(phone);
+  if (fromArg.length >= 10) return fromArg;
+  const fromDealer = normalizeWhatsAppDigits(vehicle.dealerPhone);
+  if (fromDealer.length >= 10) return fromDealer;
+  const fromEnv = normalizeWhatsAppDigits(import.meta.env.VITE_WHATSAPP_PHONE as string | undefined);
+  if (fromEnv.length >= 10 && fromEnv !== "919876543210") return fromEnv;
+  return "";
+}
+
+export function whatsAppVehicleUrl(vehicle: VehicleListing, phone?: string): string | null {
+  const num = resolveVehicleWhatsAppDigits(vehicle, phone);
+  if (!num) return null;
   const text = encodeURIComponent(
     `Hi, I'm interested in ${vehicle.title} listed on Motorcart.in at ${formatPrice(vehicle.price)}. Link: ${window.location.origin}${vehicleDetailPath(vehicle)}`
   );

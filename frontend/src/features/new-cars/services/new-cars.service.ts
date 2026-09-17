@@ -119,6 +119,12 @@ function stockRowToListing(r: Record<string, unknown>): NewCarListing {
     dealerId: dealer.id ? String(dealer.id) : undefined,
     dealerName,
     dealerSlug: dealer.slug ? String(dealer.slug) : undefined,
+    dealerPhone:
+      dealer.phone != null && String(dealer.phone).trim()
+        ? String(dealer.phone).trim()
+        : dealer.whatsapp != null && String(dealer.whatsapp).trim()
+          ? String(dealer.whatsapp).trim()
+          : undefined,
     dealerVerified: Boolean(dealer.is_verified),
     // Real inventory timestamps — never Date.now() (that reversed Newest sort while mapping 1000+ rows)
     createdAt: String(r.updated_at ?? r.created_at ?? r.updatedAt ?? r.createdAt ?? "1970-01-01T00:00:00.000Z"),

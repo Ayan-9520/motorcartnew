@@ -69,6 +69,7 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
   const emi = priceOnRequest ? 0 : getVehicleEmi(vehicle);
   const discount = vehicle.metadata.discountPercent;
   const detailPath = vehicleDetailPath(vehicle);
+  const waUrl = whatsAppVehicleUrl(vehicle);
   const isNew =
     vehicle.condition === "new" || vehicle.category === "new-cars";
   const fair =
@@ -336,11 +337,21 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
             <GitCompare className="mr-1 h-3.5 w-3.5" />
             Compare
           </Button>
-          <Button size="sm" className="h-8 rounded-md text-[11px]" asChild>
-            <a href={whatsAppVehicleUrl(vehicle)} target="_blank" rel="noreferrer">
-              <MessageCircle className="mr-1 h-3.5 w-3.5" />
-              Contact
-            </a>
+          <Button
+            size="sm"
+            className="h-8 rounded-md text-[11px]"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!waUrl) {
+                toast.error("Dealer WhatsApp number is not set for this listing yet.");
+                return;
+              }
+              window.open(waUrl, "_blank", "noopener,noreferrer");
+            }}
+          >
+            <MessageCircle className="mr-1 h-3.5 w-3.5" />
+            Contact
           </Button>
         </div>
       </Card>

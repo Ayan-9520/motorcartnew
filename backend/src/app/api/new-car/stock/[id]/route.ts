@@ -115,7 +115,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const d = await prisma.dealer.findFirst({
     where: { id: row.dealerId, deletedAt: null },
-    select: { id: true, name: true, slug: true, city: true, state: true, pincode: true, isVerified: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      city: true,
+      state: true,
+      pincode: true,
+      phone: true,
+      isVerified: true,
+      storefront: { select: { contactWhatsapp: true, contactPhone: true } },
+      owner: { select: { phone: true } },
+    },
   });
 
   const meta = (row.metadata && typeof row.metadata === "object" ? row.metadata : {}) as Record<string, unknown>;
@@ -179,6 +190,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
             city: d.city,
             state: d.state,
             pincode: d.pincode,
+            phone:
+              d.storefront?.contactWhatsapp ||
+              d.storefront?.contactPhone ||
+              d.phone ||
+              d.owner?.phone ||
+              null,
             is_verified: d.isVerified,
           }
         : null,
