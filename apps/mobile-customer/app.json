@@ -28,7 +28,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"],
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -43,7 +46,10 @@
               "scheme": "motorcart"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "predictiveBackGestureEnabled": false
@@ -54,7 +60,9 @@
       "shortName": "Motorcart",
       "description": "Motorcart — India's AI-powered automotive OS. Companion app for buyers, dealers & partners."
     },
-    "plugins": ["expo-secure-store"],
+    "plugins": [
+      "expo-secure-store"
+    ],
     "extra": {
       "eas": {
         "projectId": null
