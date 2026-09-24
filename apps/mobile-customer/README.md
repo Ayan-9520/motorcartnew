@@ -14,9 +14,10 @@ Package: **`in.motorcart.app`** · Same JWT API as [motorcart.in](https://motorc
 | Privacy + Terms in-app + on web | ✅ `motorcart.in/privacy` · `/terms` |
 | Tokens in SecureStore | ✅ |
 | HTTPS cleartext off for prod | ✅ `app.config.js` |
+| Local verify script | ✅ `npm run play:verify` |
 | Typecheck | ✅ |
-| EAS `projectId` | ❌ run `eas init` (you) |
-| Play Console app + AAB upload | ❌ (you) |
+| EAS `projectId` | ❌ run `eas init` (you — needs Expo login) |
+| Play Console app + AAB upload | ❌ (you — needs $25 + Console) |
 
 ---
 

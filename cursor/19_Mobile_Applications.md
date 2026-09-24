@@ -146,7 +146,7 @@ Primary deploy: **EAS Build** → Google Play (see README). Docker Dockerfile is
 | M2 | Push notifications via backend |
 | M3 | Lead enquiry from app |
 | M4 | Dealer workspace read-only |
-| M5 | App store release — **assets + EAS production profile ready**; remaining: Play Console + `eas init` + AAB upload |
+| M5 | App store release — **coding ready** (`play:verify`); remaining (human): Play Console $25 + `eas init` + AAB upload |
 
 ---
 

@@ -20,7 +20,11 @@ module.exports = () => {
         ...(appJson.expo.extra || {}),
         eas: {
           ...(appJson.expo.extra?.eas || {}),
-          projectId: process.env.EAS_PROJECT_ID || appJson.expo.extra?.eas?.projectId,
+          // eas init fills a real UUID; null/empty is fine until then
+          projectId:
+            process.env.EAS_PROJECT_ID ||
+            appJson.expo.extra?.eas?.projectId ||
+            undefined,
         },
       },
     },

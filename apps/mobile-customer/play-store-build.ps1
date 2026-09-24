@@ -9,6 +9,10 @@ Write-Host "Package: in.motorcart.app"
 Write-Host "API: https://motorcart.in"
 Write-Host ""
 
+Write-Host "0) Coding readiness check..."
+powershell -ExecutionPolicy Bypass -File .\verify-play-ready.ps1
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 if (-not (Get-Command eas -ErrorAction SilentlyContinue)) {
   Write-Host "Installing eas-cli globally..."
   npm install -g eas-cli
@@ -27,3 +31,4 @@ Write-Host ""
 Write-Host "Done. Download AAB from Expo dashboard → upload in Play Console Internal track." -ForegroundColor Green
 Write-Host "Listing assets: .\store\  |  Copy: .\store\LISTING.md"
 Write-Host "Privacy URL: https://motorcart.in/privacy"
+Write-Host "After first signed build: paste SHA-256 into frontend/public/.well-known/assetlinks.json"

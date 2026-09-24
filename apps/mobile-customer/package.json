@@ -33,6 +33,8 @@
     "export:web": "expo export --platform web",
     "build:docker": "expo export --platform web --output-dir dist",
     "typecheck": "tsc --noEmit",
+    "play:verify": "powershell -ExecutionPolicy Bypass -File ./verify-play-ready.ps1",
+    "play:build": "powershell -ExecutionPolicy Bypass -File ./play-store-build.ps1",
     "eas:login": "eas login",
     "eas:init": "eas init",
     "eas:preview": "eas build -p android --profile preview",
