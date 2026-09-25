@@ -1181,6 +1181,31 @@ export async function listPublicNewCarStock(opts: {
     .map((t) => t.trim())
     .filter((t) => t.length > 1);
 
+  // Dealer uploads vary: "Mercedes" vs "Mercedes-Benz" — exact contains of the long form misses stock.
+  const brandRaw = (opts.brand ?? "").trim();
+  const brandShort = brandRaw.split(/[\s/-]+/).filter(Boolean)[0] ?? "";
+  const brandTokens = [...new Set([brandRaw, brandShort].filter((t) => t.length >= 2))];
+
+  const andClauses: Prisma.NewCarInventoryWhereInput[] = [];
+  if (brandTokens.length) {
+    andClauses.push({
+      OR: brandTokens.map((t) => ({
+        brand: { contains: t, mode: "insensitive" as const },
+      })),
+    });
+  }
+  if (tokens.length) {
+    andClauses.push(
+      ...tokens.map((token) => ({
+        OR: [
+          { brand: { contains: token, mode: "insensitive" as const } },
+          { model: { contains: token, mode: "insensitive" as const } },
+          { variant: { contains: token, mode: "insensitive" as const } },
+        ],
+      })),
+    );
+  }
+
   const where: Prisma.NewCarInventoryWhereInput = {
     // Live showroom — hide only sold/booked/archived (recover rows wrongly flipped to out_of_stock on photo save)
     NOT: {
@@ -1195,19 +1220,8 @@ export async function listPublicNewCarStock(opts: {
       { stockStatus: "out_of_stock", OR: [{ imageUrl: { not: null } }, { stock: { gt: 0 } }] },
     ],
     ...(dealerIds ? { dealerId: { in: dealerIds } } : {}),
-    ...(opts.brand ? { brand: { contains: opts.brand, mode: "insensitive" } } : {}),
     ...(opts.model ? { model: { contains: opts.model, mode: "insensitive" } } : {}),
-    ...(tokens.length
-      ? {
-          AND: tokens.map((token) => ({
-            OR: [
-              { brand: { contains: token, mode: "insensitive" as const } },
-              { model: { contains: token, mode: "insensitive" as const } },
-              { variant: { contains: token, mode: "insensitive" as const } },
-            ],
-          })),
-        }
-      : {}),
+    ...(andClauses.length ? { AND: andClauses } : {}),
   };
 
   const rows = await prisma.newCarInventory.findMany({

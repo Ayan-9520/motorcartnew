@@ -44,14 +44,29 @@ export function buyFilteredListingsPath(
   return `${buyListingPath(hub, condition)}?${params.toString()}`;
 }
 
-export function resolveBrandLabel(hub: HubCategorySlug, brandSlug: string): string {
+/** Match `/brand/mercedes-benz` to OEM row `mercedes` / brand `Mercedes`. */
+function findBuyBrand(hub: HubCategorySlug, brandSlug: string) {
   const brands = getBuyBrandsForHub(hub);
-  const hit = brands.find(
+  const exact = brands.find(
     (b) =>
       b.id === brandSlug ||
       slugifyLabel(b.brand) === brandSlug ||
       slugifyLabel(b.name) === brandSlug,
   );
+  if (exact) return exact;
+  const head = brandSlug.split("-").filter(Boolean)[0];
+  if (!head || head.length < 3) return undefined;
+  return brands.find(
+    (b) =>
+      b.id === head ||
+      slugifyLabel(b.brand) === head ||
+      slugifyLabel(b.name) === head ||
+      b.id.startsWith(`${head}-`),
+  );
+}
+
+export function resolveBrandLabel(hub: HubCategorySlug, brandSlug: string): string {
+  const hit = findBuyBrand(hub, brandSlug);
   if (hit) return hit.name || hit.brand;
   return brandSlug
     .split("-")
@@ -59,16 +74,14 @@ export function resolveBrandLabel(hub: HubCategorySlug, brandSlug: string): stri
     .join(" ");
 }
 
-/** Shorter OEM token for API `contains` (Maruti matches Maruti Suzuki stock). */
+/** Shorter OEM token for API `contains` (Maruti / Mercedes match dealer stock forms). */
 export function resolveBrandApiFilter(hub: HubCategorySlug, brandSlug: string): string {
-  const brands = getBuyBrandsForHub(hub);
-  const hit = brands.find(
-    (b) =>
-      b.id === brandSlug ||
-      slugifyLabel(b.brand) === brandSlug ||
-      slugifyLabel(b.name) === brandSlug,
-  );
+  const hit = findBuyBrand(hub, brandSlug);
   if (hit?.brand) return hit.brand;
+  const head = brandSlug.split("-").filter(Boolean)[0];
+  if (head && head.length >= 3) {
+    return head.charAt(0).toUpperCase() + head.slice(1);
+  }
   return resolveBrandLabel(hub, brandSlug);
 }
 

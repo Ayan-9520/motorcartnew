@@ -45,7 +45,8 @@ export const BUY_CAR_BRANDS: BuyBrandItem[] = [
   { id: "byd", name: "BYD", brand: "BYD", logo: carLogo("byd") },
   { id: "mini", name: "MINI", brand: "MINI", logo: carLogo("mini") },
   { id: "bmw", name: "BMW", brand: "BMW", logo: carLogo("bmw") },
-  { id: "mercedes", name: "Mercedes", brand: "Mercedes-Benz", logo: carLogo("mercedes") },
+  /** API `contains` token must be short — live stock uses "Mercedes", not "Mercedes-Benz". */
+  { id: "mercedes", name: "Mercedes", brand: "Mercedes", logo: carLogo("mercedes") },
   { id: "audi", name: "Audi", brand: "Audi", logo: carLogo("audi") },
   { id: "volvo", name: "Volvo", brand: "Volvo", logo: carLogo("volvo") },
   { id: "jaguar", name: "Jaguar", brand: "Jaguar", logo: carLogo("jaguar") },
@@ -101,7 +102,7 @@ export const BUY_EV_BRANDS: BuyBrandItem[] = [
   { id: "byd-ev", name: "BYD", brand: "BYD", logo: carLogo("byd") },
   { id: "vinfast-ev", name: "VinFast", brand: "VinFast", logo: carLogo("vinfast") },
   { id: "bmw-ev", name: "BMW", brand: "BMW", logo: carLogo("bmw") },
-  { id: "mercedes-ev", name: "Mercedes", brand: "Mercedes-Benz", logo: carLogo("mercedes") },
+  { id: "mercedes-ev", name: "Mercedes", brand: "Mercedes", logo: carLogo("mercedes") },
   { id: "ola-ev", name: "Ola", brand: "Ola", logo: carLogo("ola") },
   { id: "ather-ev", name: "Ather", brand: "Ather", logo: carLogo("ather") },
 ];
