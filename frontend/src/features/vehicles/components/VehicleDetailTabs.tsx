@@ -21,11 +21,12 @@ type TabId = (typeof TABS)[number]["id"];
 
 export function VehicleDetailTabs({ vehicle }: { vehicle: VehicleListing }) {
   const [tab, setTab] = useState<TabId>("overview");
+  const tabs = vehicle.condition === "new" ? TABS.filter((t) => t.id !== "ownership") : TABS;
 
   return (
     <div className="vm-detail-tabs">
       <div className="vm-detail-tab-rail" role="tablist">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -69,7 +70,7 @@ export function VehicleDetailTabs({ vehicle }: { vehicle: VehicleListing }) {
         {tab === "ownership" && (
           <dl className="vm-spec-grid">
             <div><dt>Owners</dt><dd>{vehicle.owners}</dd></div>
-            <div><dt>Registration</dt><dd>{vehicle.state}</dd></div>
+            <div><dt>Registration</dt><dd>{vehicle.metadata?.rto || vehicle.state}</dd></div>
             <div><dt>KMs driven</dt><dd>{vehicle.kmsDriven.toLocaleString("en-IN")} km</dd></div>
             <div><dt>Condition</dt><dd className="capitalize">{vehicle.condition}</dd></div>
             <div><dt>RC transfer</dt><dd>Assisted by dealer</dd></div>

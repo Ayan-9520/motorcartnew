@@ -375,7 +375,8 @@ export function parsedRowToVehiclePayload(
   const discountPct = row.discount ?? 0;
   const finalPrice = row.dealerPrice && row.dealerPrice > 0 ? row.dealerPrice : row.price;
   const isNewCarDealer = dealer.dealerType === "new_car_dealer";
-  const isNewStock = isNewCarDealer || row.kmsDriven < 100;
+  const isUsedCarDealer = dealer.dealerType === "used_car_dealer";
+  const isNewStock = isNewCarDealer || (!isUsedCarDealer && row.kmsDriven < 100);
   const category = isNewCarDealer
     ? "new-cars"
     : dealer.dealerType === "bike_dealer"
@@ -431,7 +432,7 @@ export function parsedRowToVehiclePayload(
     bodyType,
     category,
     kmsDriven: isNewStock ? 0 : row.kmsDriven,
-    owners: isNewStock ? 0 : row.ownership,
+    owners: isNewStock ? 0 : Math.max(1, row.ownership),
     color: row.color,
     city: dealer.city,
     state: row.registrationState || dealer.state,

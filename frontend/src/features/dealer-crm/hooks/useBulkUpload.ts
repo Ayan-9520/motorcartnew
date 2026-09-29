@@ -97,6 +97,11 @@ export function useBulkUpload(dealer: DealerProfile | null, sellerId: string | u
             state: dealer.state,
             dealerType: dealer.dealerType,
           });
+          Object.assign(payload.metadata, {
+            dealerName: dealer.name,
+            dealerSlug: dealer.slug,
+            ...(dealer.phone ? { dealerPhone: dealer.phone } : {}),
+          });
 
           // Force marketplace category for new-car showroom so /buy/cars/new can find the row
           const publishNew = shouldPublishAsNewCar(dealer, payload);

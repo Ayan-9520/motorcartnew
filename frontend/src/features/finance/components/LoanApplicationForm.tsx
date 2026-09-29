@@ -30,7 +30,15 @@ export function LoanApplicationForm({ lenders, defaultBankSlug }: LoanApplicatio
   const bankSlug = params.get("bank") ?? defaultBankSlug ?? lenders[0]?.slug;
 
   const lender = lenders.find((l) => l.slug === bankSlug) ?? lenders[0];
-  const [loanAmount, setLoanAmount] = useState(loanType === "bike-loan" ? 150000 : 1200000);
+  const vehicleId = params.get("vehicle");
+  const vehiclePrice = Number(params.get("price")) || 0;
+  const [loanAmount, setLoanAmount] = useState(() =>
+    vehiclePrice > 0
+      ? Math.round((vehiclePrice * 0.85) / 1000) * 1000
+      : loanType === "bike-loan"
+        ? 150000
+        : 1200000
+  );
   const [tenure, setTenure] = useState(loanType === "commercial-loan" ? 72 : 60);
   const [income, setIncome] = useState(75000);
   const [cibil, setCibil] = useState(720);
@@ -61,6 +69,8 @@ export function LoanApplicationForm({ lenders, defaultBankSlug }: LoanApplicatio
         fullName: user.fullName,
         phone: user.phone,
         loanType: loanType ?? "used-car-loan",
+        ...(vehicleId ? { vehicleId } : {}),
+        ...(vehiclePrice > 0 ? { vehiclePrice } : {}),
       },
     });
 

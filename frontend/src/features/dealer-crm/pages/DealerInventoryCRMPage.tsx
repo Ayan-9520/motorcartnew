@@ -95,8 +95,12 @@ export function DealerInventoryCRMPage() {
       images,
       condition: form.condition,
       metadata: {
+        ...(editing?.metadata ?? {}),
         discountPercent: form.discount,
         emiMonthly,
+        ...(dealer?.name ? { dealerName: dealer.name } : {}),
+        ...(dealer?.slug ? { dealerSlug: dealer.slug } : {}),
+        ...(dealer?.phone ? { dealerPhone: dealer.phone } : {}),
         specifications: generateAISpecs({
           rowNumber: 0,
           brand: form.brand,
@@ -131,10 +135,14 @@ export function DealerInventoryCRMPage() {
       }
       toast.success("Listing updated");
     } else {
-      const { error } = await createVehicle({ ...payload, status: form.status }, user.id, dealer.id);
+      const { data: created, error } = await createVehicle({ ...payload, status: form.status }, user.id, dealer.id);
       if (error) {
         toast.error(error.message ?? "Could not add vehicle");
         throw new Error(error.message);
+      }
+      const createdId = (created as { id?: string } | null)?.id;
+      if (form.featured && createdId) {
+        await updateVehicle(createdId, { is_featured: true });
       }
       toast.success("Vehicle added to inventory");
     }

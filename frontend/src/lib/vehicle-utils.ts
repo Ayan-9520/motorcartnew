@@ -115,6 +115,25 @@ export function vehicleListingPath(
   return buyListingPath(hub, condition);
 }
 
+export function vehicleLoanPath(
+  vehicle: Pick<VehicleListing, "id" | "price" | "category" | "condition" | "fuelType">
+): string {
+  const fuel = (vehicle.fuelType ?? "").toLowerCase();
+  const type =
+    vehicle.category === "bikes"
+      ? "bike-loan"
+      : vehicle.category === "trucks" || vehicle.category === "buses"
+        ? "commercial-loan"
+        : vehicle.category === "ev" || fuel === "electric" || fuel === "ev"
+          ? "ev-loan"
+          : vehicle.condition === "new"
+            ? "new-car-loan"
+            : "used-car-loan";
+  const params = new URLSearchParams({ vehicle: vehicle.id, type });
+  if (vehicle.price > 0) params.set("price", String(Math.round(vehicle.price)));
+  return `/finance/apply?${params.toString()}`;
+}
+
 export function getFairPriceLabel(vehicle: VehicleListing): FairPriceLabel | undefined {
   return vehicle.metadata.fairPriceLabel;
 }
@@ -213,6 +232,36 @@ export function slugify(text: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+const AUTO_BODY_TOKENS = ["auto", "rickshaw", "three-wheeler", "three wheeler"];
+
+function isAutoBodyType(bodyType: string | undefined): boolean {
+  const b = (bodyType ?? "").toLowerCase();
+  return AUTO_BODY_TOKENS.some((t) => b.includes(t));
+}
+
+/** Dealer uploads use long forms ("6-Speed Automatic", "e-CVT"); dropdown uses Manual/Automatic/AMT/CVT/DCT. */
+function transmissionMatches(value: string, want: string): boolean {
+  const t = value.toLowerCase();
+  const w = want.toLowerCase();
+  if (w === "manual") return t.includes("manual") || t.includes("imt");
+  if (w === "automatic") return !!t && !t.includes("manual") && !t.includes("imt");
+  return t.includes(w);
+}
+
+function fuelMatches(value: string, want: string): boolean {
+  const f = value.toLowerCase();
+  const w = want.toLowerCase();
+  if (w === "hybrid") return f.includes("hybrid");
+  if (w === "electric" || w === "ev") return f === "electric" || f === "ev" || f.startsWith("electric");
+  return f === w || f.startsWith(`${w} `) || f.startsWith(`${w}-`);
+}
+
+function bodyTypeMatches(value: string, want: string): boolean {
+  const b = value.toLowerCase();
+  const w = want.toLowerCase() === "muv" ? "mpv" : want.toLowerCase();
+  return b.includes(w) || (w === "mpv" && b.includes("muv"));
+}
+
 export function filterVehicles(
   vehicles: VehicleListing[],
   filters: VehicleFilters
@@ -252,7 +301,13 @@ export function filterVehicles(
       result = result.filter((v) => v.category === filters.category);
     }
     if (filters.category === "new-cars") result = result.filter((v) => v.category === "new-cars" || v.condition === "new");
-    if (filters.category === "used-cars") result = result.filter((v) => v.category === "used-cars" || (v.condition === "used" && !["bikes", "trucks", "buses", "ev"].includes(v.category)));
+    if (filters.category === "used-cars") {
+      result = result.filter(
+        (v) =>
+          (v.category === "used-cars" || (v.condition === "used" && !["bikes", "trucks", "buses", "ev"].includes(v.category))) &&
+          !isAutoBodyType(v.bodyType),
+      );
+    }
   }
 
   if (filters.brand) result = result.filter((v) => brandsMatch(v.brand, filters.brand!));
@@ -260,8 +315,8 @@ export function filterVehicles(
   if (filters.variant) {
     result = result.filter((v) => (v.variant ?? "").toLowerCase().includes(filters.variant!.toLowerCase()));
   }
-  if (filters.fuel) result = result.filter((v) => v.fuelType.toLowerCase() === filters.fuel!.toLowerCase());
-  if (filters.transmission) result = result.filter((v) => v.transmission.toLowerCase() === filters.transmission!.toLowerCase());
+  if (filters.fuel) result = result.filter((v) => fuelMatches(v.fuelType, filters.fuel!));
+  if (filters.transmission) result = result.filter((v) => transmissionMatches(v.transmission, filters.transmission!));
   if (filters.priceMin != null) {
     result = result.filter(
       (v) => Boolean(v.metadata?.priceOnRequest) || getDiscountedPrice(v) >= filters.priceMin!,
@@ -283,7 +338,7 @@ export function filterVehicles(
   }
   if (filters.color) result = result.filter((v) => (v.color ?? "").toLowerCase() === filters.color!.toLowerCase());
   if (filters.bodyType) {
-    result = result.filter((v) => !v.bodyType || v.bodyType.toLowerCase() === filters.bodyType!.toLowerCase());
+    result = result.filter((v) => !v.bodyType || bodyTypeMatches(v.bodyType, filters.bodyType!));
   }
   if (filters.saleMode) {
     result = result.filter((v) => (v.saleMode ?? "dealer_offer") === filters.saleMode);

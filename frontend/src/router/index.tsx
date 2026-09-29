@@ -36,6 +36,7 @@ import { UnauthorizedPage } from "@/pages/UnauthorizedPage";
 import { AccountSuspendedPage } from "@/pages/AccountSuspendedPage";
 import { RoleDashboardRedirect } from "@/components/routing/RoleDashboardRedirect";
 import { DealerAliasRedirect } from "@/components/routing/DealerAliasRedirect";
+import { NavigateWithSearch } from "@/components/routing/NavigateWithSearch";
 import { DealerHomeGate } from "@/components/routing/DealerHomeGate";
 import { CustomerDashboardPage } from "@/pages/dashboard/CustomerDashboardPage";
 import {
@@ -284,11 +285,11 @@ export const router = createBrowserRouter([
       { path: "ev", element: <Navigate to="/buy/ev/used" replace /> },
       { path: "auto", element: <Navigate to="/buy/auto/used" replace /> },
       { path: "new-cars", element: <NewCarsHubPage /> },
-      { path: "new-cars/browse", element: <Navigate to="/buy/cars/new" replace /> },
+      { path: "new-cars/browse", element: <NavigateWithSearch to="/buy/cars/new" /> },
       { path: "new-cars/colors-demo", element: <VehicleColorsDemoPage /> },
       { path: "new-cars/:slug", element: <VehicleDetailPage /> },
       { path: "used-cars", element: <PreownedCarsHubPage /> },
-      { path: "used-cars/browse", element: <Navigate to="/buy/cars/used" replace /> },
+      { path: "used-cars/browse", element: <NavigateWithSearch to="/buy/cars/used" /> },
       { path: "used-cars/:slug", element: <VehicleDetailPage /> },
       { path: "buy", element: <BuyHubPage /> },
       { path: "buy/:category/:condition/brand/:brandSlug/model/:modelSlug", element: <BuyModelVariantsPage /> },

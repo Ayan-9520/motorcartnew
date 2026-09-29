@@ -14,7 +14,13 @@ import {
 } from "@/lib/db/query-allowlist";
 import { NamedQueryError, runNamedQuery } from "@/lib/db/query-registry";
 import { KNOWN_QUERY_TABLES } from "@/lib/db/table-map";
-import { canMutateVehicle, extractIdEqFilter, isVehicleMutation } from "@/lib/db/vehicle-ownership";
+import {
+  canMutateVehicle,
+  extractIdEqFilter,
+  isVehicleMutation,
+  sanitizeSelfUserUpdate,
+  sanitizeVehicleInsertBody,
+} from "@/lib/db/vehicle-ownership";
 import { EnquiryError } from "@/lib/leads/enquiry.service";
 
 function paramsFromReq(req: NextRequest, body?: Record<string, unknown>) {
@@ -83,7 +89,22 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
       return err(decision.message, decision.status);
     }
 
-    if (auth && isVehicleMutation(p.table, p.action) && auth.role !== "admin" && auth.role !== "super_admin") {
+    const isAdminAuth = !!auth && (auth.role === "admin" || auth.role === "super_admin");
+    const action = p.action.trim().toLowerCase();
+
+    if (auth && !isAdminAuth && p.table === "users" && (action === "update" || action === "patch")) {
+      const safe = sanitizeSelfUserUpdate(p.body);
+      if (!Object.keys(safe).length) return forbidden("Only profile fields can be updated");
+      p.body = safe;
+    }
+
+    if (auth && !isAdminAuth && p.table === "vehicles" && (action === "insert" || action === "upsert")) {
+      const safe = await sanitizeVehicleInsertBody(auth.userId, p.body);
+      if (!safe) return forbidden("You can only list vehicles for your own dealership");
+      p.body = safe;
+    }
+
+    if (auth && !isAdminAuth && isVehicleMutation(p.table, p.action)) {
       const vehicleId = extractIdEqFilter(p.filters);
       if (!vehicleId || !(await canMutateVehicle(auth.userId, vehicleId))) {
         return forbidden("You can only change your own listings");

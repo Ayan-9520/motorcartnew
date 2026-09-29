@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Calculator, ChevronRight, GitCompare, Landmark, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { vehicleLoanPath } from "@/lib/vehicle-utils";
 import type { VehicleListing } from "@/types/vehicle";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,7 @@ export function MarketplaceVehicleTools({
       icon: Landmark,
       label: "Check eligibility",
       hint: "Pre-approved",
-      href: `/finance/apply?vehicle=${vehicle.id}`,
+      href: vehicleLoanPath(vehicle),
       external: true,
     },
     {

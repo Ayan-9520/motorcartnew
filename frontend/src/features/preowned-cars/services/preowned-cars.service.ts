@@ -71,6 +71,22 @@ export function getFeaturedPreowned(limit = 8): PreownedCarListing[] {
   return sortVehicles(asPreowned(MOCK_VEHICLES).filter((v) => v.isCertified), "ai-score").slice(0, limit) as PreownedCarListing[];
 }
 
+/** Live used stock: certified first, then newest. Falls back to mock picks outside real-data mode. */
+export async function fetchFeaturedPreowned(limit = 8): Promise<PreownedCarListing[]> {
+  try {
+    const { vehicles } = await searchPreownedCars({ sort: "newest", page: 1, pageSize: 60 });
+    const live = (vehicles as PreownedCarListing[]).filter((v) => v.status === "available" || !v.status);
+    if (live.length) {
+      const certified = live.filter((v) => v.isCertified);
+      const rest = live.filter((v) => !v.isCertified);
+      return [...certified, ...rest].slice(0, limit);
+    }
+  } catch {
+    /* fall through */
+  }
+  return getFeaturedPreowned(limit);
+}
+
 export function getPreownedByProgram(programId: string, limit = 6): PreownedCarListing[] {
   const name = programId.replace(/-/g, " ");
   return asPreowned(MOCK_VEHICLES)

@@ -154,7 +154,10 @@ export function hubCategoryToFilters(
     case "buses":
       return { ...base, category: "buses" };
     case "ev":
-      return { ...base, category: "ev" };
+      // New-car search forces category new-cars, which would drop the EV fuel rule
+      return condition === "new"
+        ? { ...base, category: "new-cars", fuel: "electric" }
+        : { ...base, category: "ev" };
     case "auto":
       return { ...base, hubCategory: "auto" };
     case "equipment":

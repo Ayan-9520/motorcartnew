@@ -450,15 +450,33 @@ export async function fetchPlatformTransactions(): Promise<PlatformTransactionRo
 export async function fetchAdminVehicles(): Promise<AdminVehicleRow[]> {
   const { data, error } = await supabase
     .from("vehicles")
-    .select("id, title, brand, model, price, city, status, is_featured, metadata, created_at, dealers(name)")
+    .select("id, title, brand, model, price, city, status, is_featured, metadata, created_at, dealer_id")
     .order("created_at", { ascending: false })
     .limit(150);
 
   if (error || !data?.length) return useMock(MOCK_VEHICLES, error);
 
+  const dealerIds = [
+    ...new Set(
+      data
+        .map((v) => (v as { dealer_id?: string | null }).dealer_id)
+        .filter((id): id is string => Boolean(id))
+    ),
+  ];
+  const dealerNames = new Map<string, string>();
+  if (dealerIds.length) {
+    const { data: dealerRows } = await supabase.from("dealers").select("id, name").in("id", dealerIds);
+    for (const d of (dealerRows ?? []) as { id: string; name: string }[]) {
+      dealerNames.set(String(d.id), String(d.name));
+    }
+  }
+
   return data.map((v) => {
-    const row = v as unknown as Record<string, unknown> & { dealers?: { name: string } | null };
+    const row = v as unknown as Record<string, unknown>;
     const meta = (row.metadata as Record<string, unknown>) ?? {};
+    const dealerName =
+      (row.dealer_id ? dealerNames.get(String(row.dealer_id)) : undefined) ??
+      (typeof meta.dealerName === "string" && meta.dealerName ? meta.dealerName : null);
     return {
       id: String(row.id),
       title: String(row.title),
@@ -469,7 +487,7 @@ export async function fetchAdminVehicles(): Promise<AdminVehicleRow[]> {
       status: String(row.status),
       isFeatured: Boolean(row.is_featured),
       platformFeatured: Boolean(meta.platform_featured),
-      dealerName: row.dealers?.name ?? null,
+      dealerName,
       createdAt: String(row.created_at),
     };
   });

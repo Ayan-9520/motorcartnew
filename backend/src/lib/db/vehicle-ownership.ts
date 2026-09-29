@@ -21,6 +21,69 @@ export function isVehicleMutation(table: string, action: string): boolean {
   return table.trim() === "vehicles" && MUTATING_ACTIONS.has(action.trim().toLowerCase());
 }
 
+/** True when the user owns the dealer row or is an active member of its organization. */
+export async function canActForDealer(userId: string, dealerId: string): Promise<boolean> {
+  const dealer = await prisma.dealer.findFirst({
+    where: { id: dealerId, deletedAt: null },
+    select: { ownerId: true },
+  });
+  if (!dealer) return false;
+  if (dealer.ownerId === userId) return true;
+  const member = await prisma.organizationMember.findFirst({
+    where: { userId, status: "active", organization: { legacyDealerId: dealerId, deletedAt: null } },
+    select: { id: true },
+  });
+  return !!member;
+}
+
+/**
+ * Non-admin inserts: seller is always the caller, and any dealer_id must be one they can act for.
+ * Returns the sanitized body, or null when a row targets someone else's dealer.
+ */
+export async function sanitizeVehicleInsertBody(userId: string, body: unknown): Promise<unknown | null> {
+  const rows = Array.isArray(body) ? body : [body];
+  const out: Record<string, unknown>[] = [];
+  for (const raw of rows) {
+    if (!raw || typeof raw !== "object") return null;
+    const row = { ...(raw as Record<string, unknown>) };
+    const dealerId = (row.dealer_id ?? row.dealerId) as string | null | undefined;
+    if (dealerId && !(await canActForDealer(userId, String(dealerId)))) return null;
+    delete row.sellerId;
+    row.seller_id = userId;
+    out.push(row);
+  }
+  return Array.isArray(body) ? out : out[0];
+}
+
+/** Profile columns a signed-in user may change on their own `users` row. */
+const SELF_EDITABLE_USER_COLUMNS = new Set([
+  "full_name",
+  "fullName",
+  "phone",
+  "city",
+  "state",
+  "avatar_url",
+  "avatarUrl",
+  "company_name",
+  "companyName",
+  "community_handle",
+  "communityHandle",
+  "community_bio",
+  "communityBio",
+  "community_cover_url",
+  "communityCoverUrl",
+]);
+
+/** Drops role/status/approval/verification and any other non-profile column from a self-update. */
+export function sanitizeSelfUserUpdate(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return {};
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(body as Record<string, unknown>)) {
+    if (SELF_EDITABLE_USER_COLUMNS.has(k)) out[k] = v;
+  }
+  return out;
+}
+
 /**
  * Non-admin may update/delete a marketplace vehicle only when they listed it,
  * own its dealer account, or are an active member of that dealer's organization.
@@ -34,14 +97,5 @@ export async function canMutateVehicle(userId: string, vehicleId: string): Promi
   if (vehicle.sellerId === userId) return true;
   if (vehicle.dealer?.ownerId === userId) return true;
   if (!vehicle.dealerId) return false;
-
-  const member = await prisma.organizationMember.findFirst({
-    where: {
-      userId,
-      status: "active",
-      organization: { legacyDealerId: vehicle.dealerId, deletedAt: null },
-    },
-    select: { id: true },
-  });
-  return !!member;
+  return canActForDealer(userId, vehicle.dealerId);
 }

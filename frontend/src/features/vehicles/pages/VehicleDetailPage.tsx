@@ -26,6 +26,7 @@ import {
   getVehicleEmi,
   inferBuyHubFromVehicle,
   vehicleListingPath,
+  vehicleLoanPath,
 } from "@/lib/vehicle-utils";
 import { buyListingPath, hubCategoryLabel } from "@/features/marketplace/lib/route-utils";
 import { resolveVehicleDetailGallery, resolveVehicleHero } from "@/lib/media/resolve-images";
@@ -43,7 +44,7 @@ export function VehicleDetailPage() {
   useEffect(() => {
     if (vehicle) {
       setPageMeta({
-        title: `${vehicle.year} ${vehicle.brand} ${vehicle.model} — ${formatCurrency(vehicle.price)}`,
+        title: `${vehicle.year} ${vehicle.brand} ${vehicle.model} — ${vehicle.price > 0 ? formatCurrency(vehicle.price) : "Price on request"}`,
         description: `Buy ${vehicle.title} in ${vehicle.city}. EMI from ${formatCurrency(getVehicleEmi(vehicle))}/mo. Specs, inspection, finance & dealer on Motorcart.in`,
         ogImage: resolveVehicleHero(vehicle.brand, vehicle.model, vehicle.bodyType, vehicle.images) || undefined,
       });
@@ -181,10 +182,12 @@ export function VehicleDetailPage() {
               />
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <span className="vm-stat-pill">
-                  <Gauge className="h-4 w-4" />
-                  {vehicle.kmsDriven.toLocaleString("en-IN")} km
-                </span>
+                {vehicle.condition !== "new" && (
+                  <span className="vm-stat-pill">
+                    <Gauge className="h-4 w-4" />
+                    {vehicle.kmsDriven.toLocaleString("en-IN")} km
+                  </span>
+                )}
                 <span className="vm-stat-pill">
                   <Fuel className="h-4 w-4" />
                   {vehicle.fuelType}
@@ -193,10 +196,12 @@ export function VehicleDetailPage() {
                   <Calendar className="h-4 w-4" />
                   {vehicle.year}
                 </span>
-                <span className="vm-stat-pill">
-                  <Users className="h-4 w-4" />
-                  {vehicle.owners} owner
-                </span>
+                {vehicle.condition !== "new" && (
+                  <span className="vm-stat-pill">
+                    <Users className="h-4 w-4" />
+                    {vehicle.owners} owner{vehicle.owners > 1 ? "s" : ""}
+                  </span>
+                )}
               </div>
 
               <div className="mt-4 flex gap-2">
@@ -239,7 +244,7 @@ export function VehicleDetailPage() {
             <EnquiryForm vehicle={vehicle} />
             <TestDriveBooking vehicle={vehicle} />
             <Button variant="secondary" className="w-full rounded-xl" asChild>
-              <Link to={`/finance/apply?vehicle=${vehicle.id}`}>Check loan eligibility</Link>
+              <Link to={vehicleLoanPath(vehicle)}>Check loan eligibility</Link>
             </Button>
           </aside>
         </div>

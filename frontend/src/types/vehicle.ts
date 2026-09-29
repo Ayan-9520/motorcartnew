@@ -58,6 +58,8 @@ export interface VehicleMetadata {
   vehicleId?: string;
   /** Contact for owner listings without a dealer row (WhatsApp / call CTA). */
   dealerPhone?: string;
+  dealerName?: string;
+  dealerSlug?: string;
   stock?: number;
   stockStatus?: string;
   catalogVariantId?: string;

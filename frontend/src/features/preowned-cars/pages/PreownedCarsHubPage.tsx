@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,22 @@ import {
   PREOWNED_TAGLINE,
   TRUST_BADGES,
 } from "../data/preowned-data";
-import { getFeaturedPreowned } from "../services/preowned-cars.service";
+import { fetchFeaturedPreowned, getFeaturedPreowned } from "../services/preowned-cars.service";
+import type { PreownedCarListing } from "../types";
 import { setPageMeta } from "@/utils/seo";
 
 export function PreownedCarsHubPage() {
-  const featured = getFeaturedPreowned(8);
+  const [featured, setFeatured] = useState<PreownedCarListing[]>(() => getFeaturedPreowned(8));
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchFeaturedPreowned(8).then((rows) => {
+      if (!cancelled) setFeatured(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setPageMeta({

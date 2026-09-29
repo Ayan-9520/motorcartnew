@@ -105,6 +105,8 @@ export async function findDuplicateEnquiry(phone: string, vehicleKey: string | n
             OR: [
               ...(UUID_RE.test(vehicleKey) ? [{ vehicleId: vehicleKey }] : []),
               { vehicleInterest: vehicleKey },
+              // New-car stock leads keep vehicleId null and store the inventory id in metadata
+              { metadata: { path: ["inventory_id"], equals: vehicleKey } },
             ],
           }
         : {}),
