@@ -14,6 +14,7 @@ import {
 } from "@/lib/db/query-allowlist";
 import { NamedQueryError, runNamedQuery } from "@/lib/db/query-registry";
 import { KNOWN_QUERY_TABLES } from "@/lib/db/table-map";
+import { canMutateVehicle, extractIdEqFilter, isVehicleMutation } from "@/lib/db/vehicle-ownership";
 import { EnquiryError } from "@/lib/leads/enquiry.service";
 
 function paramsFromReq(req: NextRequest, body?: Record<string, unknown>) {
@@ -80,6 +81,13 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
       if (decision.status === 401) return unauthorized(decision.message);
       if (decision.status === 403) return forbidden(decision.message);
       return err(decision.message, decision.status);
+    }
+
+    if (auth && isVehicleMutation(p.table, p.action) && auth.role !== "admin" && auth.role !== "super_admin") {
+      const vehicleId = extractIdEqFilter(p.filters);
+      if (!vehicleId || !(await canMutateVehicle(auth.userId, vehicleId))) {
+        return forbidden("You can only change your own listings");
+      }
     }
 
     if (auth) {

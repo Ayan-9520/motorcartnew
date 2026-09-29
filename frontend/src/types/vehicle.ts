@@ -56,6 +56,8 @@ export interface VehicleMetadata {
   priceSourceText?: string;
   ncdInventoryId?: string;
   vehicleId?: string;
+  /** Contact for owner listings without a dealer row (WhatsApp / call CTA). */
+  dealerPhone?: string;
   stock?: number;
   stockStatus?: string;
   catalogVariantId?: string;

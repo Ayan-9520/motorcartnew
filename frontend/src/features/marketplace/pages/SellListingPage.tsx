@@ -111,6 +111,8 @@ export function SellListingPage() {
     condition: "used",
     images,
     description: `Owner listing via Motorcart Sell — ${hubLabel}. Contact: ${form.phone}`,
+    saleMode: "direct_owner",
+    metadata: form.phone.trim() ? { dealerPhone: form.phone.trim() } : {},
   });
 
   const handlePhotoSelect = (e: ChangeEvent<HTMLInputElement>) => {
@@ -180,13 +182,14 @@ export function SellListingPage() {
         }
       }
 
-      const { error } = await createVehicle(buildPayload(imageUrls), user.id);
+      const { data: created, error } = await createVehicle(buildPayload(imageUrls), user.id);
       if (error) {
         toast.error(error.message ?? "Could not submit listing");
         return;
       }
       try {
         await mutateSellRequest({
+          vehicleId: (created as { id?: string } | null)?.id,
           brand: form.brand,
           model: form.model,
           variant: form.variant,
@@ -218,13 +221,13 @@ export function SellListingPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
             <ShieldCheck className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 text-2xl font-bold">Listing submitted!</h1>
+          <h1 className="mt-4 text-2xl font-bold">Listing is live!</h1>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Your {hubLabel.toLowerCase()} listing is under review. Open Sell My Vehicle in your customer dashboard to submit for dealer offers.
+            Your {hubLabel.toLowerCase()} listing is now visible to buyers. Open Sell My Vehicle in your dashboard to also get offers from dealers.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild>
-              <Link to="/dashboard/dealer">Dealer dashboard</Link>
+              <Link to="/dashboard/customer/sell">Sell My Vehicle</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/sell">Sell another vehicle</Link>

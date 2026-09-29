@@ -263,6 +263,8 @@ export type VehicleFormData = {
   condition: "new" | "used";
   saleMode?: VehicleListing["saleMode"];
   metadata?: VehicleListing["metadata"];
+  /** Defaults to "available" (live). "draft" keeps it hidden from buyers. */
+  status?: string;
 };
 
 function resolveStoredVehicleImages(data: Pick<VehicleFormData, "images">) {
@@ -310,7 +312,7 @@ export async function createVehicle(data: VehicleFormData, sellerId: string, dea
     dealer_id: dealerId,
     sale_mode: data.saleMode ?? "dealer_offer",
     metadata: data.metadata ?? {},
-    status: "available",
+    status: data.status || "available",
   }).select().single();
 }
 

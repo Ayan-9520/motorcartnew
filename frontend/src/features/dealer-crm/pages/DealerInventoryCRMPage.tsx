@@ -131,7 +131,7 @@ export function DealerInventoryCRMPage() {
       }
       toast.success("Listing updated");
     } else {
-      const { error } = await createVehicle(payload, user.id, dealer.id);
+      const { error } = await createVehicle({ ...payload, status: form.status }, user.id, dealer.id);
       if (error) {
         toast.error(error.message ?? "Could not add vehicle");
         throw new Error(error.message);

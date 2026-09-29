@@ -125,6 +125,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 | 2026-08-19 | Batch 9 — Customer Super-App + MotorCart One + used trust + valuation (`cursor/32_Customer_SuperApp_MotorCartOne_Valuation.md`) |
 | 2026-08-20 | Batch 12 — final integration / production readiness (`cursor/35_Final_Platform_Gap_Audit.md`) |
 | 2026-09-25 | Buy brand models: Mercedes stock filter — API token `Mercedes` + slug alias `mercedes-benz` + backend brand token OR |
+| 2026-09-29 | Compare resolves new-car stock ids; used-car entry: dealer drawer Draft respected, owner listing `direct_owner` + seller phone + sell-request `vehicleId` |
 
 ---
 
