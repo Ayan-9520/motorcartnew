@@ -36,7 +36,7 @@ export function AuthLayout() {
           <div className="auth-layout__brand-inner">
             <div className="auth-layout__brand-main">
               <Link to="/" className="auth-layout__logo" aria-label="Motorcart">
-                <MotorcartLogo variant="full" height={42} tone="auto" />
+                <MotorcartLogo variant="icon" height={64} tone="auto" />
               </Link>
 
               <div className="auth-layout__hero">

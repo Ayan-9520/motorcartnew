@@ -6,7 +6,8 @@ const LOGO_ASSET_V = "20260929a";
 export const MOTORCART_LOGO_FULL = `/brand/motorcart-lockup.png?v=${LOGO_ASSET_V}`;
 export const MOTORCART_LOGO_FULL_DARK = `/brand/motorcart-lockup-dark.png?v=${LOGO_ASSET_V}`;
 export const MOTORCART_LOGO_WORDMARK = `/brand/motorcart-wordmark.png?v=${LOGO_ASSET_V}`;
-export const MOTORCART_LOGO_ICON = `/brand/motorcart-icon.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_ICON = `/brand/motorcart-emblem.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_ICON_DARK = `/brand/motorcart-emblem-dark.png?v=${LOGO_ASSET_V}`;
 
 type MotorcartLogoProps = {
   /**
@@ -29,6 +30,7 @@ type MotorcartLogoProps = {
 const DEFAULT_HEIGHT = { full: 36, icon: 36, wordmark: 28 } as const;
 const FULL_ASPECT = 994 / 262;
 const WORDMARK_ASPECT = 812 / 152;
+const ICON_ASPECT = 175 / 192;
 
 function FullLogoImg({
   src,
@@ -75,17 +77,27 @@ export function MotorcartLogo({
   }
 
   if (variant === "icon") {
-    return (
+    const iconImg = (src: string, extra?: string, decorative?: boolean) => (
       <img
-        src={MOTORCART_LOGO_ICON}
-        alt={alt}
-        width={h}
+        src={src}
+        alt={decorative ? "" : alt}
+        aria-hidden={decorative || undefined}
+        width={Math.round(h * ICON_ASPECT)}
         height={h}
         decoding="async"
-        className={cn("mc-logo mc-logo--icon inline-block object-contain", className)}
-        style={{ height: h, width: h }}
+        className={cn("mc-logo mc-logo--icon inline-block object-contain", extra)}
+        style={{ height: h, width: "auto" }}
       />
     );
+    if (tone === "auto") {
+      return (
+        <span className={cn("mc-logo-swap inline-flex items-center", className)}>
+          {iconImg(MOTORCART_LOGO_ICON, "mc-logo--for-light")}
+          {iconImg(MOTORCART_LOGO_ICON_DARK, "mc-logo--for-dark", true)}
+        </span>
+      );
+    }
+    return iconImg(tone === "dark" ? MOTORCART_LOGO_ICON_DARK : MOTORCART_LOGO_ICON, className);
   }
 
   if (tone === "auto") {

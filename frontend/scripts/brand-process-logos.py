@@ -4,6 +4,7 @@ Outputs (frontend/public/brand):
   motorcart-lockup.png       icon + wordmark, navy text (light backgrounds)
   motorcart-lockup-dark.png  icon + wordmark, white text (dark backgrounds)
   motorcart-wordmark.png     text-only wordmark (header)
+  motorcart-emblem.png       icon only (optional 3rd argument)
 """
 import sys
 from collections import deque
@@ -16,6 +17,7 @@ OUT = Path(__file__).resolve().parents[1] / "public" / "brand"
 # ~3x the largest on-screen height — sharp on retina, small download.
 LOCKUP_HEIGHT = 144
 WORDMARK_HEIGHT = 96
+EMBLEM_HEIGHT = 192
 
 
 def color_to_alpha(rgb: np.ndarray) -> np.ndarray:
@@ -105,7 +107,7 @@ def save(rgba: np.ndarray, name: str, height: int) -> None:
     im.quantize(colors=128, method=Image.Quantize.FASTOCTREE).save(OUT / name, optimize=True)
 
 
-def main(lockup_path: str, wordmark_path: str) -> None:
+def main(lockup_path: str, wordmark_path: str, emblem_path: str | None = None) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
 
     lock = np.array(Image.open(lockup_path).convert("RGB"))
@@ -120,10 +122,18 @@ def main(lockup_path: str, wordmark_path: str) -> None:
     wordmark = crop_to_content(color_to_alpha(word))
     save(wordmark, "motorcart-wordmark.png", WORDMARK_HEIGHT)
 
-    for name in ("motorcart-lockup.png", "motorcart-lockup-dark.png", "motorcart-wordmark.png"):
+    names = ["motorcart-lockup.png", "motorcart-lockup-dark.png", "motorcart-wordmark.png"]
+    if emblem_path:
+        emblem = np.array(Image.open(emblem_path).convert("RGB"))
+        emblem_rgba = crop_to_content(emblem_to_alpha(emblem))
+        save(emblem_rgba, "motorcart-emblem.png", EMBLEM_HEIGHT)
+        save(navy_to_white(emblem_rgba), "motorcart-emblem-dark.png", EMBLEM_HEIGHT)
+        names += ["motorcart-emblem.png", "motorcart-emblem-dark.png"]
+
+    for name in names:
         im = Image.open(OUT / name)
         print(name, im.size)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)
