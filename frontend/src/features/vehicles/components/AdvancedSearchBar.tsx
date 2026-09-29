@@ -45,7 +45,13 @@ export function AdvancedSearchBar({ onToggleFilters }: AdvancedSearchBarProps) {
         Search
       </Button>
       {onToggleFilters && (
-        <Button type="button" variant="outline" className="h-11 lg:hidden" onClick={onToggleFilters}>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 lg:hidden"
+          onClick={onToggleFilters}
+          aria-label="Filters"
+        >
           <SlidersHorizontal className="h-4 w-4" />
         </Button>
       )}

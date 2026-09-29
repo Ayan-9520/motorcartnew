@@ -107,17 +107,19 @@ export function Navbar() {
         )}
       </Link>
 
-      <Link
-        to="/cart"
-        className="nav-icon-btn nav-icon-btn-ghost relative"
-        title={cartCount > 0 ? `Cart — ${cartCount} items` : "Parts cart"}
-        aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
-      >
-        <ShoppingCart className="h-5 w-5" />
-        {cartCount > 0 && <span className="nav-badge">{cartCount > 9 ? "9+" : cartCount}</span>}
-      </Link>
+      <span className="hidden sm:contents">
+        <Link
+          to="/cart"
+          className="nav-icon-btn nav-icon-btn-ghost relative"
+          title={cartCount > 0 ? `Cart — ${cartCount} items` : "Parts cart"}
+          aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
+        >
+          <ShoppingCart className="h-5 w-5" />
+          {cartCount > 0 && <span className="nav-badge">{cartCount > 9 ? "9+" : cartCount}</span>}
+        </Link>
 
-      <ThemeToggle />
+        <ThemeToggle />
+      </span>
 
       <NotificationDropdown />
 

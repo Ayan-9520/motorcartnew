@@ -114,8 +114,8 @@ export function VehicleDetailPage() {
           <span className="line-clamp-1 text-foreground font-medium">{vehicle.title}</span>
         </nav>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_minmax(17.5rem,20rem)] xl:grid-cols-[1fr_22rem]">
-          <div className="space-y-6 min-w-0">
+        <div className="grid gap-6 lg:grid-cols-[1fr_minmax(17.5rem,20rem)] lg:grid-rows-[auto_1fr] lg:gap-x-8 xl:grid-cols-[1fr_22rem]">
+          <div className="order-1 space-y-6 min-w-0 lg:col-start-1 lg:row-start-1">
             <VehicleGallery images={galleryImages} title={vehicle.title} />
             {vehicle.metadata.viewer360 && (
               <Viewer360 images={vehicle.metadata.viewer360} title={vehicle.title} />
@@ -123,12 +123,15 @@ export function VehicleDetailPage() {
             {vehicle.metadata.videos && (
               <VideoSection videos={vehicle.metadata.videos} title={vehicle.title} />
             )}
+          </div>
+
+          <div className="order-3 space-y-6 min-w-0 lg:col-start-1 lg:row-start-2">
             <VehicleDetailTabs vehicle={vehicle} />
             <SimilarVehicles vehicles={similar} />
             <RecentlyViewed />
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <aside className="order-2 space-y-4 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
             <div className="vm-price-card">
               <div className="flex flex-wrap gap-2">
                 {vehicle.isCertified && (

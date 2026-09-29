@@ -222,7 +222,17 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/55 to-transparent px-2 pb-2 pt-8">
               <p className="text-[10px] font-medium text-primary-foreground/90">
-                {isNew ? "Dealer verified · Test drive available" : "12+ buyers viewed this week"}
+                {isNew
+                  ? "Dealer verified · Test drive available"
+                  : vehicle.isCertified
+                    ? "Certified · Inspection report available"
+                    : vehicle.saleMode === "direct_owner"
+                      ? "Direct from owner · Enquire free"
+                      : vehicle.saleMode === "auction_sale"
+                        ? "Auction listing"
+                        : vehicle.saleMode === "broker_assisted"
+                          ? "Broker assisted sale"
+                          : "Verified dealer listing"}
               </p>
             </div>
             <div className="absolute left-2 top-2 flex flex-wrap gap-1">
