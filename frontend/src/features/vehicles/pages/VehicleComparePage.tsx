@@ -4,8 +4,8 @@ import { GitCompare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useVehicleMarketStore } from "@/store/vehicleMarketStore";
-import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
-import { searchVehicles } from "@/services/vehicle.service";
+import { fetchVehiclesByIds } from "@/services/vehicle.service";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 import { getDiscountedPrice, getVehicleEmi, vehicleDetailPath } from "@/lib/vehicle-utils";
 import type { VehicleListing } from "@/types/vehicle";
@@ -28,16 +28,45 @@ const ROWS: { key: keyof VehicleListing | "emi" | "price"; label: string; fmt?: 
 
 export function VehicleComparePage() {
   const { compare, removeCompare, clearCompare } = useVehicleMarketStore();
-  const [pool, setPool] = useState<VehicleListing[]>(MOCK_VEHICLES);
+  const [vehicles, setVehicles] = useState<VehicleListing[]>([]);
+  const [loading, setLoading] = useState(compare.length > 0);
+  const compareKey = compare.join("|");
 
   useEffect(() => {
     setPageMeta({ title: "Compare vehicles", description: "Side-by-side specs, EMI and price on Motorcart.in" });
-    searchVehicles({ filters: {}, sort: "newest", page: 1, pageSize: 200 }).then((r) => {
-      if (r.vehicles.length) setPool(r.vehicles);
-    });
   }, []);
 
-  const vehicles = compare.map((id) => pool.find((v) => v.id === id)).filter(Boolean) as VehicleListing[];
+  useEffect(() => {
+    if (!compare.length) {
+      setVehicles([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    void fetchVehiclesByIds(compare).then((list) => {
+      if (cancelled) return;
+      setVehicles(list);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compareKey]);
+
+  if (loading) {
+    return (
+      <div className="marketplace-compare-page container mx-auto space-y-6 px-4 py-8">
+        <Skeleton className="h-10 w-64 rounded-xl" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {compare.map((id) => (
+            <Skeleton key={id} className="h-56 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!vehicles.length) {
     return (

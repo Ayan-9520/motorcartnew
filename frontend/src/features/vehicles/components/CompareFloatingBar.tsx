@@ -3,23 +3,30 @@ import { Link } from "react-router-dom";
 import { GitCompare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useVehicleMarketStore } from "@/store/vehicleMarketStore";
-import { MOCK_VEHICLES } from "@/data/vehicle-catalog";
-import { searchVehicles } from "@/services/vehicle.service";
+import { fetchVehiclesByIds } from "@/services/vehicle.service";
 import type { VehicleListing } from "@/types/vehicle";
 
 export function CompareFloatingBar() {
   const { compare, removeCompare, clearCompare } = useVehicleMarketStore();
-  const [pool, setPool] = useState<VehicleListing[]>(MOCK_VEHICLES);
+  const [items, setItems] = useState<VehicleListing[]>([]);
+  const compareKey = compare.join("|");
 
   useEffect(() => {
-    searchVehicles({ filters: {}, sort: "newest", page: 1, pageSize: 200 }).then((r) => {
-      if (r.vehicles.length) setPool(r.vehicles);
+    if (!compare.length) {
+      setItems([]);
+      return;
+    }
+    let cancelled = false;
+    void fetchVehiclesByIds(compare).then((list) => {
+      if (!cancelled) setItems(list);
     });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compareKey]);
 
   if (!compare.length) return null;
-
-  const items = compare.map((id) => pool.find((v) => v.id === id)).filter(Boolean);
 
   return (
     <div className="marketplace-compare-bar fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 items-center gap-3 rounded-2xl border border-primary/20 bg-card/95 p-3 shadow-2xl backdrop-blur-md">
