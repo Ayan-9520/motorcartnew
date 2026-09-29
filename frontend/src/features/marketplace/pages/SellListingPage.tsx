@@ -36,6 +36,23 @@ function estimateUsedPrice(year: number, kms: number, asking: number): number {
   return Math.round(base * dep * kmFactor);
 }
 
+function normalizeRegistration(value: string): string {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+/** Public listings show only the RTO code (e.g. MH12); the full number stays in the private sell request. */
+function rtoCodeFrom(registration: string): string | undefined {
+  const m = normalizeRegistration(registration).match(/^([A-Z]{2}\d{1,2})[A-Z]/);
+  return m?.[1];
+}
+
+const OWNER_OPTIONS = [
+  { value: 1, label: "1st owner" },
+  { value: 2, label: "2nd owner" },
+  { value: 3, label: "3rd owner" },
+  { value: 4, label: "4th owner or more" },
+];
+
 export function SellListingPage() {
   const { category: catParam } = useParams<{ category: string }>();
   const hub = parseHubCategorySlug(catParam);
@@ -61,6 +78,8 @@ export function SellListingPage() {
     variant: "",
     year: new Date().getFullYear() - 3,
     kmsDriven: 25_000,
+    owners: 1,
+    registrationNumber: "",
     price: 0,
     fuelType: "Petrol",
     transmission: "Manual",
@@ -93,27 +112,34 @@ export function SellListingPage() {
   const title = sellPageTitle(hub);
   const hubLabel = hubCategoryLabel(hub);
 
-  const buildPayload = (images: string[]): VehicleFormData => ({
-    title: `${form.year} ${form.brand} ${form.model}`.trim(),
-    brand: form.brand,
-    model: form.model,
-    variant: form.variant || undefined,
-    year: form.year,
-    price: form.price || estimated,
-    fuelType: defaults.fuelType ?? form.fuelType,
-    transmission: form.transmission,
-    bodyType: defaults.bodyType,
-    category: defaults.category,
-    kmsDriven: form.kmsDriven,
-    owners: defaults.owners,
-    city: form.city,
-    state: form.state,
-    condition: "used",
-    images,
-    description: `Owner listing via Motorcart Sell — ${hubLabel}. Contact: ${form.phone}`,
-    saleMode: "direct_owner",
-    metadata: form.phone.trim() ? { dealerPhone: form.phone.trim() } : {},
-  });
+  const buildPayload = (images: string[]): VehicleFormData => {
+    const rto = rtoCodeFrom(form.registrationNumber);
+    const contactPhone = form.phone.trim() || user?.phone?.trim() || "";
+    return {
+      title: `${form.year} ${form.brand} ${form.model}`.trim(),
+      brand: form.brand,
+      model: form.model,
+      variant: form.variant || undefined,
+      year: form.year,
+      price: form.price,
+      fuelType: defaults.fuelType ?? form.fuelType,
+      transmission: form.transmission,
+      bodyType: defaults.bodyType,
+      category: defaults.category,
+      kmsDriven: form.kmsDriven,
+      owners: form.owners,
+      city: form.city,
+      state: form.state,
+      condition: "used",
+      images,
+      description: `Owner listing via Motorcart Sell — ${hubLabel}.`,
+      saleMode: "direct_owner",
+      metadata: {
+        ...(contactPhone ? { dealerPhone: contactPhone } : {}),
+        ...(rto ? { rto } : {}),
+      },
+    };
+  };
 
   const handlePhotoSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -149,6 +175,15 @@ export function SellListingPage() {
     e.preventDefault();
     if (!form.brand.trim() || !form.model.trim() || !form.city.trim()) {
       toast.error("Brand, model, and city are required");
+      return;
+    }
+    if (!(form.price > 0)) {
+      toast.error("Please enter your expected price");
+      return;
+    }
+    const reg = normalizeRegistration(form.registrationNumber);
+    if (reg && (reg.length < 6 || reg.length > 11)) {
+      toast.error("Registration number looks incomplete (e.g. MH12AB1234)");
       return;
     }
     if (!form.phone.trim() && !isAuthenticated) {
@@ -195,11 +230,13 @@ export function SellListingPage() {
           variant: form.variant,
           year: form.year,
           kmsDriven: form.kmsDriven,
+          owners: form.owners,
           fuelType: form.fuelType,
           transmission: form.transmission,
           city: form.city,
           state: form.state,
           expectedPrice: form.price || undefined,
+          conditionNotes: reg ? `Registration: ${reg}` : undefined,
         });
       } catch {
         /* listing already created — sell request is additive */
@@ -314,6 +351,31 @@ export function SellListingPage() {
                       ))}
                     </select>
                   </div>
+                  <div>
+                    <Label>Ownership</Label>
+                    <select
+                      className="mc-input mt-1 w-full"
+                      value={form.owners}
+                      onChange={(e) => setForm({ ...form, owners: Number(e.target.value) })}
+                    >
+                      {OWNER_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Field
+                      label="Registration number"
+                      value={form.registrationNumber}
+                      onChange={(v) => setForm({ ...form, registrationNumber: v.toUpperCase() })}
+                      placeholder="e.g. MH12AB1234"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Buyers see only the RTO code (e.g. MH12). Full number is shared with dealers only.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -323,14 +385,14 @@ export function SellListingPage() {
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label>Expected price (₹)</Label>
+                    <Label>Expected price (₹) *</Label>
                     <Input
                       type="number"
                       className="mt-1"
-                      min={0}
+                      min={1}
                       value={form.price || ""}
                       onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-                      placeholder="Optional — AI suggests below"
+                      placeholder="Your asking price"
                     />
                   </div>
                   <Field label="City *" value={form.city} onChange={(v) => setForm({ ...form, city: v })} placeholder="e.g. Mumbai" />

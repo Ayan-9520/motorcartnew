@@ -1,9 +1,128 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { formatCurrency } from "@/lib/utils";
+import { vehicleDetailPath } from "@/lib/vehicle-utils";
+import { fetchDealerVehicles, updateVehicle } from "@/services/vehicle.service";
+import type { VehicleListing } from "@/types/vehicle";
 import { CustomerEcosystemPage } from "../components/CustomerEcosystemPage";
 import { fetchSellRequests, mutateSaleOffer, mutateSellRequest } from "../services/superapp.service";
 import { setPageMeta } from "@/utils/seo";
+
+const LISTING_STATUS_LABEL: Record<string, string> = {
+  available: "Live",
+  draft: "Paused",
+  reserved: "Reserved",
+  sold: "Sold",
+};
+
+function MyListings() {
+  const { user } = useAuth();
+  const [items, setItems] = useState<VehicleListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [prices, setPrices] = useState<Record<string, string>>({});
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const list = await fetchDealerVehicles(user.id);
+    setItems(list.filter((v) => v.condition !== "new"));
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function change(v: VehicleListing, patch: { status?: string; price?: number }, done: string) {
+    setBusyId(v.id);
+    const { error } = await updateVehicle(v.id, patch);
+    setBusyId(null);
+    if (error) {
+      toast.error(error.message ?? "Could not update listing");
+      return;
+    }
+    toast.success(done);
+    await load();
+  }
+
+  return (
+    <section className="mb-8">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-semibold">My listings</h2>
+        <Button size="sm" variant="outline" asChild>
+          <Link to="/sell">List another vehicle</Link>
+        </Button>
+      </div>
+      {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+      {!loading && items.length === 0 ? (
+        <p className="cos-empty">
+          No listings yet. <Link to="/sell" className="text-primary underline">List your vehicle</Link>
+        </p>
+      ) : null}
+      <ul className="space-y-3">
+        {items.map((v) => {
+          const status = v.status ?? "available";
+          const busy = busyId === v.id;
+          const priceInput = prices[v.id] ?? String(v.price || "");
+          return (
+            <li key={v.id} className="rounded-xl border p-4 text-sm">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <Link to={vehicleDetailPath(v)} className="font-medium hover:text-primary">
+                    {v.title}
+                  </Link>
+                  <p className="text-xs text-muted-foreground">
+                    {v.kmsDriven.toLocaleString("en-IN")} km · {v.city} · {formatCurrency(v.price)}
+                  </p>
+                </div>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {LISTING_STATUS_LABEL[status] ?? status}
+                </span>
+              </div>
+              {status !== "sold" ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    className="h-9 w-36"
+                    value={priceInput}
+                    onChange={(e) => setPrices((p) => ({ ...p, [v.id]: e.target.value }))}
+                    aria-label="Price"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy || !(Number(priceInput) > 0) || Number(priceInput) === v.price}
+                    onClick={() => void change(v, { price: Number(priceInput) }, "Price updated")}
+                  >
+                    Save price
+                  </Button>
+                  {status === "available" ? (
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => void change(v, { status: "draft" }, "Listing paused")}>
+                      Pause
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => void change(v, { status: "available" }, "Listing is live")}>
+                      Make live
+                    </Button>
+                  )}
+                  <Button size="sm" disabled={busy} onClick={() => void change(v, { status: "sold" }, "Marked as sold")}>
+                    Mark sold
+                  </Button>
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
 
 export function CustomerSellRequestsPage() {
   const [rows, setRows] = useState<Array<Record<string, unknown>>>([]);
@@ -23,6 +142,8 @@ export function CustomerSellRequestsPage() {
       title="Sell my vehicle"
       description="Create a sell request, receive partner valuations and dealer purchase offers. MotorCart does not auto-pick the highest offer. Settlement is not automatic."
     >
+      <MyListings />
+      <h2 className="mb-3 text-base font-semibold">Dealer offers</h2>
       <form
         className="mb-6 grid gap-2 sm:grid-cols-3"
         onSubmit={(e) => {
