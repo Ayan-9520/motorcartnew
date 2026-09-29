@@ -35,9 +35,9 @@ export function DealerInventoryCRMPage() {
 
   const load = useCallback(async () => {
     if (!dealer) return;
-    const rows = await fetchDealerVehiclesByDealerId(dealer.id);
+    const rows = await fetchDealerVehiclesByDealerId(dealer.id, user?.id);
     setVehicles(rows.length ? rows.map((v) => mapDbToListing(v as DbVehicle)) : []);
-  }, [dealer]);
+  }, [dealer, user?.id]);
 
   useEffect(() => {
     setPageMeta({ title: "Inventory Management" });

@@ -19,6 +19,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
 import { createVehicle, type VehicleFormData } from "@/services/vehicle.service";
 import { mutateSellRequest } from "@/features/customer-ecosystem/services/superapp.service";
+import { fetchDealerByOwner } from "@/features/dealer-crm/services/dealer.service";
+import type { DealerProfile } from "@/features/dealer-crm/types";
+import { isDealerRole } from "@/permissions/role-matching";
 import { uploadMultiple, validateImageFile } from "@/services/storage.service";
 import { setPageMeta } from "@/utils/seo";
 import {
@@ -66,6 +69,8 @@ export function SellListingPage() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isDealer = Boolean(user && isDealerRole(user.role));
+  const listingsPath = isDealer ? "/dashboard/dealer/inventory" : "/dashboard/customer/sell";
 
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -112,9 +117,9 @@ export function SellListingPage() {
   const title = sellPageTitle(hub);
   const hubLabel = hubCategoryLabel(hub);
 
-  const buildPayload = (images: string[]): VehicleFormData => {
+  const buildPayload = (images: string[], dealer: DealerProfile | null): VehicleFormData => {
     const rto = rtoCodeFrom(form.registrationNumber);
-    const contactPhone = form.phone.trim() || user?.phone?.trim() || "";
+    const contactPhone = form.phone.trim() || dealer?.phone?.trim() || user?.phone?.trim() || "";
     return {
       title: `${form.year} ${form.brand} ${form.model}`.trim(),
       brand: form.brand,
@@ -132,10 +137,13 @@ export function SellListingPage() {
       state: form.state,
       condition: "used",
       images,
-      description: `Owner listing via Motorcart Sell — ${hubLabel}.`,
-      saleMode: "direct_owner",
+      description: dealer
+        ? `Listed by ${dealer.name} via Motorcart Sell — ${hubLabel}.`
+        : `Owner listing via Motorcart Sell — ${hubLabel}.`,
+      saleMode: dealer ? "dealer_offer" : "direct_owner",
       metadata: {
         ...(contactPhone ? { dealerPhone: contactPhone } : {}),
+        ...(dealer ? { dealerName: dealer.name, dealerSlug: dealer.slug } : {}),
         ...(rto ? { rto } : {}),
       },
     };
@@ -217,7 +225,8 @@ export function SellListingPage() {
         }
       }
 
-      const { data: created, error } = await createVehicle(buildPayload(imageUrls), user.id);
+      const dealer = isDealer ? await fetchDealerByOwner(user.id).catch(() => null) : null;
+      const { data: created, error } = await createVehicle(buildPayload(imageUrls, dealer), user.id, dealer?.id);
       if (error) {
         toast.error(error.message ?? "Could not submit listing");
         return;
@@ -260,11 +269,13 @@ export function SellListingPage() {
           </div>
           <h1 className="mt-4 text-2xl font-bold">Listing is live!</h1>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Your {hubLabel.toLowerCase()} listing is now visible to buyers. Open Sell My Vehicle in your dashboard to also get offers from dealers.
+            {isDealer
+              ? `Your ${hubLabel.toLowerCase()} listing is live and added to your inventory. Buyer enquiries will appear in Lead CRM.`
+              : `Your ${hubLabel.toLowerCase()} listing is now visible to buyers. Open Sell My Vehicle in your dashboard to also get offers from dealers.`}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild>
-              <Link to="/dashboard/customer/sell">Sell My Vehicle</Link>
+              <Link to={listingsPath}>{isDealer ? "Open inventory" : "Sell My Vehicle"}</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/sell">Sell another vehicle</Link>

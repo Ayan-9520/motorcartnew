@@ -1,4 +1,5 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, type RouteObject } from "react-router-dom";
+import { RouteErrorPage } from "@/components/routing/RouteErrorPage";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
@@ -273,7 +274,7 @@ const ph = (title: string, desc?: string) => (
   <PlaceholderPage title={title} description={desc} />
 );
 
-export const router = createBrowserRouter([
+const appRoutes: RouteObject[] = [
   {
     element: <PublicLayout />,
     children: [
@@ -1389,4 +1390,6 @@ export const router = createBrowserRouter([
     ),
   },
   { path: "*", element: <NotFoundPage /> },
-]);
+];
+
+export const router = createBrowserRouter([{ errorElement: <RouteErrorPage />, children: appRoutes }]);

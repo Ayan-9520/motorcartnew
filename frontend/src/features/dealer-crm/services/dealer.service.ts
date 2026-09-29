@@ -96,13 +96,28 @@ export async function ensureDealerForUser(
   return profile;
 }
 
-export async function fetchDealerVehiclesByDealerId(dealerId: string) {
+/** Showroom stock; with `ownerId`, also the owner's listings posted via public Sell without a dealer. */
+export async function fetchDealerVehiclesByDealerId(dealerId: string, ownerId?: string) {
   const { data } = await supabase
     .from("vehicles")
     .select("*")
     .eq("dealer_id", dealerId)
     .order("created_at", { ascending: false });
-  return data ?? [];
+  const rows = data ?? [];
+  if (!ownerId) return rows;
+
+  const { data: own } = await supabase
+    .from("vehicles")
+    .select("*")
+    .eq("seller_id", ownerId)
+    .order("created_at", { ascending: false });
+  const field = (r: unknown, key: string) => (r as Record<string, unknown>)[key];
+  const seen = new Set(rows.map((r) => String(field(r, "id"))));
+  const extra = (own ?? []).filter((r) => !field(r, "dealer_id") && !seen.has(String(field(r, "id"))));
+  return [...rows, ...extra].sort(
+    (a, b) =>
+      new Date(String(field(b, "created_at"))).getTime() - new Date(String(field(a, "created_at"))).getTime(),
+  );
 }
 
 export async function fetchDealerLeads(dealerId: string) {

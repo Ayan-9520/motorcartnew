@@ -196,9 +196,39 @@ export async function createCustomerEnquiry(
     detail?.source_type === "marketplace" && UUID_RE.test(detail.id) ? detail.id : undefined;
   const vehicleKey = marketplaceVehicleId || value.vehicleIdRaw || value.vehicleTitle || value.vehicleSlug;
 
+  const sellerId = marketplaceVehicleId ? await findOwnerListingSeller(marketplaceVehicleId) : null;
+  // A dealer who listed through the public Sell form still owns a showroom — route there.
+  const sellerDealer =
+    !detail?.dealer?.id && sellerId
+      ? await prisma.dealer.findFirst({
+          where: { ownerId: sellerId, deletedAt: null, slug: { not: UNASSIGNED_DEALER_SLUG } },
+          orderBy: { createdAt: "asc" },
+        })
+      : null;
+  const sellerDealerId = sellerDealer?.id ?? null;
+
   const duplicate = await findDuplicateEnquiry(value.phone, vehicleKey, now);
   if (duplicate) {
     const meta = (duplicate.metadata ?? {}) as Record<string, unknown>;
+    if (meta.assignment !== "assigned" && sellerDealer) {
+      const reassignedMeta = { ...meta, assignment: "assigned", pipeline_status: "ASSIGNED" };
+      const lead = await prisma.lead.update({
+        where: { id: duplicate.id },
+        data: { dealerId: sellerDealer.id, metadata: reassignedMeta as Prisma.InputJsonValue },
+      });
+      await mirrorDealerLead({
+        dealerId: sellerDealer.id,
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+        source: lead.source ?? value.source,
+        vehicleTitle: lead.vehicleInterest,
+        location: value.location ?? detail?.location ?? null,
+        metadata: reassignedMeta,
+        assignment: "assigned",
+      });
+      return { lead, assignment: "assigned", duplicate: true, pipelineStatus: "ASSIGNED" };
+    }
     return {
       lead: duplicate,
       assignment: meta.assignment === "assigned" ? "assigned" : "unassigned",
@@ -210,13 +240,10 @@ export async function createCustomerEnquiry(
   const { dealer, assignment } = await resolveEnquiryDealer({
     dealerIdRaw: value.dealerIdRaw,
     dealerSlug: value.dealerSlug,
-    vehicleDealerId: detail?.dealer?.id ?? null,
+    vehicleDealerId: detail?.dealer?.id ?? sellerDealerId,
   });
 
-  const listingOwnerId =
-    assignment === "unassigned" && marketplaceVehicleId
-      ? await findOwnerListingSeller(marketplaceVehicleId)
-      : null;
+  const listingOwnerId = assignment === "unassigned" ? sellerId : null;
 
   const pipelineStatus = assignment === "assigned" ? "ASSIGNED" : "NEW";
   const metadata: Record<string, unknown> = {
