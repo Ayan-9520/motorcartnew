@@ -1,15 +1,19 @@
 import { cn } from "@/lib/utils";
 
 /** Cache-bust so theme lockups refresh after brand asset updates. */
-const LOGO_ASSET_V = "20260908c";
+const LOGO_ASSET_V = "20260929a";
 
-export const MOTORCART_LOGO_FULL = `/brand/motorcart-logo.png?v=${LOGO_ASSET_V}`;
-export const MOTORCART_LOGO_FULL_DARK = `/brand/motorcart-logo-dark.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_FULL = `/brand/motorcart-lockup.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_FULL_DARK = `/brand/motorcart-lockup-dark.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_WORDMARK = `/brand/motorcart-wordmark.png?v=${LOGO_ASSET_V}`;
 export const MOTORCART_LOGO_ICON = `/brand/motorcart-icon.png?v=${LOGO_ASSET_V}`;
 
 type MotorcartLogoProps = {
-  /** Full = icon + wordmark. Icon = circular car emblem only. */
-  variant?: "full" | "icon";
+  /**
+   * Full = icon + wordmark. Icon = circular car emblem only.
+   * Wordmark = text only, navy/green — header only (header stays light in both themes).
+   */
+  variant?: "full" | "icon" | "wordmark";
   className?: string;
   /** Intrinsic height hint; width scales with aspect ratio. */
   height?: number;
@@ -22,8 +26,9 @@ type MotorcartLogoProps = {
   tone?: "dark" | "light" | "auto";
 };
 
-const DEFAULT_HEIGHT = { full: 36, icon: 36 } as const;
-const FULL_ASPECT = 393 / 113;
+const DEFAULT_HEIGHT = { full: 36, icon: 36, wordmark: 28 } as const;
+const FULL_ASPECT = 994 / 262;
+const WORDMARK_ASPECT = 812 / 152;
 
 function FullLogoImg({
   src,
@@ -31,19 +36,21 @@ function FullLogoImg({
   h,
   className,
   decorative,
+  aspect = FULL_ASPECT,
 }: {
   src: string;
   alt: string;
   h: number;
   className?: string;
   decorative?: boolean;
+  aspect?: number;
 }) {
   return (
     <img
       src={src}
       alt={decorative ? "" : alt}
       aria-hidden={decorative || undefined}
-      width={Math.round(h * FULL_ASPECT)}
+      width={Math.round(h * aspect)}
       height={h}
       decoding="async"
       className={cn("mc-logo inline-block object-contain object-left", className)}
@@ -60,6 +67,12 @@ export function MotorcartLogo({
   tone = "auto",
 }: MotorcartLogoProps) {
   const h = height ?? DEFAULT_HEIGHT[variant];
+
+  if (variant === "wordmark") {
+    return (
+      <FullLogoImg src={MOTORCART_LOGO_WORDMARK} alt={alt} h={h} className={className} aspect={WORDMARK_ASPECT} />
+    );
+  }
 
   if (variant === "icon") {
     return (

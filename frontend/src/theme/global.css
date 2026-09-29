@@ -1200,6 +1200,49 @@
     overflow-y: visible;
   }
 
+  /* Header stays light in dark mode too — one navy wordmark works everywhere.
+     Re-scopes the light tokens for the header subtree only (portaled menus keep the theme). */
+  .dark .nav-shell {
+    --background: 216 20% 96%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 220 14% 97%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 142 76% 97%;
+    --accent-foreground: 222 47% 11%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+    color-scheme: light;
+    color: hsl(var(--foreground));
+    background-color: hsl(0 0% 100% / 0.96);
+    border-bottom-color: hsl(0 0% 0% / 0.35);
+  }
+
+  .dark .nav-shell.nav-shell-scrolled {
+    background-color: hsl(0 0% 100% / 0.98);
+    box-shadow:
+      0 1px 0 hsl(var(--primary) / 0.18),
+      0 12px 40px -16px rgb(0 0 0 / 0.55);
+  }
+
+  .dark .nav-shell .vehicle-hub-icon-pill__icon {
+    @apply border-border/60 bg-card/90;
+  }
+
+  .dark .nav-shell .mc-logo-swap .mc-logo--for-light {
+    display: inline-block;
+  }
+
+  .dark .nav-shell .mc-logo-swap .mc-logo--for-dark {
+    display: none;
+  }
+
   .nav-shell-fixed {
     @apply fixed left-0 right-0 top-0;
     box-shadow: 0 1px 0 hsl(var(--border) / 0.5);

@@ -183,8 +183,8 @@ export function Navbar() {
         <div className="nav-top-bar">
           <div className="container nav-top-bar-inner">
             <Link to="/" className="nav-brand shrink-0" aria-label="Motorcart home">
-              <MotorcartLogo variant="icon" height={36} className="sm:hidden" />
-              <MotorcartLogo variant="full" height={32} className="hidden sm:inline-block" />
+              <MotorcartLogo variant="wordmark" height={22} className="sm:hidden" />
+              <MotorcartLogo variant="wordmark" height={27} className="hidden sm:inline-block" />
             </Link>
 
             {!hideVehicleHubBar && (
