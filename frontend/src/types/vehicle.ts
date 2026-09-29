@@ -158,6 +158,8 @@ export interface VehicleFilters {
   emiMax?: number;
   /** Used cars — sale mode filter */
   saleMode?: VehicleSaleMode;
+  /** Only certified / inspected listings (`?certified=1`) */
+  certified?: boolean;
   q?: string;
 }
 

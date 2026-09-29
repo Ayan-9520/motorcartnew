@@ -104,6 +104,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | Date | Item |
 |------|------|
+| 2026-09-29 | Buy/sell follow-up — filter sidebar Fuel/Body/City/Colour options in real-data mode; `certified=1` + `saleMode` URL filters; similar vehicles from matching pool (new stock vs used); owner-listing enquiries notify seller + shown under My listings (`GET /api/customer/listing-enquiries`), no PIN re-route to other dealers; admin approve creates missing dealer row |
 | 2026-09-29 | Buy/sell audit — block self role/status edits via `/api/db/query`; vehicle insert only under own dealer; used detail returns full row (kms/owners/description); EV-new + fuzzy fuel/transmission/body filters; legacy browse redirects keep query; new-car duplicate enquiry; loan link carries vehicle price/type; new cars hide km/owner; dealer contact in listing metadata + featured on create; bulk Excel keeps used-car dealer stock as used; admin moderation real dealer names; `/used-cars` featured picks from live stock |
 | 2026-09-12 | Buy colour swatches — per-photo paint names in Edit stock; public gallery hint when colours missing |
 | 2026-09-12 | Mobile Play Store pack — 1024 icons, feature graphic, Privacy/Terms in-app, assetlinks template, listing copy |

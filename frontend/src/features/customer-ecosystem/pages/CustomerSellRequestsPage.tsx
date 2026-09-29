@@ -9,7 +9,13 @@ import { vehicleDetailPath } from "@/lib/vehicle-utils";
 import { fetchDealerVehicles, updateVehicle } from "@/services/vehicle.service";
 import type { VehicleListing } from "@/types/vehicle";
 import { CustomerEcosystemPage } from "../components/CustomerEcosystemPage";
-import { fetchSellRequests, mutateSaleOffer, mutateSellRequest } from "../services/superapp.service";
+import {
+  fetchListingEnquiries,
+  fetchSellRequests,
+  mutateSaleOffer,
+  mutateSellRequest,
+  type ListingEnquiry,
+} from "../services/superapp.service";
 import { setPageMeta } from "@/utils/seo";
 
 const LISTING_STATUS_LABEL: Record<string, string> = {
@@ -25,12 +31,14 @@ function MyListings() {
   const [loading, setLoading] = useState(true);
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [enquiries, setEnquiries] = useState<ListingEnquiry[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const list = await fetchDealerVehicles(user.id);
+    const [list, leads] = await Promise.all([fetchDealerVehicles(user.id), fetchListingEnquiries()]);
     setItems(list.filter((v) => v.condition !== "new"));
+    setEnquiries(leads);
     setLoading(false);
   }, [user]);
 
@@ -69,6 +77,7 @@ function MyListings() {
           const status = v.status ?? "available";
           const busy = busyId === v.id;
           const priceInput = prices[v.id] ?? String(v.price || "");
+          const buyers = enquiries.filter((e) => e.vehicleId === v.id);
           return (
             <li key={v.id} className="rounded-xl border p-4 text-sm">
               <div className="flex flex-wrap items-start justify-between gap-2">
@@ -114,6 +123,26 @@ function MyListings() {
                   <Button size="sm" disabled={busy} onClick={() => void change(v, { status: "sold" }, "Marked as sold")}>
                     Mark sold
                   </Button>
+                </div>
+              ) : null}
+              {buyers.length > 0 ? (
+                <div className="mt-3 border-t pt-3">
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Buyer enquiries ({buyers.length})
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {buyers.map((b) => (
+                      <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span>
+                          {b.name} · {new Date(b.createdAt).toLocaleDateString("en-IN")}
+                          {b.notes ? ` · ${b.notes}` : ""}
+                        </span>
+                        <a href={`tel:${b.phone}`} className="font-medium text-primary hover:underline">
+                          {b.phone}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ) : null}
             </li>

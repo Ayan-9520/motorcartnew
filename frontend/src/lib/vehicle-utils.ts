@@ -346,6 +346,7 @@ export function filterVehicles(
   if (filters.emiMax != null) {
     result = result.filter((v) => getVehicleEmi(v) <= filters.emiMax!);
   }
+  if (filters.certified) result = result.filter((v) => v.isCertified);
   if (filters.q) {
     const q = filters.q.toLowerCase();
     result = result.filter(
@@ -476,6 +477,8 @@ export function filtersFromSearchParams(params: URLSearchParams): VehicleFilters
     color: params.get("color") ?? undefined,
     bodyType: params.get("bodyType") ?? undefined,
     emiMax: params.get("emiMax") ? Number(params.get("emiMax")) : undefined,
+    saleMode: (params.get("saleMode") as VehicleFilters["saleMode"] | null) ?? undefined,
+    certified: params.get("certified") === "1" || params.get("certified") === "true" ? true : undefined,
     q: params.get("q") ?? undefined,
   };
 }

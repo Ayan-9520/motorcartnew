@@ -15,6 +15,28 @@ export async function verifyMotorCartOne(token: string) {
   return data?.data ?? {};
 }
 
+export type ListingEnquiry = {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  notes?: string | null;
+  vehicleId?: string | null;
+  vehicleInterest?: string | null;
+  status: string;
+  createdAt: string;
+};
+
+/** Buyer enquiries on the signed-in user's own (private) listings. */
+export async function fetchListingEnquiries(): Promise<ListingEnquiry[]> {
+  try {
+    const { data } = await api.get<{ data?: ListingEnquiry[] }>("/api/customer/listing-enquiries");
+    return data?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchCustomerActivity() {
   const { data } = await api.get<{ data?: Array<Record<string, unknown>> }>("/api/customer/activity");
   return data?.data ?? [];

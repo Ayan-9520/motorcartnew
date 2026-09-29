@@ -15,6 +15,48 @@ export const HUB_BRAND_LISTS: Record<HubCategorySlug, string[]> = {
   equipment: ["JCB", "Mahindra", "Tata", "Caterpillar"],
 };
 
+/** Standard fuel options per hub — used when there is no mock catalog to derive from */
+export const HUB_FUEL_LISTS: Record<HubCategorySlug, string[]> = {
+  cars: ["Petrol", "Diesel", "CNG", "Electric", "Hybrid"],
+  bikes: ["Petrol", "Electric"],
+  trucks: ["Diesel", "CNG", "Electric"],
+  buses: ["Diesel", "CNG", "Electric"],
+  ev: ["Electric"],
+  auto: ["CNG", "LPG", "Petrol", "Diesel", "Electric"],
+  equipment: ["Diesel", "Electric"],
+};
+
+/** Standard body types per hub */
+export const HUB_BODY_TYPE_LISTS: Record<HubCategorySlug, string[]> = {
+  cars: ["Hatchback", "Sedan", "SUV", "Compact SUV", "MUV", "Coupe", "Convertible", "Pickup"],
+  bikes: ["Commuter", "Sports", "Cruiser", "Scooter", "Adventure"],
+  trucks: ["Mini Truck", "Pickup", "LCV", "HCV", "Tipper", "Trailer"],
+  buses: ["School Bus", "Mini Bus", "Coach", "City Bus"],
+  ev: ["Hatchback", "Sedan", "SUV", "Scooter", "Bike"],
+  auto: ["Passenger Auto", "Cargo Auto", "E-Rickshaw"],
+  equipment: ["Tractor", "Excavator", "Loader", "Crane", "Forklift", "Harvester"],
+};
+
+export const FILTER_CITY_OPTIONS = [
+  "Delhi",
+  "Noida",
+  "Gurugram",
+  "Ghaziabad",
+  "Faridabad",
+  "Mumbai",
+  "Pune",
+  "Bangalore",
+  "Hyderabad",
+  "Chennai",
+  "Kolkata",
+  "Ahmedabad",
+  "Jaipur",
+  "Lucknow",
+  "Chandigarh",
+];
+
+export const FILTER_COLOR_OPTIONS = ["White", "Black", "Silver", "Grey", "Red", "Blue", "Brown", "Green", "Orange", "Yellow"];
+
 export type BudgetPreset = { label: string; priceMin?: number; priceMax?: number };
 
 export type EmiPreset = { label: string; emiMax: number };
@@ -123,7 +165,7 @@ export function getHubBrands(hub: HubCategorySlug): string[] {
 }
 
 export function getHubBodyTypes(hub: HubCategorySlug): string[] {
-  if (realDataOnly) return [];
+  if (realDataOnly) return HUB_BODY_TYPE_LISTS[hub];
   const types = new Set<string>();
   for (const v of MOCK_VEHICLES) {
     if (listingMatchesHub(v, hub)) types.add(v.bodyType);
@@ -132,7 +174,7 @@ export function getHubBodyTypes(hub: HubCategorySlug): string[] {
 }
 
 export function getHubFuels(hub: HubCategorySlug): string[] {
-  if (realDataOnly) return [];
+  if (realDataOnly) return HUB_FUEL_LISTS[hub];
   const fuels = new Set<string>();
   for (const v of MOCK_VEHICLES) {
     if (listingMatchesHub(v, hub)) fuels.add(v.fuelType);

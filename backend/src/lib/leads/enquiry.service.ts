@@ -94,6 +94,37 @@ export async function resolveEnquiryDealer(input: {
   });
 }
 
+/** Seller of a private (no-dealer) marketplace listing, if any. */
+async function findOwnerListingSeller(vehicleId: string): Promise<string | null> {
+  const row = await prisma.vehicle.findFirst({
+    where: { id: vehicleId },
+    select: { sellerId: true, dealerId: true },
+  });
+  if (!row || row.dealerId || !row.sellerId) return null;
+  return row.sellerId;
+}
+
+/** Enquiries buyers sent on the user's own private listings (newest first). */
+export async function listOwnerListingEnquiries(ownerUserId: string, limit = 100) {
+  const leads = await prisma.lead.findMany({
+    where: { metadata: { path: ["owner_user_id"], equals: ownerUserId } },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      email: true,
+      notes: true,
+      vehicleId: true,
+      vehicleInterest: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+  return leads.map((l) => ({ ...l, createdAt: l.createdAt.toISOString() }));
+}
+
 export async function findDuplicateEnquiry(phone: string, vehicleKey: string | null, now = new Date()) {
   const since = new Date(now.getTime() - ENQUIRY_DUPLICATE_WINDOW_MS);
   return prisma.lead.findFirst({
@@ -182,10 +213,16 @@ export async function createCustomerEnquiry(
     vehicleDealerId: detail?.dealer?.id ?? null,
   });
 
+  const listingOwnerId =
+    assignment === "unassigned" && marketplaceVehicleId
+      ? await findOwnerListingSeller(marketplaceVehicleId)
+      : null;
+
   const pipelineStatus = assignment === "assigned" ? "ASSIGNED" : "NEW";
   const metadata: Record<string, unknown> = {
     ...stripClientOwnerFields(value.metadata ?? {}),
     assignment,
+    ...(listingOwnerId ? { owner_listing: true, owner_user_id: listingOwnerId } : {}),
     pipeline_status: pipelineStatus,
     vehicle_slug: value.vehicleSlug ?? detail?.slug,
     vehicle_title: value.vehicleTitle ?? detail?.title,
@@ -242,6 +279,23 @@ export async function createCustomerEnquiry(
     });
   }
 
+  if (listingOwnerId && listingOwnerId !== options?.actorUserId) {
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: listingOwnerId,
+          title: "New buyer enquiry on your car",
+          body: `${lead.name} is interested in ${value.vehicleTitle ?? detail?.title ?? "your listing"}`,
+          message: `${lead.name} · ${lead.phone}`,
+          kind: "lead",
+          payload: { leadId: lead.id, vehicleId: marketplaceVehicleId, source: lead.source, ownerListing: true },
+        },
+      });
+    } catch {
+      /* notification is best-effort */
+    }
+  }
+
   try {
     const { applySalesOsOnEnquiry } = await import("@/services/sales-crm.service");
     const { routeLeadByPin } = await import("@/services/sales-routing.service");
@@ -253,7 +307,8 @@ export async function createCustomerEnquiry(
       location: value.location,
       source: value.source,
     });
-    if (assignment === "unassigned") {
+    // Owner listings stay with the owner (+ admin queue); never hand the buyer to an unrelated dealer.
+    if (assignment === "unassigned" && !listingOwnerId) {
       const routed = await routeLeadByPin(lead.id);
       if (routed.routed) {
         const fresh = await prisma.lead.findFirst({ where: { id: lead.id } });

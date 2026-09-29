@@ -374,13 +374,34 @@ export async function approveBusinessAccount(userId: string) {
     });
 
     if (DEALER_ROLES.includes(user.role)) {
-      await tx.dealer.updateMany({
+      const updated = await tx.dealer.updateMany({
         where: { ownerId: userId, deletedAt: null },
         data: {
           isVerified: true,
           verificationStatus: "verified",
         },
       });
+      if (updated.count === 0) {
+        const name = user.companyName?.trim() || user.fullName?.trim() || "Motorcart Dealer";
+        const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "dealer";
+        let slug = `${base}-${userId.slice(0, 6)}`;
+        if (await tx.dealer.findFirst({ where: { slug }, select: { id: true } })) {
+          slug = `${slug}-${Date.now().toString(36)}`;
+        }
+        await tx.dealer.create({
+          data: {
+            ownerId: userId,
+            name,
+            slug,
+            city: user.city ?? "",
+            state: user.state ?? "",
+            phone: user.phone,
+            dealerType: user.role,
+            isVerified: true,
+            verificationStatus: "verified",
+          },
+        });
+      }
     }
   });
 

@@ -4,7 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import type { HubCategorySlug } from "@/features/marketplace/types";
-import { getHubBrands, getHubBodyTypes, getHubFuels } from "@/features/marketplace/data/hub-filter-catalog";
+import {
+  FILTER_CITY_OPTIONS,
+  FILTER_COLOR_OPTIONS,
+  getHubBrands,
+  getHubBodyTypes,
+  getHubFuels,
+} from "@/features/marketplace/data/hub-filter-catalog";
 import { MarketplaceFilterChips } from "@/features/marketplace/components/MarketplaceFilterChips";
 import { featureFlags } from "@/config/feature-flags";
 import { SALE_MODE_OPTIONS } from "@/lib/sale-mode";
@@ -23,6 +29,8 @@ export function VehicleFilters({ filters, onFilter, onClear, hub }: VehicleFilte
   const brands = hub ? getHubBrands(hub) : [];
   const fuels = hub ? getHubFuels(hub) : ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"];
   const bodyTypes = hub ? getHubBodyTypes(hub) : [];
+  const cities = VEHICLE_CITIES.length ? VEHICLE_CITIES : FILTER_CITY_OPTIONS;
+  const colors = VEHICLE_COLORS.length ? VEHICLE_COLORS : FILTER_COLOR_OPTIONS;
 
   return (
     <aside className="marketplace-filters-panel space-y-5 rounded-xl border border-border/90 bg-card p-5 shadow-[var(--shadow-card)]">
@@ -57,7 +65,7 @@ export function VehicleFilters({ filters, onFilter, onClear, hub }: VehicleFilte
         options={TRANSMISSIONS}
         onChange={(v) => onFilter("transmission", v)}
       />
-      <FilterSelect label="City" value={filters.city as string} options={VEHICLE_CITIES} onChange={(v) => onFilter("city", v)} />
+      <FilterSelect label="City" value={filters.city as string} options={cities} onChange={(v) => onFilter("city", v)} />
       {bodyTypes.length > 0 && (
         <FilterSelect
           label="Body type"
@@ -66,7 +74,7 @@ export function VehicleFilters({ filters, onFilter, onClear, hub }: VehicleFilte
           onChange={(v) => onFilter("bodyType", v)}
         />
       )}
-      <FilterSelect label="Color" value={filters.color as string} options={VEHICLE_COLORS} onChange={(v) => onFilter("color", v)} />
+      <FilterSelect label="Color" value={filters.color as string} options={colors} onChange={(v) => onFilter("color", v)} />
       {featureFlags.vehicleSaleMode && (hub === "cars" || !hub) ? (
         <div>
           <Label className="text-xs text-muted-foreground">Sale mode</Label>
