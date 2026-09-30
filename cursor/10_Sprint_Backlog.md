@@ -104,6 +104,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | Date | Item |
 |------|------|
+| 2026-09-30 | Dealer inventory edit — title rebuilt from year/brand/model/variant on save (was stuck on old name); dealer-saved stock marked `dealer_offer`; card seller chip uses sale mode instead of "Motors" name heuristic |
 | 2026-09-30 | Premium header — theme-aware glass header (white in light, graphite in dark) with navy→green top accent line; white-text wordmark variant (`motorcart-wordmark-dark.png`) auto-swaps in dark mode; refined search pill, menu bar and active link in both themes |
 | 2026-09-29 | Phone/desktop buy-sell QA — mobile header menu button no longer clipped (cart/theme move to menu below `sm`); vehicle detail on mobile shows price/CTA/enquiry right after gallery (desktop unchanged); used cards drop fake "buyers viewed" line for real seller-type text; mobile filter button labelled |
 | 2026-09-29 | Brand refresh — new transparent lockup (icon + wordmark, light/dark) everywhere; text-only wordmark in header; header stays light in dark mode (scoped light tokens on `.nav-shell`) |

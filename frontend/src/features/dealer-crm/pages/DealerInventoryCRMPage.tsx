@@ -76,7 +76,11 @@ export function DealerInventoryCRMPage() {
     const emiMonthly = calculateEmiMonthly(form.price, form.emiRate, form.emiTenure);
     const isNew = form.condition === "new";
     return {
-      title: form.title || `${form.year} ${form.brand} ${form.model}`,
+      title:
+        [form.year, form.brand, form.model, form.variant]
+          .map((part) => String(part ?? "").trim())
+          .filter(Boolean)
+          .join(" ") || form.title,
       brand: form.brand,
       model: form.model,
       variant: form.variant,
@@ -94,8 +98,10 @@ export function DealerInventoryCRMPage() {
       description: form.description,
       images,
       condition: form.condition,
+      saleMode: "dealer_offer" as const,
       metadata: {
         ...(editing?.metadata ?? {}),
+        saleMode: "dealer_offer",
         discountPercent: form.discount,
         emiMonthly,
         ...(dealer?.name ? { dealerName: dealer.name } : {}),

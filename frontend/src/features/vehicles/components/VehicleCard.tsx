@@ -325,7 +325,13 @@ export function VehicleCard({ vehicle, index = 0, layout = "grid", compact = tru
 
             <div className="flex items-center justify-between">
               <Badge variant="outline" className="text-[10px] font-medium">
-                {vehicle.dealerName?.includes("Motors") ? "Dealer" : "Owner"}
+                {vehicle.saleMode === "direct_owner"
+                  ? "Owner"
+                  : vehicle.saleMode === "broker_assisted"
+                    ? "Broker"
+                    : vehicle.saleMode === "auction_sale"
+                      ? "Auction"
+                      : "Dealer"}
               </Badge>
               {!isNew && (
                 <span className="text-[10px] text-muted-foreground">
