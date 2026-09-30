@@ -134,6 +134,7 @@ export function DealerInventoryCRMPage() {
         ...payload,
         status: form.status,
         is_featured: form.featured,
+        ...(!editing.dealerId ? { dealer_id: dealer.id } : {}),
       });
       if (error) {
         toast.error(error.message ?? "Could not update listing");

@@ -67,13 +67,24 @@ export async function GET(_req: NextRequest, context: Ctx) {
     });
     if (!dealer) return err("Dealer not found", 404);
 
+    // Listings the owner posted before the showroom was linked (dealer_id empty) belong to
+    // their primary (oldest) showroom so the public profile is not empty.
+    const primaryShowroom = await prisma.dealer.findFirst({
+      where: { ownerId: dealer.ownerId, deletedAt: null },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
+    const includeOwnerListings = primaryShowroom?.id === dealer.id;
+
     const [storefront, vehicles, inventory, reviews] = await Promise.all([
       prisma.dealerStorefront.findUnique({ where: { dealerId: dealer.id } }),
       prisma.vehicle.findMany({
         where: {
-          dealerId: dealer.id,
           deletedAt: null,
           status: { in: ["available", "reserved"] },
+          OR: includeOwnerListings
+            ? [{ dealerId: dealer.id }, { dealerId: null, sellerId: dealer.ownerId }]
+            : [{ dealerId: dealer.id }],
         },
         orderBy: { createdAt: "desc" },
         take: 48,
@@ -142,7 +153,7 @@ export async function GET(_req: NextRequest, context: Ctx) {
       body_type: v.bodyType,
       kms_driven: v.kmsDriven,
       condition: v.condition,
-      dealer_id: v.dealerId,
+      dealer_id: v.dealerId ?? dealer.id,
       created_at: v.createdAt.toISOString(),
     }));
 

@@ -316,8 +316,12 @@ export async function createVehicle(data: VehicleFormData, sellerId: string, dea
   }).select().single();
 }
 
-export async function updateVehicle(id: string, data: Partial<VehicleFormData> & { status?: string; is_featured?: boolean }) {
+export async function updateVehicle(
+  id: string,
+  data: Partial<VehicleFormData> & { status?: string; is_featured?: boolean; dealer_id?: string }
+) {
   const payload: Record<string, unknown> = {};
+  if (data.dealer_id) payload.dealer_id = data.dealer_id;
   if (data.title != null) payload.title = data.title;
   if (data.brand != null) payload.brand = data.brand;
   if (data.model != null) payload.model = data.model;

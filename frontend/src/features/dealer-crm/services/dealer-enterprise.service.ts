@@ -331,10 +331,26 @@ export async function fetchPublicDealerBySlug(slug: string) {
         .limit(12),
     ]);
 
+    const rows = vehicles.data ?? [];
+    const ownerId = (dealer as { owner_id?: string }).owner_id;
+    if (ownerId) {
+      const { data: own } = await supabase
+        .from("vehicles")
+        .select("id, slug, title, brand, model, year, price, images, status, is_certified, city, category, fuel_type, transmission, body_type, kms_driven, condition, dealer_id, created_at")
+        .eq("seller_id", ownerId)
+        .in("status", ["available", "reserved"])
+        .order("created_at", { ascending: false })
+        .limit(48);
+      const seen = new Set(rows.map((r) => r.id));
+      for (const r of own ?? []) {
+        if (!r.dealer_id && !seen.has(r.id)) rows.push({ ...r, dealer_id: dealer.id });
+      }
+    }
+
     return {
       dealer,
       storefront: storefront.data ?? null,
-      vehicles: vehicles.data ?? [],
+      vehicles: rows,
       reviews: reviews.data ?? [],
     };
   } catch (e) {

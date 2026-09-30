@@ -55,6 +55,23 @@ export async function sanitizeVehicleInsertBody(userId: string, body: unknown): 
   return Array.isArray(body) ? out : out[0];
 }
 
+/**
+ * Vehicle update by a non-admin: `seller_id` cannot be reassigned and `dealer_id` may only
+ * point at a showroom the user can act for. Returns null when the dealer is not theirs.
+ */
+export async function sanitizeVehicleUpdateBody(userId: string, body: unknown): Promise<unknown | null> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const row = { ...(body as Record<string, unknown>) };
+  delete row.seller_id;
+  delete row.sellerId;
+  const hasDealer = "dealer_id" in row || "dealerId" in row;
+  if (hasDealer) {
+    const dealerId = (row.dealer_id ?? row.dealerId) as string | null | undefined;
+    if (dealerId && !(await canActForDealer(userId, String(dealerId)))) return null;
+  }
+  return row;
+}
+
 /** Profile columns a signed-in user may change on their own `users` row. */
 const SELF_EDITABLE_USER_COLUMNS = new Set([
   "full_name",

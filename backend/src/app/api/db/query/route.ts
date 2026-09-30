@@ -20,6 +20,7 @@ import {
   isVehicleMutation,
   sanitizeSelfUserUpdate,
   sanitizeVehicleInsertBody,
+  sanitizeVehicleUpdateBody,
 } from "@/lib/db/vehicle-ownership";
 import { EnquiryError } from "@/lib/leads/enquiry.service";
 
@@ -108,6 +109,11 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
       const vehicleId = extractIdEqFilter(p.filters);
       if (!vehicleId || !(await canMutateVehicle(auth.userId, vehicleId))) {
         return forbidden("You can only change your own listings");
+      }
+      if (action === "update" || action === "patch") {
+        const safe = await sanitizeVehicleUpdateBody(auth.userId, p.body);
+        if (safe === null) return forbidden("You can only move listings to your own dealership");
+        p.body = safe;
       }
     }
 
