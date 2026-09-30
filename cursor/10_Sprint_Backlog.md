@@ -104,6 +104,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | Date | Item |
 |------|------|
+| 2026-09-30 | Premium header — theme-aware glass header (white in light, graphite in dark) with navy→green top accent line; white-text wordmark variant (`motorcart-wordmark-dark.png`) auto-swaps in dark mode; refined search pill, menu bar and active link in both themes |
 | 2026-09-29 | Phone/desktop buy-sell QA — mobile header menu button no longer clipped (cart/theme move to menu below `sm`); vehicle detail on mobile shows price/CTA/enquiry right after gallery (desktop unchanged); used cards drop fake "buyers viewed" line for real seller-type text; mobile filter button labelled |
 | 2026-09-29 | Brand refresh — new transparent lockup (icon + wordmark, light/dark) everywhere; text-only wordmark in header; header stays light in dark mode (scoped light tokens on `.nav-shell`) |
 | 2026-09-29 | Navigation after deploy — stale-chunk auto-reload per 30s (not once per session), `vite:preloadError` handler, router `errorElement` with Back/Home/Reload; dealer posting via public Sell attaches own showroom (leads → Lead CRM, success → inventory); enquiries on seller-without-dealer listings route to seller's showroom (incl. re-sent duplicates); inventory shows owner's dealer-less listings |

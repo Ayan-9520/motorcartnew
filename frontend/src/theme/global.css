@@ -1194,58 +1194,63 @@
     @apply transition-colors hover:bg-primary/5;
   }
 
+  /* Premium glass header — follows the theme (white glass in light, graphite glass in dark)
+     with a thin navy → green brand accent along the top edge. */
   .nav-shell {
-    @apply z-50 w-full max-w-full border-b border-border/70 bg-card/90 backdrop-blur-xl;
+    @apply z-50 w-full max-w-full;
     overflow-x: clip;
     overflow-y: visible;
-  }
-
-  /* Header stays light in dark mode too — one navy wordmark works everywhere.
-     Re-scopes the light tokens for the header subtree only (portaled menus keep the theme). */
-  .dark .nav-shell {
-    --background: 216 20% 96%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 220 14% 97%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 142 76% 97%;
-    --accent-foreground: 222 47% 11%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
-    color-scheme: light;
     color: hsl(var(--foreground));
-    background-color: hsl(0 0% 100% / 0.96);
-    border-bottom-color: hsl(0 0% 0% / 0.35);
+    background-color: hsl(0 0% 100% / 0.82);
+    border-bottom: 1px solid hsl(220 14% 88% / 0.9);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+    transition:
+      background-color 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
   }
 
-  .dark .nav-shell.nav-shell-scrolled {
-    background-color: hsl(0 0% 100% / 0.98);
-    box-shadow:
-      0 1px 0 hsl(var(--primary) / 0.18),
-      0 12px 40px -16px rgb(0 0 0 / 0.55);
+  .nav-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      hsl(222 60% 22%) 0%,
+      hsl(var(--primary)) 50%,
+      hsl(222 60% 22%) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .dark .nav-shell {
+    --card: 220 12% 9%;
+    --muted: 220 10% 13%;
+    --border: 220 10% 18%;
+    color-scheme: dark;
+    background-color: hsl(220 16% 5% / 0.78);
+    border-bottom-color: hsl(0 0% 100% / 0.07);
+  }
+
+  .dark .nav-shell::before {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.15) 0%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--primary) / 0.15) 100%
+    );
   }
 
   .dark .nav-shell .vehicle-hub-icon-pill__icon {
     @apply border-border/60 bg-card/90;
   }
 
-  .dark .nav-shell .mc-logo-swap .mc-logo--for-light {
-    display: inline-block;
-  }
-
-  .dark .nav-shell .mc-logo-swap .mc-logo--for-dark {
-    display: none;
-  }
-
   .nav-shell-fixed {
     @apply fixed left-0 right-0 top-0;
-    box-shadow: 0 1px 0 hsl(var(--border) / 0.5);
+    box-shadow: 0 1px 2px hsl(222 47% 11% / 0.04);
   }
 
   .nav-shell-spacer {
@@ -1253,22 +1258,18 @@
     flex-shrink: 0;
   }
 
-  .nav-shell-scrolled {
-    @apply border-border/80 bg-card/95 shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.12)];
-    box-shadow:
-      0 1px 0 hsl(var(--primary) / 0.12),
-      0 8px 32px -12px hsl(var(--foreground) / 0.12);
+  .nav-shell.nav-shell-scrolled {
+    background-color: hsl(0 0% 100% / 0.92);
+    box-shadow: 0 10px 30px -14px hsl(222 47% 11% / 0.18);
   }
 
-  .dark .nav-shell-scrolled {
-    @apply bg-background/95;
-    box-shadow:
-      0 1px 0 hsl(var(--primary) / 0.18),
-      0 12px 40px -16px rgb(0 0 0 / 0.45);
+  .dark .nav-shell.nav-shell-scrolled {
+    background-color: hsl(220 16% 5% / 0.9);
+    box-shadow: 0 12px 36px -14px rgb(0 0 0 / 0.7);
   }
 
   .nav-top-bar {
-    @apply overflow-visible border-b border-border/40 bg-gradient-to-b from-card/85 to-card/50;
+    @apply overflow-visible bg-transparent;
   }
 
   .nav-top-bar-inner {
@@ -1309,7 +1310,13 @@
   }
 
   .nav-menu-bar {
-    @apply border-t border-border/30 bg-background/70 backdrop-blur-md;
+    border-top: 1px solid hsl(220 14% 90% / 0.8);
+    background: linear-gradient(180deg, hsl(220 20% 97% / 0.7) 0%, hsl(0 0% 100% / 0.4) 100%);
+  }
+
+  .dark .nav-menu-bar {
+    border-top-color: hsl(0 0% 100% / 0.05);
+    background: linear-gradient(180deg, hsl(0 0% 100% / 0.025) 0%, transparent 100%);
   }
 
   .nav-menu-bar-inner {
@@ -1326,6 +1333,12 @@
 
   .nav-menu-link-active {
     @apply bg-primary/10 font-semibold text-primary hover:bg-primary/10 hover:text-primary;
+    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.22);
+  }
+
+  .dark .nav-menu-link-active {
+    @apply bg-primary/15;
+    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.3);
   }
 
   .nav-menu-mobile-hint {
@@ -1574,6 +1587,18 @@
     @apply hidden h-10 min-w-[10.5rem] max-w-[13rem] items-center gap-2 rounded-xl border border-border/80 bg-muted/40 px-3 text-left text-sm text-muted-foreground shadow-sm transition-all hover:border-primary/40 hover:bg-card md:flex lg:max-w-[15rem] xl:max-w-[17rem];
   }
 
+  .nav-shell .nav-search {
+    @apply rounded-full border-border/70 bg-white/70 shadow-[0_1px_2px_hsl(222_47%_11%/0.05)] hover:bg-white;
+  }
+
+  .dark .nav-shell .nav-search {
+    @apply border-white/10 bg-white/[0.04] shadow-none hover:border-primary/40 hover:bg-white/[0.07];
+  }
+
+  .dark .nav-shell .nav-kbd {
+    @apply border-white/10 bg-white/5;
+  }
+
   .nav-search-text {
     @apply hidden flex-1 truncate sm:inline;
   }
@@ -1620,6 +1645,10 @@
 
   .nav-mobile {
     @apply max-h-[calc(100dvh-3.25rem)] overflow-y-auto border-t border-border/80 bg-card/95 p-3 pb-6 animate-fade-in backdrop-blur-xl sm:p-4;
+  }
+
+  .dark .nav-mobile {
+    background-color: hsl(220 16% 5% / 0.97);
   }
 
   .nav-mobile-search {

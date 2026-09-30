@@ -1,18 +1,19 @@
 import { cn } from "@/lib/utils";
 
 /** Cache-bust so theme lockups refresh after brand asset updates. */
-const LOGO_ASSET_V = "20260929a";
+const LOGO_ASSET_V = "20260930a";
 
 export const MOTORCART_LOGO_FULL = `/brand/motorcart-lockup.png?v=${LOGO_ASSET_V}`;
 export const MOTORCART_LOGO_FULL_DARK = `/brand/motorcart-lockup-dark.png?v=${LOGO_ASSET_V}`;
 export const MOTORCART_LOGO_WORDMARK = `/brand/motorcart-wordmark.png?v=${LOGO_ASSET_V}`;
+export const MOTORCART_LOGO_WORDMARK_DARK = `/brand/motorcart-wordmark-dark.png?v=${LOGO_ASSET_V}`;
 export const MOTORCART_LOGO_ICON = `/brand/motorcart-emblem.png?v=${LOGO_ASSET_V}`;
 export const MOTORCART_LOGO_ICON_DARK = `/brand/motorcart-emblem-dark.png?v=${LOGO_ASSET_V}`;
 
 type MotorcartLogoProps = {
   /**
    * Full = icon + wordmark. Icon = circular car emblem only.
-   * Wordmark = text only, navy/green — header only (header stays light in both themes).
+   * Wordmark = text only (header) — navy text in light theme, white text in dark theme.
    */
   variant?: "full" | "icon" | "wordmark";
   className?: string;
@@ -71,8 +72,29 @@ export function MotorcartLogo({
   const h = height ?? DEFAULT_HEIGHT[variant];
 
   if (variant === "wordmark") {
+    if (tone === "auto") {
+      return (
+        <span className={cn("mc-logo-swap inline-flex items-center", className)}>
+          <FullLogoImg src={MOTORCART_LOGO_WORDMARK} alt={alt} h={h} className="mc-logo--for-light" aspect={WORDMARK_ASPECT} />
+          <FullLogoImg
+            src={MOTORCART_LOGO_WORDMARK_DARK}
+            alt={alt}
+            h={h}
+            className="mc-logo--for-dark"
+            aspect={WORDMARK_ASPECT}
+            decorative
+          />
+        </span>
+      );
+    }
     return (
-      <FullLogoImg src={MOTORCART_LOGO_WORDMARK} alt={alt} h={h} className={className} aspect={WORDMARK_ASPECT} />
+      <FullLogoImg
+        src={tone === "dark" ? MOTORCART_LOGO_WORDMARK_DARK : MOTORCART_LOGO_WORDMARK}
+        alt={alt}
+        h={h}
+        className={className}
+        aspect={WORDMARK_ASPECT}
+      />
     );
   }
 

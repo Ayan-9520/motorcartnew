@@ -3,7 +3,8 @@
 Outputs (frontend/public/brand):
   motorcart-lockup.png       icon + wordmark, navy text (light backgrounds)
   motorcart-lockup-dark.png  icon + wordmark, white text (dark backgrounds)
-  motorcart-wordmark.png     text-only wordmark (header)
+  motorcart-wordmark.png     text-only wordmark (header, light theme)
+  motorcart-wordmark-dark.png  text-only wordmark, white text (header, dark theme)
   motorcart-emblem.png       icon only (optional 3rd argument)
 """
 import sys
@@ -121,8 +122,14 @@ def main(lockup_path: str, wordmark_path: str, emblem_path: str | None = None) -
     word = np.array(Image.open(wordmark_path).convert("RGB"))
     wordmark = crop_to_content(color_to_alpha(word))
     save(wordmark, "motorcart-wordmark.png", WORDMARK_HEIGHT)
+    save(navy_to_white(wordmark), "motorcart-wordmark-dark.png", WORDMARK_HEIGHT)
 
-    names = ["motorcart-lockup.png", "motorcart-lockup-dark.png", "motorcart-wordmark.png"]
+    names = [
+        "motorcart-lockup.png",
+        "motorcart-lockup-dark.png",
+        "motorcart-wordmark.png",
+        "motorcart-wordmark-dark.png",
+    ]
     if emblem_path:
         emblem = np.array(Image.open(emblem_path).convert("RGB"))
         emblem_rgba = crop_to_content(emblem_to_alpha(emblem))
