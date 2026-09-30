@@ -141,6 +141,8 @@ export const PUBLIC_SELECT_TABLES = new Set([
   "reviews",
   "banks",
   "auctions",
+  "bids",
+  "auction_messages",
   "service_centers",
   "part_products",
   "parts",

@@ -93,9 +93,12 @@ Legend: **REAL** = PostgreSQL via API · **MOCK** = client mock/fallback · **ME
 
 | Feature | Data source | Notes |
 |---------|-------------|-------|
-| Auction hub browse | **MOCK** | `auction-hub-data.ts` |
-| Auction room | **PARTIAL** | Socket + mock mix |
-| Bid history | **PARTIAL** | Extend with real table |
+| Auction hub browse | **REAL** | `auctions` table (pending/cancelled hidden from public); hub events fall back to `auction-hub-data.ts` only when `VITE_REAL_DATA_ONLY=false` |
+| Auction room | **REAL** | Bids via `place_auction_bid` RPC → `lib/auctions/auction-engine.ts` (row lock, min increment, anti-snipe, proxy auto-bid); socket `db:bids` / `db:auctions` / `db:auction_messages` |
+| Bid history | **REAL** | `bids` table (public select) |
+| Lot creation / approval | **REAL** | `POST /api/auctions` (admin/partner → scheduled, dealer own stock → `pending`), `POST /api/auctions/[id]/moderate` |
+| Close / winner | **REAL** | Auto sweep (≤20s) flips upcoming→live and finalizes expired lots; winner only if reserve met; notifications to winner/seller |
+| Dealer auction desk | **REAL** | `GET /api/auctions/my` (my bids, standing, auto-bid caps, won, my lots) |
 
 ---
 

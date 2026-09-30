@@ -6,7 +6,17 @@ export function slugifyAuction(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+const CATEGORY_TO_TYPE: Record<string, AuctionType> = {
+  dealer: "dealer",
+  bank: "bank_repo",
+  bank_repo: "bank_repo",
+  government: "government",
+  insurance: "insurance",
+  fleet: "fleet",
+};
+
 export function mapDbAuction(a: DbAuction): AuctionListing {
+  const category = String(a.auction_category ?? a.auction_type ?? "dealer");
   return {
     id: a.id,
     slug: a.slug ?? slugifyAuction(a.title),
@@ -14,12 +24,12 @@ export function mapDbAuction(a: DbAuction): AuctionListing {
     organizerId: a.organizer_id,
     title: a.title,
     images: resolveAuctionImages(a.title, a.images),
-    startingBid: Number(a.starting_bid),
+    startingBid: Number(a.start_price ?? a.starting_bid ?? 0),
     currentBid: a.current_bid != null ? Number(a.current_bid) : null,
     reservePrice: a.reserve_price != null ? Number(a.reserve_price) : null,
-    bidIncrement: Number(a.bid_increment),
-    bidCount: a.bid_count,
-    auctionType: (a.auction_type as AuctionType) || "dealer",
+    bidIncrement: Number(a.bid_increment) || 1000,
+    bidCount: Number(a.bid_count ?? 0),
+    auctionType: CATEGORY_TO_TYPE[category] ?? "dealer",
     location: a.location ?? "India",
     startsAt: a.starts_at,
     endsAt: a.ends_at,
@@ -32,9 +42,12 @@ export function mapDbAuction(a: DbAuction): AuctionListing {
   };
 }
 
-export function getMinNextBid(auction: Pick<AuctionListing, "currentBid" | "startingBid" | "bidIncrement">): number {
-  const base = auction.currentBid ?? auction.startingBid;
-  return base + auction.bidIncrement;
+/** First bid may equal the starting price; after that each bid adds one increment. Mirrors the server. */
+export function getMinNextBid(
+  auction: Pick<AuctionListing, "currentBid" | "startingBid" | "bidIncrement"> & { bidCount?: number }
+): number {
+  if (auction.currentBid == null || auction.bidCount === 0) return auction.startingBid;
+  return auction.currentBid + auction.bidIncrement;
 }
 
 export function getTimeLeft(endsAt: string): number {

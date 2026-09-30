@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Gavel, Zap, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export function BidPanel({
   onSetAutoBid,
   isAuthenticated,
 }: BidPanelProps) {
+  const location = useLocation();
   const [amount, setAmount] = useState(minBid);
   const [autoMax, setAutoMax] = useState(minBid + auction.bidIncrement * 5);
   const [showAuto, setShowAuto] = useState(false);
@@ -46,7 +48,27 @@ export function BidPanel({
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
-          {auction.status === "upcoming" ? "Bidding opens when auction goes live" : "This auction has ended"}
+          {auction.status === "upcoming" ? (
+            <>
+              Bidding opens{" "}
+              <strong className="text-foreground">
+                {new Date(auction.startsAt).toLocaleString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </strong>
+              <br />
+              <span className="text-xs">Starting bid {formatCurrency(auction.startingBid)}</span>
+            </>
+          ) : auction.status === "pending" ? (
+            "Awaiting admin approval — bidding opens once approved"
+          ) : auction.status === "cancelled" ? (
+            "This auction was cancelled"
+          ) : (
+            "This auction has ended"
+          )}
         </CardContent>
       </Card>
     );
@@ -64,7 +86,9 @@ export function BidPanel({
       </CardHeader>
       <CardContent className="space-y-4">
         <article className="rounded-xl bg-accent/40 p-4 text-center dark:bg-[#005c4b]/20">
-          <p className="text-xs text-muted-foreground">Current bid</p>
+          <p className="text-xs text-muted-foreground">
+            {auction.bidCount > 0 && auction.currentBid != null ? "Current bid" : "Starting bid"}
+          </p>
           <p className="text-3xl font-bold text-primary">
             {formatCurrency(auction.currentBid ?? auction.startingBid)}
           </p>
@@ -107,7 +131,15 @@ export function BidPanel({
         </Button>
 
         {!isAuthenticated && (
-          <p className="text-center text-sm text-muted-foreground">Login required to bid</p>
+          <p className="text-center text-sm text-muted-foreground">
+            <Link
+              to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
+              className="font-semibold text-primary hover:underline"
+            >
+              Login
+            </Link>{" "}
+            to bid
+          </p>
         )}
 
         <Button type="button" variant="ghost" className="w-full gap-1 text-sm" onClick={() => setShowAuto(!showAuto)}>

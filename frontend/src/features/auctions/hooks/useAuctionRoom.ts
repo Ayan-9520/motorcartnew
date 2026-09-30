@@ -69,6 +69,26 @@ export function useAuctionRoom(slug: string | undefined) {
     void loadAuction();
   }, [loadAuction]);
 
+  /** Quiet resync of lot + bids (no skeleton) after bids, auto-bids or status changes. */
+  const refreshLive = useCallback(async () => {
+    if (!slug) return;
+    const a = await fetchAuctionBySlug(slug);
+    if (!a) return;
+    setAuction(a);
+    const b = await fetchAuctionBids(a.id);
+    setBids(b);
+    b.forEach((x) => seenBidIdsRef.current.add(x.id));
+    if (user) setNotifications(await fetchAuctionNotifications(a.id, user.id));
+  }, [slug, user?.id]);
+
+  // Upcoming lot: reload when the start time arrives so bidding opens without a manual refresh.
+  useEffect(() => {
+    if (!auction || auction.status !== "upcoming" || !auction.startsAt) return;
+    const wait = new Date(auction.startsAt).getTime() - Date.now();
+    const id = setTimeout(() => void refreshLive(), Math.max(1500, wait + 1500));
+    return () => clearTimeout(id);
+  }, [auction?.id, auction?.status, auction?.startsAt, refreshLive]);
+
   // Realtime: single multiplexed channel
   useEffect(() => {
     if (!auction?.id) return;
@@ -90,18 +110,16 @@ export function useAuctionRoom(slug: string | undefined) {
             ? { ...prev, currentBid: bid.amount, bidCount: prev.bidCount + 1 }
             : prev
         );
-        const now = Date.now();
-        if (user && bid.bidderId !== user.id && now - lastNotifyAtRef.current > NOTIFY_DEBOUNCE_MS) {
-          lastNotifyAtRef.current = now;
-          toast(`Outbid — ₹${bid.amount.toLocaleString("en-IN")}`, { icon: "🔔" });
-        }
       },
       onMessageInsert: (msg) => {
         setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
       },
       onNotificationInsert: (n) => {
         if (!user || n.userId !== user.id) return;
+        const now = Date.now();
         setNotifications((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev]));
+        if (n.kind === "outbid" && now - lastNotifyAtRef.current < NOTIFY_DEBOUNCE_MS) return;
+        lastNotifyAtRef.current = now;
         toast(n.title, { icon: n.kind === "won" ? "🏆" : "🔔" });
       },
       onPresenceCount: setViewerCount,
@@ -128,10 +146,17 @@ export function useAuctionRoom(slug: string | undefined) {
               ? {
                   ...prev,
                   status: "ended",
-                  winnerId: r.winner_id ?? prev.winnerId,
+                  winnerId: r.winner_id ?? null,
                 }
               : prev
           );
+          void refreshLive();
+        } else {
+          // Anti-snipe may have extended the clock — resync and keep watching.
+          void refreshLive();
+          setTimeout(() => {
+            finalizedRef.current = false;
+          }, 5000);
         }
       });
     };
@@ -139,7 +164,7 @@ export function useAuctionRoom(slug: string | undefined) {
     const id = setInterval(check, 1000);
     check();
     return () => clearInterval(id);
-  }, [auction?.id, auction?.endsAt, auction?.status]);
+  }, [auction?.id, auction?.endsAt, auction?.status, refreshLive]);
 
   const placeBid = useCallback(
     async (amount: number) => {
@@ -186,27 +211,9 @@ export function useAuctionRoom(slug: string | undefined) {
       const result = await placeBidRpc(auction.id, amount, false);
 
       if (!result.ok) {
-        const minBid = getMinNextBid(auction);
-        if (amount >= minBid) {
-          recordBidAttempt(auction.id, user.id, amount);
-          const mockBid: AuctionBid = {
-            id: `mock-${Date.now()}`,
-            auctionId: auction.id,
-            bidderId: user.id,
-            bidderName: user.fullName,
-            amount,
-            isAutoBid: false,
-            createdAt: new Date().toISOString(),
-          };
-          seenBidIdsRef.current.add(mockBid.id);
-          setBids((prev) => mergeBidFeed(prev, mockBid));
-          setAuction((prev) =>
-            prev ? { ...prev, currentBid: amount, bidCount: prev.bidCount + 1 } : prev
-          );
-          toast.success("Bid placed (demo mode)");
-        } else {
-          toast.error(result.error ?? "Bid failed");
-        }
+        toast.error(result.error ?? "Bid failed — please try again");
+        // Server state may have moved (someone else bid); resync the room.
+        void refreshLive();
       } else {
         recordBidAttempt(auction.id, user.id, amount);
         if (result.bidId) {
@@ -221,30 +228,38 @@ export function useAuctionRoom(slug: string | undefined) {
           };
           seenBidIdsRef.current.add(optimistic.id);
           setBids((prev) => mergeBidFeed(prev, optimistic));
-          setAuction((prev) =>
-            prev ? { ...prev, currentBid: optimistic.amount, bidCount: prev.bidCount + 1 } : prev
-          );
         }
         if (result.extended) toast("Anti-snipe: auction extended by 2 minutes", { icon: "⏱️" });
-        toast.success("Bid placed!");
+        if (result.leading === false) {
+          toast("Bid placed, but another bidder's auto-bid is higher", { icon: "🔔" });
+        } else {
+          toast.success("Bid placed — you're the highest bidder!");
+        }
+        void refreshLive();
       }
 
       bidLockRef.current = false;
       setBidLocked(false);
       setPlacing(false);
-      return { ok: result.ok || amount >= getMinNextBid(auction) };
+      return { ok: result.ok };
     },
-    [auction, user, bids]
+    [auction, user, bids, refreshLive]
   );
 
   const setAutoBid = useCallback(
     async (maxAmount: number) => {
       if (!auction || !user) return;
+      if (!user) {
+        toast.error("Please login to use auto-bid");
+        return;
+      }
       const result = await setAutoBidRpc(auction.id, maxAmount);
-      if (result.ok) toast.success("Auto-bid activated");
-      else toast.error(result.error ?? "Auto-bid unavailable");
+      if (result.ok) {
+        toast.success(`Auto-bid on — we'll bid for you up to ₹${maxAmount.toLocaleString("en-IN")}`);
+        void refreshLive();
+      } else toast.error(result.error ?? "Auto-bid unavailable");
     },
-    [auction, user]
+    [auction, user, refreshLive]
   );
 
   const postMessage = useCallback(

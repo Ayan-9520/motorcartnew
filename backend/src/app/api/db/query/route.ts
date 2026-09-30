@@ -23,6 +23,9 @@ import {
   sanitizeVehicleUpdateBody,
 } from "@/lib/db/vehicle-ownership";
 import { EnquiryError } from "@/lib/leads/enquiry.service";
+import { guardAuctionQuery, isAuctionTable, restrictPublicAuctionFilters } from "@/lib/auctions/auction-access";
+import { AUCTION_ORGANIZER_ROLES, sweepAuctionStatuses } from "@/lib/auctions/auction-engine";
+import { emitDbChange } from "@/lib/socket-emit";
 
 function paramsFromReq(req: NextRequest, body?: Record<string, unknown>) {
   const sp = req.nextUrl.searchParams;
@@ -117,6 +120,19 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
       }
     }
 
+    if (auth && !isAdminAuth && isAuctionTable(p.table)) {
+      const guard = await guardAuctionQuery(auth.userId, p.table, action, p.body, p.filters);
+      if (!guard.ok) return forbidden(guard.message);
+      if (guard.body !== undefined) p.body = guard.body as typeof p.body;
+    }
+
+    if (p.table === "auctions" && action === "select") {
+      await sweepAuctionStatuses();
+      if (!auth || !AUCTION_ORGANIZER_ROLES.has(auth.role)) {
+        p.filters = restrictPublicAuctionFilters(p.filters);
+      }
+    }
+
     if (auth) {
       const access = await loadUserAccess(auth.userId);
       if (access && isPendingBusinessAccess(access)) {
@@ -131,6 +147,10 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
       req.nextUrl.searchParams.get("count") === "exact" ||
       (body as Record<string, string> | undefined)?.count === "exact";
     const data = await runDbQuery(p);
+    if (p.table === "auction_messages" && action === "insert") {
+      const rows = (Array.isArray(data) ? data : [data]) as Record<string, unknown>[];
+      for (const row of rows) if (row?.id) emitDbChange("auction_messages", "INSERT", { new: row });
+    }
     if (countRequested && p.table) {
       const total = await countDbQuery(p.table, p.filters);
       return ok({ data, count: total });

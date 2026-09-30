@@ -20,14 +20,27 @@ export function WinnerBanner({ auction, isWinner }: WinnerBannerProps) {
         <div>
           <p className="auc-winner__title">Hammer down — you are the winning bidder</p>
           <p className="auc-winner__sub">
-            Winning bid {formatCurrency(amount)}. Settlement instructions will follow via dealer desk.
+            Winning bid {formatCurrency(amount)}. The Motorcart auction team will call you for payment, documents &amp;
+            delivery.
           </p>
         </div>
       </aside>
     );
   }
 
-  if (!reserveOk && auction.reservePrice != null) {
+  if (auction.bidCount === 0 || auction.currentBid == null) {
+    return (
+      <aside className="auc-winner auc-winner--muted">
+        <XCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
+        <div>
+          <p className="font-semibold">Auction closed — no bids</p>
+          <p className="text-sm text-muted-foreground">Starting price was {formatCurrency(auction.startingBid)}.</p>
+        </div>
+      </aside>
+    );
+  }
+
+  if (!auction.winnerId || (!reserveOk && auction.reservePrice != null)) {
     return (
       <aside className="auc-winner auc-winner--muted">
         <XCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
@@ -43,7 +56,7 @@ export function WinnerBanner({ auction, isWinner }: WinnerBannerProps) {
     <aside className="auc-winner auc-winner--muted">
       <FileCheck className="h-8 w-8 shrink-0 text-muted-foreground" />
       <div>
-        <p className="font-semibold">Auction ended</p>
+        <p className="font-semibold">Sold</p>
         <p className="text-sm text-muted-foreground">Winning bid {formatCurrency(amount)}</p>
       </div>
     </aside>

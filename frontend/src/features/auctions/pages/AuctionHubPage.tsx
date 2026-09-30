@@ -11,9 +11,11 @@ import { AuctionAssetCategoryGrid } from "../components/AuctionAssetCategoryGrid
 import { AuctionCard } from "../components/AuctionCard";
 import { useAuctionHub } from "../hooks/useAuctionHub";
 import { auctionBrowsePath } from "../lib/auction-hub-routes";
+import { useAuthStore } from "@/store/authStore";
 
 export function AuctionHubPage() {
   const { liveEvents, upcomingEvents, liveAuctions, loading, stats } = useAuctionHub();
+  const viewerRole = useAuthStore((s) => s.user?.role);
 
   useEffect(() => {
     setPageMeta({
@@ -129,10 +131,18 @@ export function AuctionHubPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button className="rounded-xl shadow-[var(--shadow-primary)]" asChild>
-              <Link to="/login?redirect=/auctions/browse">Register to bid</Link>
+              <Link to={viewerRole ? "/auctions/browse" : "/login?redirect=/auctions/browse"}>
+                {viewerRole ? "Browse lots" : "Register to bid"}
+              </Link>
             </Button>
             <Button variant="outline" className="rounded-xl" asChild>
-              <Link to="/dashboard/auction">Partner dashboard</Link>
+              {viewerRole === "admin" || viewerRole === "super_admin" || viewerRole === "auction_partner" ? (
+                <Link to="/dashboard/auction">Auction desk</Link>
+              ) : (
+                <Link to={viewerRole ? "/dashboard/dealer/auctions" : "/login?redirect=/dashboard/dealer/auctions"}>
+                  Dealers: sell via auction
+                </Link>
+              )}
             </Button>
           </div>
         </div>

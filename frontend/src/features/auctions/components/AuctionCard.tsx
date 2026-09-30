@@ -43,7 +43,9 @@ export function AuctionCard({ auction, index = 0 }: AuctionCardProps) {
               </Badge>
             )}
             {auction.status === "upcoming" && (
-              <Badge className="absolute left-3 top-3 bg-amber-500 text-white border-0">UPCOMING</Badge>
+              <Badge className="absolute left-3 top-3 bg-amber-500 text-white border-0">
+                STARTS {new Date(auction.startsAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+              </Badge>
             )}
             {auction.status === "ended" && (
               <Badge className="absolute left-3 top-3 bg-muted-foreground text-white border-0">ENDED</Badge>
@@ -66,7 +68,9 @@ export function AuctionCard({ auction, index = 0 }: AuctionCardProps) {
             </p>
             <footer className="flex items-end justify-between gap-2">
               <div>
-                <p className="text-xs text-muted-foreground">Current bid</p>
+                <p className="text-xs text-muted-foreground">
+                  {auction.bidCount > 0 && auction.currentBid != null ? "Current bid" : "Starting bid"}
+                </p>
                 <p className="text-xl font-bold text-primary">
                   {formatCurrency(auction.currentBid ?? auction.startingBid)}
                 </p>

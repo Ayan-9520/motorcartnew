@@ -28,7 +28,7 @@ export type UserStatus = "active" | "suspended" | "pending_verification" | "clos
 
 export type KycStatus = "pending" | "submitted" | "verified" | "rejected";
 export type VehicleStatus = "draft" | "available" | "reserved" | "sold";
-export type AuctionStatus = "upcoming" | "live" | "ended" | "cancelled";
+export type AuctionStatus = "upcoming" | "live" | "ended" | "cancelled" | "pending";
 export type LeadStatus = "new" | "contacted" | "qualified" | "converted" | "lost";
 export type FinanceStatus = "draft" | "submitted" | "processing" | "approved" | "rejected" | "disbursed";
 export type BookingStatus = "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
@@ -119,12 +119,15 @@ export interface DbAuction {
   organizer_id: string;
   title: string;
   images: string[];
-  starting_bid: number;
+  /** API column; `starting_bid` kept for older payloads. */
+  start_price?: number;
+  starting_bid?: number;
   current_bid: number | null;
   reserve_price: number | null;
   bid_increment: number;
   bid_count: number;
-  auction_type: string;
+  auction_category?: string;
+  auction_type?: string;
   starts_at: string;
   ends_at: string;
   status: AuctionStatus;

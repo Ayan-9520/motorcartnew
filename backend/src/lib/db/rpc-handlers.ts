@@ -2,8 +2,13 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import type { JwtPayload } from "@/lib/auth/jwt";
 import { loadUserAccess, isPendingBusinessAccess } from "@/lib/auth/account-access";
-import { emitDbChange } from "@/lib/socket-emit";
 import type { FinanceStatus } from "@prisma/client";
+import {
+  finalizeAuction,
+  placeAuctionBid,
+  registerDealerForAuction,
+  setAuctionAutoBid,
+} from "@/lib/auctions/auction-engine";
 import { ensureCommissionOnDisbursement } from "@/services/finance-commission.service";
 
 type RpcArgs = Record<string, unknown>;
@@ -17,9 +22,9 @@ export async function runRpc(fn: string, args: RpcArgs, auth: JwtPayload | null)
     case "finalize_auction":
       return finalizeAuction(args, auth);
     case "register_dealer_auction":
-      return { ok: true, registered: true };
+      return registerDealerForAuction(args, auth);
     case "set_auction_auto_bid":
-      return { ok: true };
+      return setAuctionAutoBid(args, auth);
     case "create_part_order":
       return createPartOrder(args, auth);
     case "submit_finance_application":
@@ -56,44 +61,6 @@ async function registerDeviceSession(args: RpcArgs, auth: JwtPayload | null) {
     where: { userId_deviceId: { userId: auth.sub, deviceId } },
     create: { userId: auth.sub, deviceId, userAgent: String(args.p_user_agent ?? args.user_agent ?? "") },
     update: { lastSeenAt: new Date() },
-  });
-  return { ok: true };
-}
-
-async function placeAuctionBid(args: RpcArgs, auth: JwtPayload | null) {
-  if (!auth) throw new Error("Unauthorized");
-  const auctionId = String(args.p_auction_id ?? args.auction_id);
-  const amount = Number(args.p_amount ?? args.amount);
-  const bid = await prisma.auctionBid.create({
-    data: {
-      auctionId,
-      bidderId: auth.sub,
-      bidderName: String(args.p_bidder_name ?? args.bidder_name ?? "Bidder"),
-      amount,
-      isAutoBid: Boolean(args.p_is_auto_bid ?? args.is_auto_bid),
-    },
-  });
-  await prisma.auction.update({
-    where: { id: auctionId },
-    data: { currentBid: amount, bidCount: { increment: 1 } },
-  });
-  emitDbChange("bids", "INSERT", { new: { id: bid.id, auction_id: auctionId, amount } });
-  emitDbChange("auctions", "UPDATE", { new: { id: auctionId, current_bid: amount } });
-  return { ok: true, bid_id: bid.id, amount };
-}
-
-async function finalizeAuction(args: RpcArgs, auth: JwtPayload | null) {
-  if (!auth) throw new Error("Unauthorized");
-  const auctionId = String(args.p_auction_id ?? args.auction_id);
-  const auction = await prisma.auction.findUnique({ where: { id: auctionId } });
-  if (!auction) throw new Error("Auction not found");
-  const topBid = await prisma.auctionBid.findFirst({
-    where: { auctionId },
-    orderBy: { amount: "desc" },
-  });
-  await prisma.auction.update({
-    where: { id: auctionId },
-    data: { status: "ended", winnerId: topBid?.bidderId ?? null },
   });
   return { ok: true };
 }

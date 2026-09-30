@@ -12,25 +12,55 @@ import {
   getAuctionAnalytics,
   updateAuctionAdmin,
   finalizeAuctionRpc,
+  moderateAuction,
 } from "../services/auction.service";
 import type { AuctionListing } from "../types";
 import { AUCTION_TYPE_LABELS } from "../types";
 import { auctionDetailPath } from "../lib/auction-utils";
+import { AuctionLotForm } from "../components/AuctionLotForm";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import type { AuctionStatus } from "@/types/database";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/store/authStore";
+
+type WinnerContact = { name: string; phone: string | null; email: string | null };
 
 export function AuctionAdminPage() {
+  const role = useAuthStore((s) => s.user?.role);
+  const isAdmin = role === "admin" || role === "super_admin";
   const [auctions, setAuctions] = useState<AuctionListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [winners, setWinners] = useState<Record<string, WinnerContact>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     const list = await fetchAuctions();
     setAuctions(list);
     setLoading(false);
-  }, []);
+    const ids = [...new Set(list.map((a) => a.winnerId).filter(Boolean))] as string[];
+    if (isAdmin && ids.length) {
+      const { data } = await supabase.from("users").select("id, full_name, phone, email").in("id", ids);
+      const map: Record<string, WinnerContact> = {};
+      for (const u of (data ?? []) as { id: string; full_name?: string; phone?: string; email?: string }[]) {
+        map[u.id] = { name: u.full_name || "Bidder", phone: u.phone ?? null, email: u.email ?? null };
+      }
+      setWinners(map);
+    }
+  }, [isAdmin]);
+
+  const review = async (id: string, decision: "approve" | "reject") => {
+    setUpdating(id);
+    const r = await moderateAuction(id, decision);
+    if (!r.ok) toast.error(r.error);
+    else {
+      toast.success(decision === "approve" ? `Approved — ${r.status === "live" ? "live now" : "scheduled"}` : "Rejected");
+      await load();
+    }
+    setUpdating(null);
+  };
 
   useEffect(() => {
     setPageMeta({ title: "Auction Admin — Motorcart.in", description: "Manage live auctions" });
@@ -82,10 +112,33 @@ export function AuctionAdminPage() {
 
   return (
     <motion.div className="space-y-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <header>
-        <h1 className="text-2xl font-bold">Auction control center</h1>
-        <p className="text-muted-foreground">Manage live rooms, featured listings & analytics</p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Auction control center</h1>
+          <p className="text-muted-foreground">Create lots, approve dealer submissions, run live rooms & settle winners</p>
+        </div>
+        <Button onClick={() => setShowCreate((v) => !v)} className="gap-2">
+          <Gavel className="h-4 w-4" />
+          {showCreate ? "Close form" : "Create auction"}
+        </Button>
       </header>
+
+      {showCreate && (
+        <Card>
+          <CardHeader>
+            <CardTitle>New auction lot</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AuctionLotForm
+              mode="organizer"
+              onCreated={() => {
+                setShowCreate(false);
+                void load();
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {statCards.map(({ label, value, icon: Icon }) => (
@@ -124,6 +177,7 @@ export function AuctionAdminPage() {
                     <th className="pb-3 pr-4">Status</th>
                     <th className="pb-3 pr-4">Current bid</th>
                     <th className="pb-3 pr-4">Bids</th>
+                    <th className="pb-3 pr-4">Schedule / result</th>
                     <th className="pb-3">Actions</th>
                   </tr>
                 </thead>
@@ -150,16 +204,58 @@ export function AuctionAdminPage() {
                       </td>
                       <td className="py-3 pr-4 font-medium">{formatCurrency(a.currentBid ?? a.startingBid)}</td>
                       <td className="py-3 pr-4">{a.bidCount}</td>
+                      <td className="py-3 pr-4 text-xs text-muted-foreground">
+                        {a.status === "ended" ? (
+                          a.winnerId ? (
+                            <span className="text-foreground">
+                              Winner: <strong>{winners[a.winnerId]?.name ?? "Bidder"}</strong>
+                              {winners[a.winnerId]?.phone && (
+                                <>
+                                  {" · "}
+                                  <a className="text-primary hover:underline" href={`tel:${winners[a.winnerId]!.phone}`}>
+                                    {winners[a.winnerId]!.phone}
+                                  </a>
+                                </>
+                              )}
+                            </span>
+                          ) : a.bidCount > 0 ? (
+                            "Reserve not met — no sale"
+                          ) : (
+                            "No bids"
+                          )
+                        ) : (
+                          <>
+                            {new Date(a.startsAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                            {" → "}
+                            {new Date(a.endsAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                          </>
+                        )}
+                      </td>
                       <td className="py-3">
                         <motion.div className="flex flex-wrap gap-1" role="group">
-                          {a.status !== "live" && (
+                          {a.status === "pending" && isAdmin && (
+                            <>
+                              <Button size="sm" disabled={updating === a.id} onClick={() => void review(a.id, "approve")}>
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={updating === a.id}
+                                onClick={() => void review(a.id, "reject")}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {a.status === "upcoming" && (
                             <Button
                               size="sm"
                               variant="outline"
                               disabled={updating === a.id}
                               onClick={() => setStatus(a.id, "live")}
                             >
-                              Go live
+                              Start now
                             </Button>
                           )}
                           {a.status === "live" && (
@@ -172,14 +268,16 @@ export function AuctionAdminPage() {
                               Hammer down
                             </Button>
                           )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={updating === a.id}
-                            onClick={() => toggleFeatured(a.id, a.isFeatured)}
-                          >
-                            {a.isFeatured ? "Unfeature" : "Feature"}
-                          </Button>
+                          {isAdmin && (a.status === "live" || a.status === "upcoming") && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={updating === a.id}
+                              onClick={() => toggleFeatured(a.id, a.isFeatured)}
+                            >
+                              {a.isFeatured ? "Unfeature" : "Feature"}
+                            </Button>
+                          )}
                         </motion.div>
                       </td>
                     </tr>

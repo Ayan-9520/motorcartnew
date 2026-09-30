@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { formatCurrency } from "@/lib/utils";
 import { fetchAdminAuctions, updateAdminAuction } from "../services/platform-admin.service";
 import type { AdminAuctionRow } from "../types";
+import { finalizeAuctionRpc, moderateAuction } from "@/features/auctions/services/auction.service";
 import { AdminErpShell } from "../components/AdminErpShell";
 import { SuperAdminStatusBadge } from "../components/SuperAdminStatusBadge";
 
@@ -28,6 +29,24 @@ export function AuctionApprovalsPage() {
     if (error) toast.error(error);
     else {
       toast.success(`Auction ${status}`);
+      void load();
+    }
+  };
+
+  const review = async (id: string, decision: "approve" | "reject") => {
+    const r = await moderateAuction(id, decision);
+    if (!r.ok) toast.error(r.error);
+    else {
+      toast.success(decision === "approve" ? `Approved — ${r.status === "live" ? "live now" : "scheduled"}` : "Rejected");
+      void load();
+    }
+  };
+
+  const hammer = async (id: string) => {
+    const r = await finalizeAuctionRpc(id);
+    if (!r.ok) toast.error(r.error ?? "Could not close auction");
+    else {
+      toast.success(r.winner_id ? "Closed — winner declared" : "Closed — reserve not met or no bids");
       void load();
     }
   };
@@ -53,25 +72,38 @@ export function AuctionApprovalsPage() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex flex-wrap gap-1">
+          {row.original.status === "pending" && (
+            <>
+              <Button size="sm" onClick={() => void review(row.original.id, "approve")}>
+                Approve
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => void review(row.original.id, "reject")}>
+                Reject
+              </Button>
+            </>
+          )}
           {row.original.status === "upcoming" && (
             <Button size="sm" onClick={() => void setStatus(row.original.id, "live")}>
-              Go live
+              Start now
             </Button>
           )}
           {row.original.status === "live" && (
-            <Button size="sm" variant="outline" onClick={() => void setStatus(row.original.id, "ended")}>
-              End
+            <Button size="sm" variant="outline" onClick={() => void hammer(row.original.id)}>
+              End &amp; declare winner
             </Button>
           )}
-          <Button size="sm" variant="ghost" onClick={() => void toggleFeatured(row.original)}>
-            {row.original.isFeatured ? "Unfeature" : "Feature"}
-          </Button>
+          {(row.original.status === "live" || row.original.status === "upcoming") && (
+            <Button size="sm" variant="ghost" onClick={() => void toggleFeatured(row.original)}>
+              {row.original.isFeatured ? "Unfeature" : "Feature"}
+            </Button>
+          )}
         </div>
       ),
     },
   ];
 
-  const pending = rows.filter((r) => r.status === "upcoming");
+  const pending = rows.filter((r) => r.status === "pending");
+  const scheduled = rows.filter((r) => r.status === "upcoming");
 
   return (
     <AdminErpShell
@@ -85,8 +117,12 @@ export function AuctionApprovalsPage() {
     >
       <div className="erp-kpi-strip">
         <div className="erp-kpi">
-          <span className="erp-kpi__label">Awaiting go-live</span>
+          <span className="erp-kpi__label">Awaiting approval</span>
           <span className="erp-kpi__value">{pending.length}</span>
+        </div>
+        <div className="erp-kpi">
+          <span className="erp-kpi__label">Scheduled</span>
+          <span className="erp-kpi__value">{scheduled.length}</span>
         </div>
         <div className="erp-kpi">
           <span className="erp-kpi__label">Live now</span>

@@ -292,11 +292,14 @@ export async function fetchDealerAuctionEntries(dealerId: string) {
 }
 
 export async function registerDealerAuction(dealerId: string, auctionId: string) {
-  return supabase.from("dealer_auction_entries").insert({
-    dealer_id: dealerId,
-    auction_id: auctionId,
-    status: "registered",
+  const { data, error } = await supabase.rpc("register_dealer_auction", {
+    p_auction_id: auctionId,
+    p_dealer_id: dealerId,
   });
+  if (error) throw new Error(error.message);
+  const result = data as { ok?: boolean; error?: string } | null;
+  if (!result?.ok) throw new Error(result?.error ?? "Could not register");
+  return result;
 }
 
 export async function fetchPublicDealerBySlug(slug: string) {

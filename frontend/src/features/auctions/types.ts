@@ -1,11 +1,22 @@
 import type { AuctionStatus } from "@/types/database";
 
-export type AuctionType = "dealer" | "bank_repo" | "government";
+export type AuctionType = "dealer" | "bank_repo" | "government" | "insurance" | "fleet";
 
 export const AUCTION_TYPE_LABELS: Record<AuctionType, string> = {
   dealer: "Dealer Auction",
   bank_repo: "Bank Repo",
   government: "Government Auction",
+  insurance: "Insurance Salvage",
+  fleet: "Fleet Auction",
+};
+
+/** UI auction type ↔ `auctions.auction_category` column. */
+export const AUCTION_TYPE_TO_CATEGORY: Record<AuctionType, string> = {
+  dealer: "dealer",
+  bank_repo: "bank",
+  government: "government",
+  insurance: "insurance",
+  fleet: "fleet",
 };
 
 export interface AuctionListing {
@@ -101,4 +112,5 @@ export interface PlaceBidResult {
   amount?: number;
   bidderName?: string;
   extended?: boolean;
+  leading?: boolean;
 }

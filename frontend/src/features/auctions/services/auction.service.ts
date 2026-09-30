@@ -3,6 +3,8 @@ import type { DbAuction, DbBid } from "@/types/database";
 import { MOCK_AUCTIONS, MOCK_BIDS, MOCK_MESSAGES } from "../data/mock-auctions";
 import { realDataOnly } from "@/config/real-data";
 import { mapDbAuction } from "../lib/auction-utils";
+import { api, apiErrorMessage } from "@/lib/api/axios";
+import { AUCTION_TYPE_TO_CATEGORY } from "../types";
 import type {
   AuctionListing,
   AuctionBid,
@@ -21,7 +23,7 @@ export async function fetchAuctions(filters?: {
 }): Promise<AuctionListing[]> {
   let q = supabase.from("auctions").select("*").order("ends_at", { ascending: true });
   if (filters?.status) q = q.eq("status", filters.status);
-  if (filters?.type) q = q.eq("auction_type", filters.type);
+  if (filters?.type) q = q.eq("auction_category", AUCTION_TYPE_TO_CATEGORY[filters.type] ?? filters.type);
   if (filters?.featured) q = q.eq("is_featured", true);
 
   const { data, error } = await q;
@@ -38,9 +40,15 @@ export async function fetchAuctions(filters?: {
   return pool;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function fetchAuctionBySlug(slug: string): Promise<AuctionListing | null> {
   const { data } = await supabase.from("auctions").select("*").eq("slug", slug).maybeSingle();
   if (data) return mapDbAuction(data as DbAuction);
+  if (UUID_RE.test(slug)) {
+    const { data: byId } = await supabase.from("auctions").select("*").eq("id", slug).maybeSingle();
+    if (byId) return mapDbAuction(byId as DbAuction);
+  }
 
   if (realDataOnly) return null;
   return MOCK_AUCTIONS.find((a) => a.slug === slug) ?? null;
@@ -49,19 +57,19 @@ export async function fetchAuctionBySlug(slug: string): Promise<AuctionListing |
 export async function fetchAuctionBids(auctionId: string): Promise<AuctionBid[]> {
   const { data } = await supabase
     .from("bids")
-    .select("*, users(full_name)")
+    .select("*")
     .eq("auction_id", auctionId)
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (data?.length) {
     return data.map((b) => {
-      const row = b as DbBid & { users?: { full_name: string } };
+      const row = b as DbBid & { bidder_name?: string | null };
       return {
         id: row.id,
         auctionId: row.auction_id,
         bidderId: row.bidder_id,
-        bidderName: row.users?.full_name ?? "Bidder",
+        bidderName: row.bidder_name || "Bidder",
         amount: Number(row.amount),
         isAutoBid: row.is_auto_bid,
         createdAt: row.created_at,
@@ -115,6 +123,7 @@ export async function placeBidRpc(
     amount?: number;
     bidder_name?: string;
     extended?: boolean;
+    leading?: boolean;
   };
   return {
     ok: result.ok,
@@ -123,6 +132,7 @@ export async function placeBidRpc(
     amount: result.amount,
     bidderName: result.bidder_name,
     extended: result.extended,
+    leading: result.leading,
   };
 }
 
@@ -204,8 +214,73 @@ export async function updateAuctionAdmin(
   return supabase.from("auctions").update(updates).eq("id", auctionId).select().single();
 }
 
-export async function createAuction(payload: Record<string, unknown>) {
-  return supabase.from("auctions").insert(payload).select().single();
+export type CreateAuctionPayload = {
+  title?: string;
+  vehicle_id?: string;
+  start_price: number;
+  reserve_price?: number | null;
+  bid_increment?: number;
+  starts_at?: string;
+  ends_at: string;
+  location?: string;
+  images?: string[];
+  category?: string;
+  description?: string;
+};
+
+/** Admin / auction partner → scheduled lot; dealer / customer (own vehicle) → pending approval. */
+export async function createAuction(
+  payload: CreateAuctionPayload
+): Promise<{ ok: true; id: string; slug: string; status: AuctionStatus } | { ok: false; error: string }> {
+  try {
+    const { data } = await api.post<{ data: { id: string; slug: string; status: AuctionStatus } }>("/api/auctions", payload);
+    return { ok: true, ...data.data };
+  } catch (e) {
+    return { ok: false, error: apiErrorMessage(e) };
+  }
+}
+
+export async function moderateAuction(id: string, decision: "approve" | "reject", note?: string) {
+  try {
+    const { data } = await api.post<{ data: { status: AuctionStatus } }>(`/api/auctions/${encodeURIComponent(id)}/moderate`, {
+      decision,
+      note,
+    });
+    return { ok: true as const, status: data.data.status };
+  } catch (e) {
+    return { ok: false as const, error: apiErrorMessage(e) };
+  }
+}
+
+export type MyAuctionLot = {
+  id: string;
+  slug: string;
+  title: string;
+  status: AuctionStatus;
+  current_bid: number | null;
+  start_price: number;
+  reserve_price: number | null;
+  bid_count: number;
+  starts_at: string;
+  ends_at: string;
+  winner_id: string | null;
+  vehicle_id?: string | null;
+  metadata?: Record<string, unknown>;
+};
+
+export type MyAuctionBid = MyAuctionLot & {
+  my_bid: number;
+  auto_bid_max: number | null;
+  standing: "leading" | "outbid" | "won" | "lost";
+};
+
+export async function fetchMyAuctionActivity(): Promise<{ bids: MyAuctionBid[]; organised: MyAuctionLot[] }> {
+  try {
+    const { data } = await api.get<{ data: { bids: MyAuctionBid[]; organised: MyAuctionLot[] } }>("/api/auctions/my");
+    return data.data ?? { bids: [], organised: [] };
+  } catch {
+    return { bids: [], organised: [] };
+  }
 }
 
 export function getAuctionAnalytics(auctions: AuctionListing[]): AuctionAnalytics {

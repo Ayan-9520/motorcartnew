@@ -65,6 +65,7 @@ enum AuctionStatus {
   live
   ended
   cancelled
+  pending
 }
 
 enum AuctionCategory {
