@@ -267,17 +267,7 @@ export function AuctionDesk({
             Motorcart reviews every lot before it goes live. Bidding opens at the scheduled time and the vehicle is
             sold only if the reserve price is met.
           </p>
-          {sellableVehicles.length ? (
-            <AuctionLotForm mode="seller" vehicles={sellableVehicles} onCreated={onRefresh} />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No available vehicles in your inventory.{" "}
-              <Link to="/dashboard/dealer/inventory" className="text-primary hover:underline">
-                Add a vehicle
-              </Link>{" "}
-              first.
-            </p>
-          )}
+          <AuctionLotForm mode="seller" vehicles={sellableVehicles} onCreated={onRefresh} />
         </div>
         {myLots.length > 0 && (
           <section className="dealer-os-card">

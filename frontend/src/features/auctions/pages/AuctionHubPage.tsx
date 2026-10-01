@@ -127,7 +127,7 @@ export function AuctionHubPage() {
       <section className="container pb-14">
         <div className="auction-hub-footer-cta text-center">
           <p className="mb-3 text-sm text-muted-foreground">
-            Dealer, bank repo or government fleet — register once, bid everywhere
+            Buy from bank, fleet & dealer lots — or put your own vehicle up for auction
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button className="rounded-xl shadow-[var(--shadow-primary)]" asChild>
@@ -139,9 +139,7 @@ export function AuctionHubPage() {
               {viewerRole === "admin" || viewerRole === "super_admin" || viewerRole === "auction_partner" ? (
                 <Link to="/dashboard/auction">Auction desk</Link>
               ) : (
-                <Link to={viewerRole ? "/dashboard/dealer/auctions" : "/login?redirect=/dashboard/dealer/auctions"}>
-                  Dealers: sell via auction
-                </Link>
+                <Link to={viewerRole ? "/auctions/sell" : "/login?redirect=/auctions/sell"}>Sell via auction</Link>
               )}
             </Button>
           </div>

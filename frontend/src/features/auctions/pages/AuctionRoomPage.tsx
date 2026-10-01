@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Building2, MapPin, Radio } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +39,7 @@ export function AuctionRoomPage() {
     postMessage,
     registerDealer,
   } = useAuctionRoom(slug);
+  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
     if (auction) {
@@ -74,6 +75,24 @@ export function AuctionRoomPage() {
   }
 
   const isWinner = Boolean(auction.winnerId && user?.id === auction.winnerId);
+  const vd = (auction.metadata?.vehicle_details ?? {}) as Record<string, string | number | undefined>;
+  const facts = (
+    [
+      ["Make / model", [vd.brand, vd.model, vd.variant].filter(Boolean).join(" ")],
+      ["Year", vd.year],
+      ["KM driven", vd.km_driven != null ? `${Number(vd.km_driven).toLocaleString("en-IN")} km` : ""],
+      ["Fuel", vd.fuel],
+      ["Transmission", vd.transmission],
+      ["Owners", vd.owners != null ? (Number(vd.owners) >= 4 ? "4+" : `${vd.owners}${["", "st", "nd", "rd"][Number(vd.owners)] ?? "th"} owner`) : ""],
+      ["Registration", [vd.registration_number, vd.registration_state].filter(Boolean).join(" · ")],
+      ["RC", vd.rc_status],
+      ["Insurance till", vd.insurance_valid_till ? new Date(String(vd.insurance_valid_till)).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : ""],
+      ["Loan", vd.hypothecation],
+      ["Accident history", vd.accident_history],
+    ] as [string, string | number | undefined][]
+  ).filter(([, v]) => v != null && String(v).trim() !== "") as [string, string | number][];
+  const inspectionNotes = vd.inspection_notes ? String(vd.inspection_notes) : "";
+  const sellerNotes = auction.metadata?.description ? String(auction.metadata.description) : "";
 
   const header = (
     <header className="auc-room__header flex flex-wrap items-center justify-between gap-4">
@@ -107,7 +126,11 @@ export function AuctionRoomPage() {
           <AuctionNotificationsPanel notifications={notifications} />
 
           <figure className="auc-room__hero relative aspect-[16/9] overflow-hidden rounded-2xl border bg-muted">
-            <img src={auction.images[0]} alt={auction.title} className="h-full w-full object-cover" />
+            <img
+              src={auction.images[activeImage] ?? auction.images[0]}
+              alt={auction.title}
+              className="h-full w-full object-cover"
+            />
             {auction.status === "live" && (
               <span className="auc-room__live-pill">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
@@ -119,7 +142,14 @@ export function AuctionRoomPage() {
           {auction.images.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto">
               {auction.images.map((src, i) => (
-                <img key={i} src={src} alt="" className="h-16 w-24 shrink-0 rounded-lg border object-cover" />
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActiveImage(i)}
+                  className={`shrink-0 overflow-hidden rounded-lg border-2 ${i === activeImage ? "border-primary" : "border-transparent"}`}
+                >
+                  <img src={src} alt={`${auction.title} photo ${i + 1}`} className="h-16 w-24 object-cover" />
+                </button>
               ))}
             </div>
           )}
@@ -136,6 +166,37 @@ export function AuctionRoomPage() {
             </p>
             <ReserveMeter auction={auction} />
           </div>
+
+          {facts.length > 0 && (
+            <section className="mt-5 rounded-xl border bg-card p-4">
+              <h2 className="mb-3 text-sm font-semibold">Vehicle details</h2>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
+                {facts.map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-xs text-muted-foreground">{label}</dt>
+                    <dd className="font-medium">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
+          {(inspectionNotes || sellerNotes) && (
+            <section className="mt-4 space-y-3 rounded-xl border bg-card p-4 text-sm">
+              {inspectionNotes && (
+                <div>
+                  <h2 className="mb-1 font-semibold">Condition / inspection</h2>
+                  <p className="whitespace-pre-line text-muted-foreground">{inspectionNotes}</p>
+                </div>
+              )}
+              {sellerNotes && (
+                <div>
+                  <h2 className="mb-1 font-semibold">Seller notes</h2>
+                  <p className="whitespace-pre-line text-muted-foreground">{sellerNotes}</p>
+                </div>
+              )}
+            </section>
+          )}
 
           {isAuthenticated && auction.auctionType === "dealer" && auction.status === "live" && (
             <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-dashed p-4">

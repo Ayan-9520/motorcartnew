@@ -138,6 +138,7 @@ import {
 } from "@/router/lazy-pages";
 import { AuctionHubPage } from "@/features/auctions/pages/AuctionHubPage";
 import { AuctionListingPage } from "@/features/auctions/pages/AuctionListingPage";
+import { SellViaAuctionPage } from "@/features/auctions/pages/SellViaAuctionPage";
 import { AuctionRoomPage } from "@/router/lazy-pages";
 import { FinanceHubPage } from "@/features/finance/pages/FinanceHubPage";
 import { FinanceMarketplacePage } from "@/features/finance/pages/FinanceMarketplacePage";
@@ -308,6 +309,14 @@ const appRoutes: RouteObject[] = [
       { path: "one/verify/:token", element: <MotorCartOneVerifyPage /> },
       { path: "auctions", element: <AuctionHubPage /> },
       { path: "auctions/browse", element: <AuctionListingPage /> },
+      {
+        path: "auctions/sell",
+        element: (
+          <ProtectedRoute>
+            <SellViaAuctionPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: "auctions/:status/:slug", element: <AuctionRoomPage /> },
       { path: "finance", element: <FinanceHubPage /> },
       { path: "finance/offers", element: <FinanceMarketplacePage /> },

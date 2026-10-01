@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
     category: (body.category ?? body.auction_category) as string | undefined,
     description: body.description as string | undefined,
     assetClass: (body.asset_class ?? body.assetClass) as string | undefined,
+    details: (body.vehicle_details ?? body.details) as Record<string, unknown> | undefined,
   };
   try {
     const result = await createAuctionLot(auth, input);

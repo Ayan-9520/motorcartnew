@@ -227,6 +227,7 @@ export type CreateAuctionPayload = {
   category?: string;
   asset_class?: string;
   description?: string;
+  vehicle_details?: Record<string, string>;
 };
 
 /** Admin / auction partner → scheduled lot; dealer / customer (own vehicle) → pending approval. */

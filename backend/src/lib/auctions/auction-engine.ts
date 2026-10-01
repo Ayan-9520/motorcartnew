@@ -414,6 +414,20 @@ export async function finalizeAuction(args: Args, auth: JwtPayload | null, opts:
   if (result.ok && !result.already) {
     emitDbChange("auctions", "UPDATE", { new: result.auction as Record<string, unknown> });
     emitNotifications(notices);
+    if (notices.length) {
+      await prisma.notification
+        .createMany({
+          data: notices.map((n) => ({
+            userId: n.userId,
+            title: n.title,
+            body: n.body,
+            message: n.body,
+            kind: "auction",
+            payload: { auctionId: n.auctionId } as Prisma.InputJsonValue,
+          })),
+        })
+        .catch(() => undefined);
+    }
   }
   return result;
 }
@@ -508,7 +522,47 @@ export type CreateAuctionInput = {
   category?: string;
   assetClass?: string;
   description?: string;
+  details?: Record<string, unknown>;
 };
+
+const DETAIL_TEXT_FIELDS = [
+  "brand",
+  "model",
+  "variant",
+  "fuel",
+  "transmission",
+  "registration_state",
+  "registration_number",
+  "rc_status",
+  "insurance_valid_till",
+  "hypothecation",
+  "accident_history",
+  "inspection_notes",
+] as const;
+
+/** Whitelisted vehicle facts shown to bidders on the lot page (`metadata.vehicle_details`). */
+function sanitizeVehicleDetails(raw: unknown): Record<string, string | number> {
+  if (!raw || typeof raw !== "object") return {};
+  const src = raw as Record<string, unknown>;
+  const out: Record<string, string | number> = {};
+  for (const key of DETAIL_TEXT_FIELDS) {
+    const v = src[key];
+    if (v == null) continue;
+    const s = String(v).trim().slice(0, key === "inspection_notes" ? 1000 : 80);
+    if (s) out[key] = s;
+  }
+  if (typeof out.registration_number === "string") {
+    const reg = out.registration_number.replace(/[^a-z0-9]/gi, "").toUpperCase();
+    out.registration_number = reg.length > 6 ? `${reg.slice(0, 4)}XXXX${reg.slice(-2)}` : reg.slice(0, 4);
+  }
+  const year = Number(src.year);
+  if (Number.isInteger(year) && year >= 1950 && year <= new Date().getFullYear() + 1) out.year = year;
+  const km = Number(src.km_driven);
+  if (Number.isFinite(km) && km >= 0 && km < 5_000_000) out.km_driven = Math.round(km);
+  const owners = Number(src.owners);
+  if (Number.isInteger(owners) && owners >= 1 && owners <= 10) out.owners = owners;
+  return out;
+}
 
 const ASSET_CLASSES = new Set(["commercial", "cars", "tractors", "two-wheelers", "buses", "construction", "gold", "real-estate"]);
 
@@ -547,12 +601,16 @@ export async function createAuctionLot(auth: JwtPayload, input: CreateAuctionInp
       select: { id: true },
     });
     if (running) return fail("This vehicle already has an active auction");
-  } else if (!organizer) {
-    return fail("Pick one of your vehicles to auction");
+  }
+
+  if (!organizer) {
+    const pendingCount = await prisma.auction.count({ where: { organizerId: auth.sub, status: "pending" } });
+    if (pendingCount >= 5) return fail("You already have 5 lots awaiting approval — wait for review before adding more");
   }
 
   const title = (input.title?.trim() || vehicle?.title || "").slice(0, 180);
   if (!title) return fail("Title is required");
+  const details = sanitizeVehicleDetails(input.details);
   const startPrice = num(input.startPrice);
   if (!Number.isFinite(startPrice) || startPrice < 1000) return fail("Starting price must be at least ₹1,000");
   const reserve = input.reservePrice == null || input.reservePrice === 0 ? null : num(input.reservePrice);
@@ -566,9 +624,14 @@ export async function createAuctionLot(auth: JwtPayload, input: CreateAuctionInp
   if (endsAt.getTime() <= Date.now()) return fail("End time must be in the future");
   if (endsAt.getTime() - startsAt.getTime() < 10 * 60_000) return fail("Auction must run at least 10 minutes");
 
-  const category = CATEGORIES.has(input.category as AuctionCategory) ? (input.category as AuctionCategory) : "dealer";
-  const images = (input.images ?? []).map((u) => String(u).trim()).filter(Boolean);
+  const category =
+    organizer && CATEGORIES.has(input.category as AuctionCategory) ? (input.category as AuctionCategory) : "dealer";
+  const images = (input.images ?? [])
+    .map((u) => String(u).trim())
+    .filter((u) => u.startsWith("/uploads/") || /^https:\/\//i.test(u))
+    .slice(0, 20);
   const vehicleImages = Array.isArray(vehicle?.images) ? (vehicle!.images as unknown[]).map(String) : [];
+  if (!organizer && !vehicle && images.length < 3) return fail("Upload at least 3 clear photos of the vehicle");
 
   const status: AuctionStatus = !organizer
     ? "pending"
@@ -594,12 +657,33 @@ export async function createAuctionLot(auth: JwtPayload, input: CreateAuctionInp
       metadata: {
         description: input.description?.trim() || null,
         asset_class: ASSET_CLASSES.has(String(input.assetClass)) ? input.assetClass : inferAssetClass(vehicle?.category, title),
+        vehicle_details: details,
         submitted_by_role: auth.role,
         approval: organizer ? "approved" : "pending",
       } as Prisma.InputJsonValue,
     },
   });
   emitDbChange("auctions", "INSERT", { new: { id: auction.id, status: auction.status } });
+  if (status === "pending") {
+    const admins = await prisma.user.findMany({
+      where: { role: { in: ["super_admin", "admin"] }, deletedAt: null },
+      select: { id: true },
+    });
+    if (admins.length) {
+      await prisma.notification
+        .createMany({
+          data: admins.map((a) => ({
+            userId: a.id,
+            title: "Auction lot awaiting approval",
+            body: `${title} — starting ₹${startPrice.toLocaleString("en-IN")}`,
+            message: `${title} — starting ₹${startPrice.toLocaleString("en-IN")}`,
+            kind: "auction",
+            payload: { auctionId: auction.id, link: "/dashboard/super-admin/auction-desk" } as Prisma.InputJsonValue,
+          })),
+        })
+        .catch(() => undefined);
+    }
+  }
   return { ok: true, id: auction.id, slug: auction.slug, status: auction.status };
 }
 
@@ -641,6 +725,18 @@ export async function moderateAuctionLot(auth: JwtPayload, auctionId: string, de
       },
     });
     emitNotifications([n]);
+    await prisma.notification
+      .create({
+        data: {
+          userId: auction.organizerId,
+          title: n.title,
+          body: n.body,
+          message: n.body,
+          kind: "auction",
+          payload: { auctionId, link: `/auctions/${status === "cancelled" ? "live" : status}/${auction.slug}` } as Prisma.InputJsonValue,
+        },
+      })
+      .catch(() => undefined);
   }
   emitDbChange("auctions", "UPDATE", { new: auctionRow(updated) });
   return { ok: true, status };

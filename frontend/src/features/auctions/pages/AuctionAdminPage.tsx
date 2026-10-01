@@ -40,7 +40,11 @@ export function AuctionAdminPage() {
     const list = await fetchAuctions();
     setAuctions(list);
     setLoading(false);
-    const ids = [...new Set(list.map((a) => a.winnerId).filter(Boolean))] as string[];
+    const ids = [
+      ...new Set(
+        list.flatMap((a) => [a.winnerId, a.status === "pending" ? a.organizerId : null]).filter(Boolean)
+      ),
+    ] as string[];
     if (isAdmin && ids.length) {
       const { data } = await supabase.from("users").select("id, full_name, phone, email").in("id", ids);
       const map: Record<string, WinnerContact> = {};
@@ -223,6 +227,19 @@ export function AuctionAdminPage() {
                           ) : (
                             "No bids"
                           )
+                        ) : a.status === "pending" ? (
+                          <span className="text-foreground">
+                            Seller: <strong>{winners[a.organizerId]?.name ?? "—"}</strong>
+                            {winners[a.organizerId]?.phone && (
+                              <>
+                                {" · "}
+                                <a className="text-primary hover:underline" href={`tel:${winners[a.organizerId]!.phone}`}>
+                                  {winners[a.organizerId]!.phone}
+                                </a>
+                              </>
+                            )}
+                            <span className="block text-muted-foreground">Open the lot to check photos & details</span>
+                          </span>
                         ) : (
                           <>
                             {new Date(a.startsAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
