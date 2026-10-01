@@ -6,6 +6,34 @@ export function slugifyAuction(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+export const AUCTION_ASSET_CLASSES = [
+  { id: "cars", label: "4 Wheelers (cars, SUVs)" },
+  { id: "commercial", label: "Commercial vehicles (trucks, tippers)" },
+  { id: "two-wheelers", label: "2 Wheelers" },
+  { id: "buses", label: "Buses & coaches" },
+  { id: "tractors", label: "Tractors & farm" },
+  { id: "construction", label: "Construction equipment" },
+  { id: "gold", label: "Gold & assets" },
+  { id: "real-estate", label: "Real estate" },
+] as const;
+
+const ASSET_CLASS_IDS = new Set<string>(AUCTION_ASSET_CLASSES.map((c) => c.id));
+
+/** Asset class saved on the lot (`metadata.asset_class`), else inferred from the title. */
+export function auctionAssetClass(a: Pick<AuctionListing, "title" | "metadata">): string {
+  const saved = String(a.metadata?.asset_class ?? "");
+  if (ASSET_CLASS_IDS.has(saved)) return saved;
+  const t = a.title.toLowerCase();
+  if (/\b(tractor|harvester|rotavator)\b/.test(t)) return "tractors";
+  if (/\b(jcb|excavator|crane|loader|mixer|backhoe|dozer)\b/.test(t)) return "construction";
+  if (/\b(truck|tipper|trailer|pickup|tempo|lcv|hcv)\b/.test(t)) return "commercial";
+  if (/\b(bus|coach)\b/.test(t)) return "buses";
+  if (/\b(bike|scooter|motorcycle|activa|splendor|pulsar|royal enfield)\b/.test(t)) return "two-wheelers";
+  if (/\b(gold|jewell?ery)\b/.test(t)) return "gold";
+  if (/\b(plot|flat|land|shop|property)\b/.test(t)) return "real-estate";
+  return "cars";
+}
+
 const CATEGORY_TO_TYPE: Record<string, AuctionType> = {
   dealer: "dealer",
   bank: "bank_repo",

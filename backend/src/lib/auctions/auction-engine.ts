@@ -506,8 +506,27 @@ export type CreateAuctionInput = {
   location?: string;
   images?: string[];
   category?: string;
+  assetClass?: string;
   description?: string;
 };
+
+const ASSET_CLASSES = new Set(["commercial", "cars", "tractors", "two-wheelers", "buses", "construction", "gold", "real-estate"]);
+
+function inferAssetClass(vehicleCategory: string | null | undefined, title: string): string {
+  const cat = (vehicleCategory ?? "").toLowerCase();
+  if (cat.includes("bike") || cat.includes("scooter")) return "two-wheelers";
+  if (cat.includes("truck")) return "commercial";
+  if (cat.includes("bus")) return "buses";
+  const t = title.toLowerCase();
+  if (/\b(tractor|harvester|rotavator)\b/.test(t)) return "tractors";
+  if (/\b(jcb|excavator|crane|loader|mixer|backhoe|dozer)\b/.test(t)) return "construction";
+  if (/\b(truck|tipper|trailer|pickup|tempo|lcv|hcv)\b/.test(t)) return "commercial";
+  if (/\b(bus|coach)\b/.test(t)) return "buses";
+  if (/\b(bike|scooter|motorcycle|activa|splendor|pulsar|royal enfield)\b/.test(t)) return "two-wheelers";
+  if (/\b(gold|jewell?ery)\b/.test(t)) return "gold";
+  if (/\b(plot|flat|land|shop|property)\b/.test(t)) return "real-estate";
+  return "cars";
+}
 
 /**
  * Admin / auction partner lots go straight to schedule; dealer and customer lots (own vehicle only)
@@ -515,11 +534,11 @@ export type CreateAuctionInput = {
  */
 export async function createAuctionLot(auth: JwtPayload, input: CreateAuctionInput): Promise<AuctionResult> {
   const organizer = AUCTION_ORGANIZER_ROLES.has(auth.role);
-  let vehicle: { id: string; title: string; images: unknown; price: Prisma.Decimal; city: string } | null = null;
+  let vehicle: { id: string; title: string; images: unknown; price: Prisma.Decimal; city: string; category: string } | null = null;
   if (input.vehicleId) {
     vehicle = await prisma.vehicle.findFirst({
       where: { id: input.vehicleId, deletedAt: null },
-      select: { id: true, title: true, images: true, price: true, city: true },
+      select: { id: true, title: true, images: true, price: true, city: true, category: true },
     });
     if (!vehicle) return fail("Vehicle not found");
     if (!organizer && !(await canMutateVehicle(auth.sub, vehicle.id))) return fail("You can only auction your own vehicle");
@@ -574,6 +593,7 @@ export async function createAuctionLot(auth: JwtPayload, input: CreateAuctionInp
       images: (images.length ? images : vehicleImages) as Prisma.InputJsonValue,
       metadata: {
         description: input.description?.trim() || null,
+        asset_class: ASSET_CLASSES.has(String(input.assetClass)) ? input.assetClass : inferAssetClass(vehicle?.category, title),
         submitted_by_role: auth.role,
         approval: organizer ? "approved" : "pending",
       } as Prisma.InputJsonValue,

@@ -14,7 +14,7 @@ import { auctionBrowsePath } from "../lib/auction-hub-routes";
 import { useAuthStore } from "@/store/authStore";
 
 export function AuctionHubPage() {
-  const { liveEvents, upcomingEvents, liveAuctions, loading, stats } = useAuctionHub();
+  const { liveEvents, upcomingEvents, liveAuctions, upcomingAuctions, loading, stats } = useAuctionHub();
   const viewerRole = useAuthStore((s) => s.user?.role);
 
   useEffect(() => {
@@ -122,7 +122,7 @@ export function AuctionHubPage() {
         )}
       </section>
 
-      <AuctionAssetCategoryGrid />
+      <AuctionAssetCategoryGrid auctions={[...liveAuctions, ...upcomingAuctions]} loading={loading} />
 
       <section className="container pb-14">
         <div className="auction-hub-footer-cta text-center">

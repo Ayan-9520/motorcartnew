@@ -70,7 +70,6 @@ export interface AuctionAssetCategory {
   subtitle: string;
   image: string;
   href: string;
-  countLabel: string;
 }
 
 export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
@@ -80,7 +79,6 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     subtitle: "Trucks, tippers & CV fleets",
     image: HUB_HERO_IMAGES.trucks,
     href: "/auctions/browse?category=commercial",
-    countLabel: "420+ lots",
   },
   {
     id: "cars",
@@ -88,7 +86,6 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     subtitle: "Cars, SUVs & MUVs",
     image: HUB_HERO_IMAGES.cars,
     href: "/auctions/browse?category=cars",
-    countLabel: "1,200+ lots",
   },
   {
     id: "tractors",
@@ -96,31 +93,27 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     subtitle: "Agri & harvest equipment",
     image: HUB_HERO_IMAGES.equipment,
     href: "/auctions/browse?category=tractors",
-    countLabel: "180+ lots",
   },
   {
     id: "two-wheelers",
     label: "2 Wheelers",
     subtitle: "Bikes & scooters",
     image: HUB_HERO_IMAGES.bikes,
-    href: "/buy/bikes/used",
-    countLabel: "350+ lots",
+    href: "/auctions/browse?category=two-wheelers",
   },
   {
     id: "buses",
     label: "Buses & Coaches",
     subtitle: "Staff & tourist coaches",
     image: HUB_HERO_IMAGES.buses,
-    href: "/buy/buses/used",
-    countLabel: "95+ lots",
+    href: "/auctions/browse?category=buses",
   },
   {
     id: "construction",
     label: "Construction Equipment",
     subtitle: "JCB, cranes & mixers",
     image: HUB_HERO_IMAGES.equipment,
-    href: "/buy/equipment/used",
-    countLabel: "140+ lots",
+    href: "/auctions/browse?category=construction",
   },
   {
     id: "gold",
@@ -128,7 +121,6 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     subtitle: "Bank pledged assets",
     image: MEDIA_DEFAULTS.finance,
     href: "/auctions/browse?category=gold",
-    countLabel: "60+ lots",
   },
   {
     id: "real-estate",
@@ -136,7 +128,6 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     subtitle: "Plots & commercial space",
     image: MEDIA_DEFAULTS.dealerCover,
     href: "/auctions/browse?category=real-estate",
-    countLabel: "45+ listings",
   },
 ];
 

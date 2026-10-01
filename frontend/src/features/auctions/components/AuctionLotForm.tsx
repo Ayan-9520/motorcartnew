@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { createAuction } from "../services/auction.service";
+import { AUCTION_ASSET_CLASSES } from "../lib/auction-utils";
 import { AUCTION_TYPE_LABELS, AUCTION_TYPE_TO_CATEGORY, type AuctionType } from "../types";
 
 export type AuctionVehicleOption = { id: string; title: string; price: number; city?: string };
@@ -58,6 +59,7 @@ export function AuctionLotForm({ mode, vehicles = [], onCreated }: AuctionLotFor
   const [location, setLocation] = useState("");
   const [images, setImages] = useState("");
   const [description, setDescription] = useState("");
+  const [assetClass, setAssetClass] = useState("");
   const [saving, setSaving] = useState(false);
 
   const picked = useMemo(() => vehicles.find((v) => v.id === vehicleId), [vehicles, vehicleId]);
@@ -127,6 +129,7 @@ export function AuctionLotForm({ mode, vehicles = [], onCreated }: AuctionLotFor
         : undefined,
       category: organizer ? AUCTION_TYPE_TO_CATEGORY[type] : "dealer",
       description: description.trim() || undefined,
+      asset_class: assetClass || undefined,
     });
     setSaving(false);
     if (!result.ok) {
@@ -148,6 +151,7 @@ export function AuctionLotForm({ mode, vehicles = [], onCreated }: AuctionLotFor
     setIncrement("");
     setImages("");
     setDescription("");
+    setAssetClass("");
     setStartsAt(localNow());
     onCreated?.();
   };
@@ -211,6 +215,19 @@ export function AuctionLotForm({ mode, vehicles = [], onCreated }: AuctionLotFor
           onChange={(e) => setTitle(e.target.value)}
           required={organizer && !listingUrl.trim()}
         />
+      </div>
+
+      <div className="sm:col-span-2">
+        <Label>Asset class</Label>
+        <select className="dealer-os-select mt-1 w-full" value={assetClass} onChange={(e) => setAssetClass(e.target.value)}>
+          <option value="">Auto-detect from vehicle / title</option>
+          {AUCTION_ASSET_CLASSES.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-[11px] text-muted-foreground">Decides which category tile on /auctions shows this lot.</p>
       </div>
 
       <div>

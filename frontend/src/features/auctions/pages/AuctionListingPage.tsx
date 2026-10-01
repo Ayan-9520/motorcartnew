@@ -10,6 +10,7 @@ import { AuctionCard } from "../components/AuctionCard";
 import { AuctionHeroBanner } from "../components/AuctionHeroBanner";
 import { CategoryTabs } from "../components/CategoryTabs";
 import { MOCK_AUCTION_EVENTS } from "../data/auction-hub-data";
+import { auctionAssetClass } from "../lib/auction-utils";
 
 const STATUS_TABS = [
   { id: "live", label: "Live now", icon: Radio },
@@ -24,6 +25,7 @@ export function AuctionListingPage() {
   const q = (params.get("q") ?? "").toLowerCase();
   const state = params.get("state");
   const eventSlug = params.get("event");
+  const assetCategory = params.get("category");
 
   const filterBySearch = (list: typeof live) => {
     let result = list;
@@ -37,6 +39,9 @@ export function AuctionListingPage() {
     }
     if (state && state !== "All States") {
       result = result.filter((a) => a.location.toLowerCase().includes(state.toLowerCase().split(" ")[0]!));
+    }
+    if (assetCategory) {
+      result = result.filter((a) => auctionAssetClass(a) === assetCategory);
     }
     if (eventSlug) {
       const ev = MOCK_AUCTION_EVENTS.find((e) => e.slug === eventSlug);
@@ -53,7 +58,7 @@ export function AuctionListingPage() {
 
   const activeListRaw =
     status === "upcoming" ? upcoming : status === "ended" ? ended : live;
-  const activeList = useMemo(() => filterBySearch(activeListRaw), [activeListRaw, q, state, eventSlug]);
+  const activeList = useMemo(() => filterBySearch(activeListRaw), [activeListRaw, q, state, eventSlug, assetCategory]);
 
   const heroAuction = featured[0] ?? live[0];
 

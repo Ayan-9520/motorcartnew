@@ -225,6 +225,7 @@ export type CreateAuctionPayload = {
   location?: string;
   images?: string[];
   category?: string;
+  asset_class?: string;
   description?: string;
 };
 
