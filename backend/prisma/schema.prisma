@@ -1134,6 +1134,37 @@ model InsuranceApplication {
   @@map("insurance_applications")
 }
 
+/// Customer claim intimation desk — works for any insurer, with or without a MotorCart-issued policy.
+model InsuranceClaimRequest {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  applicationId String?   @map("application_id")
+  insurerName   String    @map("insurer_name")
+  policyNumber  String    @map("policy_number")
+  vehicleReg    String    @map("vehicle_reg")
+  vehicleType   String    @default("car") @map("vehicle_type")
+  incidentType  String    @map("incident_type")
+  incidentAt    DateTime  @map("incident_at")
+  location      String
+  description   String
+  claimMode     String    @default("cashless") @map("claim_mode")
+  garage        String?
+  firNumber     String?   @map("fir_number")
+  contactPhone  String    @map("contact_phone")
+  documents     Json      @default("[]")
+  status        String    @default("intimated")
+  claimNumber   String?   @map("claim_number")
+  surveyAt      DateTime? @map("survey_at")
+  approvedAmount Decimal? @map("approved_amount") @db.Decimal(12, 2)
+  notes         Json      @default("[]")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@map("insurance_claim_requests")
+}
+
 model PartProduct {
   id            String   @id @default(uuid())
   sellerId      String   @map("seller_id")

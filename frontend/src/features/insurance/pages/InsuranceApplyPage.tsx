@@ -1,78 +1,84 @@
 import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Camera } from "lucide-react";
 import { setPageMeta } from "@/utils/seo";
 import { formatCurrency } from "@/lib/utils";
-import { BrandLogo } from "@/components/ui/BrandLogo";
 import { InsuranceSubpageShell } from "../components/InsuranceSubpageShell";
 import { InsuranceApplyForm } from "../components/InsuranceApplyForm";
-import { useInsuranceQuote } from "../hooks/useInsuranceQuote";
-import { parseInsuranceVehicle, vehicleTypeLabel } from "../lib/insurance-routes";
-import { planTypeLabel } from "../lib/insurance-premium";
+import { InsuranceDisclaimer, InsurancePremiumBreakdown, InsurerMonogram } from "../components/InsuranceBits";
+import { readSelectedQuote, useInsuranceQuote } from "../hooks/useInsuranceQuote";
+import { parseInsuranceVehicle } from "../lib/insurance-routes";
+import { assessScenario, computeInsurerQuote, findInsurer, motorPlanLabel, scenarioLabel } from "../lib/insurance-engine";
 
 export function InsuranceApplyPage() {
   const [params] = useSearchParams();
   const vehicleType = parseInsuranceVehicle(params.get("type"));
-  const quoteId = params.get("quote");
-  const { offers, loading } = useInsuranceQuote(vehicleType);
+  const insurerParam = params.get("quote");
+  const { input: storedInput } = useInsuranceQuote(vehicleType);
 
-  const offer = useMemo(
-    () => offers.find((o) => o.id === quoteId) ?? offers[0] ?? null,
-    [offers, quoteId]
-  );
+  const selection = useMemo(() => {
+    const selected = readSelectedQuote();
+    const input = selected && selected.input.vehicleType === vehicleType ? selected.input : storedInput;
+    const insurer = findInsurer(insurerParam ?? selected?.insurerSlug);
+    if (!insurer) return null;
+    const assessment = assessScenario(input);
+    const quote = computeInsurerQuote(input, insurer, assessment);
+    return { input, insurer, assessment, quote };
+  }, [vehicleType, insurerParam, storedInput]);
 
   useEffect(() => {
-    setPageMeta({ title: "Buy insurance — Motorcart" });
+    setPageMeta({ title: "Insurance application — Motorcart" });
   }, []);
 
-  if (loading && !offer) {
+  if (!selection || !selection.quote.available) {
     return (
-      <InsuranceSubpageShell title="Checkout" subtitle="Loading your quote…" vehicleType={vehicleType}>
-        <p className="text-muted-foreground animate-pulse">Preparing checkout…</p>
-      </InsuranceSubpageShell>
-    );
-  }
-
-  if (!offer) {
-    return (
-      <InsuranceSubpageShell title="Checkout" subtitle="Quote not found" vehicleType={vehicleType}>
-        <Link to={`/insurance/quote?type=${vehicleType}`} className="text-primary font-semibold">
-          Get a new quote
+      <InsuranceSubpageShell title="Checkout" subtitle="Pick an insurer from the quote list first" vehicleType={vehicleType}>
+        <Link to={`/insurance/quote?type=${vehicleType}`} className="font-semibold text-primary">
+          Get quotes
         </Link>
       </InsuranceSubpageShell>
     );
   }
 
+  const { input, insurer, assessment, quote } = selection;
+
   return (
     <InsuranceSubpageShell
-      title="Complete purchase"
-      subtitle={`${offer.partnerName} · ${planTypeLabel(offer.planType)} · ${vehicleTypeLabel(offer.vehicleType)}`}
+      title="Complete your application"
+      subtitle={`${insurer.shortName} · ${motorPlanLabel(input.planType, input.scenario, input.vehicleType)} · ${scenarioLabel(input.scenario)}`}
       vehicleType={vehicleType}
     >
-      <div className="grid gap-8 lg:grid-cols-2 max-w-4xl">
-        <article className="ins-checkout-summary">
-          <div className="flex items-center gap-3 mb-4">
-            <BrandLogo src={offer.logoUrl ?? ""} alt={offer.partnerName} size="md" />
-            <div>
-              <p className="font-bold">{offer.partnerName}</p>
-              <p className="text-sm text-muted-foreground">
-                {offer.vehicleMake} {offer.vehicleModel} · {offer.registrationCity}
-              </p>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-5">
+        <aside className="min-w-0 space-y-4 lg:col-span-2">
+          <article className="ins-checkout-summary">
+            <div className="mb-4 flex items-center gap-3">
+              <InsurerMonogram name={insurer.shortName} />
+              <div className="min-w-0">
+                <p className="font-bold">{insurer.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {input.make} {input.model} · {input.city}
+                </p>
+              </div>
             </div>
-          </div>
-          <p className="text-3xl font-bold text-primary">{formatCurrency(offer.annualPremium)}</p>
-          <p className="text-xs text-muted-foreground">Annual premium · IDV {formatCurrency(offer.idvAmount)}</p>
-          <ul className="mt-4 space-y-1 text-sm">
-            {offer.breakdown.slice(0, 4).map((line) => (
-              <li key={line.label} className="flex justify-between">
-                <span className="text-muted-foreground">{line.label}</span>
-                <span>{formatCurrency(Math.abs(line.amount))}</span>
-              </li>
-            ))}
-          </ul>
-        </article>
-        <div className="ins-panel">
-          <h2 className="text-sm font-bold mb-4">Policy holder</h2>
-          <InsuranceApplyForm offer={offer} />
+            <p className="text-3xl font-bold text-primary">{formatCurrency(quote.totalPremium)}</p>
+            <p className="mb-4 text-xs text-muted-foreground">
+              Indicative, incl. GST{quote.idv ? ` · IDV ${formatCurrency(quote.idv)}` : ""} · {insurer.claimSettlementRatio}% claims settled
+            </p>
+            <InsurancePremiumBreakdown quote={quote} compact />
+          </article>
+          {assessment.inspectionRequired && (
+            <p className="flex gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm">
+              <Camera className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              {assessment.inspectionReason}
+            </p>
+          )}
+          <InsuranceDisclaimer />
+          <Link to={`/insurance/quote?type=${vehicleType}`} className="block text-sm font-semibold text-primary">
+            ← Change vehicle, plan or insurer
+          </Link>
+        </aside>
+        <div className="ins-panel min-w-0 lg:col-span-3">
+          <InsuranceApplyForm input={input} insurer={insurer} quote={quote} assessment={assessment} />
         </div>
       </div>
     </InsuranceSubpageShell>

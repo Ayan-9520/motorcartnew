@@ -8,6 +8,7 @@ export type StorageBucket =
   | "service-images"
   | "part-images"
   | "finance-documents"
+  | "insurance-documents"
   | "community-media";
 
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
@@ -122,7 +123,7 @@ export async function uploadFile(
   onProgress?: (pct: number) => void
 ) {
   let toUpload = file;
-  if (bucket !== "dealer-documents" && bucket !== "finance-documents") {
+  if (bucket !== "dealer-documents" && bucket !== "finance-documents" && bucket !== "insurance-documents") {
     toUpload = await resolveImageFile(file);
     if (!/\.(jpe?g|png|webp|avif|gif|bmp|heic)$/i.test(path)) {
       const ext = toUpload.type === "image/png" ? "png" : toUpload.type === "image/webp" ? "webp" : "jpg";

@@ -36,6 +36,7 @@
     "test:phase3": "tsx --test src/lib/organization/organization.test.ts",
     "test:phase3-db": "tsx --test src/lib/organization/organization-db.test.ts",
     "test:phase-c": "tsx --test src/lib/finance/finance.test.ts",
+    "test:insurance": "tsx --test src/lib/insurance/insurance-engine.test.ts",
     "test:phase-c-db": "tsx --test src/lib/finance/finance-db.test.ts",
     "test:phase4": "tsx --test src/lib/customer/customer.test.ts",
     "test:phase4-db": "tsx --test src/lib/customer/customer-db.test.ts",
