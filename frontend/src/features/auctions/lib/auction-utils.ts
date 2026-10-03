@@ -13,8 +13,6 @@ export const AUCTION_ASSET_CLASSES = [
   { id: "buses", label: "Buses & coaches" },
   { id: "tractors", label: "Tractors & farm" },
   { id: "construction", label: "Construction equipment" },
-  { id: "gold", label: "Gold & assets" },
-  { id: "real-estate", label: "Real estate" },
 ] as const;
 
 const ASSET_CLASS_IDS = new Set<string>(AUCTION_ASSET_CLASSES.map((c) => c.id));
@@ -29,8 +27,6 @@ export function auctionAssetClass(a: Pick<AuctionListing, "title" | "metadata">)
   if (/\b(truck|tipper|trailer|pickup|tempo|lcv|hcv)\b/.test(t)) return "commercial";
   if (/\b(bus|coach)\b/.test(t)) return "buses";
   if (/\b(bike|scooter|motorcycle|activa|splendor|pulsar|royal enfield)\b/.test(t)) return "two-wheelers";
-  if (/\b(gold|jewell?ery)\b/.test(t)) return "gold";
-  if (/\b(plot|flat|land|shop|property)\b/.test(t)) return "real-estate";
   return "cars";
 }
 

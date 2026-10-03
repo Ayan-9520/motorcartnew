@@ -4242,11 +4242,11 @@
   }
 
   .auction-category-grid {
-    @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-4;
+    @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-3;
   }
 
   .auction-category-card {
-    @apply relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-[var(--shadow-card-hover)];
+    @apply relative aspect-[16/9] overflow-hidden rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-[var(--shadow-card-hover)];
   }
 
   .auction-category-bg {

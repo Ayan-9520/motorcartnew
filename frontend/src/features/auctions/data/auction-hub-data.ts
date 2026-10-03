@@ -20,7 +20,6 @@ import {
 import {
   dealerCoverImage,
   HUB_HERO_IMAGES,
-  MEDIA_DEFAULTS,
 } from "@/lib/media/india-media-catalog";
 
 export type AuctionServiceId =
@@ -60,9 +59,7 @@ export type AuctionAssetCategoryId =
   | "tractors"
   | "two-wheelers"
   | "buses"
-  | "construction"
-  | "gold"
-  | "real-estate";
+  | "construction";
 
 export interface AuctionAssetCategory {
   id: AuctionAssetCategoryId;
@@ -77,7 +74,7 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     id: "commercial",
     label: "Commercial Vehicles",
     subtitle: "Trucks, tippers & CV fleets",
-    image: HUB_HERO_IMAGES.trucks,
+    image: "/media/auctions/commercial.webp",
     href: "/auctions/browse?category=commercial",
   },
   {
@@ -91,7 +88,7 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     id: "tractors",
     label: "Tractors & Farm",
     subtitle: "Agri & harvest equipment",
-    image: HUB_HERO_IMAGES.equipment,
+    image: "/media/auctions/tractors.webp",
     href: "/auctions/browse?category=tractors",
   },
   {
@@ -105,29 +102,15 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     id: "buses",
     label: "Buses & Coaches",
     subtitle: "Staff & tourist coaches",
-    image: HUB_HERO_IMAGES.buses,
+    image: "/media/auctions/buses.webp",
     href: "/auctions/browse?category=buses",
   },
   {
     id: "construction",
     label: "Construction Equipment",
     subtitle: "JCB, cranes & mixers",
-    image: HUB_HERO_IMAGES.equipment,
+    image: "/media/auctions/construction.webp",
     href: "/auctions/browse?category=construction",
-  },
-  {
-    id: "gold",
-    label: "Gold & Assets",
-    subtitle: "Bank pledged assets",
-    image: MEDIA_DEFAULTS.finance,
-    href: "/auctions/browse?category=gold",
-  },
-  {
-    id: "real-estate",
-    label: "Real Estate",
-    subtitle: "Plots & commercial space",
-    image: MEDIA_DEFAULTS.dealerCover,
-    href: "/auctions/browse?category=real-estate",
   },
 ];
 

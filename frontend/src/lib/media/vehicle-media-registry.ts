@@ -157,7 +157,7 @@ export const HUB_HERO_IMAGES: Record<
   buses: "/media/vehicles/buses/Ashok Leyland/Viking/01.webp",
   ev: "/media/vehicles/cars/Hyundai/Creta/01.webp",
   auto: "/brand/hero-automotive-premium-v2.webp",
-  equipment: "/media/vehicles/trucks/Tata/Prima/01.webp",
+  equipment: "/media/auctions/construction.webp",
 };
 
 /** Indian OEM brands — stable gallery offset within segment (visual consistency per brand) */

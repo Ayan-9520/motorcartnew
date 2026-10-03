@@ -24,10 +24,9 @@ export function AuctionAssetCategoryGrid({ auctions = [], loading = false }: Auc
   return (
     <section className="container pb-14">
       <div className="auction-hub-category-header">
-        <h2 className="auction-hub-section-title text-primary">More than just vehicles</h2>
+        <h2 className="auction-hub-section-title text-primary">Browse by vehicle type</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">
-          Commercial fleets, tractors, gold, real estate &amp; more — browse by asset class with live &amp;
-          upcoming lots across India.
+          Cars, bikes, trucks, buses, tractors &amp; construction equipment — live &amp; upcoming lots across India.
         </p>
       </div>
 
