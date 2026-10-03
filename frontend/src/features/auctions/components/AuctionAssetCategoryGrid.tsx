@@ -24,25 +24,25 @@ export function AuctionAssetCategoryGrid({ auctions = [], loading = false }: Auc
   return (
     <section className="container pb-14">
       <div className="auction-hub-category-header">
-        <h2 className="auction-hub-section-title text-primary">Browse by vehicle type</h2>
+        <h2 className="auction-hub-section-title text-primary">Browse by category</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">
-          Cars, bikes, trucks, buses, tractors &amp; construction equipment — live &amp; upcoming lots across India.
+          Cars, bikes, trucks, buses, tractors, construction equipment &amp; property — live &amp; upcoming lots
+          across India.
         </p>
       </div>
 
       <div className="auction-category-grid">
         {AUCTION_ASSET_CATEGORIES.map((cat) => {
-          const n = counts[cat.id] ?? 0;
+          const n = cat.id === "all" ? auctions.length : (counts[cat.id] ?? 0);
           return (
             <Link key={cat.id} to={cat.href} className="auction-category-card group">
-              <img src={cat.image} alt={cat.label} loading="lazy" className="auction-category-bg" />
+              <img src={cat.image} alt={`${cat.label} — ${cat.subtitle}`} loading="lazy" className="auction-category-bg" />
               <span className="auction-category-overlay" />
+              <span className="sr-only">{cat.label}</span>
               <span className="auction-category-content">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/80">
-                  {loading ? "\u00a0" : n > 0 ? `${n} ${n === 1 ? "lot" : "lots"}` : "Coming soon"}
+                <span className="auction-category-count">
+                  {loading ? "…" : n > 0 ? `${n} ${n === 1 ? "lot" : "lots"}` : "Coming soon"}
                 </span>
-                <span className="text-lg font-bold text-white md:text-xl">{cat.label}</span>
-                <span className="text-xs text-white/85">{cat.subtitle}</span>
                 <span className="auction-category-cta">
                   View all <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </span>

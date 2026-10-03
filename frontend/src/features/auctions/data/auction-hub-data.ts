@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import {
   dealerCoverImage,
-  HUB_HERO_IMAGES,
 } from "@/lib/media/india-media-catalog";
 
 export type AuctionServiceId =
@@ -54,12 +53,14 @@ export const AUCTION_SERVICES: AuctionServiceItem[] = [
 ];
 
 export type AuctionAssetCategoryId =
+  | "all"
   | "commercial"
   | "cars"
   | "tractors"
   | "two-wheelers"
   | "buses"
-  | "construction";
+  | "construction"
+  | "real-estate";
 
 export interface AuctionAssetCategory {
   id: AuctionAssetCategoryId;
@@ -71,6 +72,13 @@ export interface AuctionAssetCategory {
 
 export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
   {
+    id: "all",
+    label: "Live Auctions",
+    subtitle: "Cars, bikes, trucks & equipment",
+    image: "/media/auctions/live-auctions-banner.webp",
+    href: "/auctions/browse",
+  },
+  {
     id: "commercial",
     label: "Commercial Vehicles",
     subtitle: "Trucks, tippers & CV fleets",
@@ -81,7 +89,7 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     id: "cars",
     label: "4 Wheelers",
     subtitle: "Cars, SUVs & MUVs",
-    image: HUB_HERO_IMAGES.cars,
+    image: "/media/auctions/cars.webp",
     href: "/auctions/browse?category=cars",
   },
   {
@@ -95,7 +103,7 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     id: "two-wheelers",
     label: "2 Wheelers",
     subtitle: "Bikes & scooters",
-    image: HUB_HERO_IMAGES.bikes,
+    image: "/media/auctions/two-wheelers.webp",
     href: "/auctions/browse?category=two-wheelers",
   },
   {
@@ -111,6 +119,13 @@ export const AUCTION_ASSET_CATEGORIES: AuctionAssetCategory[] = [
     subtitle: "JCB, cranes & mixers",
     image: "/media/auctions/construction.webp",
     href: "/auctions/browse?category=construction",
+  },
+  {
+    id: "real-estate",
+    label: "Real Estate",
+    subtitle: "Plots & commercial space",
+    image: "/media/auctions/real-estate.webp",
+    href: "/auctions/browse?category=real-estate",
   },
 ];
 

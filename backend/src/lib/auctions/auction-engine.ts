@@ -564,7 +564,7 @@ function sanitizeVehicleDetails(raw: unknown): Record<string, string | number> {
   return out;
 }
 
-const ASSET_CLASSES = new Set(["commercial", "cars", "tractors", "two-wheelers", "buses", "construction"]);
+const ASSET_CLASSES = new Set(["commercial", "cars", "tractors", "two-wheelers", "buses", "construction", "real-estate"]);
 
 function inferAssetClass(vehicleCategory: string | null | undefined, title: string): string {
   const cat = (vehicleCategory ?? "").toLowerCase();
@@ -577,6 +577,7 @@ function inferAssetClass(vehicleCategory: string | null | undefined, title: stri
   if (/\b(truck|tipper|trailer|pickup|tempo|lcv|hcv)\b/.test(t)) return "commercial";
   if (/\b(bus|coach)\b/.test(t)) return "buses";
   if (/\b(bike|scooter|motorcycle|activa|splendor|pulsar|royal enfield)\b/.test(t)) return "two-wheelers";
+  if (/\b(plot|flat|land|shop|property|villa|apartment)\b/.test(t)) return "real-estate";
   return "cars";
 }
 
