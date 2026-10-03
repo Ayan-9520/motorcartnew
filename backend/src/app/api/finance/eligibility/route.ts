@@ -18,6 +18,8 @@ export async function POST(req: NextRequest) {
       tenureMonths: Number(body.tenureMonths ?? body.tenure_months ?? 60),
       cibilScore: Number(body.cibilScore ?? body.cibil_score),
       employmentType: String(body.employmentType ?? body.employment_type ?? "salaried"),
+      product: body.product ?? body.loanType ?? body.loan_type ? String(body.product ?? body.loanType ?? body.loan_type) : undefined,
+      vehiclePrice: Number(body.vehiclePrice ?? body.vehicle_price ?? 0) || undefined,
     });
     return ok({ data: result });
   } catch (e) {

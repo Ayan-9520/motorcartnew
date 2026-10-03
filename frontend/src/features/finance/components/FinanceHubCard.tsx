@@ -29,9 +29,12 @@ const ICONS: Record<string, LucideIcon> = {
 export function FinanceHubCard({
   item,
   compact = true,
+  rateFrom,
 }: {
   item: FinanceHubCategoryItem;
   compact?: boolean;
+  /** e.g. "7.45%" — lowest published rate for this product */
+  rateFrom?: string | null;
 }) {
   const Icon = ICONS[item.icon] ?? Car;
 
@@ -50,6 +53,11 @@ export function FinanceHubCard({
             <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
               {item.description}
             </p>
+            {rateFrom ? (
+              <p className="fin-rate-from mt-1.5">
+                from <strong>{rateFrom}</strong> p.a.
+              </p>
+            ) : null}
           </div>
         </div>
 

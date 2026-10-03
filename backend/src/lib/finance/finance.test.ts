@@ -6,6 +6,7 @@ import { calculateEmi, validateEmiParams } from "./emi";
 import { FINANCE_DESK_ROLES, isFinanceDeskRole, isFinanceStaffRole } from "./errors";
 import { canReadApplication } from "./access";
 import { buildLoanOffers } from "./matching";
+import { loanFromEmi, priceForProfile, processingFeeWithGst, resolveProductRate } from "./rate-card";
 import { NEVER_ALLOW_TABLES } from "@/lib/db/query-allowlist";
 
 describe("Phase C finance domain", () => {
@@ -91,6 +92,67 @@ describe("Phase C finance domain", () => {
     );
     assert.equal(offers[0]?.id, "bank-a");
     assert.equal(offers.length, 1);
+  });
+
+  it("caps max loan by interest-aware EMI capacity, not EMI × tenure", () => {
+    const result = checkEligibility({
+      monthlyIncome: 60000,
+      existingEmi: 0,
+      loanAmount: 500000,
+      tenureMonths: 60,
+      cibilScore: 760,
+      employmentType: "salaried",
+    });
+    const naive = result.maxEmi * 60;
+    assert.ok(result.maxLoan < naive);
+    assert.ok(result.rateUsed && result.rateUsed > 7 && result.rateUsed < 12);
+    assert.equal(result.maxLoan, loanFromEmi(result.maxEmi, result.rateUsed!, 60));
+  });
+
+  it("applies product LTV against vehicle price", () => {
+    const result = checkEligibility({
+      monthlyIncome: 200000,
+      existingEmi: 0,
+      loanAmount: 900000,
+      tenureMonths: 60,
+      cibilScore: 780,
+      employmentType: "salaried",
+      product: "used-car-loan",
+      vehiclePrice: 1000000,
+    });
+    assert.equal(result.ltvCap, 800000);
+    assert.equal(result.eligible, false);
+    assert.match(result.message, /80%/);
+  });
+
+  it("prices better CIBIL lower inside the product range", () => {
+    const range = { min: 8, max: 12 };
+    assert.equal(priceForProfile(range, 810, 60), 8);
+    assert.ok(priceForProfile(range, 700, 60) > priceForProfile(range, 760, 60));
+    assert.equal(priceForProfile(range, 600, 60), 12);
+  });
+
+  it("uses product-wise published rates and skips lenders without the product", () => {
+    const sbi = resolveProductRate({ slug: "sbi", interestRateMin: 8.9, interestRateMax: 9.85 }, "used_car");
+    assert.equal(sbi?.min, 10.45);
+    assert.equal(sbi?.estimated, false);
+    assert.equal(resolveProductRate({ slug: "bajaj", interestRateMin: 12, interestRateMax: 24 }, "new_car"), null);
+    const unknown = resolveProductRate({ slug: "some-bank", interestRateMin: 9, interestRateMax: 11 }, "used_car");
+    assert.equal(unknown?.estimated, true);
+    assert.ok(unknown!.min > 9);
+  });
+
+  it("adds processing fee with GST to offer total cost", () => {
+    const fee = processingFeeWithGst({ pct: 0.5, min: 1000, max: 10000 }, 1000000);
+    assert.equal(fee, 5900);
+    const [offer] = buildLoanOffers(
+      [{ id: "x", slug: "hdfc-bank", rankingScore: 90, minCibil: 700, interestRateMin: 8.15, interestRateMax: 12.5, maxTenureMonths: 84, maxLoanAmount: 5000000 }],
+      1000000,
+      60,
+      { monthlyIncome: 150000, existingEmi: 0, loanAmount: 1000000, tenureMonths: 60, cibilScore: 800, employmentType: "salaried" },
+    );
+    assert.equal(offer?.effectiveRate, 8.15);
+    assert.equal(offer?.totalCost, offer!.emi * 60 + offer!.processingFeeAmount);
   });
 
   it("isolates application reads by customer, lender bank, and DSA", () => {

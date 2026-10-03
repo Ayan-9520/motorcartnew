@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DbBank, DbFinanceApplication, FinanceStatus } from "@/types/database";
-import { MOCK_LENDERS } from "../data/lenders";
+import { LENDER_CATALOG } from "../data/lenders";
 import { realDataOnly } from "@/config/real-data";
 import { buildMockBankIntegrations } from "../data/mock-bank-integrations";
 import {
@@ -99,7 +99,7 @@ export async function fetchLenders(): Promise<Lender[]> {
   } catch {
     /* fall through */
   }
-  return realDataOnly ? [] : MOCK_LENDERS;
+  return LENDER_CATALOG;
 }
 
 export async function fetchLenderBySlug(slug: string): Promise<Lender | null> {

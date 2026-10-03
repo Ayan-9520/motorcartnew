@@ -25,8 +25,9 @@ export function LoanComparisonTable({ offers, selectedSlugs = [], onToggle }: Lo
             <th className="p-3">Rate</th>
             <th className="p-3">EMI</th>
             <th className="p-3">Total interest</th>
-            <th className="p-3">Approval %</th>
-            <th className="p-3">Max loan</th>
+            <th className="p-3">Fee + GST</th>
+            <th className="p-3">Total cost</th>
+            <th className="p-3">Approval chance</th>
           </tr>
         </thead>
         <tbody>
@@ -52,11 +53,19 @@ export function LoanComparisonTable({ offers, selectedSlugs = [], onToggle }: Lo
                   {o.name}
                 </span>
               </td>
-              <td className="p-3">{o.effectiveRate.toFixed(2)}%</td>
+              <td className="p-3">
+                <span className="font-semibold">{o.effectiveRate.toFixed(2)}%</span>
+                {o.productRateMin != null && o.productRateMax != null ? (
+                  <span className="block text-[11px] text-muted-foreground">
+                    {o.productRateMin}–{o.productRateMax}%{o.rateEstimated ? " est." : ""}
+                  </span>
+                ) : null}
+              </td>
               <td className="p-3">{formatCurrency(o.emi)}</td>
               <td className="p-3">{formatCurrency(o.totalInterest)}</td>
+              <td className="p-3">{formatCurrency(o.processingFeeAmount ?? 0)}</td>
+              <td className="p-3 font-semibold">{o.totalCost != null ? formatCurrency(o.totalCost) : "—"}</td>
               <td className="p-3 text-primary font-semibold">{o.approvalProbability}%</td>
-              <td className="p-3">{formatCurrency(o.maxLoanAmount)}</td>
             </tr>
           ))}
         </tbody>

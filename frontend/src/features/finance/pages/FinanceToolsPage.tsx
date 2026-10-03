@@ -8,6 +8,8 @@ import { createFinanceLead } from "../services/finance.service";
 import type { EligibilityInput } from "../types";
 import { EmiCalculatorWidget } from "../components/EmiCalculatorWidget";
 import { CibilEstimatorPanel } from "../components/CibilEstimatorPanel";
+import { RefinancePanel } from "../components/RefinancePanel";
+import { LENDER_CATALOG } from "../data/lenders";
 
 export function FinanceToolsPage() {
   useEffect(() => {
@@ -24,7 +26,7 @@ export function FinanceToolsPage() {
           <p className="fin-tools-hero__eyebrow">Smart finance tools</p>
           <h1 className="fin-tools-hero__title">Know your EMI before you apply</h1>
           <p className="fin-tools-hero__sub">
-            CRED-style clarity · Bajaj-grade calculators · zero impact eligibility preview
+            Real lender rate cards · interest + LTV based eligibility · refinance with all charges
           </p>
           <Button className="mt-4 rounded-full" asChild>
             <Link to="/finance/apply">
@@ -49,15 +51,14 @@ export function FinanceToolsPage() {
         <div className="lg:col-span-2">
           <div className="fin-tools-ai-banner">
             <Sparkles className="h-5 w-5" />
-            <p>AI matches you to 14+ lenders after eligibility check</p>
+            <p>Compare {LENDER_CATALOG.length} banks &amp; NBFCs priced for your CIBIL band</p>
             <Button variant="outline" size="sm" asChild>
               <Link to="/finance/offers">View offers</Link>
             </Button>
           </div>
         </div>
-        <div className="lg:col-span-2">
-          <CibilEstimatorPanel />
-        </div>
+        <RefinancePanel />
+        <CibilEstimatorPanel />
       </div>
     </div>
   );

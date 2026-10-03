@@ -1,6 +1,7 @@
 import type { DbBank } from "@/types/database";
 import type { Lender } from "../types";
-import { MOCK_LENDERS } from "../data/lenders";
+import { LENDER_CATALOG } from "../data/lenders";
+import { findRateCardEntry } from "./rate-card";
 
 export function mapDbBank(b: DbBank & { ranking_score?: number; min_cibil?: number; short_code?: string }): Lender {
   return {
@@ -22,9 +23,9 @@ export function mapDbBank(b: DbBank & { ranking_score?: number; min_cibil?: numb
   };
 }
 
+/** DB lenders first; catalogue lenders fill gaps (matched by slug or rate-card alias). */
 export function mergeLenders(db: Lender[]): Lender[] {
-  if (db.length >= 10) return db;
-  const slugs = new Set(db.map((l) => l.slug));
-  const extras = MOCK_LENDERS.filter((m) => !slugs.has(m.slug));
+  const covered = new Set(db.map((l) => findRateCardEntry(l.slug)?.slug ?? l.slug));
+  const extras = LENDER_CATALOG.filter((m) => !covered.has(m.slug));
   return [...db, ...extras];
 }

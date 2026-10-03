@@ -30,6 +30,9 @@ import {
   Linkedin,
   MessageCircle,
 } from "lucide-react";
+import { LENDER_RATE_CARD } from "@/features/finance/lib/rate-card";
+import { calculateEmi } from "@/features/finance/lib/emi-utils";
+import { lenderLogoPath } from "@/data/partner-logos";
 
 /** Legacy vehicle slug — used by other home sections */
 export type HeroVehicleType = "cars" | "bikes" | "trucks" | "buses" | "ev";
@@ -485,23 +488,20 @@ export const QUICK_ACCESS: QuickAccessItem[] = [
   { label: "Compare", href: "/vehicles/compare", icon: GitCompare },
 ];
 
-export const BANK_OFFERS = [
-  { code: "SBI", name: "State Bank of India", rate: "8.5%", emi: "₹18,420", approval: "24 hrs", logo: "/partners/banks/sbi.svg" },
-  { code: "HDFC", name: "HDFC Bank", rate: "8.9%", emi: "₹18,650", approval: "4 hrs", logo: "/partners/banks/hdfcbank.svg" },
-  { code: "ICICI", name: "ICICI Bank", rate: "9.1%", emi: "₹18,780", approval: "6 hrs", logo: "/partners/banks/icicibank.svg" },
-  { code: "AXIS", name: "Axis Bank", rate: "9.2%", emi: "₹18,890", approval: "12 hrs", logo: "/partners/banks/axisbank.svg" },
-  { code: "AU", name: "AU Small Finance Bank", rate: "9.5%", emi: "₹19,020", approval: "8 hrs", logo: "/partners/banks/au.svg" },
-  { code: "CHOLA", name: "Cholamandalam Finance", rate: "10.2%", emi: "₹19,280", approval: "6 hrs", logo: "/partners/banks/chola.svg" },
-  { code: "BOB", name: "Bank of Baroda", rate: "8.7%", emi: "₹18,520", approval: "48 hrs", logo: "/partners/banks/bob.svg" },
-  { code: "KOTAK", name: "Kotak Mahindra", rate: "9.0%", emi: "₹18,720", approval: "6 hrs", logo: "/partners/banks/kotak.svg" },
-  { code: "PNB", name: "Punjab National Bank", rate: "8.8%", emi: "₹18,580", approval: "36 hrs", logo: "/partners/banks/pnb.svg" },
-  { code: "BAJAJ", name: "Bajaj Finance", rate: "10.5%", emi: "₹19,450", approval: "8 hrs", logo: "/partners/banks/bajaj.svg" },
-  { code: "IDFC", name: "IDFC First Bank", rate: "9.3%", emi: "₹18,920", approval: "12 hrs", logo: "/partners/banks/idfc.svg" },
-  { code: "YES", name: "YES Bank", rate: "9.4%", emi: "₹18,980", approval: "10 hrs", logo: "/partners/banks/yes.svg" },
-  { code: "INDUS", name: "IndusInd Bank", rate: "9.2%", emi: "₹18,860", approval: "8 hrs", logo: "/partners/banks/indusind.svg" },
-  { code: "UNION", name: "Union Bank", rate: "8.6%", emi: "₹18,480", approval: "48 hrs", logo: "/partners/banks/union.svg" },
-  { code: "CANARA", name: "Canara Bank", rate: "8.65%", emi: "₹18,510", approval: "36 hrs", logo: "/partners/banks/canara.svg" },
-];
+/** New-car "rates from" per lender (published rate card) with EMI for ₹10 lakh over 5 years. */
+export const BANK_OFFERS = LENDER_RATE_CARD.filter((l) => l.products.new_car)
+  .sort((a, b) => b.rankingScore - a.rankingScore)
+  .map((l) => {
+    const rate = l.products.new_car!.min;
+    return {
+      code: l.shortCode,
+      name: l.name,
+      rate: `${rate}%`,
+      emi: `₹${calculateEmi(1000000, rate, 60).toLocaleString("en-IN")}`,
+      approval: l.lenderType === "nbfc" ? "NBFC" : "Bank",
+      logo: lenderLogoPath(l.slug),
+    };
+  });
 
 export const SERVICE_TILES = [
   { label: "Car Service", href: "/services", icon: Wrench },

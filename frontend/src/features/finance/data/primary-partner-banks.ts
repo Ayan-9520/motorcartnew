@@ -1,4 +1,5 @@
 import { lenderLogoPath } from "@/data/partner-logos";
+import { findRateCardEntry } from "../lib/rate-card";
 
 /** Featured partner banks for marketplace & DSA desk */
 export const PRIMARY_PARTNER_BANK_IDS = [
@@ -20,18 +21,23 @@ export interface PrimaryPartnerBank {
   rateFrom: string;
 }
 
+function rateFrom(slug: string): string {
+  const min = findRateCardEntry(slug)?.products.new_car?.min;
+  return min != null ? `${min.toFixed(2)}%` : "—";
+}
+
 export const PRIMARY_PARTNER_BANKS: PrimaryPartnerBank[] = [
-  { id: "hdfc", name: "HDFC Bank", shortCode: "HDFC", logoUrl: lenderLogoPath("hdfc"), rateFrom: "8.75%" },
-  { id: "icici", name: "ICICI Bank", shortCode: "ICICI", logoUrl: lenderLogoPath("icici"), rateFrom: "8.99%" },
-  { id: "axis", name: "Axis Bank", shortCode: "AXIS", logoUrl: lenderLogoPath("axis"), rateFrom: "9.25%" },
-  { id: "sbi", name: "State Bank of India", shortCode: "SBI", logoUrl: lenderLogoPath("sbi"), rateFrom: "8.50%" },
-  { id: "chola", name: "Cholamandalam", shortCode: "CHOLA", logoUrl: lenderLogoPath("chola"), rateFrom: "9.75%" },
+  { id: "hdfc", name: "HDFC Bank", shortCode: "HDFC", logoUrl: lenderLogoPath("hdfc"), rateFrom: rateFrom("hdfc") },
+  { id: "icici", name: "ICICI Bank", shortCode: "ICICI", logoUrl: lenderLogoPath("icici"), rateFrom: rateFrom("icici") },
+  { id: "axis", name: "Axis Bank", shortCode: "AXIS", logoUrl: lenderLogoPath("axis"), rateFrom: rateFrom("axis") },
+  { id: "sbi", name: "State Bank of India", shortCode: "SBI", logoUrl: lenderLogoPath("sbi"), rateFrom: rateFrom("sbi") },
+  { id: "chola", name: "Cholamandalam", shortCode: "CHOLA", logoUrl: lenderLogoPath("chola"), rateFrom: rateFrom("chola") },
   {
     id: "tata-capital",
     name: "Tata Capital",
     shortCode: "TATA",
     logoUrl: lenderLogoPath("tata-capital"),
-    rateFrom: "9.49%",
+    rateFrom: rateFrom("tata-capital"),
   },
 ];
 

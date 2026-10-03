@@ -18,20 +18,25 @@ import { FinanceSubpageShell } from "../components/FinanceSubpageShell";
 import { FinanceSubpageQuickLinks } from "../components/FinanceSubpageQuickLinks";
 import { FeaturedPartnerBanksStrip } from "../components/FeaturedPartnerBanksStrip";
 import { financeCategoryLabel, parseFinanceType } from "../lib/finance-hub-routes";
+import { PRODUCT_RULES } from "../lib/rate-card";
+import { CibilBandSelect, RateCardNote } from "../components/RateCardBits";
 
 export function FinanceMarketplacePage() {
   const [params] = useSearchParams();
   const loanType = parseFinanceType(params.get("type"));
   const {
+    lenders,
     offers,
     recommendations,
     loading,
+    product,
     loanAmount,
     tenureMonths,
     setLoanAmount,
     setTenureMonths,
+    eligibility,
     setEligibility,
-  } = useFinanceMarketplace();
+  } = useFinanceMarketplace(loanType);
 
   const [tab, setTab] = useState<"offers" | "tools">("offers");
   const applyHref = loanType ? `/finance/apply?type=${loanType}` : "/finance/apply";
@@ -46,7 +51,7 @@ export function FinanceMarketplacePage() {
   return (
     <FinanceSubpageShell
       title="Bank offers & tools"
-      subtitle="14 banks & NBFCs · ranked by EMI, rate & approval. EMI calculator, eligibility & CIBIL tools included."
+      subtitle={`${lenders.length} banks & NBFCs · priced for your CIBIL · ranked by total cost incl. processing fee + GST.`}
       loanType={loanType}
     >
       <FinanceSubpageQuickLinks active="offers" loanType={loanType} />
@@ -93,7 +98,7 @@ export function FinanceMarketplacePage() {
         ))}
       </nav>
 
-      <section className="finance-compare-params premium-vehicle-card mb-6 grid gap-4 rounded-xl border bg-card p-4 sm:grid-cols-2 md:p-5">
+      <section className="finance-compare-params premium-vehicle-card mb-6 grid gap-4 rounded-xl border bg-card p-4 sm:grid-cols-3 md:p-5">
         <div>
           <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Loan amount
@@ -116,13 +121,21 @@ export function FinanceMarketplacePage() {
             value={tenureMonths}
             onChange={(e) => setTenureMonths(Number(e.target.value))}
           />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Max {PRODUCT_RULES[product].maxTenureMonths} months for {PRODUCT_RULES[product].label.toLowerCase()}
+          </p>
         </div>
+        <CibilBandSelect
+          value={eligibility.cibilScore}
+          onChange={(cibilScore) => setEligibility({ ...eligibility, cibilScore })}
+        />
       </section>
+      <RateCardNote />
 
       {tab === "tools" ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <EmiCalculatorWidget defaultAmount={loanAmount} defaultTenure={tenureMonths} />
-          <EligibilityChecker onResult={setEligibility} />
+          <EligibilityChecker onResult={setEligibility} product={product} />
           <CibilEstimatorPanel />
           <RefinancePanel />
         </div>
@@ -140,10 +153,14 @@ export function FinanceMarketplacePage() {
                   <Skeleton key={i} className="h-48 rounded-xl" />
                 ))}
               </div>
+            ) : offers.length === 0 ? (
+              <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                No lender matches this amount, tenure and CIBIL band. Try a lower amount or shorter tenure.
+              </p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {offers.map((o) => (
-                  <BankOfferCard key={o.slug} offer={o} />
+                  <BankOfferCard key={o.slug} offer={o} tenureMonths={tenureMonths} />
                 ))}
               </div>
             )}

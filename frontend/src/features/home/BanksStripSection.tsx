@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, Percent } from "lucide-react";
+import { ArrowRight, Building2, Percent } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useHomePage } from "@/features/home/context/HomePageContext";
@@ -15,8 +15,8 @@ export function BanksStripSection() {
       <div className="container home-stack">
         <SectionHeader
           eyebrow="Finance marketplace"
-          title="Compare loans from 14+ banks & NBFCs"
-          description="Instant EMI preview, AI eligibility, and fastest approval times."
+          title={`Compare loans from ${offers.length} banks & NBFCs`}
+          description="New-car rates from each lender's published rate card · EMI shown for ₹10 lakh over 5 years."
           href="/finance/compare"
           linkLabel="Compare all lenders"
         />
@@ -40,13 +40,13 @@ export function BanksStripSection() {
                   <span className="flex items-center justify-between gap-1">
                     <span className="truncate text-xs font-semibold leading-tight">{bank.name}</span>
                     <span className="flex shrink-0 items-center gap-0.5 text-[10px] text-muted-foreground">
-                      <Clock className="h-2.5 w-2.5" />
+                      <Building2 className="h-2.5 w-2.5" />
                       {bank.approval}
                     </span>
                   </span>
                   <span className="mt-1 flex items-center gap-1 text-sm font-bold text-primary">
                     <Percent className="h-3 w-3" />
-                    {bank.rate}
+                    {bank.rate} onwards
                   </span>
                   <span className="text-[10px] text-muted-foreground">EMI from {bank.emi}/mo</span>
                   <span className="mt-1 inline-block text-[10px] font-semibold text-primary">Compare →</span>

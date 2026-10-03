@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       existingEmi: body.existingEmi != null ? Number(body.existingEmi) : undefined,
       cibilScore: body.cibilScore != null ? Number(body.cibilScore) : undefined,
       employmentType: body.employmentType ? String(body.employmentType) : undefined,
+      product: body.product ?? body.loanType ?? body.loan_type ? String(body.product ?? body.loanType ?? body.loan_type) : undefined,
     });
     return ok({ data }, 201);
   } catch (e) {

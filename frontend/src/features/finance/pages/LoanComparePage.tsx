@@ -12,12 +12,23 @@ import { AiRecommendationPanel } from "../components/AiRecommendationPanel";
 import { FinanceSubpageShell } from "../components/FinanceSubpageShell";
 import { FinanceSubpageQuickLinks } from "../components/FinanceSubpageQuickLinks";
 import { financeCategoryLabel, parseFinanceType } from "../lib/finance-hub-routes";
+import { PRODUCT_RULES } from "../lib/rate-card";
+import { CibilBandSelect, RateCardNote } from "../components/RateCardBits";
 
 export function LoanComparePage() {
   const [params] = useSearchParams();
   const loanType = parseFinanceType(params.get("type"));
-  const { offers, recommendations, loanAmount, tenureMonths, setLoanAmount, setTenureMonths } =
-    useFinanceMarketplace();
+  const {
+    offers,
+    recommendations,
+    product,
+    loanAmount,
+    tenureMonths,
+    setLoanAmount,
+    setTenureMonths,
+    eligibility,
+    setEligibility,
+  } = useFinanceMarketplace(loanType);
   const [selected, setSelected] = useState<string[]>([]);
 
   useEffect(() => {
@@ -37,13 +48,13 @@ export function LoanComparePage() {
   return (
     <FinanceSubpageShell
       title="Compare lenders"
-      subtitle="Select up to 4 banks side-by-side. Adjust loan amount and tenure — EMI updates instantly across all offers."
+      subtitle="Select up to 4 lenders side-by-side. Rates are priced for your CIBIL band; total cost includes processing fee + GST."
       loanType={loanType}
     >
       <FinanceSubpageQuickLinks active="compare" loanType={loanType} />
 
       <Card className="finance-compare-params premium-vehicle-card mb-6 overflow-hidden">
-        <CardContent className="grid gap-4 p-4 sm:grid-cols-2 md:p-5">
+        <CardContent className="grid gap-4 p-4 sm:grid-cols-3 md:p-5">
           <div>
             <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Loan amount (₹)
@@ -65,9 +76,17 @@ export function LoanComparePage() {
               value={tenureMonths}
               onChange={(e) => setTenureMonths(Number(e.target.value))}
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Max {PRODUCT_RULES[product].maxTenureMonths} months
+            </p>
           </div>
+          <CibilBandSelect
+            value={eligibility.cibilScore}
+            onChange={(cibilScore) => setEligibility({ ...eligibility, cibilScore })}
+          />
         </CardContent>
       </Card>
+      <RateCardNote className="mb-6" />
 
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
         <aside className="lg:col-span-1">

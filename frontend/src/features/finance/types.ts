@@ -27,6 +27,14 @@ export interface LoanOffer extends Lender {
   totalInterest: number;
   approvalProbability: number;
   rank: number;
+  /** Product-specific published range used for pricing */
+  productRateMin?: number;
+  productRateMax?: number;
+  rateEstimated?: boolean;
+  /** Processing fee incl. 18% GST */
+  processingFeeAmount?: number;
+  /** EMI × tenure + processing fee */
+  totalCost?: number;
 }
 
 export interface EligibilityInput {
@@ -36,6 +44,10 @@ export interface EligibilityInput {
   tenureMonths: number;
   cibilScore: number;
   employmentType: "salaried" | "self_employed" | "business";
+  /** Finance hub category id or rate-card product (defaults to new car) */
+  product?: string;
+  /** On-road / valuation price — enables the LTV cap */
+  vehiclePrice?: number;
 }
 
 export interface EligibilityResult {
@@ -44,6 +56,9 @@ export interface EligibilityResult {
   maxEmi: number;
   message: string;
   recommendedTenure: number;
+  rateUsed?: number;
+  maxLoanByIncome?: number;
+  ltvCap?: number | null;
 }
 
 export interface CibilEstimate {

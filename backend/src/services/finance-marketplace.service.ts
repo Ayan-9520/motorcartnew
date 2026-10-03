@@ -14,6 +14,7 @@ import { checkEligibility } from "@/lib/finance/eligibility";
 import { calculateEmi, validateEmiParams } from "@/lib/finance/emi";
 import { FinanceError, isFinanceStaffRole } from "@/lib/finance/errors";
 import { buildLoanOffers, type LenderSnapshot } from "@/lib/finance/matching";
+import { toLoanProduct } from "@/lib/finance/rate-card";
 import { ensureCommissionOnDisbursement } from "./finance-commission.service";
 
 const ALLOWED_STATUS: FinanceStatus[] = ["processing", "approved", "rejected", "disbursed"];
@@ -92,6 +93,8 @@ export async function runEligibility(
     tenureMonths: number;
     cibilScore: number;
     employmentType?: string;
+    product?: string;
+    vehiclePrice?: number;
   },
 ) {
   const monthlyIncome = num(input.monthlyIncome);
@@ -112,6 +115,8 @@ export async function runEligibility(
     tenureMonths,
     cibilScore,
     employmentType,
+    product: input.product,
+    vehiclePrice: input.vehiclePrice && input.vehiclePrice > 0 ? num(input.vehiclePrice) : undefined,
   });
 
   const row = await prisma.financeEligibilityCheck.create({
@@ -128,8 +133,13 @@ export async function runEligibility(
       maxEmi: BigInt(result.maxEmi),
       message: result.message.slice(0, 512),
       recommendedTenure: result.recommendedTenure,
-      engineVersion: "v1",
-      metadata: { per_lender: false },
+      engineVersion: "v2",
+      metadata: {
+        per_lender: false,
+        product: toLoanProduct(input.product),
+        rate_used: result.rateUsed ?? null,
+        ltv_cap: result.ltvCap ?? null,
+      },
     },
   });
 
@@ -144,6 +154,8 @@ export async function runEligibility(
 
 function toLenderSnapshot(row: {
   id: string;
+  slug: string;
+  bankType: string;
   rankingScore: number;
   minCibil: number;
   interestRateMin: Prisma.Decimal;
@@ -153,6 +165,8 @@ function toLenderSnapshot(row: {
 }): LenderSnapshot {
   return {
     id: row.id,
+    slug: row.slug,
+    lenderType: row.bankType,
     rankingScore: row.rankingScore,
     minCibil: row.minCibil,
     interestRateMin: Number(row.interestRateMin),
@@ -171,6 +185,7 @@ export async function compareLenders(
     existingEmi?: number;
     cibilScore?: number;
     employmentType?: string;
+    product?: string;
   },
 ) {
   const loanAmount = num(input.loanAmount);
@@ -185,6 +200,7 @@ export async function compareLenders(
     tenureMonths,
     cibilScore: Math.round(num(input.cibilScore, 700)),
     employmentType: input.employmentType || "salaried",
+    product: toLoanProduct(input.product),
   };
   const banks = await prisma.bank.findMany({ where: { isActive: true } });
   const offers = buildLoanOffers(banks.map(toLenderSnapshot), loanAmount, tenureMonths, eligibilityInput);
@@ -203,7 +219,12 @@ export async function compareLenders(
         totalInterest: o.totalInterest,
         approvalProbability: o.approvalProbability,
         rank: o.rank,
-        metadata: {},
+        metadata: {
+          product: eligibilityInput.product,
+          processing_fee_with_gst: o.processingFeeAmount,
+          total_cost: o.totalCost,
+          rate_estimated: o.rateEstimated,
+        },
       })),
     });
   }
