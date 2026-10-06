@@ -2985,23 +2985,28 @@
 
   /* Site marketing pages — editorial typography (About, Contact, FAQs, Legal) */
   .marketing-hero-editorial {
-    @apply py-10 md:py-12;
+    @apply py-14 md:py-20;
+    background:
+      radial-gradient(60% 80% at 15% 0%, hsl(var(--primary) / 0.18) 0%, transparent 60%),
+      radial-gradient(50% 70% at 90% 10%, hsl(var(--primary) / 0.12) 0%, transparent 65%),
+      linear-gradient(180deg, hsl(var(--muted) / 0.35) 0%, hsl(var(--background)) 100%);
   }
 
   .marketing-hero-editorial .marketing-hero-mesh {
-    @apply opacity-20;
+    @apply opacity-40;
+    mask-image: radial-gradient(70% 90% at 50% 0%, #000 30%, transparent 80%);
   }
 
   .site-eyebrow {
-    @apply mb-4 inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary;
+    @apply mb-5 inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary shadow-sm backdrop-blur;
   }
 
   .site-page-title {
-    @apply mx-auto max-w-2xl text-[1.625rem] font-semibold leading-[1.2] tracking-tight text-foreground sm:text-[1.875rem] md:text-[2.125rem];
+    @apply mx-auto max-w-3xl text-[2rem] font-extrabold leading-[1.12] tracking-tight text-foreground sm:text-[2.5rem] md:text-[3rem];
   }
 
   .site-page-lead {
-    @apply mx-auto mt-4 max-w-xl text-sm leading-[1.65] text-muted-foreground md:text-[15px];
+    @apply mx-auto mt-5 max-w-2xl text-[15px] leading-[1.7] text-muted-foreground md:text-lg;
   }
 
   .site-page-actions {
@@ -3194,19 +3199,24 @@
   }
 
   .marketing-doc {
-    @apply text-foreground;
+    @apply mx-auto max-w-4xl space-y-5 text-foreground;
   }
 
   .marketing-doc-section {
-    @apply mb-10 last:mb-0;
+    @apply relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md sm:p-7;
+  }
+
+  .marketing-doc-section::before {
+    content: "";
+    @apply absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-primary to-primary/30;
   }
 
   .marketing-doc-h2 {
-    @apply mb-3 text-base font-semibold tracking-tight text-foreground md:text-lg;
+    @apply mb-4 text-lg font-bold tracking-tight text-foreground md:text-xl;
   }
 
   .marketing-doc-body {
-    @apply space-y-3 text-sm leading-relaxed text-muted-foreground;
+    @apply space-y-3 text-[15px] leading-relaxed text-muted-foreground;
   }
 
   .marketing-doc-body p {
@@ -3217,7 +3227,11 @@
     @apply font-semibold text-foreground;
   }
 
-  .marketing-doc-body a {
+  .marketing-doc-body li::marker {
+    @apply text-primary;
+  }
+
+  .marketing-doc-body a:not(.inline-flex) {
     @apply font-medium text-primary underline-offset-2 hover:underline;
   }
 
