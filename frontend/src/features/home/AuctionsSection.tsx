@@ -5,6 +5,7 @@ import { Clock, Gavel, MapPin, Users } from "lucide-react";
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { HOME_DEMO_AUCTIONS } from "@/features/home/data/home-demo-showcase";
 import { formatCurrency } from "@/lib/utils";
+import { realDataOnly } from "@/config/real-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +32,38 @@ export function AuctionsSection() {
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  if (isDemo && realDataOnly) {
+    return (
+      <section className="home-section-alt">
+        <div className="container home-stack">
+          <SectionHeader
+            eyebrow="Auctions"
+            title="Live auctions — cars, bikes & commercial"
+            description="Dealer inventory, bank repo & fleet disposals with transparent bidding."
+            href="/auctions"
+            linkLabel="Auction hub"
+          />
+          <Card>
+            <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+              <Gavel className="h-8 w-8 text-primary" />
+              <p className="text-sm text-muted-foreground">
+                No lots are live right now. New auctions appear here as soon as they are scheduled.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button size="sm" asChild>
+                  <Link to="/auctions/browse?status=upcoming">See upcoming lots</Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to="/auctions/sell">Sell via auction</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="home-section-alt">

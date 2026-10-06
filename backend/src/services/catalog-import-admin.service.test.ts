@@ -88,8 +88,7 @@ describe("CatalogImportAdminService", () => {
         listingPagesVisited: 1,
         vehicleCardsSeen: 2,
         vehiclesExtracted: 2,
-        vehiclesFailed: 0,
-        retries: 0,
+        errors: 0,
         durationMs: 12,
       },
       importSummary: {

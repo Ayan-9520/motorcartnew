@@ -6,11 +6,37 @@ import { TRUST_BADGES } from "@/features/preowned-cars/data/preowned-data";
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { HOME_DEMO_PREOWNED } from "@/features/home/data/home-demo-showcase";
 import { SectionHeader } from "./SectionHeader";
+import { realDataOnly } from "@/config/real-data";
 
 export function PreownedCarsHomeSection() {
   const { preownedCars } = useHomePage();
   const list = preownedCars.length ? preownedCars.slice(0, 4) : HOME_DEMO_PREOWNED;
   const isDemo = !preownedCars.length;
+
+  if (isDemo && realDataOnly) {
+    return (
+      <section className="home-section-alt">
+        <div className="container home-stack">
+          <SectionHeader
+            eyebrow="Pre-owned"
+            title="Inspected cars you can trust"
+            description="Verified dealer and owner listings with EMI and inspection details."
+            href="/buy/cars/used"
+            linkLabel="Browse pre-owned"
+          />
+          <div className="flex flex-wrap justify-center gap-2 rounded-2xl border border-dashed p-8 text-center">
+            <p className="w-full text-sm text-muted-foreground">Fresh pre-owned stock is being added. Browse all listings or list your own car.</p>
+            <Button size="sm" className="rounded-lg" asChild>
+              <Link to="/buy/cars/used">Browse pre-owned</Link>
+            </Button>
+            <Button size="sm" variant="outline" className="rounded-lg" asChild>
+              <Link to="/sell/cars">Sell your car</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="home-section-alt">

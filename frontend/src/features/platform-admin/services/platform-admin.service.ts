@@ -61,7 +61,7 @@ import { adminDemoFallback } from "@/config/real-data";
 
 const USE_DEMO_FALLBACK = adminDemoFallback;
 
-function useMock<T>(data: T, error: unknown): T {
+function fallbackData<T>(data: T, error: unknown): T {
   if (error) console.warn("[platform-admin] API error", error);
   if (USE_DEMO_FALLBACK) return data;
   return (Array.isArray(data) ? [] : data) as T;
@@ -213,7 +213,7 @@ export async function fetchAdminUsers(): Promise<AdminUserRow[]> {
     .order("created_at", { ascending: false })
     .limit(200);
 
-  if (error) return useMock(MOCK_USERS, error);
+  if (error) return fallbackData(MOCK_USERS, error);
   if (!data?.length) return [];
 
   return data.map((u) => ({
@@ -332,7 +332,7 @@ export async function fetchPendingDealers(): Promise<AdminDealerRow[]> {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) return useMock(MOCK_DEALERS, error);
+  if (error) return fallbackData(MOCK_DEALERS, error);
   if (!data?.length) return [];
 
   return data.map((d) => ({
@@ -377,7 +377,7 @@ export async function fetchKycQueue(): Promise<KycQueueRow[]> {
     .order("updated_at", { ascending: false })
     .limit(100);
 
-  if (error) return useMock(MOCK_KYC, error);
+  if (error) return fallbackData(MOCK_KYC, error);
   if (!data?.length) return [];
 
   return data.map((u) => ({
@@ -454,7 +454,7 @@ export async function fetchAdminVehicles(): Promise<AdminVehicleRow[]> {
     .order("created_at", { ascending: false })
     .limit(150);
 
-  if (error || !data?.length) return useMock(MOCK_VEHICLES, error);
+  if (error || !data?.length) return fallbackData(MOCK_VEHICLES, error);
 
   const dealerIds = [
     ...new Set(
@@ -518,7 +518,7 @@ export async function fetchAdminAuctions(): Promise<AdminAuctionRow[]> {
     .order("created_at", { ascending: false })
     .limit(80);
 
-  if (error || !data?.length) return useMock(MOCK_AUCTIONS, error);
+  if (error || !data?.length) return fallbackData(MOCK_AUCTIONS, error);
 
   return data.map((a) => ({
     id: a.id,
@@ -612,7 +612,7 @@ export async function fetchSubscriptionPlans(): Promise<SubscriptionPlanRow[]> {
     .select("code, name, price_monthly, max_listings")
     .order("sort_order");
 
-  if (error || !plans?.length) return useMock(MOCK_PLANS, error);
+  if (error || !plans?.length) return fallbackData(MOCK_PLANS, error);
 
   const { data: dealers } = await supabase.from("dealers").select("subscription_tier");
   const counts: Record<string, number> = {};
@@ -636,7 +636,7 @@ export async function fetchPlatformBanners(): Promise<PlatformBanner[]> {
     .select("*")
     .order("sort_order");
 
-  if (error || !data?.length) return useMock(MOCK_BANNERS, error);
+  if (error || !data?.length) return fallbackData(MOCK_BANNERS, error);
 
   return data.map((b) => ({
     id: b.id,
@@ -652,7 +652,7 @@ export async function fetchPlatformBanners(): Promise<PlatformBanner[]> {
 export async function fetchCmsPages(): Promise<CmsPageRow[]> {
   const { data, error } = await supabase.from("platform_cms_pages").select("id, slug, title, status, updated_at").order("updated_at", { ascending: false });
 
-  if (error || !data?.length) return useMock(MOCK_CMS, error);
+  if (error || !data?.length) return fallbackData(MOCK_CMS, error);
 
   return data.map((p) => ({
     id: p.id,
@@ -666,7 +666,7 @@ export async function fetchCmsPages(): Promise<CmsPageRow[]> {
 export async function fetchPlatformNotifications(): Promise<PlatformNotificationRow[]> {
   const { data, error } = await supabase.from("platform_notifications").select("*").order("created_at", { ascending: false }).limit(50);
 
-  if (error || !data?.length) return useMock(MOCK_NOTIFICATIONS, error);
+  if (error || !data?.length) return fallbackData(MOCK_NOTIFICATIONS, error);
 
   return data.map((n) => ({
     id: n.id,
@@ -681,7 +681,7 @@ export async function fetchPlatformNotifications(): Promise<PlatformNotification
 export async function fetchSupportTickets(): Promise<SupportTicketRow[]> {
   const { data, error } = await supabase.from("support_tickets").select("*").order("created_at", { ascending: false }).limit(100);
 
-  if (error || !data?.length) return useMock(MOCK_TICKETS, error);
+  if (error || !data?.length) return fallbackData(MOCK_TICKETS, error);
 
   return data.map((t) => ({
     id: t.id,
@@ -702,7 +702,7 @@ export async function updateSupportTicket(id: string, status: PlatformTicketStat
 export async function fetchFraudAlerts(): Promise<FraudAlertRow[]> {
   const { data, error } = await supabase.from("platform_fraud_alerts").select("*").order("created_at", { ascending: false }).limit(100);
 
-  if (error || !data?.length) return useMock(MOCK_FRAUD, error);
+  if (error || !data?.length) return fallbackData(MOCK_FRAUD, error);
 
   return data.map((f) => ({
     id: f.id,
@@ -724,7 +724,7 @@ export async function updateFraudAlert(id: string, status: PlatformFraudStatus):
 export async function fetchPlatformReports(): Promise<PlatformReportRow[]> {
   const { data, error } = await supabase.from("platform_report_snapshots").select("*").order("created_at", { ascending: false }).limit(30);
 
-  if (error || !data?.length) return useMock(MOCK_REPORTS, error);
+  if (error || !data?.length) return fallbackData(MOCK_REPORTS, error);
 
   return data.map((r) => ({
     id: r.id,

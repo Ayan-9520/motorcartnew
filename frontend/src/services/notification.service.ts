@@ -30,12 +30,12 @@ function mapUnifiedToDb(userId: string, item: UnifiedNotificationItem): DbNotifi
   };
 }
 
-async function useUnifiedNotificationsApi(): Promise<boolean> {
+async function shouldUseUnifiedNotificationsApi(): Promise<boolean> {
   return featureFlags.unifiedNotifications && hasConfiguredApi();
 }
 
 export async function fetchNotifications(userId: string, limit = 50) {
-  if (await useUnifiedNotificationsApi()) {
+  if (await shouldUseUnifiedNotificationsApi()) {
     try {
       const { data } = await api.get<{ data?: UnifiedNotificationItem[] }>("/api/notifications/list", {
         params: { limit },
@@ -58,7 +58,7 @@ export async function fetchNotifications(userId: string, limit = 50) {
 }
 
 export async function markNotificationRead(id: string) {
-  if (await useUnifiedNotificationsApi()) {
+  if (await shouldUseUnifiedNotificationsApi()) {
     try {
       await api.post(`/api/notifications/${encodeURIComponent(id)}/read`);
       return;
@@ -72,7 +72,7 @@ export async function markNotificationRead(id: string) {
 }
 
 export async function markAllNotificationsRead(userId: string) {
-  if (await useUnifiedNotificationsApi()) {
+  if (await shouldUseUnifiedNotificationsApi()) {
     try {
       await api.post("/api/notifications/read-all");
       return;

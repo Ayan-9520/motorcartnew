@@ -19,16 +19,17 @@ export function ServiceBookingFlowPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const user = useAuthStore((s) => s.user);
 
-  if (!serviceId || serviceId === "undefined") {
-    return <Navigate to={DEFAULT_SERVICE_BOOK_PATH} replace />;
-  }
-
-  const flow = useServiceBookingFlow(serviceId, user?.id);
+  const validServiceId = Boolean(serviceId) && serviceId !== "undefined";
+  const flow = useServiceBookingFlow(validServiceId ? serviceId! : "", user?.id);
   const [otpMsg, setOtpMsg] = useState<string | null>(null);
 
   useEffect(() => {
     setPageMeta({ title: "Book service — Motorcart.in", description: "Choose slot, pickup & drop, confirm with OTP." });
   }, []);
+
+  if (!validServiceId) {
+    return <Navigate to={DEFAULT_SERVICE_BOOK_PATH} replace />;
+  }
 
   if (!user) {
     return (

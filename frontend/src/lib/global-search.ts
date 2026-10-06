@@ -272,7 +272,7 @@ export function normalizeSearchHref(url: string, meta?: { id?: string; slug?: st
 
   try {
     const u = raw.startsWith("http") ? new URL(raw) : new URL(raw, "http://local");
-    let path = u.pathname;
+    const path = u.pathname;
     const qs = u.search;
 
     // Bare new-cars hub with stock id → detail

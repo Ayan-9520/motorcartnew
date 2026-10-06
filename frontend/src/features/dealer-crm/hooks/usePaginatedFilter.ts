@@ -10,7 +10,7 @@ export function usePaginatedFilter<T>(
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const filtered = useMemo(() => {
-    let list = items.filter((item) => filterFn(item, query));
+    const list = items.filter((item) => filterFn(item, query));
     return list;
   }, [items, query, filterFn]);
 
