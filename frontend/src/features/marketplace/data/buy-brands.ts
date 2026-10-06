@@ -21,6 +21,7 @@ const RASTER_EXT: Record<string, "png" | "jpg" | "webp"> = {
   bentley: "png",
   mahindra: "png",
   lamborghini: "png",
+  mclaren: "png",
 };
 const carLogo = (file: string) => `/partners/cars/${file}.${RASTER_EXT[file] ?? "svg"}?${LOGO_V}`;
 
