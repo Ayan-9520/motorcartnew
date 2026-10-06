@@ -40,7 +40,7 @@ export const BUY_CAR_BRANDS: BuyBrandItem[] = [
   { id: "renault", name: "Renault", brand: "Renault", logo: carLogo("renault") },
   { id: "citroen", name: "Citroën", brand: "Citroen", logo: carLogo("citroen") },
   { id: "jeep", name: "Jeep", brand: "Jeep", logo: carLogo("jeep") },
-  { id: "ford", name: "Ford", brand: "Ford", logo: carLogo("ford") },
+  { id: "tesla", name: "Tesla", brand: "Tesla", logo: carLogo("tesla") },
   { id: "isuzu", name: "Isuzu", brand: "Isuzu", logo: carLogo("isuzu") },
   { id: "byd", name: "BYD", brand: "BYD", logo: carLogo("byd") },
   { id: "mini", name: "MINI", brand: "MINI", logo: carLogo("mini") },
@@ -58,6 +58,9 @@ export const BUY_CAR_BRANDS: BuyBrandItem[] = [
   { id: "aston-martin", name: "Aston Martin", brand: "Aston Martin", logo: carLogo("aston-martin") },
   { id: "ferrari", name: "Ferrari", brand: "Ferrari", logo: carLogo("ferrari") },
   { id: "lamborghini", name: "Lamborghini", brand: "Lamborghini", logo: carLogo("lamborghini") },
+  { id: "mclaren", name: "McLaren", brand: "McLaren", logo: carLogo("mclaren") },
+  { id: "bugatti", name: "Bugatti", brand: "Bugatti", logo: carLogo("bugatti") },
+  { id: "rolls-royce", name: "Rolls-Royce", brand: "Rolls-Royce", logo: carLogo("rolls-royce") },
   { id: "lotus", name: "Lotus", brand: "Lotus", logo: carLogo("lotus") },
   { id: "vinfast", name: "VinFast", brand: "VinFast", logo: carLogo("vinfast") },
 ];
