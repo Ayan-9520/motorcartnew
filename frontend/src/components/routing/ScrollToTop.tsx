@@ -1,13 +1,38 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLayoutEffect } from "react";
+import { Outlet, useLocation, useNavigationType } from "react-router-dom";
 
-/** Scroll window to top on route change (SPA). */
+/**
+ * On every new page (link click / navigate) jump to the top — or to `#hash` when present.
+ * Browser back/forward (POP) keeps the browser's own scroll restoration.
+ */
 export function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
+  const navigationType = useNavigationType();
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" in window ? ("instant" as ScrollBehavior) : "auto" });
-  }, [pathname]);
+  useLayoutEffect(() => {
+    if (navigationType === "POP") return;
+    if (hash) {
+      const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+      if (target) {
+        target.scrollIntoView();
+        return;
+      }
+    }
+    window.scrollTo(0, 0);
+    document.querySelectorAll<HTMLElement>("main, .workspace-shell__main").forEach((el) => {
+      if (el.scrollTop > 0) el.scrollTop = 0;
+    });
+  }, [pathname, hash, navigationType]);
 
   return null;
+}
+
+/** Root route element: mounts scroll handling for every page. */
+export function ScrollToTopRoot() {
+  return (
+    <>
+      <ScrollToTop />
+      <Outlet />
+    </>
+  );
 }

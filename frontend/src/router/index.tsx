@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, type RouteObject } from "react-router-dom";
+import { ScrollToTopRoot } from "@/components/routing/ScrollToTop";
 import { RouteErrorPage } from "@/components/routing/RouteErrorPage";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
@@ -1401,4 +1402,6 @@ const appRoutes: RouteObject[] = [
   { path: "*", element: <NotFoundPage /> },
 ];
 
-export const router = createBrowserRouter([{ errorElement: <RouteErrorPage />, children: appRoutes }]);
+export const router = createBrowserRouter([
+  { element: <ScrollToTopRoot />, errorElement: <RouteErrorPage />, children: appRoutes },
+]);
