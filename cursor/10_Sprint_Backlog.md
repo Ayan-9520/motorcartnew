@@ -104,6 +104,7 @@ Status: 🔴 Open · 🟡 In Progress · 🟢 Done · ⚪ Planned
 
 | Date | Item |
 |------|------|
+| 2026-10-08 | Homepage hero follows site theme — white canvas + dark text in light mode, dark canvas + white text in dark mode (green only as accent); badges, search panel, chips use theme tokens |
 | 2026-10-08 | Homepage hero v3 — split layout on dark-green canvas: copy left, car video in glowing rounded frame right with floating glass badges (Live auctions / Verified dealers / Bank-grade finance), search module full width below |
 | 2026-10-08 | Homepage hero premium refresh — dark-green cinematic scrim + glow + grid over video, white headline with green shimmer, live-dot eyebrow chip, rotating line pill, glass CTAs, trust row (Verified dealers / Bank-grade finance / Live auctions / AI search) |
 | 2026-10-08 | Premium site footer — dark navy theme with green glow, CTA band (Buy / Sell), glass contact card, single-line column headings, white logo variant |
