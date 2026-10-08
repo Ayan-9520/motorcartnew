@@ -1,5 +1,5 @@
 ﻿import { Link } from "react-router-dom";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { ArrowRight, Mail, MapPin, Phone } from "lucide-react";
 import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
 import { FOOTER_COLUMNS, FOOTER_LEGAL_LINKS, SITE_CONTACT } from "@/content/site-content";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
@@ -9,11 +9,29 @@ export function Footer() {
   return (
     <footer className="site-footer">
       <div className="site-footer__glow" aria-hidden />
+      <div className="site-footer__orb site-footer__orb--left" aria-hidden />
+      <div className="site-footer__orb site-footer__orb--right" aria-hidden />
       <div className="container relative">
+        <div className="site-footer__cta">
+          <div>
+            <p className="site-footer__cta-eyebrow">India&apos;s automotive marketplace</p>
+            <h2 className="site-footer__cta-title">Buy, sell, finance &amp; insure — all in one place.</h2>
+          </div>
+          <div className="site-footer__cta-actions">
+            <Link to="/buy" className="site-footer__cta-btn site-footer__cta-btn--primary">
+              Buy vehicles
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link to="/sell" className="site-footer__cta-btn">
+              Sell your vehicle
+            </Link>
+          </div>
+        </div>
+
         <div className="site-footer__main">
           <div className="site-footer__brand">
             <Link to="/" className="site-footer__logo inline-flex items-center no-underline">
-              <MotorcartLogo variant="full" height={36} />
+              <MotorcartLogo variant="full" height={36} tone="dark" />
             </Link>
             <p className="site-footer__tagline">{SITE_TAGLINE}</p>
 
