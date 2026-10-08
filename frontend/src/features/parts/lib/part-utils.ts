@@ -13,10 +13,18 @@ export function isDealerRole(role: AppRole | undefined): boolean {
   return role != null && DEALER_ROLES.includes(role);
 }
 
-export function displayUnitPrice(part: PartProduct, role: AppRole | undefined): number {
-  if (isDealerRole(role) && part.wholesalePrice != null && part.wholesalePrice > 0) {
-    return part.wholesalePrice;
-  }
+type PriceTier = Pick<PartProduct, "price" | "wholesalePrice" | "bulkMinQty">;
+
+/** Mirrors backend `priceLine`: wholesale applies to everyone once qty reaches the bulk tier. */
+export function hasBulkTier(part: PriceTier): boolean {
+  return part.wholesalePrice != null && part.bulkMinQty > 1 && part.wholesalePrice > 0 && part.wholesalePrice < part.price;
+}
+
+export function unitPriceForQty(part: PriceTier, qty: number): number {
+  return hasBulkTier(part) && qty >= part.bulkMinQty ? part.wholesalePrice! : part.price;
+}
+
+export function displayUnitPrice(part: PartProduct, _role?: AppRole): number {
   return part.price;
 }
 

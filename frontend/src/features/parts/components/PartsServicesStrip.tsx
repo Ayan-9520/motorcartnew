@@ -6,11 +6,11 @@ export function PartsServicesStrip() {
     <section className="parts-hub-services-section">
       <div className="container">
         <div className="parts-hub-section-head parts-hub-section-head--center">
-          <p className="parts-hub-section-eyebrow">Garage OS</p>
-          <h2 className="parts-hub-section-title">Built for professional garages</h2>
+          <p className="parts-hub-section-eyebrow">Why buy here</p>
+          <h2 className="parts-hub-section-title">For car owners and garages alike</h2>
           <p className="parts-hub-section-desc">
-            GST credit-ready invoices, slab wholesale pricing, COD &amp; online settlement, and AI fitment —
-            across cars, CV, trucks, buses &amp; equipment.
+            GST invoices with your GSTIN, automatic bulk pricing, Cash on Delivery, and courier tracking —
+            across cars, bikes, trucks, buses &amp; autos.
           </p>
         </div>
         <ul className="parts-services-grid">

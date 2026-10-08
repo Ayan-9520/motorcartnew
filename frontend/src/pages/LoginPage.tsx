@@ -1,15 +1,17 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthPageChrome } from "@/components/auth/AuthPageChrome";
 import { AuthPageLinks } from "@/components/auth/AuthPageLinks";
 import { AuthRoleSwitch } from "@/components/auth/AuthRoleSwitch";
-import { getWorkspaceHomePath } from "@/auth/workspace-redirect";
+import { resolveLoginRedirect } from "@/auth/login-redirect";
 import { useAuthStore } from "@/store/authStore";
 import { setPrivatePageMeta } from "@/utils/seo";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [params] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const profileHydrated = useAuthStore((s) => s.profileHydrated);
@@ -20,9 +22,10 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && profileHydrated && user) {
-      navigate(getWorkspaceHomePath(user), { replace: true });
+      const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from ?? null;
+      navigate(resolveLoginRedirect(user, { from, redirectParam: params.get("redirect") }), { replace: true });
     }
-  }, [isAuthenticated, profileHydrated, user, navigate]);
+  }, [isAuthenticated, profileHydrated, user, navigate, location.state, params]);
 
   return (
     <AuthPageChrome

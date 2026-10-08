@@ -18,6 +18,13 @@ import { usePartsList } from "../hooks/usePartsList";
 import { parseVehicleHubParam, partMatchesVehicleHub, VEHICLE_HUB_ENTRIES } from "@/lib/vehicle-hub-catalog";
 import { X } from "lucide-react";
 
+const HOW_IT_WORKS = [
+  { title: "Find the right part", body: "Search by part, brand or your vehicle model." },
+  { title: "Order with COD", body: "Pay on delivery or confirm on WhatsApp first." },
+  { title: "Desk confirms & packs", body: "We verify fitment and stock before dispatch." },
+  { title: "Track to your door", body: "Courier AWB and GST invoice in My orders." },
+];
+
 export function PartsHubPage() {
   const [params] = useSearchParams();
   const hub = useMemo(() => parseVehicleHubParam(params.get("hub")), [params]);
@@ -106,7 +113,7 @@ export function PartsHubPage() {
           <div>
             <p className="parts-hub-section-eyebrow">Deals</p>
             <h2 className="parts-hub-section-title">Featured deals</h2>
-            <p className="parts-hub-section-desc mt-1">GST-inclusive · bulk MOQ shown</p>
+            <p className="parts-hub-section-desc mt-1">GST-inclusive prices · bulk rate shown on each part</p>
           </div>
           <Button className="rounded-xl shadow-[var(--shadow-primary)]" asChild>
             <Link to={partsBrowsePath({ hub: hub ?? undefined })}>
@@ -134,31 +141,44 @@ export function PartsHubPage() {
       </section>
 
       <section className="container pb-14">
+        <div className="parts-hub-howto mb-8">
+          {HOW_IT_WORKS.map((s, i) => (
+            <div key={s.title} className="parts-hub-howto__step">
+              <span className="parts-hub-howto__num">{i + 1}</span>
+              <div>
+                <p className="font-semibold">{s.title}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">{s.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="parts-fintech-banner">
           <div className="max-w-xl">
-            <p className="text-xs font-bold uppercase tracking-wider text-primary">Fintech for garages</p>
-            <h3 className="mt-2 text-xl font-bold md:text-2xl">GST credit notes · pay later · dealer slabs</h3>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">For garages &amp; fleets</p>
+            <h3 className="mt-2 text-xl font-bold md:text-2xl">Bulk pricing applies automatically</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Download invoices from orders, unlock wholesale after KYC, and split payments via finance partners.
+              Add the bulk quantity shown on a part and the lower rate is applied at checkout. Enter your GSTIN for a
+              business invoice and claim input tax credit.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button className="rounded-xl" asChild>
-              <Link to="/login?redirect=/parts/browse">Unlock wholesale</Link>
+              <Link to="/parts/browse?dealer=1">Shop bulk deals</Link>
             </Button>
             <Button variant="outline" className="rounded-xl" asChild>
               <Link to="/dashboard/parts">
                 <Store className="mr-2 h-4 w-4" />
-                Sell as supplier
+                Sell your parts
               </Link>
             </Button>
           </div>
         </div>
 
         <div className="parts-hub-footer-cta mt-8 text-center">
-          <p className="mb-3 text-sm text-muted-foreground">Need a quote for 50+ units? WhatsApp our parts desk.</p>
+          <p className="mb-3 text-sm text-muted-foreground">Already ordered? Track delivery and download GST invoices anytime.</p>
           <Button variant="outline" className="rounded-xl" asChild>
-            <Link to={partsBrowsePath({ hub: hub ?? undefined })}>Open catalogue</Link>
+            <Link to="/orders">My parts orders</Link>
           </Button>
         </div>
       </section>

@@ -13,7 +13,7 @@ export function usePartDetail(category: string | undefined, slug: string | undef
     const p = await fetchPartBySlug(category, slug);
     setPart(p);
     if (p) {
-      setReviews(await fetchPartReviews(p.id));
+      setReviews(await fetchPartReviews(p.slug));
     }
     setLoading(false);
   }, [category, slug]);

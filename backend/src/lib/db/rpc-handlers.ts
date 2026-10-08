@@ -10,6 +10,7 @@ import {
   setAuctionAutoBid,
 } from "@/lib/auctions/auction-engine";
 import { ensureCommissionOnDisbursement } from "@/services/finance-commission.service";
+import { checkoutParts } from "@/lib/parts/parts-store.service";
 
 type RpcArgs = Record<string, unknown>;
 
@@ -67,44 +68,19 @@ async function registerDeviceSession(args: RpcArgs, auth: JwtPayload | null) {
 
 async function createPartOrder(args: RpcArgs, auth: JwtPayload | null) {
   if (!auth) throw new Error("Unauthorized");
-  const items = (args.p_items ?? args.items) as { part_id: string; qty: number }[];
-  const shipping = (args.p_shipping ?? args.shipping ?? {}) as Record<string, unknown>;
-  let total = 0;
-  for (const it of items ?? []) {
-    const part = await prisma.part.findUnique({ where: { id: it.part_id } });
-    if (part) total += Number(part.price) * it.qty;
-  }
-  const order = await prisma.partOrder.create({
-    data: {
-      buyerId: auth.sub,
-      status: "confirmed",
-      total,
-      metadata: {
-        shipping,
-        payment_method: args.p_payment_method,
-        cod: args.p_cod,
-      } as Prisma.InputJsonValue,
-    },
+  const result = await checkoutParts(auth, {
+    items: args.p_items ?? args.items,
+    paymentMethod: args.p_payment_method ?? args.payment_method,
+    shipping: args.p_shipping ?? args.shipping,
+    gstin: args.p_gstin ?? args.gstin,
   });
-  for (const it of items ?? []) {
-    const part = await prisma.part.findUnique({ where: { id: it.part_id } });
-    if (!part) continue;
-    await prisma.partOrderItem
-      .create({
-        data: {
-          orderId: order.id,
-          productId: part.id,
-          qty: it.qty,
-          price: Number(part.price),
-        },
-      })
-      .catch(() => {});
-  }
+  if (!result.ok) throw new Error(result.error);
+  const order = result.data as { id: string; invoiceNumber: string; grandTotal: number };
   return {
     ok: true,
     order_id: order.id,
-    invoice_number: `INV-MC-${Date.now()}`,
-    grand_total: total,
+    invoice_number: order.invoiceNumber,
+    grand_total: order.grandTotal,
   };
 }
 

@@ -41,6 +41,20 @@ export function resolveLoginRedirect(user: User, options?: LoginRedirectOptions)
   if (pathname?.startsWith("/dashboard") && isPathInUserWorkspace(user, pathname)) {
     return `${normalizePathForWorkspace(user, pathname)}${options?.from?.search ?? ""}`;
   }
+  if (pathname && isCommercePath(pathname) && isPathInUserWorkspace(user, pathname)) {
+    return `${pathname}${options?.from?.search ?? ""}`;
+  }
 
   return home;
+}
+
+/** Cart / checkout / order tracking must resume where the buyer left off. */
+function isCommercePath(pathname: string): boolean {
+  return (
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname === "/orders" ||
+    pathname.startsWith("/orders/") ||
+    pathname.startsWith("/parts/")
+  );
 }

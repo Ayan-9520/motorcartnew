@@ -30,15 +30,15 @@ export interface PartsHubService {
 }
 
 export const PARTS_HUB_SERVICES: PartsHubService[] = [
-  { id: "b2b", label: "B2B Wholesale", description: "Dealer slab pricing", icon: Percent, href: "/parts/browse?dealer=1" },
-  { id: "gst", label: "GST Invoice", description: "B2B tax credit ready", icon: FileText, href: "/parts/browse" },
-  { id: "cod", label: "COD Available", description: "Pay on delivery", icon: Truck, href: "/parts/browse?pay=cod" },
-  { id: "same-day", label: "Same-day metro", description: "Mumbai · Delhi · BLR", icon: Zap, href: "/parts/browse?delivery=fast" },
-  { id: "whatsapp", label: "WhatsApp order", description: "Bulk on chat", icon: MessageCircle, href: "/parts/browse" },
-  { id: "ai", label: "AI PartsBot", description: "Fitment matched", icon: Sparkles, href: "/parts/browse" },
-  { id: "warranty", label: "OEM warranty", description: "Brand authorised", icon: ShieldCheck, href: "/parts/browse" },
-  { id: "fitment", label: "Fitment check", description: "By VIN / model", icon: Wrench, href: "/parts/browse" },
-  { id: "emi", label: "Pay later / EMI", description: "For garages & fleets", icon: CreditCard, href: "/finance" },
+  { id: "b2b", label: "Bulk pricing", description: "Lower rate at bulk qty", icon: Percent, href: "/parts/browse?dealer=1" },
+  { id: "gst", label: "GST invoice", description: "Add GSTIN for input credit", icon: FileText, href: "/parts/browse" },
+  { id: "cod", label: "Cash on Delivery", description: "Pay cash / UPI on arrival", icon: Truck, href: "/parts/browse?pay=cod" },
+  { id: "ready", label: "Ready to ship", description: "Dispatch in 1–3 days", icon: Zap, href: "/parts/browse?delivery=fast" },
+  { id: "whatsapp", label: "WhatsApp confirm", description: "Desk confirms fitment", icon: MessageCircle, href: "/parts/browse" },
+  { id: "ai", label: "PartsBot picks", description: "Matched to your vehicle", icon: Sparkles, href: "/parts/browse" },
+  { id: "tracking", label: "Live tracking", description: "Courier AWB in orders", icon: ShieldCheck, href: "/orders" },
+  { id: "fitment", label: "Fitment help", description: "Share model & year", icon: Wrench, href: "/parts/browse" },
+  { id: "sell", label: "Sell parts", description: "List your inventory", icon: CreditCard, href: "/dashboard/parts" },
 ];
 
 export const PARTS_CATEGORY_ICONS: Record<PartCategorySlug, LucideIcon> = {
@@ -68,8 +68,8 @@ export function partsTrustStatsForCatalog(skuCount: number, liveOnly: boolean) {
     const countLabel = skuCount > 0 ? skuCount.toLocaleString("en-IN") : "0";
     return [
       { label: countLabel, sub: "SKUs live" },
-      { label: "18%", sub: "GST on parts" },
-      { label: "B2B", sub: "Wholesale ready" },
+      { label: "GST", sub: "Invoice on every order" },
+      { label: "Bulk", sub: "Tier pricing" },
       { label: "COD", sub: "Pay on delivery" },
     ];
   }

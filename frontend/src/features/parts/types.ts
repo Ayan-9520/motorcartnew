@@ -73,6 +73,8 @@ export interface PartProduct {
   partOrigin: PartOrigin;
   mrp: number | null;
   supplierSku: string | null;
+  sellerName?: string | null;
+  hsnCode?: string | null;
   createdAt: string;
 }
 
@@ -101,6 +103,7 @@ export interface PartReview {
   rating: number;
   title: string | null;
   content: string | null;
+  verifiedPurchase?: boolean;
   createdAt: string;
 }
 
@@ -108,6 +111,9 @@ export interface PartOrderItem {
   id: string;
   partId: string;
   partName?: string;
+  slug?: string;
+  categorySlug?: PartCategorySlug;
+  hsnCode?: string | null;
   sellerId: string;
   qty: number;
   unitPrice: number;
@@ -131,9 +137,19 @@ export interface PartOrder {
   carrier: string | null;
   invoiceNumber: string | null;
   invoiceSnapshot: Record<string, unknown> | null;
+  gstin?: string | null;
+  timeline?: PartOrderTimelineEntry[];
+  sellerIds?: string[];
   items: PartOrderItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PartOrderTimelineEntry {
+  status: PartOrderStatus;
+  at: string;
+  note?: string;
+  by?: string;
 }
 
 export interface CartLine {
@@ -147,5 +163,6 @@ export interface CartLine {
   gstRate: number;
   bulkMinQty: number;
   sellerId: string;
+  stock?: number;
   qty: number;
 }

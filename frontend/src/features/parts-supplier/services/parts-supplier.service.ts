@@ -3,9 +3,11 @@ import {
   computeSupplierAnalytics,
   fetchSellerPartOrders,
   fetchSellerParts,
+  fetchPartOrderById,
   fetchSupplierProfile,
+  orderLineLabel,
 } from "@/features/parts/services/parts.service";
-import type { PartProduct } from "@/features/parts/types";
+import type { PartOrder, PartProduct } from "@/features/parts/types";
 import {
   buildMockPartsSupplierSnapshot,
   emptyPartsSupplierSnapshot,
@@ -118,9 +120,48 @@ export async function fetchPartsSupplierSnapshot(
   }
 }
 
+const TIMELINE_STEPS: { status: PartOrder["status"]; label: string }[] = [
+  { status: "pending", label: "Order placed" },
+  { status: "confirmed", label: "Confirmed" },
+  { status: "packed", label: "Packed" },
+  { status: "shipped", label: "Shipped" },
+  { status: "delivered", label: "Delivered" },
+];
+
+function mapOrderDetail(o: PartOrder): PsSupplierOrderDetail {
+  const addr = o.shippingAddress as Record<string, string | undefined>;
+  const fmt = (iso: string) => new Date(iso).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+  const events = o.timeline ?? [];
+  const steps = o.status === "cancelled" ? [...TIMELINE_STEPS.slice(0, 1), { status: "cancelled" as const, label: "Cancelled" }] : TIMELINE_STEPS;
+  return {
+    id: o.id,
+    orderNo: o.invoiceNumber ?? `MC-${o.id.slice(0, 8)}`,
+    customerName: addr.name ?? "Customer",
+    customerType: o.gstin ? "wholesale" : "retail",
+    status: o.status,
+    grandTotal: o.grandTotal,
+    itemCount: o.items.length,
+    city: addr.city ?? "—",
+    paymentMode: o.paymentMethod === "cod" ? "Cash on Delivery" : o.paymentMethod === "whatsapp" ? "WhatsApp confirm" : o.paymentMethod,
+    createdAt: o.createdAt,
+    gstin: o.gstin ?? undefined,
+    phone: addr.phone ?? "—",
+    trackingNumber: o.trackingNumber ?? undefined,
+    carrier: o.carrier ?? undefined,
+    warehouse: [addr.line1, addr.line2, addr.city, addr.state, addr.pin].filter(Boolean).join(", ") || "—",
+    timeline: steps.map((s) => {
+      const hit = events.find((e) => e.status === s.status);
+      return { label: s.label, at: hit ? fmt(hit.at) : s.status === "pending" ? fmt(o.createdAt) : "—", done: !!hit || s.status === "pending" };
+    }),
+    items: o.items.map((i) => ({ name: orderLineLabel(i), sku: i.slug ?? i.partId.slice(0, 8), qty: i.qty, lineTotal: i.lineTotal })),
+  };
+}
+
 export async function fetchPartsSupplierOrderDetail(
   orderId: string
 ): Promise<PsSupplierOrderDetail | null> {
+  const order = await fetchPartOrderById("", orderId).catch(() => null);
+  if (order) return mapOrderDetail(order);
   if (realDataOnly) return null;
   return getMockOrderDetail(orderId);
 }

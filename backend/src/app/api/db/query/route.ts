@@ -120,6 +120,10 @@ async function handle(req: NextRequest, body?: Record<string, unknown>) {
       }
     }
 
+    if (!isAdminAuth && p.table === "parts" && action !== "select") {
+      return forbidden("Use /api/parts/seller/listings to manage parts");
+    }
+
     if (auth && !isAdminAuth && isAuctionTable(p.table)) {
       const guard = await guardAuctionQuery(auth.userId, p.table, action, p.body, p.filters);
       if (!guard.ok) return forbidden(guard.message);

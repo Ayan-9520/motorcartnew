@@ -28,9 +28,10 @@ function workspaceRoots(workspace: AppRole): string[] {
         "/dashboard/founder",
         "/dashboard/admin",
         "/dashboard/auction",
+        "/dashboard/parts",
       ];
     case "admin":
-      return ["/dashboard/super-admin", "/dashboard/admin"];
+      return ["/dashboard/super-admin", "/dashboard/admin", "/dashboard/parts"];
     case "new_car_dealer":
       return ["/dashboard/new-car"];
     case "broker":
@@ -69,6 +70,10 @@ function isPublicPostLoginPath(pathname: string): boolean {
     pathname.startsWith("/finance") ||
     pathname.startsWith("/insurance") ||
     pathname.startsWith("/parts") ||
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname === "/orders" ||
+    pathname.startsWith("/orders/") ||
     pathname.startsWith("/services") ||
     pathname.startsWith("/community") ||
     pathname.startsWith("/directory") ||

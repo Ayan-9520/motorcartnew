@@ -190,7 +190,6 @@ const TABLES_WITH_SOFT_DELETE = new Set([
   "vehicles",
   "part_products",
   "social_posts",
-  "parts",
 ]);
 
 export function tableHasSoftDelete(table: string) {

@@ -16,6 +16,7 @@
     "auth:confirm": "tsx scripts/confirm-email.ts",
     "seed:vehicles": "tsx scripts/seed-vehicles-catalog.ts",
     "seed:new-cars": "tsx scripts/seed-new-cars-bulk.ts",
+    "test:parts": "tsx --test src/lib/parts/parts-store.test.ts",
     "test:catalog-matching": "tsx --test src/lib/catalog/catalog-matching.test.ts",
     "test:catalog-linking": "tsx --test src/lib/catalog/catalog-linking.test.ts",
     "test:catalog-approval": "tsx --test src/lib/catalog/catalog-approval.test.ts",

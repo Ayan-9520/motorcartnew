@@ -8,7 +8,7 @@ import { setPageMeta } from "@/utils/seo";
 
 export function PartsSupplierOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [order, setOrder] = useState<PsSupplierOrderDetail | null>(null);
+  const [order, setOrder] = useState<PsSupplierOrderDetail | null | undefined>(undefined);
 
   useEffect(() => {
     if (!id) return;
@@ -19,7 +19,7 @@ export function PartsSupplierOrderDetailPage() {
   if (!order) {
     return (
       <PartsSupplierShell title="Order" crumbs={[{ label: "Orders", href: "/dashboard/parts/orders" }]}>
-        <p className="text-muted-foreground">Loading…</p>
+        <p className="text-muted-foreground">{order === undefined ? "Loading…" : "Order not found or not assigned to you."}</p>
       </PartsSupplierShell>
     );
   }
@@ -52,7 +52,7 @@ export function PartsSupplierOrderDetailPage() {
               <dd>{order.paymentMode}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Warehouse</dt>
+              <dt className="text-slate-500">Ship to</dt>
               <dd>{order.warehouse}</dd>
             </div>
           </dl>
@@ -97,8 +97,8 @@ export function PartsSupplierOrderDetailPage() {
         </table>
         <p className="mt-3 text-right font-semibold">Grand total: {formatCurrency(order.grandTotal)}</p>
       </div>
-      <Link to="/dashboard/parts/finance/invoices" className="mt-4 inline-block text-sm text-amber-400 hover:underline">
-        Generate GST invoice →
+      <Link to={`/orders/${order.id}/invoice`} className="mt-4 inline-block text-sm text-amber-400 hover:underline">
+        View GST invoice →
       </Link>
     </PartsSupplierShell>
   );

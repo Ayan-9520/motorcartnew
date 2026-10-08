@@ -5692,6 +5692,18 @@
     @apply rounded-2xl border border-dashed border-primary/30 bg-gradient-to-b from-primary/5 to-transparent px-6 py-10 text-center;
   }
 
+  .parts-hub-howto {
+    @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .parts-hub-howto__step {
+    @apply flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-card)];
+  }
+
+  .parts-hub-howto__num {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary ring-1 ring-primary/25;
+  }
+
   .parts-catalog-hero {
     background-image: linear-gradient(180deg, hsl(var(--primary) / 0.06), hsl(var(--background)));
   }

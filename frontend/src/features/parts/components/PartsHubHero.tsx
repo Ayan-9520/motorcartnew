@@ -7,8 +7,6 @@ import { VehicleHubFilterRail } from "@/components/vehicle/VehicleHubFilterRail"
 import { parseVehicleHubParam } from "@/lib/vehicle-hub-catalog";
 import type { HubCategorySlug } from "@/features/marketplace/types";
 import { partsBrowsePath, partsTrustStatsForCatalog } from "../data/parts-hub-data";
-import { realDataOnly } from "@/config/real-data";
-
 interface PartsHubHeroProps {
   skuCount?: number;
 }
@@ -37,7 +35,7 @@ export function PartsHubHero({ skuCount = 0 }: PartsHubHeroProps) {
     );
   };
 
-  const trustStats = partsTrustStatsForCatalog(skuCount, realDataOnly);
+  const trustStats = partsTrustStatsForCatalog(skuCount, true);
 
   return (
     <section className="parts-hub-hero relative overflow-hidden">
@@ -53,19 +51,19 @@ export function PartsHubHero({ skuCount = 0 }: PartsHubHeroProps) {
           </span>
           <span className="parts-hub-hero__badge parts-hub-hero__badge--muted">
             <ShieldCheck className="h-3 w-3" />
-            B2B &amp; retail · GST ready
+            Fulfilled by Motorcart Parts Desk
           </span>
         </div>
 
         <h1 className="parts-hub-title">
-          India&apos;s{" "}
-          <span className="parts-hub-title-accent">fintech-grade</span>
+          Spare parts from{" "}
+          <span className="parts-hub-title-accent">brands you trust</span>
           <br className="hidden sm:block" />
-          {" "}parts marketplace
+          {" "}delivered to your door
         </h1>
         <p className="parts-hub-subtitle">
-          OEM &amp; aftermarket for cars, bikes, commercial vehicles, trucks, buses &amp; equipment —
-          wholesale pricing, COD &amp; same-day metro delivery
+          Bosch, Amaron, Exide, MRF, Castrol, Brembo &amp; more for cars, bikes, trucks, buses and autos —
+          GST invoice on every order, bulk pricing and Cash on Delivery.
         </p>
 
         <div className="parts-hub-hero__stats">

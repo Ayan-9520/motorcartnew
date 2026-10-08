@@ -8,9 +8,9 @@ export type PartsBrowseFilter = {
 };
 
 export const PARTS_FILTER_LABELS: Record<string, string> = {
-  dealer: "Wholesale / B2B",
+  dealer: "Bulk pricing",
   cod: "COD available",
-  fast: "Same-day metro",
+  fast: "Ready to ship",
 };
 
 export function applyPartsBrowseFilters(parts: PartProduct[], filters: PartsBrowseFilter): PartProduct[] {
@@ -25,7 +25,7 @@ export function applyPartsBrowseFilters(parts: PartProduct[], filters: PartsBrow
   }
 
   if (filters.delivery === "fast") {
-    result = result.filter((p) => p.isFeatured || p.stock >= 40);
+    result = result.filter((p) => p.stock >= 20);
   }
 
   if (filters.brand?.trim()) {
