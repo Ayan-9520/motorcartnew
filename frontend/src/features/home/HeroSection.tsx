@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroSearchModule } from "@/features/home/components/HeroSearchModule";
 import { HeroSearchInsights } from "@/features/home/components/HeroSearchInsights";
@@ -26,6 +26,8 @@ const HOME_ROTATING = [
   "Auctions, community & services — unified",
   "AI-powered search for every vehicle type",
 ] as const;
+
+const HOME_TRUST_POINTS = ["Verified dealers", "Bank-grade finance", "Live auctions", "AI search"] as const;
 
 export function HeroSection() {
   const { pathname } = useLocation();
@@ -154,6 +156,13 @@ export function HeroSection() {
             aria-hidden
           />
         ) : null}
+        {isHome ? (
+          <>
+            <div className="hero-premium-scrim" />
+            <div className="hero-premium-orb" />
+            <div className="hero-premium-grid" />
+          </>
+        ) : null}
         {!isHome ? (
           <>
             <div className="hero-section-bg-cinematic" />
@@ -176,7 +185,10 @@ export function HeroSection() {
             <div className="space-y-3">
               {isHome ? (
                 <h1 className="hero-headline hero-headline--cinematic">
-                  <span className="hero-headline-kicker">India&apos;s automotive OS</span>
+                  <span className="hero-headline-kicker">
+                    <span className="hero-kicker-dot" aria-hidden />
+                    India&apos;s automotive OS
+                  </span>
                   <span className="hero-headline-line">Buy, finance &amp; auction</span>
                   <span className="hero-headline-line hero-headline-accent hero-headline-shimmer">
                     with AI speed
@@ -245,6 +257,17 @@ export function HeroSection() {
                 </>
               )}
             </div>
+
+            {isHome ? (
+              <ul className="hero-trust-row">
+                {HOME_TRUST_POINTS.map((point) => (
+                  <li key={point}>
+                    <CheckCircle2 className="h-4 w-4" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
 
             <div className={isHome ? "hero-search-premium-wrap" : undefined}>
               <HeroSearchModule />
