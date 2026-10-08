@@ -1,9 +1,9 @@
 /* Premium site footer — imported from global.css */
 .site-footer {
-  @apply relative mt-auto overflow-hidden pt-12 pb-8 text-slate-300 md:pt-14 md:pb-10;
+  @apply relative mt-auto overflow-hidden pt-12 pb-8 text-emerald-50/85 md:pt-14 md:pb-10;
   background:
-    radial-gradient(120% 60% at 50% 0%, hsl(var(--primary) / 0.1) 0%, transparent 60%),
-    linear-gradient(180deg, #0b1324 0%, #070d1a 100%);
+    radial-gradient(120% 60% at 50% 0%, hsl(var(--primary) / 0.14) 0%, transparent 60%),
+    linear-gradient(180deg, #06311c 0%, #03200f 100%);
 }
 
 .site-footer__glow {
@@ -66,7 +66,7 @@
 }
 
 .site-footer__tagline {
-  @apply max-w-sm text-sm leading-relaxed text-slate-400;
+  @apply max-w-sm text-sm leading-relaxed text-emerald-100/70;
 }
 
 .site-footer__contact-card {
@@ -78,7 +78,7 @@
 }
 
 .site-footer__address {
-  @apply text-sm leading-relaxed text-slate-200;
+  @apply text-sm leading-relaxed text-emerald-50;
 }
 
 .site-footer__contact-list {
@@ -90,11 +90,11 @@
 }
 
 .site-footer__contact-list a {
-  @apply font-medium text-slate-100 no-underline transition-colors hover:text-primary;
+  @apply font-medium text-white no-underline transition-colors hover:text-primary;
 }
 
 .site-footer__hours {
-  @apply mt-4 border-t border-white/10 pt-3 text-xs text-slate-400;
+  @apply mt-4 border-t border-white/10 pt-3 text-xs text-emerald-100/70;
 }
 
 .site-footer__social {
@@ -102,7 +102,7 @@
 }
 
 .site-footer__social-btn {
-  @apply flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary hover:text-primary-foreground;
+  @apply flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-emerald-50/85 transition hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary hover:text-primary-foreground;
 }
 
 .site-footer__columns {
@@ -118,7 +118,7 @@
 }
 
 .site-footer__col-links a {
-  @apply inline-block text-slate-400 no-underline transition-all duration-200 hover:translate-x-0.5 hover:text-primary;
+  @apply inline-block text-emerald-100/70 no-underline transition-all duration-200 hover:translate-x-0.5 hover:text-primary;
 }
 
 .site-footer__bottom {
@@ -126,7 +126,7 @@
 }
 
 .site-footer__copy {
-  @apply text-center text-xs text-slate-500 md:text-left;
+  @apply text-center text-xs text-emerald-100/55 md:text-left;
 }
 
 .site-footer__legal {
@@ -134,7 +134,7 @@
 }
 
 .site-footer__legal-pill {
-  @apply rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-slate-300 no-underline transition hover:border-primary/50 hover:bg-primary/10 hover:text-primary;
+  @apply rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-emerald-50/85 no-underline transition hover:border-primary/50 hover:bg-primary/10 hover:text-primary;
 }
 
 .site-contact-chip--address {
