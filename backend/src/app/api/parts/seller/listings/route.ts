@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { ok, err, forbidden, unauthorized } from "@/lib/api-response";
 import { getAuthUser } from "@/lib/auth/middleware";
-import { canSellParts, createSellerListing, listSellerListings } from "@/lib/parts/parts-store.service";
+import { createSellerListing, listSellerListings, sellerAccessError } from "@/lib/parts/parts-store.service";
 
 export async function GET(req: NextRequest) {
   const auth = getAuthUser(req);
   if (!auth) return unauthorized();
-  if (!canSellParts(auth)) return forbidden("Parts seller access required");
+  const denied = await sellerAccessError(auth);
+  if (denied) return forbidden(denied);
   try {
     return ok({ data: await listSellerListings(auth) });
   } catch (e) {
@@ -18,6 +19,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = getAuthUser(req);
   if (!auth) return unauthorized();
+  const denied = await sellerAccessError(auth);
+  if (denied) return forbidden(denied);
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   try {
     const result = await createSellerListing(auth, body);

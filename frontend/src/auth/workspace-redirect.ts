@@ -33,7 +33,7 @@ function workspaceRoots(workspace: AppRole): string[] {
     case "admin":
       return ["/dashboard/super-admin", "/dashboard/admin", "/dashboard/parts"];
     case "new_car_dealer":
-      return ["/dashboard/new-car"];
+      return ["/dashboard/new-car", "/dashboard/parts"];
     case "broker":
       return ["/dashboard/broker"];
     case "customer":
@@ -44,7 +44,7 @@ function workspaceRoots(workspace: AppRole): string[] {
       return ["/dashboard/parts"];
     case "service_center":
     case "service_partner":
-      return ["/dashboard/service", "/dashboard/technician"];
+      return ["/dashboard/service", "/dashboard/technician", "/dashboard/parts"];
     case "service_technician":
       return ["/dashboard/technician", "/dashboard/service"];
     case "bank_nbfc":
@@ -53,7 +53,7 @@ function workspaceRoots(workspace: AppRole): string[] {
     case "auction_partner":
       return ["/dashboard/auction"];
     default:
-      if (isDealerRole(workspace)) return ["/dashboard/dealer"];
+      if (isDealerRole(workspace)) return ["/dashboard/dealer", "/dashboard/parts"];
       return ["/dashboard/customer"];
   }
 }

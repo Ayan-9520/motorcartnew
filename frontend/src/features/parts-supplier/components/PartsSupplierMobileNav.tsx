@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingCart, Warehouse } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Package, ShoppingCart, Warehouse } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePartsWorkspaceHomePath } from "../hooks/usePartsWorkspaceHomePath";
 
 const mobileLinks = [
   { to: "/dashboard/parts", label: "Home", icon: LayoutDashboard, end: true },
@@ -10,9 +11,14 @@ const mobileLinks = [
 ];
 
 export function PartsSupplierMobileNav() {
+  const homePath = usePartsWorkspaceHomePath();
+  const links = homePath
+    ? [{ to: homePath, label: "My dashboard", icon: ArrowLeft, end: true }, ...mobileLinks]
+    : mobileLinks;
+
   return (
     <nav className="flex gap-1 overflow-x-auto pb-1">
-      {mobileLinks.map(({ to, label, icon: Icon, end }) => (
+      {links.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
           to={to}

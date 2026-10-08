@@ -611,7 +611,21 @@ const appRoutes: RouteObject[] = [
   },
   {
     element: (
-      <ProtectedRoute roles={["parts_seller", "admin", "super_admin"]}>
+      <ProtectedRoute
+        roles={[
+          "parts_seller",
+          "admin",
+          "super_admin",
+          "dealer",
+          "used_car_dealer",
+          "preowned_dealer",
+          "new_car_dealer",
+          "bike_dealer",
+          "truck_dealer",
+          "service_center",
+          "service_partner",
+        ]}
+      >
         <PartsSupplierLayout />
       </ProtectedRoute>
     ),

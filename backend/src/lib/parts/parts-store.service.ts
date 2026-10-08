@@ -2,13 +2,24 @@ import { Prisma, type Part, type PartOrder } from "@prisma/client";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import type { JwtPayload } from "@/lib/auth/jwt";
+import { isPendingBusinessAccess, loadUserAccess } from "@/lib/auth/account-access";
 
 /** Platform-fulfilled catalogue; orders for these SKUs are handled by admins. */
 export const PARTS_DESK_SELLER_ID = "motorcart-parts-desk";
 export const PARTS_DESK_NAME = "Motorcart Parts Desk";
 
 const ADMIN_ROLES = new Set(["admin", "super_admin"]);
-const SELLER_ROLES = new Set(["parts_seller", "dealer", "service_center"]);
+const SELLER_ROLES = new Set([
+  "parts_seller",
+  "dealer",
+  "used_car_dealer",
+  "preowned_dealer",
+  "new_car_dealer",
+  "bike_dealer",
+  "truck_dealer",
+  "service_center",
+  "service_partner",
+]);
 
 export const PART_CATEGORY_SLUGS = [
   "engine-parts",
@@ -116,7 +127,8 @@ export type CatalogFilters = {
 };
 
 export async function listCatalog(filters: CatalogFilters) {
-  const where: Prisma.PartWhereInput = { isActive: true };
+  const blocked = await blockedSellerIds();
+  const where: Prisma.PartWhereInput = { isActive: true, ...(blocked.length ? { sellerId: { notIn: blocked } } : {}) };
   if (filters.category && (PART_CATEGORY_SLUGS as readonly string[]).includes(filters.category)) where.category = filters.category;
   if (filters.featured) where.isFeatured = true;
   const q = str(filters.q, 80);
@@ -135,7 +147,10 @@ export async function listCatalog(filters: CatalogFilters) {
   let list = rows.map(serializePart);
   if (q) {
     const needle = q.toLowerCase();
-    const extra = await prisma.part.findMany({ where: { isActive: true }, take: 500 });
+    const extra = await prisma.part.findMany({
+      where: { isActive: true, ...(blocked.length ? { sellerId: { notIn: blocked } } : {}) },
+      take: 500,
+    });
     const seen = new Set(list.map((p) => p.id));
     for (const p of extra.map(serializePart)) {
       if (!seen.has(p.id) && p.compatibility.some((c) => c.toLowerCase().includes(needle))) list.push(p);
@@ -151,6 +166,7 @@ export async function listCatalog(filters: CatalogFilters) {
 export async function getCatalogPart(slug: string) {
   const row = await prisma.part.findUnique({ where: { slug: str(slug, 160) } });
   if (!row || !row.isActive) return null;
+  if ((await blockedSellerIds()).includes(row.sellerId)) return null;
   return serializePart(row);
 }
 
@@ -279,6 +295,7 @@ export async function checkoutParts(auth: JwtPayload, input: CheckoutInput): Pro
   const gstin = str(input.gstin, 15).toUpperCase();
   if (gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) return fail("GSTIN format looks wrong.");
 
+  const blocked = new Set(await blockedSellerIds());
   try {
     const order = await prisma.$transaction(async (tx) => {
       const parts = await tx.part.findMany({ where: { id: { in: [...qtyById.keys()] } } });
@@ -286,7 +303,10 @@ export async function checkoutParts(auth: JwtPayload, input: CheckoutInput): Pro
       const lines: PricedLine[] = [];
       for (const [id, qty] of qtyById) {
         const row = byId.get(id);
-        if (!row || !row.isActive) throw new CheckoutError("One of the parts in your cart is no longer available. Remove it and try again.", 409);
+        if (!row || !row.isActive || blocked.has(row.sellerId)) {
+          throw new CheckoutError("One of the parts in your cart is no longer available. Remove it and try again.", 409);
+        }
+        if (row.sellerId === auth.sub) throw new CheckoutError(`“${row.name}” is your own listing — you can't order it.`, 409);
         const updated = await tx.part.updateMany({ where: { id, isActive: true, stock: { gte: qty } }, data: { stock: { decrement: qty } } });
         if (updated.count === 0) {
           throw new CheckoutError(row.stock > 0 ? `Only ${row.stock} left of “${row.name}”. Reduce the quantity.` : `“${row.name}” just went out of stock.`, 409);
@@ -618,6 +638,34 @@ export function canSellParts(auth: JwtPayload | null): boolean {
   return !!auth && (isAdmin(auth) || SELLER_ROLES.has(auth.role));
 }
 
+/** Role check plus live account state: only active, admin-approved business accounts may sell. */
+export async function sellerAccessError(auth: JwtPayload | null): Promise<string | null> {
+  if (!auth || !canSellParts(auth)) return "Parts seller access required";
+  if (isAdmin(auth)) return null;
+  const user = await loadUserAccess(auth.sub);
+  if (!user || !SELLER_ROLES.has(user.role)) return "Parts seller access required";
+  if (user.status === "suspended" || user.status === "closed") return "Your seller account is suspended. Contact MotorCart support.";
+  if (isPendingBusinessAccess(user)) return "Your business account is awaiting MotorCart approval. You can list parts once it is approved.";
+  return null;
+}
+
+/** Sellers whose listings must not be shown or sold (suspended, closed or deleted accounts). */
+async function blockedSellerIds(): Promise<string[]> {
+  const rows = await prisma.user.findMany({
+    where: { OR: [{ status: { in: ["suspended", "closed"] } }, { deletedAt: { not: null } }] },
+    select: { id: true },
+    take: 5000,
+  });
+  return rows.map((r) => r.id);
+}
+
+async function sellerDisplayName(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { companyName: true, fullName: true } });
+  if (!user) return null;
+  const name = user.companyName?.trim() || user.fullName?.trim();
+  return name ? name.slice(0, 120) : null;
+}
+
 function slugify(v: string) {
   return v
     .toLowerCase()
@@ -707,6 +755,10 @@ export async function createSellerListing(auth: JwtPayload, body: ListingInput):
     if (i > 5) return fail("Could not create a unique link for this part — change the name slightly.", 409);
   }
   const sellerId = isAdmin(auth) && body.asPartsDesk === true ? PARTS_DESK_SELLER_ID : auth.sub;
+  if (sellerId !== PARTS_DESK_SELLER_ID) {
+    const sellerName = await sellerDisplayName(sellerId);
+    if (sellerName) meta.seller_name = sellerName;
+  }
   const row = await prisma.part.create({
     data: {
       sellerId,

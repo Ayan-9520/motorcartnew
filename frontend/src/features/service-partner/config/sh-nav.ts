@@ -99,6 +99,7 @@ export const SERVICE_PARTNER_NAV: ShNavGroup[] = [
       { to: "/dashboard/service/parts/vendors", label: "Vendors", icon: Building2 },
       { to: "/dashboard/service/parts/po", label: "Purchase orders", icon: FileText },
       { to: "/dashboard/service/parts/billing", label: "Parts billing", icon: CreditCard },
+      { to: "/dashboard/parts", label: "Sell on parts store", icon: Truck },
     ],
   },
   {

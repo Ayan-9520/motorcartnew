@@ -99,6 +99,7 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
         { to: "/dashboard/dealer/earnings", label: "Earnings", icon: BadgeIndianRupee },
         { to: "/dashboard/dealer/finance", label: "Finance", icon: Landmark },
         { to: "/dashboard/dealer/auctions", label: "Auctions", icon: Gavel },
+        { to: "/dashboard/parts", label: "Parts store", icon: Package },
         { to: "/dashboard/dealer/whatsapp", label: "WhatsApp", icon: MessageSquare },
         { to: "/dashboard/dealer/calls", label: "Calls", icon: Phone },
         { to: "/dashboard/dealer/analytics", label: "Analytics", icon: BarChart3 },

@@ -1,13 +1,15 @@
 import { NavLink } from "react-router-dom";
-import { ChevronLeft, Package } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/uiStore";
 import { Button } from "@/components/ui/button";
 import { RoleSidebarUserFooter } from "@/dashboards/components/RoleSidebarUserFooter";
 import { PARTS_SUPPLIER_NAV } from "../config/ps-nav";
+import { usePartsWorkspaceHomePath } from "../hooks/usePartsWorkspaceHomePath";
 
 export function PartsSupplierSidebar() {
   const { sidebarOpen, toggleSidebar } = useUIStore();
+  const homePath = usePartsWorkspaceHomePath();
 
   return (
     <aside
@@ -36,6 +38,14 @@ export function PartsSupplierSidebar() {
         </div>
       </div>
       <nav className="psp-sidebar__nav dashboard-sidebar__nav min-h-0 flex-1">
+        {homePath && (
+          <div className="psp-sidebar__group">
+            <NavLink to={homePath} className="psp-sidebar__link" title="Back to my dashboard">
+              <ArrowLeft className="h-4 w-4 shrink-0" />
+              {sidebarOpen && <span>Back to my dashboard</span>}
+            </NavLink>
+          </div>
+        )}
         {PARTS_SUPPLIER_NAV.map((group) => (
           <div key={group.label} className="psp-sidebar__group">
             {sidebarOpen && <p className="psp-sidebar__group-label">{group.label}</p>}

@@ -57,6 +57,7 @@ export const NEW_CAR_DEALER_NAV: NcdNavGroup[] = [
       { to: "/dashboard/new-car/deliveries", label: "Deliveries", icon: Truck },
       { to: "/dashboard/new-car/rto", label: "RTO & documents", icon: FileText },
       { to: "/dashboard/new-car/accessories", label: "Accessories", icon: Package },
+      { to: "/dashboard/parts", label: "Parts store", icon: Store },
     ],
   },
   {
