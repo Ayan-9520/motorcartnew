@@ -732,7 +732,39 @@
   }
 
   .hero-v3-search {
-    @apply relative z-[1] mt-12 lg:mt-14;
+    @apply relative z-[1] mt-12 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-3 shadow-2xl backdrop-blur-md sm:p-4 lg:mt-14;
+  }
+
+  .hero-v3-search .hero-search-module {
+    @apply space-y-3;
+  }
+
+  .hero-v3-search .hero-vehicle-tabs {
+    @apply w-fit max-w-full gap-1 rounded-xl border-white/15 bg-white/10 p-1;
+  }
+
+  .hero-v3-search .hero-vehicle-tab {
+    @apply rounded-lg px-3 py-2 text-xs text-white/75 hover:bg-white/10 hover:text-white;
+  }
+
+  .hero-v3-search .hero-vehicle-tab-active {
+    @apply bg-primary text-primary-foreground ring-0 hover:bg-primary hover:text-primary-foreground;
+  }
+
+  .hero-v3-search .hero-search-suggestions {
+    @apply px-1;
+  }
+
+  .hero-v3-search .hero-search-suggestions-label {
+    @apply text-white/70;
+  }
+
+  .hero-v3-search .hero-suggestion-chip {
+    @apply rounded-full border-white/15 bg-white/10 px-3 py-1 text-white/85 hover:border-primary/60 hover:bg-primary/15 hover:text-white;
+  }
+
+  .hero-v3-search .hero-search-card {
+    @apply rounded-2xl border-transparent shadow-none;
   }
 
   @media (prefers-reduced-motion: reduce) {
