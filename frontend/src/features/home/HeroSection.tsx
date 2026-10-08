@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Landmark, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroSearchModule } from "@/features/home/components/HeroSearchModule";
 import { HeroSearchInsights } from "@/features/home/components/HeroSearchInsights";
@@ -132,28 +132,14 @@ export function HeroSection() {
       }`}
     >
       <div className="hero-section-bg" aria-hidden>
-        <img
-          src={posterSrc}
-          alt=""
-          className={`hero-section-bg-photo${videoReady && showHeroVideo ? " hero-section-bg-photo--behind-video" : ""}`}
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-        />
-        {showHeroVideo ? (
-          <video
-            ref={videoRef}
-            className={`hero-section-bg-video${videoReady ? " hero-section-bg-video--ready" : ""}`}
-            src={HERO_CAR_VIDEO_SRC}
-            poster={HERO_HOME_POSTER}
-            muted
-            loop
-            playsInline
-            autoPlay
-            preload="auto"
-            controls={false}
-            disablePictureInPicture
-            aria-hidden
+        {!isHome ? (
+          <img
+            src={posterSrc}
+            alt=""
+            className="hero-section-bg-photo"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
           />
         ) : null}
         {isHome ? (
@@ -173,7 +159,7 @@ export function HeroSection() {
       </div>
 
       <div className={`container relative z-[1]${isHome ? " hero-premium-inner" : " py-8 md:py-11 lg:py-12"}`}>
-        <div className={isHome ? "hero-layout-premium" : "hero-layout-grid"}>
+        <div className={isHome ? "hero-v3-layout" : "hero-layout-grid"}>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -269,10 +255,71 @@ export function HeroSection() {
               </ul>
             ) : null}
 
-            <div className={isHome ? "hero-search-premium-wrap" : undefined}>
-              <HeroSearchModule />
-            </div>
+            {!isHome ? <HeroSearchModule /> : null}
           </motion.div>
+
+          {isHome ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              className="hero-v3-media"
+            >
+              <div className="hero-v3-frame">
+                <img
+                  src={posterSrc}
+                  alt=""
+                  className={`hero-v3-frame__media${videoReady && showHeroVideo ? " hero-v3-frame__media--hidden" : ""}`}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                />
+                {showHeroVideo ? (
+                  <video
+                    ref={videoRef}
+                    className={`hero-v3-frame__media hero-v3-frame__video${videoReady ? " hero-v3-frame__video--ready" : ""}`}
+                    src={HERO_CAR_VIDEO_SRC}
+                    poster={HERO_HOME_POSTER}
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                    preload="auto"
+                    controls={false}
+                    disablePictureInPicture
+                    aria-hidden
+                  />
+                ) : null}
+                <div className="hero-v3-frame__shade" aria-hidden />
+              </div>
+
+              <Link to="/auctions" className="hero-v3-badge hero-v3-badge--top">
+                <span className="hero-v3-badge__live" aria-hidden />
+                <span>
+                  <strong>Live auctions</strong>
+                  <small>Bid on cars, bikes &amp; trucks</small>
+                </span>
+              </Link>
+              <Link to="/finance" className="hero-v3-badge hero-v3-badge--bottom">
+                <span className="hero-v3-badge__icon">
+                  <Landmark className="h-4 w-4" />
+                </span>
+                <span>
+                  <strong>Bank-grade finance</strong>
+                  <small>Compare loans from top lenders</small>
+                </span>
+              </Link>
+              <Link to="/dealers" className="hero-v3-badge hero-v3-badge--side">
+                <span className="hero-v3-badge__icon">
+                  <ShieldCheck className="h-4 w-4" />
+                </span>
+                <span>
+                  <strong>Verified dealers</strong>
+                  <small>Across India</small>
+                </span>
+              </Link>
+            </motion.div>
+          ) : null}
 
           {!isHome ? (
             <motion.div
@@ -285,6 +332,12 @@ export function HeroSection() {
             </motion.div>
           ) : null}
         </div>
+
+        {isHome ? (
+          <div className="hero-search-premium-wrap hero-v3-search">
+            <HeroSearchModule />
+          </div>
+        ) : null}
 
         {/* Home: no vehicle cards / AI picks here — inventory lives below hero once */}
         {!isHome ? <HeroSearchInsights /> : null}

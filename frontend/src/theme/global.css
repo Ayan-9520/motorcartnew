@@ -232,7 +232,7 @@
   }
 
   .hero-premium-inner {
-    @apply py-7 md:py-9 lg:py-10;
+    @apply py-10 md:py-12 lg:py-14;
   }
 
   .hero-headline-kicker {
@@ -607,15 +607,8 @@
 
   .hero-premium-scrim {
     background:
-      linear-gradient(
-        95deg,
-        rgb(3 26 14 / 0.94) 0%,
-        rgb(4 36 20 / 0.86) 30%,
-        rgb(5 40 22 / 0.55) 52%,
-        rgb(5 40 22 / 0.12) 74%,
-        transparent 100%
-      ),
-      linear-gradient(to top, rgb(3 22 12 / 0.75) 0%, transparent 35%);
+      radial-gradient(70% 90% at 85% 40%, rgb(16 90 50 / 0.55) 0%, transparent 60%),
+      linear-gradient(135deg, #031a0e 0%, #05301b 48%, #031d10 100%);
   }
 
   .hero-premium-orb {
@@ -630,8 +623,123 @@
       linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
       linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
     background-size: 44px 44px;
-    mask-image: linear-gradient(95deg, #000 0%, rgb(0 0 0 / 0.5) 35%, transparent 60%);
-    -webkit-mask-image: linear-gradient(95deg, #000 0%, rgb(0 0 0 / 0.5) 35%, transparent 60%);
+    mask-image: radial-gradient(80% 80% at 30% 30%, #000 0%, transparent 75%);
+    -webkit-mask-image: radial-gradient(80% 80% at 30% 30%, #000 0%, transparent 75%);
+  }
+
+  .hero-v3-layout {
+    @apply grid items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12;
+  }
+
+  .hero-v3-media {
+    @apply relative mx-auto w-full max-w-xl lg:max-w-none;
+  }
+
+  .hero-v3-frame {
+    @apply relative aspect-[16/11] overflow-hidden rounded-[2rem] border border-white/15 bg-black/40;
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.04),
+      0 30px 80px -30px rgb(0 0 0 / 0.7),
+      0 0 70px -10px hsl(var(--primary) / 0.45);
+    transition: box-shadow 0.5s ease;
+  }
+
+  .hero-v3-media:hover .hero-v3-frame {
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.06),
+      0 30px 80px -30px rgb(0 0 0 / 0.7),
+      0 0 90px -6px hsl(var(--primary) / 0.6);
+  }
+
+  .hero-v3-frame__media {
+    @apply absolute inset-0 h-full w-full object-cover;
+  }
+
+  .hero-v3-frame__media--hidden {
+    opacity: 0;
+  }
+
+  .hero-v3-frame__video {
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
+
+  .hero-v3-frame__video--ready {
+    opacity: 1;
+  }
+
+  .hero-v3-frame__shade {
+    @apply absolute inset-0;
+    background: linear-gradient(to top, rgb(3 26 14 / 0.55) 0%, transparent 45%);
+  }
+
+  .hero-v3-badge {
+    @apply absolute z-[2] flex items-center gap-2.5 rounded-2xl border border-white/20 bg-[rgb(6_40_22_/_0.72)] px-3.5 py-2.5 text-white no-underline shadow-2xl backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-primary/60;
+  }
+
+  .hero-v3-badge strong {
+    @apply block text-[13px] font-bold leading-tight;
+  }
+
+  .hero-v3-badge small {
+    @apply block text-[11px] leading-tight text-white/70;
+  }
+
+  .hero-v3-badge__icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground;
+  }
+
+  .hero-v3-badge__live {
+    @apply h-2.5 w-2.5 shrink-0 rounded-full bg-red-500;
+    animation: heroLiveRed 1.6s ease-out infinite;
+  }
+
+  @keyframes heroLiveRed {
+    0% {
+      box-shadow: 0 0 0 0 rgb(239 68 68 / 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 9px rgb(239 68 68 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(239 68 68 / 0);
+    }
+  }
+
+  .hero-v3-badge--top {
+    @apply -top-4 left-4 sm:-left-6;
+    animation: heroBadgeFloat 6s ease-in-out infinite;
+  }
+
+  .hero-v3-badge--bottom {
+    @apply -bottom-5 right-4 sm:-right-4;
+    animation: heroBadgeFloat 7s ease-in-out infinite reverse;
+  }
+
+  .hero-v3-badge--side {
+    @apply -left-8 bottom-16 hidden xl:flex;
+    animation: heroBadgeFloat 8s ease-in-out infinite;
+  }
+
+  @keyframes heroBadgeFloat {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .hero-v3-search {
+    @apply relative z-[1] mt-12 lg:mt-14;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-v3-badge,
+    .hero-v3-badge__live {
+      animation: none;
+    }
   }
 
   @keyframes heroOrbFloat {
