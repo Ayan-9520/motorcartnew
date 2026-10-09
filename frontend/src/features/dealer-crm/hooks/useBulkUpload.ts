@@ -22,6 +22,7 @@ function shouldPublishAsNewCar(
   dealer: DealerProfile,
   payload: { category: string; condition: "new" | "used" },
 ): boolean {
+  if (payload.category !== "new-cars" && payload.category !== "used-cars") return false;
   return (
     dealer.dealerType === "new_car_dealer" ||
     payload.category === "new-cars" ||

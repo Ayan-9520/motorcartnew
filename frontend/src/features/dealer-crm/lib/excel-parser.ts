@@ -2,6 +2,7 @@ import * as XLSX from "xlsx";
 import { z } from "zod";
 import { COLUMN_ALIASES, INVENTORY_COLUMNS, SAMPLE_ROWS, type InventoryColumn } from "./inventory-columns";
 import type { ParsedInventoryRow, RowValidationError } from "../types";
+import { isTwoWheeler } from "@/lib/two-wheeler";
 
 /** Soft schema: Brand + Model mandatory; everything else optional with defaults. */
 const rowSchema = z.object({
@@ -368,6 +369,13 @@ export function downloadSampleTemplate() {
   XLSX.writeFile(wb, "motorcart-new-car-inventory-demo.xlsx");
 }
 
+/** Seating ≤ 2 with a bike-style body ("Sports", "Naked"…) is a motorcycle even from an unknown brand. */
+export function isTwoWheelerRow(row: Pick<ParsedInventoryRow, "brand" | "bodyType" | "seating">): boolean {
+  if (isTwoWheeler({ brand: row.brand, bodyType: row.bodyType })) return true;
+  const seats = Number(String(row.seating ?? "").replace(/[^\d.]/g, ""));
+  return seats > 0 && seats <= 2 && /sport|naked|street|tourer|bike|scoot/i.test(row.bodyType ?? "");
+}
+
 export function parsedRowToVehiclePayload(
   row: ParsedInventoryRow,
   dealer: { city: string; state: string; dealerType: string }
@@ -376,16 +384,17 @@ export function parsedRowToVehiclePayload(
   const finalPrice = row.dealerPrice && row.dealerPrice > 0 ? row.dealerPrice : row.price;
   const isNewCarDealer = dealer.dealerType === "new_car_dealer";
   const isUsedCarDealer = dealer.dealerType === "used_car_dealer";
-  const isNewStock = isNewCarDealer || (!isUsedCarDealer && row.kmsDriven < 100);
-  const category = isNewCarDealer
-    ? "new-cars"
-    : dealer.dealerType === "bike_dealer"
-      ? "bikes"
-      : dealer.dealerType === "truck_dealer"
-        ? "trucks"
-        : isNewStock
-          ? "new-cars"
-          : "used-cars";
+  const isBikeRow = dealer.dealerType === "bike_dealer" || isTwoWheelerRow(row);
+  const isNewStock = isBikeRow
+    ? row.kmsDriven < 100
+    : isNewCarDealer || (!isUsedCarDealer && row.kmsDriven < 100);
+  const category = isBikeRow
+    ? "bikes"
+    : dealer.dealerType === "truck_dealer"
+      ? "trucks"
+      : isNewCarDealer || isNewStock
+        ? "new-cars"
+        : "used-cars";
 
   const bodyType =
     row.bodyType?.trim() ||

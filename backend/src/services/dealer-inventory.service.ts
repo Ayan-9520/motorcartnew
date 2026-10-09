@@ -8,6 +8,7 @@ import { isAdminRole, type SalesActor } from "@/lib/sales-os/http";
 import { toSnakeRow } from "@/lib/db/table-map";
 import { LOW_STOCK_THRESHOLD } from "@/lib/dealer-inventory/constants";
 import { DealerInventoryError } from "@/lib/dealer-inventory/errors";
+import { isTwoWheeler } from "@/lib/two-wheeler";
 import { parseInventorySpreadsheet } from "@/lib/dealer-inventory/parse-spreadsheet";
 import {
   stripClientOwnedInventoryFields,
@@ -934,6 +935,11 @@ export async function previewDealerInventoryImport(
 
     try {
       input = validateInventoryInput(row.values);
+      if (isTwoWheeler({ brand: input.brand, bodyType: input.bodyType })) {
+        throw new Error(
+          `${input.brand} ${input.model} is a two-wheeler — upload bikes from a bike dealer account (Dealer → Inventory → Excel), not new-car showroom stock.`,
+        );
+      }
       rowWarnings.push(...(input.warnings ?? []));
       if (rowWarnings.length) severity = "warning";
       try {

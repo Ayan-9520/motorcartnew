@@ -4,6 +4,7 @@ import { api } from "@/lib/api/axios";
 import { hasConfiguredApi } from "@/lib/api/base-url";
 import { searchVehicles } from "@/services/vehicle.service";
 import { filterVehicles, getDiscountedPrice, paginateVehicles, sortVehicles } from "@/lib/vehicle-utils";
+import { isTwoWheeler } from "@/lib/two-wheeler";
 import type { VehicleFilters, VehicleListing, VehicleSearchResult, VehicleSortOption } from "@/types/vehicle";
 import type { NewCarListing, NewCarModelGroup } from "../types";
 
@@ -258,7 +259,7 @@ export async function searchNewCars(params: {
     fromVehicles = [];
   }
 
-  const merged = mergeNewCarListings(stock, fromVehicles);
+  const merged = mergeNewCarListings(stock, fromVehicles).filter((v) => !isTwoWheeler(v));
   const filtered = filterVehicles(merged, { ...filters, category: "new-cars", condition: "new" });
   const sorted = sortVehicles(filtered, sort);
   const pageResult = paginateVehicles(sorted, page, pageSize);
@@ -421,6 +422,95 @@ export async function searchNewCarModelGroups(params: {
     pageSize: pageResult.pageSize,
     totalPages: pageResult.totalPages,
   };
+}
+
+type DemandScore = { brand: string; model: string; score: number };
+
+/** India's best-selling passenger cars (FY25 retail volumes) — tie-breaker when on-site demand is thin. */
+const MARKET_TOP_SELLERS: Array<[brand: string, model: string]> = [
+  ["maruti", "wagon r"],
+  ["hyundai", "creta"],
+  ["maruti", "swift"],
+  ["tata", "punch"],
+  ["maruti", "ertiga"],
+  ["maruti", "brezza"],
+  ["tata", "nexon"],
+  ["maruti", "baleno"],
+  ["maruti", "dzire"],
+  ["mahindra", "scorpio"],
+  ["maruti", "fronx"],
+  ["maruti", "eeco"],
+  ["mahindra", "thar"],
+  ["toyota", "innova"],
+  ["kia", "sonet"],
+  ["hyundai", "venue"],
+  ["maruti", "grand vitara"],
+  ["mahindra", "xuv700"],
+  ["kia", "seltos"],
+  ["mahindra", "bolero"],
+  ["mahindra", "xuv 3xo"],
+  ["tata", "tiago"],
+  ["hyundai", "exter"],
+  ["hyundai", "i20"],
+  ["toyota", "hyryder"],
+  ["kia", "carens"],
+  ["toyota", "fortuner"],
+  ["honda", "city"],
+  ["honda", "amaze"],
+  ["mg", "windsor"],
+];
+
+function norm(v: string): string {
+  return v.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function brandMatches(a: string, b: string): boolean {
+  const x = norm(a.split(/\s+/)[0] ?? a);
+  const y = norm(b.split(/\s+/)[0] ?? b);
+  return Boolean(x) && x === y;
+}
+
+function marketRank(brand: string, model: string): number {
+  const m = norm(model);
+  const i = MARKET_TOP_SELLERS.findIndex(([b, mm]) => brandMatches(brand, b) && (m === norm(mm) || m.startsWith(norm(mm))));
+  return i < 0 ? Number.POSITIVE_INFINITY : i;
+}
+
+async function fetchDemandScores(): Promise<DemandScore[]> {
+  if (!hasConfiguredApi()) return [];
+  try {
+    const { data } = await api.get<{ data?: DemandScore[] }>("/api/new-car/popular-models", { params: { limit: 100 } });
+    return Array.isArray(data?.data) ? data.data : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Popular = real buyer demand on MotorCart (enquiries, quotes, test drives, wishlists — last 120 days),
+ * then national best-seller rank, then models with photos and more dealer stock. Never "last uploaded".
+ */
+export async function fetchPopularNewCarModelGroups(limit = 4): Promise<NewCarModelGroup[]> {
+  const [{ groups }, demand] = await Promise.all([
+    searchNewCarModelGroups({ filters: { condition: "new" }, sort: "newest", page: 1, pageSize: 2000 }),
+    fetchDemandScores(),
+  ]);
+  const demandOf = (g: NewCarModelGroup) => {
+    const m = norm(g.model);
+    return demand.find((d) => brandMatches(d.brand, g.brand) && norm(d.model) === m)?.score ?? 0;
+  };
+  return groups
+    .map((g) => ({ g, demand: demandOf(g), rank: marketRank(g.brand, g.model) }))
+    .sort(
+      (a, b) =>
+        b.demand - a.demand ||
+        a.rank - b.rank ||
+        Number(Boolean(b.g.image)) - Number(Boolean(a.g.image)) ||
+        b.g.listingCount - a.g.listingCount ||
+        Date.parse(b.g.createdAt) - Date.parse(a.g.createdAt),
+    )
+    .slice(0, limit)
+    .map((x) => x.g);
 }
 
 export function getNewCarInventory(): NewCarListing[] {

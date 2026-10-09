@@ -8,32 +8,25 @@ import { NewCarModelCard } from "@/features/new-cars/components/NewCarModelCard"
 import { useHomePage } from "@/features/home/context/HomePageContext";
 import { BUY_CAR_BRANDS } from "@/features/marketplace/data/buy-brands";
 import {
+  fetchPopularNewCarModelGroups,
   groupNewCarsByModel,
-  searchNewCarModelGroups,
 } from "@/features/new-cars/services/new-cars.service";
+import { isTwoWheeler } from "@/lib/two-wheeler";
 import { SectionHeader } from "./SectionHeader";
 
 const HOME_BRAND_CHIPS = BUY_CAR_BRANDS.slice(0, 8);
 
 /**
- * Popular models from live dealer stock (/api/new-car/stock).
+ * Popular models from live dealer stock, ranked by real buyer demand (see fetchPopularNewCarModelGroups).
  * Uploaded photos show on cards; no fake demo SVGs when inventory exists or is empty.
  */
 export function NewCarsHomeSection() {
   const { newCars } = useHomePage();
-  const fromHomeApi = groupNewCarsByModel(newCars).slice(0, 4);
+  const fromHomeApi = groupNewCarsByModel(newCars.filter((v) => !isTwoWheeler(v))).slice(0, 4);
 
   const { data: fromStock = [], isLoading, isFetched } = useQuery({
-    queryKey: ["home-new-car-model-groups"],
-    queryFn: async () => {
-      const r = await searchNewCarModelGroups({
-        filters: { condition: "new" },
-        sort: "newest",
-        page: 1,
-        pageSize: 4,
-      });
-      return r.groups.slice(0, 4);
-    },
+    queryKey: ["home-popular-new-car-models"],
+    queryFn: () => fetchPopularNewCarModelGroups(4),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
