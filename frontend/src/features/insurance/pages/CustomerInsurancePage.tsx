@@ -95,7 +95,7 @@ export function CustomerInsurancePage() {
               </div>
 
               {app.status === "issued" && (
-                <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-sm">
+                <div className="rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 text-sm">
                   Policy <strong>{m.policyNumber}</strong>
                   {m.policyStart && m.policyEnd && (
                     <>

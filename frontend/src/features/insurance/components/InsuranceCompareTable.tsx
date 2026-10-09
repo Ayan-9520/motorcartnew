@@ -53,7 +53,7 @@ export function InsuranceCompareTable({ offers, input }: InsuranceCompareTablePr
                 <div className="flex items-center gap-2">
                   <InsurerMonogram name={o.insurerShortName} className="h-8 w-8 text-xs" />
                   <span className="font-medium">{o.insurerShortName}</span>
-                  {i === 0 && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Lowest</span>}
+                  {i === 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Lowest</span>}
                 </div>
               </td>
               {showOd && <td className="px-3 py-3 text-right tabular-nums">{formatCurrency(o.idv)}</td>}

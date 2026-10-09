@@ -19,7 +19,7 @@ export function InsurerMonogram({ name, className }: { name: string; className?:
     <span
       aria-hidden
       className={cn(
-        "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 text-sm font-bold text-emerald-700 ring-1 ring-emerald-500/20 dark:text-emerald-300",
+        "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-sm font-bold text-primary ring-1 ring-primary/20",
         className,
       )}
     >
@@ -66,8 +66,8 @@ export function InsuranceScenarioTabs({
 export function InsuranceAssessmentNotice({ assessment }: { assessment: ScenarioAssessment }) {
   return (
     <div className="space-y-2 text-sm">
-      <p className="flex gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
-        <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+      <p className="flex gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2">
+        <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <span>
           <strong>NCB {assessment.ncbPercent}%</strong> — {assessment.ncbReason}
         </span>
@@ -113,7 +113,7 @@ export function InsurancePremiumBreakdown({ quote, compact }: { quote: MotorPrem
       {rows.map((r) => (
         <div key={r.label} className="flex justify-between gap-3">
           <dt className="text-muted-foreground">{r.label}</dt>
-          <dd className={cn("tabular-nums", r.tone === "minus" && "text-emerald-600")}>
+          <dd className={cn("tabular-nums", r.tone === "minus" && "text-primary")}>
             {r.amount < 0 ? `− ${formatCurrency(-r.amount)}` : formatCurrency(r.amount)}
           </dd>
         </div>

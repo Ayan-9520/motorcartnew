@@ -45,7 +45,7 @@ export function InsurancePlanCard({ offer, input, rank, featured }: InsurancePla
       </div>
       <ul className="ins-plan-card__meta">
         <li>
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
           {offer.claimSettlementRatio}% claims settled
         </li>
         <li>

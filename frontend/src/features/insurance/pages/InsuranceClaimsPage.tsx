@@ -147,7 +147,7 @@ export function InsuranceClaimsPage() {
       <ol className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((s, i) => (
           <li key={s.title} className="ins-feature-card">
-            <p className="text-xs font-bold text-emerald-600">Step {i + 1}</p>
+            <p className="text-xs font-bold text-primary">Step {i + 1}</p>
             <h3 className="font-semibold">{s.title}</h3>
             <p className="mt-1 text-xs text-muted-foreground">{s.body}</p>
           </li>
@@ -254,7 +254,7 @@ export function InsuranceClaimsPage() {
                       <li key={label} className="flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-sm">
                         <span className="min-w-0 truncate">{label}</span>
                         {doc ? (
-                          <span className="flex items-center gap-1 text-emerald-600">
+                          <span className="flex items-center gap-1 text-primary">
                             <CheckCircle2 className="h-4 w-4" />
                             <button type="button" aria-label={`Remove ${label}`} onClick={() => setDocs((d) => d.filter((x) => x.label !== label))}>
                               <X className="h-4 w-4 text-muted-foreground" />
@@ -308,7 +308,7 @@ export function InsuranceClaimsPage() {
                     </p>
                     {c.claimNumber && <p className="text-xs">Claim no. {c.claimNumber}</p>}
                     {c.surveyAt && <p className="text-xs">Survey: {new Date(c.surveyAt).toLocaleString("en-IN")}</p>}
-                    {c.approvedAmount != null && <p className="text-xs font-semibold text-emerald-600">Approved {formatCurrency(c.approvedAmount)}</p>}
+                    {c.approvedAmount != null && <p className="text-xs font-semibold text-primary">Approved {formatCurrency(c.approvedAmount)}</p>}
                     {c.notes.length > 0 && c.notes[c.notes.length - 1]?.note && (
                       <p className="mt-1 text-xs text-muted-foreground">“{c.notes[c.notes.length - 1]!.note}”</p>
                     )}

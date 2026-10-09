@@ -219,7 +219,7 @@ export function InsuranceHubPage() {
         <div className="grid gap-4 md:grid-cols-3">
           {SCENARIO_CARDS.map(({ id, icon: Icon, title, points }) => (
             <article key={id} className="ins-feature-card flex flex-col">
-              <Icon className="mb-2 h-5 w-5 text-emerald-600" />
+              <Icon className="mb-2 h-5 w-5 text-primary" />
               <h3 className="font-semibold">{title}</h3>
               <ul className="mt-2 flex-1 space-y-1 text-sm text-muted-foreground">
                 {points(vehicleType).map((p) => (
@@ -326,7 +326,7 @@ export function InsuranceHubPage() {
         <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {HOW.map((s, i) => (
             <li key={s.title} className="ins-panel">
-              <p className="text-xs font-bold text-emerald-600">Step {i + 1}</p>
+              <p className="text-xs font-bold text-primary">Step {i + 1}</p>
               <h3 className="font-semibold">{s.title}</h3>
               <p className="mt-1 text-xs text-muted-foreground">{s.body}</p>
             </li>

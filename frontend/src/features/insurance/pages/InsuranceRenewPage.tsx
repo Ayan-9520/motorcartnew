@@ -114,8 +114,8 @@ export function InsuranceRenewPage() {
           {status && (
             <div className="space-y-2 text-sm">
               {status.status === "active" ? (
-                <p className="flex gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
-                  <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <p className="flex gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   Policy active — {Math.abs(status.days)} day(s) left. Renew now: no inspection, continuous cover.
                 </p>
               ) : (

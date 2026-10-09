@@ -10,7 +10,7 @@ export function InsurancePartnerStrip() {
           <li key={p.slug} className="ins-partners__item">
             <InsurerMonogram name={p.shortName} className="h-9 w-9 text-xs" />
             <span className="w-full truncate text-xs font-medium">{p.shortName}</span>
-            <span className="text-[10px] text-emerald-600">{p.claimSettlementRatio}% claims settled</span>
+            <span className="text-[10px] text-primary">{p.claimSettlementRatio}% claims settled</span>
           </li>
         ))}
       </ul>

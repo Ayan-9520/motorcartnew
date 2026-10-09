@@ -80,8 +80,8 @@ export function InsuranceApplyForm({ input, insurer, quote, assessment }: Insura
     const meta = done.metadata;
     return (
       <div className="space-y-4 text-sm">
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-          <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-600" />
+        <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <CheckCircle2 className="h-6 w-6 shrink-0 text-primary" />
           <div>
             <p className="font-semibold">Application submitted — ref {meta.reference}</p>
             <p className="text-muted-foreground">No payment has been taken yet.</p>
@@ -250,7 +250,7 @@ export function InsuranceApplyForm({ input, insurer, quote, assessment }: Insura
               <li key={label} className="flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-sm">
                 <span className="min-w-0 truncate">{label}</span>
                 {doc ? (
-                  <span className="flex items-center gap-1 text-emerald-600">
+                  <span className="flex items-center gap-1 text-primary">
                     <CheckCircle2 className="h-4 w-4" />
                     <button type="button" aria-label={`Remove ${label}`} onClick={() => setDocs((d) => d.filter((x) => x.label !== label))}>
                       <X className="h-4 w-4 text-muted-foreground" />

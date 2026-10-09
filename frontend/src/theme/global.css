@@ -8030,25 +8030,24 @@
   }
 
   .ins-hero {
-    background-image:
-      radial-gradient(ellipse 70% 50% at 10% 0%, rgb(16 185 129 / 0.12), transparent),
-      radial-gradient(ellipse 50% 40% at 90% 0%, rgb(99 102 241 / 0.1), transparent),
-      linear-gradient(180deg, hsl(160 40% 97%), hsl(var(--background)) 100px);
-    @apply border-b border-border/60;
+    @apply border-b border-border/50;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -25%, hsl(var(--primary) / 0.14), transparent 55%),
+      linear-gradient(180deg, hsl(var(--muted) / 0.35) 0%, hsl(var(--background)) 100%);
   }
 
   .dark .ins-hero {
-    background-image:
-      radial-gradient(ellipse 70% 50% at 10% 0%, rgb(16 185 129 / 0.08), transparent),
-      linear-gradient(180deg, hsl(var(--card)), hsl(var(--background)));
+    background:
+      radial-gradient(ellipse 85% 55% at 50% -20%, hsl(var(--primary) / 0.1), transparent 55%),
+      linear-gradient(180deg, hsl(var(--card) / 0.6) 0%, hsl(var(--background)) 72%);
   }
 
   .ins-hero__icon {
-    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg;
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-primary)];
   }
 
   .ins-hero__eyebrow {
-    @apply text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400;
+    @apply text-[11px] font-bold uppercase tracking-[0.2em] text-primary;
   }
 
   .ins-hero__title {
@@ -8068,7 +8067,7 @@
   }
 
   .ins-vehicle-toggle__btn--active {
-    @apply bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md;
+    @apply bg-primary text-primary-foreground shadow-md;
   }
 
   .ins-hub-stats {
@@ -8088,7 +8087,7 @@
   }
 
   .ins-feature-card {
-    @apply rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent p-4;
+    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-primary/40;
   }
 
   .ins-partners__label {
@@ -8108,7 +8107,7 @@
   }
 
   .ins-panel--glow {
-    @apply border-emerald-500/25 shadow-[0_0_40px_-12px_rgba(16,185,129,0.35)];
+    @apply border-primary/25 shadow-[0_0_40px_-16px_hsl(var(--primary)/0.4)];
   }
 
   .ins-plan-card {
@@ -8116,11 +8115,11 @@
   }
 
   .ins-plan-card--featured {
-    @apply border-emerald-500/40 ring-1 ring-emerald-500/20;
+    @apply border-primary/40 ring-1 ring-primary/20;
   }
 
   .ins-plan-card__badge {
-    @apply absolute -top-2 right-4 bg-emerald-600 text-white;
+    @apply absolute -top-2 right-4 bg-primary text-primary-foreground;
   }
 
   .ins-plan-card__head {
@@ -8136,11 +8135,11 @@
   }
 
   .ins-plan-pill {
-    @apply rounded-xl border border-border/70 p-3 transition-colors hover:border-emerald-500/40;
+    @apply rounded-xl border border-border/70 p-3 transition-colors hover:border-primary/40;
   }
 
   .ins-plan-pill--active {
-    @apply border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30;
+    @apply border-primary bg-primary/10 ring-1 ring-primary/30;
   }
 
   .ins-addon-pill {
@@ -8148,15 +8147,15 @@
   }
 
   .ins-addon-pill--on {
-    @apply border-emerald-500/50 bg-emerald-500/5;
+    @apply border-primary/50 bg-primary/5;
   }
 
   .ins-select {
-    @apply flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm;
+    @apply flex h-10 w-full rounded-xl border border-input bg-card px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
   }
 
   .ins-checkout-summary {
-    @apply rounded-2xl border bg-gradient-to-br from-emerald-500/10 to-card p-6;
+    @apply rounded-2xl border bg-gradient-to-br from-primary/10 to-card p-6;
   }
 
   .ins-policy-card {
