@@ -66,20 +66,20 @@ export function classifyAuthError(
   }
 
   if (
+    m.includes("mobile number is already registered") ||
+    m.includes("phone number is already") ||
+    m.includes("users_phone_key")
+  ) {
+    return "phone_already_registered";
+  }
+
+  if (
     m.includes("already registered") ||
     m.includes("already been registered") ||
     m.includes("user already exists") ||
     m.includes("already exists. sign in")
   ) {
     return "user_already_registered";
-  }
-
-  if (
-    m.includes("mobile number is already registered") ||
-    m.includes("phone number is already") ||
-    m.includes("users_phone_key")
-  ) {
-    return "phone_already_registered";
   }
 
   if (m.includes("password should be") || m.includes("weak password")) {

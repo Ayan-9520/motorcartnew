@@ -142,7 +142,7 @@ export function useAuth() {
 
     if (error) {
       const errorCode = classifyAuthError(error.message);
-      toast.error(getAuthErrorToast(errorCode, "signup"));
+      toast.error(getAuthErrorToast(errorCode, "signup"), { id: "auth-signup-error" });
       return {
         data,
         error,
