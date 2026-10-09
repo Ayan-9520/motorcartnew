@@ -7,6 +7,24 @@ export { PartsSupplierProfilePage } from "./pages/PartsSupplierProfilePage";
 export { PartsSupplierUploadPage } from "./pages/PartsSupplierUploadPage";
 export { PartsSupplierCompatibilityPage } from "./pages/PartsSupplierCompatibilityPage";
 export {
+  PsProductsPage,
+  PsEditProductPage,
+  PsStockPage,
+  PsPricingPage,
+  PsCategoriesPage,
+  PsBrandsPage,
+  PsBulkUploadPage,
+} from "./pages/PartsSellerCatalogPages";
+export {
+  PsDashboardPage,
+  PsRevenuePage,
+  PsInvoicesPage,
+  PsCustomersPage,
+  PsReviewsPage,
+  PsNotificationsPage,
+  PsProfilePage,
+} from "./pages/PartsSellerBusinessPages";
+export {
   PartsSupplierAnalyticsHubPage,
   PartsSupplierAnalyticsRevenuePage,
   PartsSupplierAnalyticsProductsPage,

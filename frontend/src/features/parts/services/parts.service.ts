@@ -222,6 +222,53 @@ export async function updatePartPricing(
   );
 }
 
+export async function updatePartListing(partId: string, patch: Record<string, unknown>): Promise<ApiResult & { part?: PartProduct }> {
+  try {
+    const { data } = await api.patch<{ data: PartProduct }>(`/api/parts/seller/listings/${encodeURIComponent(partId)}`, patch);
+    return { error: null, part: mapApiPart(data.data) };
+  } catch (e) {
+    return { error: { message: apiErrorMessage(e) } };
+  }
+}
+
+export async function deletePartListing(partId: string): Promise<ApiResult & { archived?: boolean }> {
+  try {
+    const { data } = await api.delete<{ data: { id: string; archived: boolean } }>(
+      `/api/parts/seller/listings/${encodeURIComponent(partId)}`
+    );
+    return { error: null, archived: data.data?.archived === true };
+  } catch (e) {
+    return { error: { message: apiErrorMessage(e) } };
+  }
+}
+
+export type BulkPartRowResult = { row: number; ok: boolean; id?: string; name?: string; error?: string };
+
+export async function bulkInsertParts(
+  rows: Partial<PartListingInput>[]
+): Promise<{ error: string | null; created: number; failed: number; results: BulkPartRowResult[] }> {
+  try {
+    const { data } = await api.post<{ data: { created: number; failed: number; results: BulkPartRowResult[] } }>(
+      "/api/parts/seller/listings/bulk",
+      { rows }
+    );
+    return { error: null, ...data.data };
+  } catch (e) {
+    return { error: apiErrorMessage(e), created: 0, failed: rows.length, results: [] };
+  }
+}
+
+export type SellerPartReview = Omit<PartReview, "userId"> & { partId: string; partName: string; partSlug: string | null };
+
+export async function fetchSellerPartReviews(): Promise<SellerPartReview[]> {
+  try {
+    const { data } = await api.get<{ data: SellerPartReview[] }>("/api/parts/seller/reviews");
+    return data.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchSellerParts(_sellerId?: string): Promise<PartProduct[]> {
   try {
     const { data } = await api.get<{ data: PartProduct[] }>("/api/parts/seller/listings");

@@ -738,9 +738,9 @@ export async function listSellerListings(auth: JwtPayload) {
   const rows = await prisma.part.findMany({
     where: isAdmin(auth) ? { sellerId: { in: [auth.sub, PARTS_DESK_SELLER_ID] } } : { sellerId: auth.sub },
     orderBy: { updatedAt: "desc" },
-    take: 500,
+    take: 1000,
   });
-  return rows.map(serializePart);
+  return rows.filter((r) => asMeta(r.metadata).archived !== true).map(serializePart);
 }
 
 export async function createSellerListing(auth: JwtPayload, body: ListingInput): Promise<StoreResult> {
@@ -785,6 +785,7 @@ export async function updateSellerListing(auth: JwtPayload, id: string, body: Li
   if (!row) return fail("Part not found", 404);
   const owns = row.sellerId === auth.sub || isAdmin(auth);
   if (!owns) return fail("You can only edit your own parts", 403);
+  if (asMeta(row.metadata).archived === true) return fail("This part was deleted.", 404);
   const parsed = parseListing(body, true);
   if (!parsed.ok) return parsed;
   const { fields, meta } = parsed.data;
@@ -794,4 +795,75 @@ export async function updateSellerListing(auth: JwtPayload, id: string, body: Li
     data: { ...fields, metadata: { ...asMeta(row.metadata), ...meta } as Prisma.InputJsonValue },
   });
   return { ok: true, data: serializePart(updated) };
+}
+
+/** Parts with order history are archived (kept for invoices); unsold parts are removed outright. */
+export async function deleteSellerListing(auth: JwtPayload, id: string): Promise<StoreResult<{ id: string; archived: boolean }>> {
+  const row = await prisma.part.findUnique({ where: { id: str(id, 64) } });
+  if (!row) return fail("Part not found", 404);
+  const owns = row.sellerId === auth.sub || isAdmin(auth);
+  if (!owns) return fail("You can only delete your own parts", 403);
+  const sold = await prisma.partOrderItem.count({ where: { productId: row.id } });
+  if (sold > 0) {
+    await prisma.part.update({
+      where: { id: row.id },
+      data: {
+        isActive: false,
+        isFeatured: false,
+        metadata: { ...asMeta(row.metadata), archived: true, archived_at: new Date().toISOString() } as Prisma.InputJsonValue,
+      },
+    });
+    return { ok: true, data: { id: row.id, archived: true } };
+  }
+  await prisma.part.delete({ where: { id: row.id } });
+  return { ok: true, data: { id: row.id, archived: false } };
+}
+
+const MAX_BULK_ROWS = 500;
+
+export async function bulkCreateSellerListings(auth: JwtPayload, rows: unknown) {
+  if (!Array.isArray(rows) || rows.length === 0) return fail("No rows found in the sheet.");
+  if (rows.length > MAX_BULK_ROWS) return fail(`Upload at most ${MAX_BULK_ROWS} parts per sheet.`);
+  const results: { row: number; ok: boolean; id?: string; name?: string; error?: string }[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const input = rows[i] && typeof rows[i] === "object" ? (rows[i] as ListingInput) : {};
+    const res = await createSellerListing(auth, { ...input, asPartsDesk: false });
+    if (res.ok) {
+      const part = res.data as ReturnType<typeof serializePart>;
+      results.push({ row: i + 1, ok: true, id: part.id, name: part.name });
+    } else {
+      results.push({ row: i + 1, ok: false, name: str(input.name, 160) || undefined, error: res.error });
+    }
+  }
+  const created = results.filter((r) => r.ok).length;
+  return { ok: true as const, data: { created, failed: results.length - created, results } };
+}
+
+export async function listSellerReviews(auth: JwtPayload) {
+  const parts = await prisma.part.findMany({
+    where: isAdmin(auth) ? { sellerId: { in: [auth.sub, PARTS_DESK_SELLER_ID] } } : { sellerId: auth.sub },
+    select: { id: true, name: true, slug: true },
+    take: 1000,
+  });
+  if (!parts.length) return [];
+  const byId = new Map(parts.map((p) => [p.id, p]));
+  const rows = await prisma.review.findMany({
+    where: { entityType: "part", entityId: { in: parts.map((p) => p.id) } },
+    orderBy: { createdAt: "desc" },
+    take: 300,
+  });
+  return rows.map((r) => {
+    const part = byId.get(r.entityId);
+    return {
+      id: r.id,
+      partId: r.entityId,
+      partName: part?.name ?? "Part",
+      partSlug: part?.slug ?? null,
+      rating: r.rating,
+      title: r.title,
+      content: r.comment,
+      verifiedPurchase: asMeta(r.metadata).verified_purchase === true,
+      createdAt: r.createdAt.toISOString(),
+    };
+  });
 }

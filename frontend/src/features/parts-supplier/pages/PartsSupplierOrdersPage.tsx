@@ -26,9 +26,13 @@ const FILTERS: { id: "all" | PartOrderStatus; label: string }[] = [
   { id: "cancelled", label: "Cancelled" },
 ];
 
-export function PartsSupplierOrdersPage() {
+type OrdersPageProps = { initialFilter?: "all" | PartOrderStatus; title?: string };
+
+export function PartsSupplierOrdersPage({ initialFilter = "all", title = "Live orders" }: OrdersPageProps = {}) {
   const [orders, setOrders] = useState<PartOrder[] | null>(null);
-  const [filter, setFilter] = useState<"all" | PartOrderStatus>("all");
+  const [filter, setFilter] = useState<"all" | PartOrderStatus>(initialFilter);
+  const [query, setQuery] = useState("");
+  useEffect(() => setFilter(initialFilter), [initialFilter]);
   const [track, setTrack] = useState<Record<string, string>>({});
   const [carrier, setCarrier] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -72,10 +76,23 @@ export function PartsSupplierOrdersPage() {
     void run(orderId, () => updatePartOrderStatus(orderId, "cancelled", reason || undefined), "Order cancelled — stock restored");
   };
 
-  const visible = (orders ?? []).filter((o) => filter === "all" || o.status === filter);
+  const q = query.trim().toLowerCase();
+  const visible = (orders ?? []).filter((o) => {
+    if (filter !== "all" && o.status !== filter) return false;
+    if (!q) return true;
+    const addr = o.shippingAddress as Record<string, string | undefined>;
+    const hay = [o.invoiceNumber, o.id, addr.name, addr.phone, addr.city, ...o.items.map((i) => i.partName)].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
 
   return (
-    <PartsSupplierShell title="Live orders" description="Confirm → pack → ship with tracking → delivered. Customers get a notification at every step.">
+    <PartsSupplierShell title={title} description="Confirm → pack → ship with tracking → delivered. Customers get a notification at every step.">
+      <Input
+        className="mb-4 max-w-sm"
+        placeholder="Search invoice, customer, phone or part"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
       <div className="mb-6 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button

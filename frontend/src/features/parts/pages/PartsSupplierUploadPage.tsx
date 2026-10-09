@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import type { HubCategorySlug } from "@/features/marketplace/types";
-import { insertPart } from "../services/parts.service";
+import { insertPart, updatePartListing } from "../services/parts.service";
 import { PART_CATEGORIES, PART_ORIGIN_LABELS } from "../types";
 import type { PartCategorySlug, PartOrigin, PartProduct } from "../types";
 import { Button } from "@/components/ui/button";
@@ -39,14 +39,39 @@ const initial = {
   description: "",
 };
 
-export function PartsSupplierUploadPage() {
+function formFromPart(p: PartProduct): typeof initial {
+  const uploaded = p.images.find((u) => /^(https:\/\/|\/uploads\/)/.test(u)) ?? "";
+  return {
+    name: p.name,
+    brand: p.brand ?? "",
+    sku: p.sku ?? "",
+    hsn: p.hsnCode ?? "",
+    price: String(p.price),
+    mrp: p.mrp != null ? String(p.mrp) : "",
+    wholesale: p.wholesalePrice != null ? String(p.wholesalePrice) : "",
+    bulkMin: String(p.bulkMinQty ?? 1),
+    stock: String(p.stock),
+    gst: String(p.gstRate ?? 18),
+    image: uploaded,
+    compat: p.compatibility.join(", "),
+    description: p.description ?? "",
+  };
+}
+
+type UploadFormProps = {
+  /** When set, the form edits this listing instead of creating a new one. */
+  existing?: PartProduct;
+  onSaved?: (part: PartProduct) => void;
+};
+
+export function PartsSupplierUploadPage({ existing, onSaved }: UploadFormProps = {}) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
-  const [form, setForm] = useState(initial);
-  const [category, setCategory] = useState<PartCategorySlug>("engine-parts");
-  const [origin, setOrigin] = useState<PartOrigin>("aftermarket");
-  const [hubs, setHubs] = useState<HubCategorySlug[]>(["cars"]);
-  const [asDesk, setAsDesk] = useState(isAdmin);
+  const [form, setForm] = useState(() => (existing ? formFromPart(existing) : initial));
+  const [category, setCategory] = useState<PartCategorySlug>(existing?.categorySlug ?? "engine-parts");
+  const [origin, setOrigin] = useState<PartOrigin>(existing?.partOrigin ?? "aftermarket");
+  const [hubs, setHubs] = useState<HubCategorySlug[]>(existing ? existing.vehicleHubs ?? [] : ["cars"]);
+  const [asDesk, setAsDesk] = useState(isAdmin && !existing);
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<PartProduct | null>(null);
 
@@ -69,6 +94,38 @@ export function PartsSupplierUploadPage() {
     if (mrp != null && mrp < price) return toast.error("MRP can't be lower than the selling price");
     if (wholesale != null && wholesale >= price) return toast.error("Wholesale price should be lower than the selling price");
     if (form.image && !/^(https:\/\/|\/uploads\/)/.test(form.image.trim())) return toast.error("Image URL must start with https://");
+
+    if (existing) {
+      const original = formFromPart(existing);
+      const patch: Record<string, unknown> = {
+        name: form.name.trim(),
+        category,
+        brand: form.brand.trim(),
+        sku: form.sku.trim(),
+        hsnCode: form.hsn.trim(),
+        price,
+        mrp: mrp ?? null,
+        wholesalePrice: wholesale ?? null,
+        bulkMinQty: Math.max(1, Math.floor(Number(form.bulkMin) || 1)),
+        stock: Math.max(0, Math.floor(Number(form.stock) || 0)),
+        gstRate: Number(form.gst),
+        partOrigin: origin,
+        compatibility: form.compat.split(",").map((s) => s.trim()).filter(Boolean),
+        description: form.description.trim(),
+      };
+      if (form.image.trim() !== original.image) patch.images = form.image.trim() ? [form.image.trim()] : [];
+      if (JSON.stringify([...hubs].sort()) !== JSON.stringify([...(existing.vehicleHubs ?? [])].sort())) patch.vehicleHubs = hubs;
+      setBusy(true);
+      const { error, part } = await updatePartListing(existing.id, patch);
+      setBusy(false);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Product updated");
+      if (part) onSaved?.(part);
+      return;
+    }
 
     setBusy(true);
     const { error, part } = await insertPart({
@@ -199,14 +256,14 @@ export function PartsSupplierUploadPage() {
           <Label htmlFor="pu-desc">Description</Label>
           <Textarea id="pu-desc" className="mt-1" rows={3} maxLength={2000} value={form.description} onChange={set("description")} />
         </div>
-        {isAdmin && (
+        {isAdmin && !existing && (
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={asDesk} onChange={(e) => setAsDesk(e.target.checked)} />
             List under <strong>Motorcart Parts Desk</strong> (platform-fulfilled)
           </label>
         )}
         <Button className="w-full" onClick={submit} disabled={busy || !form.name.trim()}>
-          {busy ? "Publishing…" : "Publish product"}
+          {existing ? (busy ? "Saving…" : "Save changes") : busy ? "Publishing…" : "Publish product"}
         </Button>
       </div>
     </div>
