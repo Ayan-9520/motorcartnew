@@ -49,7 +49,7 @@ export function mapDbToListing(v: DbVehicle, dealer?: DbDealer | null): VehicleL
   // Only keep real URLs — never invent stock/Pexels gallery for empty listings.
   const images = rawImages
     .filter((u) => (u.startsWith("http://") || u.startsWith("https://") || u.includes("/uploads/") || u.startsWith("/media/")) && !isBlockedImageUrl(u))
-    .slice(0, 8);
+    .slice(0, 12);
   return {
     id: v.id,
     slug: v.slug,
@@ -279,7 +279,7 @@ function resolveStoredVehicleImages(data: Pick<VehicleFormData, "images">) {
       if (u.includes("/uploads/") || u.includes("/media/")) return true;
       return false;
     })
-    .slice(0, 8);
+    .slice(0, 12);
 }
 
 export async function createVehicle(data: VehicleFormData, sellerId: string, dealerId?: string) {

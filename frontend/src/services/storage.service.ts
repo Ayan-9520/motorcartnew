@@ -9,7 +9,8 @@ export type StorageBucket =
   | "part-images"
   | "finance-documents"
   | "insurance-documents"
-  | "community-media";
+  | "community-media"
+  | "brochures";
 
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const PASS_THROUGH = new Set([

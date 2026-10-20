@@ -90,6 +90,7 @@ export async function updateDealerProfile(
     email: string;
     city: string;
     state: string;
+    logo_url: string;
   }>
 ) {
   return supabase.from("dealers").update(patch).eq("id", dealerId);

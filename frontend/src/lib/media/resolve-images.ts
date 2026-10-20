@@ -68,7 +68,7 @@ export function resolveVehicleGalleryFromListing(
 export function resolveVehicleDetailGallery(
   listing: VehicleResolveInput & { images?: string[] | null }
 ): string[] {
-  return cleanImageUrls(listing.images ?? []).slice(0, 8);
+  return cleanImageUrls(listing.images ?? []).slice(0, 12);
 }
 
 export function resolveVehicleHero(

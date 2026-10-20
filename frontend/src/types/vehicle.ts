@@ -56,6 +56,8 @@ export interface VehicleMetadata {
   priceSourceText?: string;
   ncdInventoryId?: string;
   vehicleId?: string;
+  /** Photo URL → angle slot (front, side, rear, interior…), see `@/lib/photo-angles`. */
+  photoAngles?: Record<string, string>;
   /** Contact for owner listings without a dealer row (WhatsApp / call CTA). */
   dealerPhone?: string;
   dealerName?: string;

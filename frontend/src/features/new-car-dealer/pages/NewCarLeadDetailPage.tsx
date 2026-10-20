@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { FileText, MessageSquare, Phone, Shield, Landmark } from "lucide-react";
+import { FileText, MessageSquare, Palette, Phone, Shield, Landmark } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -136,6 +136,11 @@ export function NewCarLeadDetailPage() {
                 <a href={`tel:${lead.phone}`}>
                   <Phone className="mr-2 h-4 w-4" /> Call customer
                 </a>
+              </Button>
+              <Button variant="outline" className="rounded-lg justify-start" asChild>
+                <Link to={`/dashboard/new-car/brochure-studio?lead=${encodeURIComponent(lead.id)}`}>
+                  <Palette className="mr-2 h-4 w-4" /> Send a poster
+                </Link>
               </Button>
               <Button variant="outline" className="rounded-lg justify-start" asChild>
                 <Link to="/dashboard/new-car/test-drives">Test drive requests</Link>

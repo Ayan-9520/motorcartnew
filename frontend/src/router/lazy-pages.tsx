@@ -12,6 +12,8 @@ function lazyNamed<T extends Record<string, unknown>, K extends keyof T>(
 // Dealer OS
 export const DealerOverviewPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerOverviewPage"), "DealerOverviewPage");
 export const DealerInventoryCRMPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerInventoryCRMPage"), "DealerInventoryCRMPage");
+export const DealerBrochureStudioPage = lazyNamed(() => import("@/features/brochure-studio/pages/BrochureStudioPage"), "DealerBrochureStudioPage");
+export const NewCarBrochureStudioPage = lazyNamed(() => import("@/features/brochure-studio/pages/BrochureStudioPage"), "NewCarBrochureStudioPage");
 export const DealerLeadsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerLeadsPage"), "DealerLeadsPage");
 export const DealerEnquiriesPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerEnquiriesPage"), "DealerEnquiriesPage");
 export const DealerAnalyticsPage = lazyNamed(() => import("@/features/dealer-crm/pages/DealerAnalyticsPage"), "DealerAnalyticsPage");

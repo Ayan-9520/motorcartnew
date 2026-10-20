@@ -25,6 +25,9 @@ export interface DealerProfile {
   city: string;
   state: string;
   phone?: string;
+  logoUrl?: string;
+  email?: string;
+  address?: string;
   rating: number;
   reviewCount: number;
   isVerified: boolean;
@@ -69,6 +72,8 @@ export interface ParsedInventoryRow {
   mainImageUrl?: string;
   /** Up to 4 http(s) image URLs from sheet (Main + Image URL 2–4, or pipe-separated). */
   imageUrls?: string[];
+  /** Image URL → angle slot from per-angle columns (Front Image URL, Rear Image URL…). */
+  photoAngles?: Record<string, string>;
   /** True when spreadsheet had blank/range/non-deterministic price. */
   priceOnRequest?: boolean;
   priceSourceText?: string;

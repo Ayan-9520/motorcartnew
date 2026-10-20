@@ -16,6 +16,7 @@ import {
 import { generateAISpecs } from "../lib/excel-parser";
 import { VehicleImagePicker } from "./VehicleImagePicker";
 import type { VehicleListing } from "@/types/vehicle";
+import { readPhotoAngles, type PhotoAngleMap } from "@/lib/photo-angles";
 
 export type VehicleFormState = {
   title: string;
@@ -37,6 +38,7 @@ export type VehicleFormState = {
   color: string;
   description: string;
   imageUrls: string[];
+  photoAngles: PhotoAngleMap;
   condition: "new" | "used";
   discount: number;
   status: string;
@@ -63,6 +65,7 @@ export const emptyVehicleForm = (city = "Mumbai", state = "Maharashtra"): Vehicl
   color: "",
   description: "",
   imageUrls: [""],
+  photoAngles: {},
   condition: "used",
   discount: 0,
   status: "available",
@@ -91,6 +94,7 @@ export function vehicleToForm(v: VehicleListing, city: string, state: string): V
     color: v.color ?? "",
     description: v.description ?? "",
     imageUrls: v.images?.length ? v.images : [""],
+    photoAngles: readPhotoAngles(v.metadata, v.images ?? []),
     condition: v.condition === "new" ? "new" : "used",
     discount: v.metadata?.discountPercent ?? 0,
     status: v.status,
@@ -342,7 +346,10 @@ export function VehicleInventoryDrawer({
             <VehicleImagePicker
               imageUrls={form.imageUrls}
               uploadPrefix={dealerId ? `dealer-${dealerId}` : "inventory"}
-              onChange={(imageUrls) => setForm({ ...form, imageUrls })}
+              onChange={(imageUrls) => setForm((f) => ({ ...f, imageUrls }))}
+              photoAngles={form.photoAngles}
+              onAnglesChange={(photoAngles) => setForm((f) => ({ ...f, photoAngles }))}
+              condition={form.condition}
             />
           </div>
 

@@ -1,5 +1,36 @@
 import { useEffect, useState } from "react";
-import { Calendar, FileText, MessageCircle, Phone, StickyNote, User } from "lucide-react";
+import { Calendar, FileText, MessageCircle, Palette, Phone, StickyNote, User } from "lucide-react";
+import { POSTER_NOTE_PREFIX } from "@/features/brochure-studio/services/brochure.service";
+
+/** Poster saved from AI Brochure Studio: "[Poster] title\n<image url>\nListing: <url>". */
+function PosterNote({ body }: { body: string }) {
+  const [head, imageUrl, listingLine] = body.split("\n");
+  const listing = listingLine?.replace(/^Listing:\s*/, "");
+  return (
+    <div className="flex gap-2">
+      {imageUrl ? (
+        <a href={imageUrl} target="_blank" rel="noreferrer" className="shrink-0">
+          <img src={imageUrl} alt="Poster" className="h-20 w-16 rounded-md border object-cover" loading="lazy" />
+        </a>
+      ) : null}
+      <div className="min-w-0 text-sm">
+        <p className="font-medium">{head?.replace(POSTER_NOTE_PREFIX, "").trim() || "Poster"}</p>
+        <div className="mt-1 flex flex-wrap gap-2 text-xs">
+          {imageUrl ? (
+            <a href={imageUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+              Open poster
+            </a>
+          ) : null}
+          {listing ? (
+            <a href={listing} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+              Listing
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,6 +176,11 @@ export function LeadDetailPanel({ lead, dealerId, team, onUpdated }: LeadDetailP
             <FileText className="h-4 w-4 mr-1" /> Quote
           </Link>
         </Button>
+        <Button size="sm" variant="outline" className="flex-1" asChild>
+          <Link to={`/dashboard/dealer/brochure-studio?lead=${encodeURIComponent(lead.id)}`}>
+            <Palette className="h-4 w-4 mr-1" /> Poster
+          </Link>
+        </Button>
       </div>
 
       <div className="dealer-lead-panel-section">
@@ -201,7 +237,7 @@ export function LeadDetailPanel({ lead, dealerId, team, onUpdated }: LeadDetailP
         <ul className="dealer-lead-notes mt-3">
           {notes.map((n) => (
             <li key={n.id} className="dealer-lead-note">
-              <p className="text-sm">{n.body}</p>
+              {n.body.startsWith(POSTER_NOTE_PREFIX) ? <PosterNote body={n.body} /> : <p className="text-sm">{n.body}</p>}
               <time className="text-[10px] text-muted-foreground">
                 {new Date(n.createdAt).toLocaleString("en-IN")}
               </time>

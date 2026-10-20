@@ -9,6 +9,8 @@ interface VehicleGalleryProps {
   title: string;
   /** Kept for API compat — colour picker temporarily disabled. */
   colors?: VehiclePaintColor[];
+  /** Photo URL → label ("Front View", "Interior"…) from dealer photo slots. */
+  angleLabels?: Record<string, string>;
 }
 
 function realUrls(images: string[]): string[] {
@@ -27,7 +29,7 @@ function realUrls(images: string[]): string[] {
 }
 
 /** Photo gallery only — paint colour system paused for now. */
-export function VehicleGallery({ images, title }: VehicleGalleryProps) {
+export function VehicleGallery({ images, title, angleLabels }: VehicleGalleryProps) {
   const [active, setActive] = useState(0);
   const list = useMemo(() => realUrls(images), [images]);
 
@@ -53,7 +55,7 @@ export function VehicleGallery({ images, title }: VehicleGalleryProps) {
         <img
           key={list[active]}
           src={list[active]}
-          alt={`${title} - ${active + 1}`}
+          alt={angleLabels?.[list[active]!] ? `${title} - ${angleLabels[list[active]!]}` : `${title} - ${active + 1}`}
           className="h-full w-full object-cover object-center transition-opacity duration-300"
           referrerPolicy="no-referrer"
           decoding="async"
@@ -94,6 +96,11 @@ export function VehicleGallery({ images, title }: VehicleGalleryProps) {
         >
           <Maximize2 className="h-4 w-4" />
         </Button>
+        {angleLabels?.[list[active]!] ? (
+          <span className="absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+            {angleLabels[list[active]!]}
+          </span>
+        ) : null}
       </div>
 
       {list.length > 1 ? (
@@ -103,6 +110,7 @@ export function VehicleGallery({ images, title }: VehicleGalleryProps) {
               key={`${img}-${i}`}
               type="button"
               onClick={() => setActive(i)}
+              title={angleLabels?.[img]}
               className={cn(
                 "h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition-all",
                 i === active ? "border-primary ring-2 ring-primary/30" : "border-transparent opacity-70 hover:opacity-100",

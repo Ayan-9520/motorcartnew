@@ -108,6 +108,8 @@ import {
 } from "@/features/new-car-dealer";
 import { NewCarSettingsPage } from "@/features/new-car-dealer/pages/NewCarSettingsPage";
 import {
+  DealerBrochureStudioPage,
+  NewCarBrochureStudioPage,
   DealerOverviewPage,
   DealerInventoryCRMPage,
   DealerLeadsPage,
@@ -503,6 +505,7 @@ const appRoutes: RouteObject[] = [
       { path: "dashboard/dealer", element: <DealerHomeGate /> },
       { path: "dashboard/dealer/inventory", element: <DealerInventoryCRMPage /> },
       { path: "dashboard/dealer/inventory/excel", element: <DealerBulkUploadPage /> },
+      { path: "dashboard/dealer/brochure-studio", element: <DealerBrochureStudioPage /> },
       { path: "dashboard/dealer/finance", element: <DealerFinancePage /> },
       { path: "dashboard/dealer/auctions", element: <DealerAuctionsPage /> },
       { path: "dashboard/dealer/verification", element: <DealerVerificationPage /> },
@@ -542,6 +545,7 @@ const appRoutes: RouteObject[] = [
       { path: "dashboard/new-car", element: <NewCarOverviewPage /> },
       { path: "dashboard/new-car/inventory", element: <NewCarInventoryPage /> },
       { path: "dashboard/new-car/inventory/bulk", element: <NewCarBulkUploadPage /> },
+      { path: "dashboard/new-car/brochure-studio", element: <NewCarBrochureStudioPage /> },
       { path: "dashboard/new-car/leads", element: <NewCarLeadsPage /> },
       { path: "dashboard/new-car/leads/:id", element: <NewCarLeadDetailPage /> },
       { path: "dashboard/new-car/quotations", element: <DealerQuotationsPage /> },

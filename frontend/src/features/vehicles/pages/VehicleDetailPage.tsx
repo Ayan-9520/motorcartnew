@@ -30,6 +30,7 @@ import {
 } from "@/lib/vehicle-utils";
 import { buyListingPath, hubCategoryLabel } from "@/features/marketplace/lib/route-utils";
 import { resolveVehicleDetailGallery, resolveVehicleHero } from "@/lib/media/resolve-images";
+import { photoAngleLabel, readPhotoAngles } from "@/lib/photo-angles";
 import toast from "react-hot-toast";
 
 export function VehicleDetailPage() {
@@ -116,7 +117,13 @@ export function VehicleDetailPage() {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_minmax(17.5rem,20rem)] lg:grid-rows-[auto_1fr] lg:gap-x-8 xl:grid-cols-[1fr_22rem]">
           <div className="order-1 space-y-6 min-w-0 lg:col-start-1 lg:row-start-1">
-            <VehicleGallery images={galleryImages} title={vehicle.title} />
+            <VehicleGallery
+              images={galleryImages}
+              title={vehicle.title}
+              angleLabels={Object.fromEntries(
+                Object.entries(readPhotoAngles(vehicle.metadata, galleryImages)).map(([url, angle]) => [url, photoAngleLabel(angle)])
+              )}
+            />
             {vehicle.metadata.viewer360 && (
               <Viewer360 images={vehicle.metadata.viewer360} title={vehicle.title} />
             )}

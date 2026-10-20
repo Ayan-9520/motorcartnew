@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { z } from "zod";
-import { COLUMN_ALIASES, INVENTORY_COLUMNS, SAMPLE_ROWS, type InventoryColumn } from "./inventory-columns";
+import { ANGLE_IMAGE_COLUMNS, COLUMN_ALIASES, INVENTORY_COLUMNS, SAMPLE_ROWS, type InventoryColumn } from "./inventory-columns";
 import type { ParsedInventoryRow, RowValidationError } from "../types";
 import { isTwoWheeler } from "@/lib/two-wheeler";
 
@@ -51,6 +51,10 @@ function parseNumber(val: unknown): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+function isListingImageUrl(p: string) {
+  return /^https?:\/\//i.test(p) || /^\/uploads\//i.test(p) || /^\/media\//i.test(p);
+}
+
 /** Collect up to 4 image URLs (https or site /uploads|/media paths). Splits on | ; or newlines. */
 function collectImageUrls(...cells: unknown[]): string[] {
   const out: string[] = [];
@@ -59,11 +63,7 @@ function collectImageUrls(...cells: unknown[]): string[] {
     if (!raw) continue;
     const parts = raw.split(/[|;,\n]+/).map((p) => p.trim()).filter(Boolean);
     for (const p of parts) {
-      const ok =
-        /^https?:\/\//i.test(p) ||
-        /^\/uploads\//i.test(p) ||
-        /^\/media\//i.test(p);
-      if (ok && !out.includes(p)) out.push(p);
+      if (isListingImageUrl(p) && !out.includes(p)) out.push(p);
     }
   }
   return out.slice(0, 4);
@@ -259,7 +259,21 @@ function mapRawRow(row: Record<string, unknown>, rowNumber: number): {
     warnings.push({ row: rowNumber, field: "Variant", message: "Variant blank — can be added later" });
   }
 
-  const imageUrls = collectImageUrls(get("Main Image URL"), get("Image URL 2"), get("Image URL 3"), get("Image URL 4"));
+  const generalImages = collectImageUrls(get("Main Image URL"), get("Image URL 2"), get("Image URL 3"), get("Image URL 4"));
+  const photoAngles: Record<string, string> = {};
+  const angleImages: string[] = [];
+  for (const [col, angle] of ANGLE_IMAGE_COLUMNS) {
+    const url = blankToEmpty(get(col)).split(/[|;\n]+/)[0]?.trim() ?? "";
+    if (!url || !isListingImageUrl(url)) continue;
+    photoAngles[url] = angle;
+    if (!angleImages.includes(url)) angleImages.push(url);
+  }
+  const front = angleImages.find((u) => photoAngles[u] === "front");
+  const imageUrls = [
+    ...(generalImages.length ? [] : front ? [front] : []),
+    ...generalImages,
+    ...angleImages,
+  ].filter((u, i, arr) => arr.indexOf(u) === i).slice(0, 12);
 
   const featuresRaw = blankToEmpty(get("Features"));
   const features = featuresRaw
@@ -288,6 +302,7 @@ function mapRawRow(row: Record<string, unknown>, rowNumber: number): {
     discount: parseNumber(get("Discount")),
     mainImageUrl: imageUrls[0],
     imageUrls,
+    photoAngles: Object.keys(photoAngles).length ? photoAngles : undefined,
     priceOnRequest,
     priceSourceText,
     bodyType: blankToEmpty(get("Body Type")) || undefined,
@@ -364,6 +379,8 @@ export function downloadSampleTemplate() {
     ["EV: Fuel=Electric, fill Range Km + Battery kWh, leave Engine CC blank"],
     ["ICE: fill Engine CC + Mileage; leave Range/Battery blank"],
     ["Features: separate with |"],
+    ["Photos: Main Image URL + Image URL 2–4, or one column per angle (Front, Side, Rear, Interior, Dashboard, Odometer, Engine, Tyre, Boot, Rear Seat Image URL)"],
+    ["Angle photos are labelled on the listing and used automatically in AI Brochure Studio posters"],
   ]);
   XLSX.utils.book_append_sheet(wb, guide, "Instructions");
   XLSX.writeFile(wb, "motorcart-new-car-inventory-demo.xlsx");
@@ -460,6 +477,7 @@ export function parsedRowToVehiclePayload(
       onRoadPrice: row.onRoadPrice,
       waitingPeriod: row.waitingPeriodDays,
       brochureUrl: row.brochureUrl,
+      ...(row.photoAngles ? { photoAngles: row.photoAngles } : {}),
     },
   };
 }

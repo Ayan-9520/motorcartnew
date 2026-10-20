@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Car, Pencil, Trash2 } from "lucide-react";
+import { Car, Palette, Pencil, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -109,9 +109,16 @@ export function NcdInventoryGrid({ items, onChanged }: Props) {
                   <Trash2 className="mr-1 h-3 w-3" /> Remove
                 </Button>
                 {v.vehicleId ? (
-                  <Button size="sm" variant="ghost" className="h-7 rounded-lg px-2 text-xs" asChild>
-                    <Link to="/buy/cars/new">Public</Link>
-                  </Button>
+                  <>
+                    <Button size="sm" variant="outline" className="h-7 rounded-lg px-2 text-xs" asChild>
+                      <Link to={`/dashboard/new-car/brochure-studio?vehicle=${encodeURIComponent(v.vehicleId)}`}>
+                        <Palette className="mr-1 h-3 w-3" /> Poster
+                      </Link>
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 rounded-lg px-2 text-xs" asChild>
+                      <Link to="/buy/cars/new">Public</Link>
+                    </Button>
+                  </>
                 ) : null}
               </div>
             </div>

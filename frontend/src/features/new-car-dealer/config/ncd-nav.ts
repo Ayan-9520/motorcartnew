@@ -12,6 +12,7 @@ import {
   Megaphone,
   MessageSquare,
   Package,
+  Palette,
   Shield,
   Store,
   Truck,
@@ -37,6 +38,7 @@ export const NEW_CAR_DEALER_NAV: NcdNavGroup[] = [
     items: [
       { to: "/dashboard/new-car/inventory", label: "New car stock", icon: Car },
       { to: "/dashboard/new-car/inventory/bulk", label: "Bulk upload", icon: Package },
+      { to: "/dashboard/new-car/brochure-studio", label: "AI Brochure Studio", icon: Palette },
       { to: "/dashboard/new-car/leads", label: "Lead CRM", icon: Users },
       { to: "/dashboard/new-car/quotations", label: "Quotations", icon: FileText },
       { to: "/dashboard/new-car/test-drives", label: "Test drives", icon: Calendar },

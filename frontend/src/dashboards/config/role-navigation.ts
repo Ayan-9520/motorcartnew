@@ -28,6 +28,7 @@ import {
   Plug,
   Gauge,
   UserPlus,
+  Palette,
 } from "lucide-react";
 import type { AppRole } from "@/types/database";
 import { isDealerRole } from "@/permissions/role-matching";
@@ -73,6 +74,7 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
       items: [
         { to: "/dashboard/new-car", label: "Showroom home", icon: LayoutDashboard, end: true },
         { to: "/dashboard/new-car/inventory", label: "Inventory", icon: Car },
+        { to: "/dashboard/new-car/brochure-studio", label: "AI Brochure Studio", icon: Palette },
         { to: "/dashboard/new-car/leads", label: "Lead CRM", icon: Users },
       ],
     };
@@ -86,6 +88,7 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
         { to: "/dashboard/dealer", label: "Dashboard", icon: LayoutDashboard, end: true },
         { to: "/dashboard/dealer/inventory", label: "Inventory", icon: Car },
         { to: "/dashboard/dealer/inventory/excel", label: "Bulk upload", icon: FileSpreadsheet },
+        { to: "/dashboard/dealer/brochure-studio", label: "AI Brochure Studio", icon: Palette },
         { to: "/dashboard/dealer/leads", label: "Lead CRM", icon: Users },
         { to: "/dashboard/dealer/pipeline", label: "Pipeline", icon: Gauge },
         { to: "/dashboard/dealer/follow-ups", label: "Follow-ups", icon: ClipboardList },

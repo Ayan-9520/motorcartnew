@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash2, Star, CheckCircle, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, CheckCircle, Sparkles, Palette } from "lucide-react";
+import { cleanPhotoAngles } from "@/lib/photo-angles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,7 +108,10 @@ export function DealerInventoryCRMPage() {
         ...(dealer?.name ? { dealerName: dealer.name } : {}),
         ...(dealer?.slug ? { dealerSlug: dealer.slug } : {}),
         ...(dealer?.phone ? { dealerPhone: dealer.phone } : {}),
-        specifications: generateAISpecs({
+        photoAngles: cleanPhotoAngles(form.photoAngles, images),
+        specifications: {
+          ...(editing?.metadata?.specifications ?? {}),
+          ...generateAISpecs({
           rowNumber: 0,
           brand: form.brand,
           model: form.model,
@@ -118,7 +122,8 @@ export function DealerInventoryCRMPage() {
           ownership: isNew ? 0 : form.owners,
           price: form.price,
           registrationState: form.state,
-        }),
+          }),
+        },
       },
     };
   };
@@ -279,6 +284,11 @@ export function DealerInventoryCRMPage() {
                   <div className="flex flex-wrap gap-1 shrink-0">
                     <Button size="sm" variant="outline" asChild>
                       <Link to={vehicleDetailPath(v)}>View</Link>
+                    </Button>
+                    <Button size="sm" variant="outline" title="Create poster" asChild>
+                      <Link to={`/dashboard/dealer/brochure-studio?vehicle=${encodeURIComponent(v.id)}`}>
+                        <Palette className="h-4 w-4" />
+                      </Link>
                     </Button>
                     <Button size="sm" variant="outline" title="Edit" onClick={() => openEdit(v)}>
                       <Pencil className="h-4 w-4" />
