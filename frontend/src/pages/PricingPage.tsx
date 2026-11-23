@@ -175,7 +175,7 @@ export function PricingPage() {
           </div>
 
           <div className="mt-6 grid items-stretch gap-6 xl:grid-cols-2">
-            <section id="showroom-plans" className="flex h-full flex-col rounded-3xl border border-border/80 bg-card/50 p-4">
+            <section id="showroom-plans" className="flex h-full flex-col rounded-3xl border border-primary/20 bg-card p-4 shadow-sm">
               <h3 className="text-base font-bold tracking-normal">Showroom plans</h3>
               <p className="text-xs text-muted-foreground">For automobile dealers</p>
               <div className="mt-3 grid flex-1 grid-cols-1 items-stretch gap-3 sm:grid-cols-3">
@@ -183,7 +183,11 @@ export function PricingPage() {
                   <article
                     key={plan.code}
                     className={cn(
-                      "group flex h-full min-h-[26rem] flex-col rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground",
+                      "group flex h-full min-h-[26rem] flex-col rounded-2xl border-2 bg-background p-4 shadow-sm transition-colors",
+                      plan.highlighted
+                        ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
+                        : "border-primary/25 hover:border-primary",
+                      "hover:bg-primary hover:text-primary-foreground",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -227,7 +231,7 @@ export function PricingPage() {
               </div>
             </section>
 
-            <section id="dsa-plans" className="flex h-full flex-col rounded-3xl border border-border/80 bg-card/50 p-4">
+            <section id="dsa-plans" className="flex h-full flex-col rounded-3xl border border-primary/20 bg-card p-4 shadow-sm">
               <h3 className="text-base font-bold tracking-normal">DSA plans</h3>
               <p className="text-xs text-muted-foreground">For loan consultants and agencies</p>
               <div className="mt-3 grid flex-1 grid-cols-1 items-stretch gap-3 sm:grid-cols-3">
@@ -235,7 +239,11 @@ export function PricingPage() {
                   <article
                     key={plan.code}
                     className={cn(
-                      "group flex h-full min-h-[26rem] flex-col rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground",
+                      "group flex h-full min-h-[26rem] flex-col rounded-2xl border-2 bg-background p-4 shadow-sm transition-colors",
+                      plan.highlighted
+                        ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
+                        : "border-primary/25 hover:border-primary",
+                      "hover:bg-primary hover:text-primary-foreground",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
