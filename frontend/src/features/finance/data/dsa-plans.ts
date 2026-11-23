@@ -16,7 +16,13 @@ export const DSA_PLANS: DsaPlan[] = [
     priceMonthly: 0,
     applications: "15 applications / month",
     seats: "1 user",
-    features: ["Your own leads", "Application status", "Loan marketplace (view)"],
+    features: [
+      "Your own customer leads",
+      "Application status tracking",
+      "Loan marketplace (view)",
+      "EMI and eligibility tools",
+      "Email support",
+    ],
   },
   {
     code: "growth",
@@ -24,7 +30,13 @@ export const DSA_PLANS: DsaPlan[] = [
     priceMonthly: 1999,
     applications: "Unlimited applications",
     seats: "3 team seats",
-    features: ["Lead CRM", "Payout statement", "WhatsApp follow-up"],
+    features: [
+      "Loan lead CRM",
+      "Pending-document desk",
+      "CIBIL overview on files",
+      "Commission and payout statement",
+      "WhatsApp follow-up",
+    ],
     highlighted: true,
   },
   {
@@ -33,7 +45,13 @@ export const DSA_PLANS: DsaPlan[] = [
     priceMonthly: 6999,
     applications: "Unlimited applications",
     seats: "15 team seats",
-    features: ["Bank API desk", "Priority assignment", "Sub-agent tracking"],
+    features: [
+      "Everything in Growth",
+      "Bank API desk",
+      "Priority file assignment",
+      "Sub-agent tracking",
+      "Team conversion metrics",
+    ],
   },
 ];
 

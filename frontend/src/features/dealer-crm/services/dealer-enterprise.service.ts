@@ -221,7 +221,7 @@ export async function changeSubscriptionTier(dealerId: string, tier: string) {
     .from("dealers")
     .update({
       subscription_tier: tier,
-      total_listings_cap: plan?.maxListings ?? 25,
+      total_listings_cap: plan?.maxListings ?? 10,
       subscription_started_at: new Date().toISOString(),
     })
     .eq("id", dealerId);
