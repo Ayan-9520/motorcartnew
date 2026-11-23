@@ -136,6 +136,8 @@ export const FOOTER_COLUMNS = [
     title: "Partners",
     links: [
       { label: "Dealer signup", href: "/signup?role=dealer" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "DSA plans", href: "/pricing#dsa-plans" },
       { label: "DSA portal", href: "/dashboard/dsa" },
       { label: "Service partners", href: "/signup?role=service_center" },
       { label: "Parts suppliers", href: "/signup?role=parts_seller" },

@@ -97,6 +97,7 @@ export const NAV_LINKS = [
   { label: "Community", href: "/community" },
   { label: "AI", href: "/ai" },
   { label: "Dealers", href: "/dealers" },
+  { label: "Pricing", href: "/pricing" },
 ] as const;
 
 export const VEHICLE_ECOSYSTEM = [

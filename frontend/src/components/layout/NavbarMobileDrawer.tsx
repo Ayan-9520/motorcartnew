@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   Sparkles,
   Store,
+  CreditCard,
   Tag,
   User,
   Users,
@@ -40,6 +41,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "/community": Users,
   "/ai": Bot,
   "/dealers": Store,
+  "/pricing": CreditCard,
 };
 
 type Props = {

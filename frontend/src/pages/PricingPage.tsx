@@ -88,7 +88,7 @@ export function PricingPage() {
           ))}
         </div>
 
-        <div className="mt-16">
+        <div className="mt-16" id="dsa-plans">
           <p className="site-eyebrow">DSA desk</p>
           <h2 className="mt-2 text-2xl font-bold tracking-normal">Plans for loan agents</h2>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
