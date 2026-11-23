@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -25,21 +25,23 @@ const PILLARS = [
   { icon: Headphones, title: "Dedicated support", text: "Onboarding and ongoing help" },
 ] as const;
 
-function Price({ amount, onDark }: { amount: number; onDark?: boolean }) {
-  return (
-    <>
-      {formatCurrency(amount)}
-      {amount > 0 ? (
-        <span className={cn("text-sm font-normal", onDark ? "text-primary-foreground/80" : "text-muted-foreground")}>
-          {" "}
-          / month
-        </span>
-      ) : null}
-    </>
-  );
+type BillingCycle = "monthly" | "quarterly" | "yearly";
+
+const CYCLES: { id: BillingCycle; label: string; months: number; off: number; per: string }[] = [
+  { id: "monthly", label: "Monthly", months: 1, off: 0, per: "month" },
+  { id: "quarterly", label: "Quarterly", months: 3, off: 0.1, per: "quarter" },
+  { id: "yearly", label: "Yearly", months: 12, off: 0.2, per: "year" },
+];
+
+function cycleCharge(monthly: number, cycle: (typeof CYCLES)[number]) {
+  if (monthly <= 0) return 0;
+  return Math.round(monthly * cycle.months * (1 - cycle.off));
 }
 
 export function PricingPage() {
+  const [cycleId, setCycleId] = useState<BillingCycle>("monthly");
+  const cycle = CYCLES.find((item) => item.id === cycleId) ?? CYCLES[0];
+
   useEffect(() => {
     setPageMeta({
       title: "Pricing — Showroom and DSA plans",
@@ -167,25 +169,33 @@ export function PricingPage() {
           <p className="mt-1 text-center text-sm text-muted-foreground">
             Showroom plans and DSA plans, side by side.
           </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <a href="#showroom-plans" className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground">
-              Showroom plans
-            </a>
-            <a href="#dsa-plans" className="rounded-full border border-border px-4 py-1.5 text-sm font-semibold">
-              DSA plans
-            </a>
+          <div className="mx-auto mt-4 flex w-fit rounded-full border border-border bg-card p-1">
+            {CYCLES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setCycleId(item.id)}
+                className={cn(
+                  "rounded-full px-4 py-1.5 text-sm font-semibold",
+                  cycleId === item.id ? "bg-primary text-primary-foreground" : "text-foreground",
+                )}
+              >
+                {item.label}
+                {item.off > 0 ? <span className="ml-1 text-[11px] font-bold">{item.off * 100}% off</span> : null}
+              </button>
+            ))}
           </div>
 
-          <div className="mt-6 grid items-start gap-6 xl:grid-cols-2">
-            <section id="showroom-plans" className="rounded-3xl border border-border/80 bg-card/50 p-4">
+          <div className="mt-6 grid items-stretch gap-6 xl:grid-cols-2">
+            <section id="showroom-plans" className="flex h-full flex-col rounded-3xl border border-border/80 bg-card/50 p-4">
               <h3 className="text-base font-bold tracking-normal">Showroom plans</h3>
               <p className="text-xs text-muted-foreground">For automobile dealers</p>
-              <div className="mt-3 grid gap-3 md:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+              <div className="mt-3 grid flex-1 grid-cols-1 items-stretch gap-3 sm:grid-cols-3">
                 {SUBSCRIPTION_PLANS.map((plan) => (
                   <article
                     key={plan.code}
                     className={cn(
-                      "rounded-2xl border bg-background p-4",
+                      "flex h-full min-h-[26rem] flex-col rounded-2xl border bg-background p-4",
                       plan.highlighted ? "border-primary bg-primary text-primary-foreground" : "border-border/80",
                     )}
                   >
@@ -200,13 +210,15 @@ export function PricingPage() {
                         {plan.highlighted ? "Popular" : plan.priceMonthly === 0 ? "Starter" : "Scale"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold">
-                      <Price amount={plan.priceMonthly} onDark={plan.highlighted} />
+                    <p className="mt-2 text-2xl font-bold">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className={cn("text-xs", plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                      {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
+                      {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
                     <p className={cn("mt-1 text-xs", plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground")}>
                       {plan.maxListings === 9999 ? "Unlimited" : plan.maxListings} listings · {plan.maxTeamMembers} seats
                     </p>
-                    <ul className="mt-3 space-y-1.5 text-sm">
+                    <ul className="mt-3 flex-1 space-y-1.5 text-sm">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex gap-2">
                           <Check className="mt-0.5 h-4 w-4 shrink-0" />
@@ -215,7 +227,7 @@ export function PricingPage() {
                       ))}
                     </ul>
                     <Button
-                      className="mt-4 w-full rounded-full"
+                      className="mt-auto w-full rounded-full pt-4"
                       variant={plan.highlighted ? "secondary" : "outline"}
                       asChild
                     >
@@ -228,15 +240,15 @@ export function PricingPage() {
               </div>
             </section>
 
-            <section id="dsa-plans" className="rounded-3xl border border-border/80 bg-card/50 p-4">
+            <section id="dsa-plans" className="flex h-full flex-col rounded-3xl border border-border/80 bg-card/50 p-4">
               <h3 className="text-base font-bold tracking-normal">DSA plans</h3>
               <p className="text-xs text-muted-foreground">For loan consultants and agencies</p>
-              <div className="mt-3 grid gap-3 md:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+              <div className="mt-3 grid flex-1 grid-cols-1 items-stretch gap-3 sm:grid-cols-3">
                 {DSA_PLANS.map((plan) => (
                   <article
                     key={plan.code}
                     className={cn(
-                      "rounded-2xl border bg-background p-4",
+                      "flex h-full min-h-[26rem] flex-col rounded-2xl border bg-background p-4",
                       plan.highlighted ? "border-primary bg-primary text-primary-foreground" : "border-border/80",
                     )}
                   >
@@ -251,19 +263,15 @@ export function PricingPage() {
                         {plan.highlighted ? "Popular" : plan.priceMonthly === 0 ? "Starter" : "Agency"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold">
-                      {formatCurrency(plan.priceMonthly)}
-                      {plan.priceMonthly > 0 ? (
-                        <span className={cn("text-sm font-normal", plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground")}>
-                          {" "}
-                          / month
-                        </span>
-                      ) : null}
+                    <p className="mt-2 text-2xl font-bold">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className={cn("text-xs", plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                      {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
+                      {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
                     <p className={cn("mt-1 text-xs", plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground")}>
                       {plan.applications} · {plan.seats}
                     </p>
-                    <ul className="mt-3 space-y-1.5 text-sm">
+                    <ul className="mt-3 flex-1 space-y-1.5 text-sm">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex gap-2">
                           <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" />
@@ -272,7 +280,7 @@ export function PricingPage() {
                       ))}
                     </ul>
                     <Button
-                      className="mt-4 w-full rounded-full"
+                      className="mt-auto w-full rounded-full pt-4"
                       variant={plan.highlighted ? "secondary" : "outline"}
                       asChild
                     >
