@@ -53,6 +53,7 @@ export const DsaApplicationsPage = lazyNamed(() => import("@/features/finance/pa
 export const DsaLeadsPage = lazyNamed(() => import("@/features/finance/pages/DsaLeadsPage"), "DsaLeadsPage");
 export const DsaTeamPage = lazyNamed(() => import("@/features/finance/pages/DsaTeamPage"), "DsaTeamPage");
 export const DsaIntegrationsPage = lazyNamed(() => import("@/features/finance/pages/DsaIntegrationsPage"), "DsaIntegrationsPage");
+export const DsaPlansPage = lazyNamed(() => import("@/features/finance/pages/DsaPlansPage"), "DsaPlansPage");
 export const FinanceLoanCrmPage = lazyNamed(() => import("@/features/finance/pages/FinanceLoanCrmPage"), "FinanceLoanCrmPage");
 export const FinanceManagerIntegrationsPage = lazyNamed(
   () => import("@/features/finance/pages/FinanceManagerIntegrationsPage"),

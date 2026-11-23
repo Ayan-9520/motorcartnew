@@ -8,6 +8,7 @@ import {
   Plug,
   Users,
   Wallet,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ const LINKS = [
   { to: "/dashboard/dsa/leads", label: "Lead CRM", icon: Gauge },
   { to: "/dashboard/dsa/integrations", label: "Bank APIs", icon: Plug },
   { to: "/dashboard/dsa/team", label: "Team", icon: Users },
+  { to: "/dashboard/dsa/plans", label: "Plans", icon: CreditCard },
 ] as const;
 
 export function DsaWorkspaceNav() {

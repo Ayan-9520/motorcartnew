@@ -164,6 +164,7 @@ import {
   DsaLeadsPage,
   DsaTeamPage,
   DsaIntegrationsPage,
+  DsaPlansPage,
   LenderDashboardPage,
   LenderApplicationsPage,
   FinanceManagerDashboardPage,
@@ -1189,6 +1190,14 @@ const appRoutes: RouteObject[] = [
         element: (
           <ProtectedRoute roles={["dsa_agent", "admin"]}>
             <DsaTeamPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard/dsa/plans",
+        element: (
+          <ProtectedRoute roles={["dsa_agent", "admin"]}>
+            <DsaPlansPage />
           </ProtectedRoute>
         ),
       },

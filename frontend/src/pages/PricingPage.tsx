@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarketingPageBody, MarketingPageShell } from "@/components/marketing/MarketingPageShell";
 import { SUBSCRIPTION_PLANS } from "@/features/dealer-crm/data/subscription-plans";
+import { DSA_PLANS, DSA_PLATFORM_SHARE_PERCENT } from "@/features/finance/data/dsa-plans";
 import { formatCurrency } from "@/lib/utils";
 import { setPageMeta } from "@/utils/seo";
 
@@ -85,6 +86,63 @@ export function PricingPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="mt-16">
+          <p className="site-eyebrow">DSA desk</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-normal">Plans for loan agents</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Monthly desk fee sits below dealer plans. MotorCart keeps {DSA_PLATFORM_SHARE_PERCENT}% of the
+            commission the bank pays you — not a cut of the loan. Bought marketplace leads are extra credits.
+          </p>
+          <div className="mt-6 grid gap-6 md:grid-cols-3">
+            {DSA_PLANS.map((plan) => (
+              <Card
+                key={plan.code}
+                className={
+                  plan.highlighted
+                    ? "border-primary/40 shadow-[var(--shadow-primary)] ring-1 ring-primary/20"
+                    : "border-border/80"
+                }
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-lg">
+                    {plan.name}
+                    {plan.highlighted ? (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
+                        Popular
+                      </span>
+                    ) : null}
+                  </CardTitle>
+                  <p className="text-3xl font-bold text-foreground">
+                    {plan.priceMonthly === 0 ? "Free" : formatCurrency(plan.priceMonthly)}
+                    {plan.priceMonthly > 0 ? (
+                      <span className="text-sm font-normal text-muted-foreground"> / month</span>
+                    ) : null}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {plan.applications} · {plan.seats}
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2 text-sm">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button className="w-full rounded-xl" variant={plan.highlighted ? "default" : "outline"} asChild>
+                    <Link to="/signup/business">
+                      Join as DSA
+                      <ArrowRight className="ml-1.5 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="mt-12 rounded-2xl border border-border/80 bg-muted/20 p-6 text-center">

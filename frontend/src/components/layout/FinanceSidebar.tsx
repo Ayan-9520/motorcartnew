@@ -8,6 +8,7 @@ import {
   Gauge,
   Plug,
   Shield,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/uiStore";
@@ -27,6 +28,7 @@ const dsaLinks = [
   { to: "/dashboard/dsa/leads", label: "Lead CRM", icon: Gauge },
   { to: "/dashboard/dsa/integrations", label: "Bank APIs", icon: Plug },
   { to: "/dashboard/dsa/team", label: "Team", icon: Users },
+  { to: "/dashboard/dsa/plans", label: "Plans", icon: CreditCard },
   { to: "/finance/offers", label: "Loan marketplace", icon: Building2 },
 ];
 

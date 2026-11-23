@@ -74,7 +74,7 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
       items: [
         { to: "/dashboard/new-car", label: "Showroom home", icon: LayoutDashboard, end: true },
         { to: "/dashboard/new-car/inventory", label: "Inventory", icon: Car },
-        { to: "/dashboard/new-car/brochure-studio", label: "AI Brochure Studio", icon: Palette },
+        { to: "/dashboard/new-car/brochure-studio", label: "AI Brochure Studio", icon: Palette, end: true },
         { to: "/dashboard/new-car/leads", label: "Lead CRM", icon: Users },
       ],
     };
@@ -88,7 +88,7 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
         { to: "/dashboard/dealer", label: "Dashboard", icon: LayoutDashboard, end: true },
         { to: "/dashboard/dealer/inventory", label: "Inventory", icon: Car },
         { to: "/dashboard/dealer/inventory/excel", label: "Bulk upload", icon: FileSpreadsheet },
-        { to: "/dashboard/dealer/brochure-studio", label: "AI Brochure Studio", icon: Palette },
+        { to: "/dashboard/dealer/brochure-studio", label: "AI Brochure Studio", icon: Palette, end: true },
         { to: "/dashboard/dealer/leads", label: "Lead CRM", icon: Users },
         { to: "/dashboard/dealer/pipeline", label: "Pipeline", icon: Gauge },
         { to: "/dashboard/dealer/follow-ups", label: "Follow-ups", icon: ClipboardList },
@@ -140,6 +140,7 @@ export function getRoleNavContext(role: AppRole): RoleNavContext {
         { to: "/dashboard/dsa/leads", label: "Lead CRM", icon: Gauge },
         { to: "/dashboard/dsa/integrations", label: "Bank APIs", icon: Plug },
         { to: "/dashboard/dsa/team", label: "Team", icon: UserPlus },
+        { to: "/dashboard/dsa/plans", label: "Plans", icon: CreditCard },
         { to: "/finance/offers", label: "Loan marketplace", icon: Store },
       ],
     };
