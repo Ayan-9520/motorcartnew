@@ -66,7 +66,10 @@ export function PricingPage() {
 
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <article className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-                <img src="/brand/pricing-showroom.jpg" alt="Virtual showroom" className="h-52 w-full scale-110 object-cover blur-[2px] sm:h-64" />
+                <div className="relative h-52 overflow-hidden sm:h-64">
+                  <img src="/brand/pricing-showroom.jpg" alt="Virtual showroom" className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-white/45" />
+                </div>
                 <div className="p-5">
                   <p className="text-xs font-semibold text-primary">For automobile dealers</p>
                   <h2 className="mt-1 text-xl font-bold tracking-normal">Virtual showroom</h2>
@@ -99,7 +102,10 @@ export function PricingPage() {
               </article>
 
               <article id="dsa-intro" className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-                <img src="/brand/pricing-dsa.jpg" alt="Digital loan workspace" className="h-52 w-full scale-110 object-cover blur-[2px] sm:h-64" />
+                <div className="relative h-52 overflow-hidden sm:h-64">
+                  <img src="/brand/pricing-dsa.jpg" alt="Digital loan workspace" className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-white/45" />
+                </div>
                 <div className="p-5">
                   <p className="text-xs font-semibold text-primary">For DSAs and loan consultants</p>
                   <h2 className="mt-1 text-xl font-bold tracking-normal">Digital loan workspace</h2>
