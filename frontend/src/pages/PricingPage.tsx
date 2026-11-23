@@ -4,7 +4,7 @@ import { ArrowRight, Check, Landmark, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarketingPageBody, MarketingPageShell } from "@/components/marketing/MarketingPageShell";
 import { SUBSCRIPTION_PLANS } from "@/features/dealer-crm/data/subscription-plans";
-import { DSA_PLANS, DSA_PLATFORM_SHARE_PERCENT } from "@/features/finance/data/dsa-plans";
+import { DSA_PLANS } from "@/features/finance/data/dsa-plans";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { setPageMeta } from "@/utils/seo";
@@ -30,21 +30,8 @@ export function PricingPage() {
 
   return (
     <MarketingPageShell className="site-page">
-      <section className="marketing-hero marketing-hero-slim marketing-hero-editorial">
-        <div className="marketing-hero-mesh" aria-hidden />
-        <MarketingPageBody narrow>
-          <h1 className="site-page-title">
-            Plans for <span className="text-primary">showrooms</span> and{" "}
-            <span className="text-primary">loan agents</span>
-          </h1>
-          <p className="site-page-lead">
-            Two desks, same marketplace. Pick the column that matches your work. Prices are public. A Motorcart
-            admin assigns the plan after signup.
-          </p>
-        </MarketingPageBody>
-      </section>
-
       <MarketingPageBody>
+        <h1 className="mb-5 text-2xl font-bold tracking-normal text-foreground">Plans</h1>
         <div className="grid items-start gap-8 lg:grid-cols-2">
           <section id="showroom-plans" className="rounded-3xl border border-border/80 bg-card/60 p-4 sm:p-5">
             <div className="mb-4 flex items-start gap-3">
@@ -52,11 +39,7 @@ export function PricingPage() {
                 <Store className="h-5 w-5" />
               </span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">For showrooms</p>
-                <h2 className="text-xl font-bold tracking-normal">Dealer plans</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  List cars, run lead CRM, and sell from your public storefront.
-                </p>
+                <h2 className="text-base font-bold tracking-normal">Showroom</h2>
               </div>
             </div>
             <div className="space-y-4">
@@ -65,7 +48,9 @@ export function PricingPage() {
                   key={plan.code}
                   className={cn(
                     "rounded-2xl border bg-background p-4",
-                    plan.highlighted ? "border-primary/40 ring-1 ring-primary/20" : "border-border/70",
+                    plan.highlighted
+                      ? "border-primary/50 bg-primary/[0.04] shadow-[var(--shadow-primary)] ring-1 ring-primary/25"
+                      : "border-border/70",
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -110,12 +95,7 @@ export function PricingPage() {
                 <Landmark className="h-5 w-5" />
               </span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">For loan agents</p>
-                <h2 className="text-xl font-bold tracking-normal">DSA plans</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  File loans, track documents, and see payouts. MotorCart keeps {DSA_PLATFORM_SHARE_PERCENT}% of
-                  the bank commission, not of the loan.
-                </p>
+                <h2 className="text-base font-bold tracking-normal">DSA</h2>
               </div>
             </div>
             <div className="space-y-4">
@@ -124,7 +104,9 @@ export function PricingPage() {
                   key={plan.code}
                   className={cn(
                     "rounded-2xl border bg-background p-4",
-                    plan.highlighted ? "border-primary/40 ring-1 ring-primary/20" : "border-border/70",
+                    plan.highlighted
+                      ? "border-primary/50 bg-primary/[0.04] shadow-[var(--shadow-primary)] ring-1 ring-primary/25"
+                      : "border-border/70",
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -163,15 +145,6 @@ export function PricingPage() {
           </section>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-border/80 bg-muted/20 p-6 text-center">
-          <h2 className="text-lg font-semibold tracking-normal">OEM, fleet, or multi-city rollout</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Showroom Enterprise includes the auction desk, API access, and a dedicated success manager.
-          </p>
-          <Button variant="outline" className="mt-4 rounded-xl" asChild>
-            <Link to="/contact">Contact sales</Link>
-          </Button>
-        </div>
       </MarketingPageBody>
     </MarketingPageShell>
   );

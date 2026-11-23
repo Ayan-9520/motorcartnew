@@ -4,7 +4,7 @@ import { setPageMeta } from "@/utils/seo";
 import { formatCurrency } from "@/lib/utils";
 import { FinanceDashboardShell } from "../components/FinanceDashboardShell";
 import { DsaWorkspaceNav } from "../components/DsaWorkspaceNav";
-import { DSA_PLANS, DSA_PLATFORM_SHARE_PERCENT } from "../data/dsa-plans";
+import { DSA_PLANS } from "../data/dsa-plans";
 import { cn } from "@/lib/utils";
 
 export function DsaPlansPage() {
@@ -16,7 +16,7 @@ export function DsaPlansPage() {
     <FinanceDashboardShell
       variant="dsa"
       title="DSA plans"
-      subtitle="Desk fee is monthly. MotorCart's share is taken from the bank payout, not from the loan amount."
+      subtitle="Monthly desk fee. A Motorcart admin assigns the plan."
     >
       <DsaWorkspaceNav />
       <div className="grid gap-4 md:grid-cols-3">
@@ -57,11 +57,6 @@ export function DsaPlansPage() {
           </article>
         ))}
       </div>
-      <p className="mt-4 text-sm text-muted-foreground">
-        On a disbursed file, MotorCart keeps {DSA_PLATFORM_SHARE_PERCENT}% of the commission the bank pays the DSA.
-        Example: ₹8,00,000 loan, bank commission 1% = ₹8,000, platform share ₹1,200, DSA receives ₹6,800.
-        Marketplace leads are bought with credits and are not included in these plans.
-      </p>
     </FinanceDashboardShell>
   );
 }
