@@ -193,6 +193,7 @@ export function PricingPage() {
                       plan.highlighted
                         ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
                         : "border-primary/25",
+                      "hover:border-primary hover:bg-primary hover:text-primary-foreground",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -206,12 +207,12 @@ export function PricingPage() {
                         {plan.highlighted ? "Premium" : plan.priceMonthly === 0 ? "Free" : "Scale"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold transition-colors group-hover:text-violet-600">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="mt-2 text-2xl font-bold text-foreground transition-colors group-hover:text-violet-300">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className="text-xs text-muted-foreground group-hover:text-primary-foreground/80">
                       {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
                       {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary-foreground/80">
                       {plan.maxListings === 9999 ? "Unlimited" : plan.maxListings} listings · {plan.maxTeamMembers} seats
                     </p>
                     <ul className="mt-3 flex-1 space-y-1.5 text-sm">
@@ -224,7 +225,7 @@ export function PricingPage() {
                     </ul>
                     <Button
                       variant="outline"
-                      className="mt-auto w-full rounded-full"
+                      className="mt-auto w-full rounded-full border-border bg-background text-foreground group-hover:border-background group-hover:bg-background"
                       asChild
                     >
                       <Link to={plan.code === "enterprise" ? "/contact" : "/signup/business"}>
@@ -248,6 +249,7 @@ export function PricingPage() {
                       plan.highlighted
                         ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
                         : "border-primary/25",
+                      "hover:border-primary hover:bg-primary hover:text-primary-foreground",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -261,12 +263,12 @@ export function PricingPage() {
                         {plan.highlighted ? "Premium" : plan.priceMonthly === 0 ? "Free" : "Agency"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold transition-colors group-hover:text-violet-600">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="mt-2 text-2xl font-bold text-foreground transition-colors group-hover:text-violet-300">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className="text-xs text-muted-foreground group-hover:text-primary-foreground/80">
                       {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
                       {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary-foreground/80">
                       {plan.applications} · {plan.seats}
                     </p>
                     <ul className="mt-3 flex-1 space-y-1.5 text-sm">
@@ -279,7 +281,7 @@ export function PricingPage() {
                     </ul>
                     <Button
                       variant="outline"
-                      className="mt-auto w-full rounded-full"
+                      className="mt-auto w-full rounded-full border-border bg-background text-foreground group-hover:border-background group-hover:bg-background"
                       asChild
                     >
                       <Link to={plan.code === "agency" ? "/contact" : "/signup/business"}>
