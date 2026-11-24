@@ -192,8 +192,7 @@ export function PricingPage() {
                       "group flex h-full min-h-[26rem] flex-col rounded-2xl border-2 bg-background p-4 shadow-sm transition-colors",
                       plan.highlighted
                         ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
-                        : "border-primary/25 hover:border-primary",
-                      "hover:bg-primary hover:text-primary-foreground",
+                        : "border-primary/25",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -201,18 +200,18 @@ export function PricingPage() {
                       <span
                         className={cn(
                           "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                          plan.highlighted ? "bg-primary/10 text-primary group-hover:bg-background/15 group-hover:text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-background/15 group-hover:text-primary-foreground",
+                          plan.highlighted ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
                         )}
                       >
                         {plan.highlighted ? "Premium" : plan.priceMonthly === 0 ? "Free" : "Scale"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
-                    <p className="text-xs text-muted-foreground group-hover:text-primary-foreground/80">
+                    <p className="mt-2 text-2xl font-bold transition-colors group-hover:text-violet-600">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className="text-xs text-muted-foreground">
                       {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
                       {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary-foreground/80">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {plan.maxListings === 9999 ? "Unlimited" : plan.maxListings} listings · {plan.maxTeamMembers} seats
                     </p>
                     <ul className="mt-3 flex-1 space-y-1.5 text-sm">
@@ -225,7 +224,7 @@ export function PricingPage() {
                     </ul>
                     <Button
                       variant="outline"
-                      className="mt-auto w-full rounded-full border-border bg-background text-foreground group-hover:border-background group-hover:bg-background"
+                      className="mt-auto w-full rounded-full"
                       asChild
                     >
                       <Link to={plan.code === "enterprise" ? "/contact" : "/signup/business"}>
@@ -248,8 +247,7 @@ export function PricingPage() {
                       "group flex h-full min-h-[26rem] flex-col rounded-2xl border-2 bg-background p-4 shadow-sm transition-colors",
                       plan.highlighted
                         ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
-                        : "border-primary/25 hover:border-primary",
-                      "hover:bg-primary hover:text-primary-foreground",
+                        : "border-primary/25",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -257,18 +255,18 @@ export function PricingPage() {
                       <span
                         className={cn(
                           "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                          plan.highlighted ? "bg-primary/10 text-primary group-hover:bg-background/15 group-hover:text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-background/15 group-hover:text-primary-foreground",
+                          plan.highlighted ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
                         )}
                       >
                         {plan.highlighted ? "Premium" : plan.priceMonthly === 0 ? "Free" : "Agency"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
-                    <p className="text-xs text-muted-foreground group-hover:text-primary-foreground/80">
+                    <p className="mt-2 text-2xl font-bold transition-colors group-hover:text-violet-600">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className="text-xs text-muted-foreground">
                       {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
                       {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary-foreground/80">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {plan.applications} · {plan.seats}
                     </p>
                     <ul className="mt-3 flex-1 space-y-1.5 text-sm">
@@ -281,7 +279,7 @@ export function PricingPage() {
                     </ul>
                     <Button
                       variant="outline"
-                      className="mt-auto w-full rounded-full border-border bg-background text-foreground group-hover:border-background group-hover:bg-background"
+                      className="mt-auto w-full rounded-full"
                       asChild
                     >
                       <Link to={plan.code === "agency" ? "/contact" : "/signup/business"}>
