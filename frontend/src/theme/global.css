@@ -10099,7 +10099,7 @@
 }
 
 .auth-layout__brand-center {
-  @apply relative z-[1] flex h-full w-full items-center justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 xl:px-16;
+  @apply relative z-[1] flex h-full w-full flex-col items-start justify-center gap-3 px-8 py-10 pr-16 text-left;
 }
 
 .auth-layout__brand-inner {
@@ -10131,11 +10131,11 @@
 }
 
 .auth-layout__headline {
-  @apply mt-4 max-w-[14rem] text-4xl font-semibold leading-[1.05] tracking-tight text-white;
+  @apply max-w-[12rem] text-4xl font-semibold leading-[1.05] tracking-tight text-white;
 }
 
 .auth-layout__tagline {
-  @apply mt-4 max-w-[15rem] text-sm leading-relaxed text-white/80;
+  @apply max-w-[13rem] text-sm leading-relaxed text-white/80;
 }
 
 .auth-layout__form .auth-surface {
