@@ -773,7 +773,7 @@
   }
 
   .hero-section--premium .hero-headline--cinematic {
-    color: hsl(var(--foreground));
+    color: #390a5d;
     text-shadow: none;
   }
 
@@ -783,7 +783,7 @@
   }
 
   .hero-section--premium .hero-headline--cinematic .hero-headline-line:not(.hero-headline-shimmer) {
-    color: hsl(var(--foreground));
+    color: #390a5d;
   }
 
   .hero-section--premium .hero-headline--cinematic .hero-headline-line.hero-headline-shimmer {
@@ -796,7 +796,7 @@
   }
 
   .hero-section--premium .hero-headline-kicker {
-    @apply mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-[11px] font-bold tracking-[0.2em] text-foreground shadow-sm;
+    @apply mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-card px-3.5 py-1.5 text-[11px] font-bold tracking-[0.2em] text-primary shadow-sm;
     text-shadow: none;
   }
 
@@ -819,7 +819,8 @@
   }
 
   .hero-section--premium .hero-tagline-cinematic {
-    @apply text-muted-foreground md:text-base;
+    @apply md:text-base;
+    color: #0b3d22;
     text-shadow: none;
   }
 
