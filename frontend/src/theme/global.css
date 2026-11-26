@@ -222,17 +222,11 @@
   }
 
   .hero-section--premium {
-    min-height: min(58vh, 34rem);
-  }
-
-  @media (min-width: 768px) {
-    .hero-section--premium {
-      min-height: min(62vh, 38rem);
-    }
+    min-height: 0;
   }
 
   .hero-premium-inner {
-    @apply py-10 md:py-12 lg:py-14;
+    @apply py-8 md:py-10 lg:py-12;
   }
 
   .hero-headline-kicker {
@@ -607,8 +601,8 @@
 
   .hero-premium-scrim {
     background:
-      radial-gradient(60% 80% at 85% 35%, hsl(var(--primary) / 0.07) 0%, transparent 60%),
-      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 100%);
+      radial-gradient(46% 70% at 78% 42%, hsl(var(--primary) / 0.16) 0%, transparent 62%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
   }
 
   .hero-premium-orb {
@@ -619,12 +613,7 @@
   }
 
   .hero-premium-grid {
-    background-image:
-      linear-gradient(hsl(var(--foreground) / 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--foreground) / 0.045) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: radial-gradient(80% 80% at 30% 30%, #000 0%, transparent 75%);
-    -webkit-mask-image: radial-gradient(80% 80% at 30% 30%, #000 0%, transparent 75%);
+    display: none;
   }
 
   .hero-v3-layout {
@@ -636,10 +625,10 @@
   }
 
   .hero-v3-frame {
-    @apply relative aspect-[16/11] overflow-hidden rounded-[2rem] border border-border bg-muted;
+    @apply relative aspect-[16/10] overflow-hidden rounded-[1.75rem] border border-primary/25 bg-muted;
     box-shadow:
-      0 0 0 6px hsl(var(--foreground) / 0.03),
-      0 30px 70px -30px rgb(0 0 0 / 0.35);
+      0 0 0 1px hsl(var(--primary) / 0.18),
+      0 28px 60px -24px hsl(var(--primary) / 0.45);
     transition: box-shadow 0.5s ease;
   }
 
@@ -730,7 +719,7 @@
   }
 
   .hero-v3-search {
-    @apply relative z-[1] mt-12 rounded-[1.75rem] border border-border/70 bg-card/70 p-3 shadow-xl backdrop-blur-md sm:p-4 lg:mt-14;
+    @apply relative z-[1] mt-8 rounded-[1.5rem] border border-border bg-card p-3 shadow-lg sm:p-4 lg:mt-10;
   }
 
   .hero-v3-search .hero-search-module {
