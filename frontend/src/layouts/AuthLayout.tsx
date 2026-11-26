@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { ShieldCheck, Sparkles, TrendingUp, Zap } from "lucide-react";
-import { SITE_TAGLINE } from "@/lib/constants";
 import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
 import { AuthSurface } from "@/components/auth/AuthSurface";
 import { AuthMinimalHeader } from "@/components/auth/AuthMinimalHeader";
@@ -19,6 +18,7 @@ export function AuthLayout() {
   const setLoginModalOpen = useUIStore((s) => s.setLoginModalOpen);
   const wideForm = pathname === "/signup/business";
   const scrollForm = pathname === "/signup/business";
+  const signingIn = pathname.startsWith("/login");
 
   useEffect(() => {
     setLoginModalOpen(false);
@@ -27,10 +27,11 @@ export function AuthLayout() {
   return (
     <div className="auth-layout flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-background">
       <AuthMinimalHeader />
-      <div className="auth-layout__shell relative flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="auth-layout__shell relative flex min-h-0 flex-1 items-center justify-center px-4 py-6">
         <div className="auth-layout__bg pointer-events-none absolute inset-0" aria-hidden />
+        <div className="auth-layout__stage relative z-[1] flex min-h-0 w-full max-w-[980px] flex-col overflow-hidden lg:min-h-[560px] lg:flex-row">
 
-        <aside className="auth-layout__brand relative hidden min-h-0 lg:flex lg:w-1/2 xl:w-[48%]">
+        <aside className="auth-layout__brand relative hidden min-h-0 lg:flex lg:w-[44%]">
           <div className="auth-layout__brand-glow pointer-events-none" aria-hidden />
           <div className="auth-layout__brand-center">
           <div className="auth-layout__brand-inner">
@@ -44,9 +45,13 @@ export function AuthLayout() {
                   <Sparkles className="h-3 w-3" />
                   Secure onboarding
                 </p>
-                <h2 className="auth-layout__headline">{SITE_TAGLINE}</h2>
+                <h2 className="auth-layout__headline">
+                  {signingIn ? "Welcome back" : "Start from this page"}
+                </h2>
                 <p className="auth-layout__tagline">
-                  India&apos;s dealers, DSAs, parts & service partners — one ecosystem.
+                  {signingIn
+                    ? "Your showroom, DSA desk, or customer garage opens after sign in."
+                    : "Create the account here. Business logins open after Motorcart approves the profile."}
                 </p>
               </div>
 
@@ -82,7 +87,7 @@ export function AuthLayout() {
 
         <div
           className={cn(
-            "auth-layout__form relative flex min-h-0 flex-1 lg:w-1/2 xl:w-[52%]",
+            "auth-layout__form relative flex min-h-0 flex-1 lg:w-[56%]",
             scrollForm ? "overflow-y-auto" : "overflow-hidden"
           )}
         >
@@ -103,6 +108,7 @@ export function AuthLayout() {
             </AuthSurface>
           </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
