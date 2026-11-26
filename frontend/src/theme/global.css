@@ -8,17 +8,17 @@
   :root {
     /* Light — WhatsApp fintech: #f0f2f5 bg, #ffffff cards, #25D366 green */
     --background: 216 20% 96%;
-    --foreground: 222 72% 26%;
+    --foreground: 222 78% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 222 72% 26%;
+    --card-foreground: 222 78% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 72% 26%;
+    --popover-foreground: 222 78% 18%;
     --secondary: 0 0% 100%;
-    --secondary-foreground: 222 72% 26%;
+    --secondary-foreground: 222 78% 18%;
     --muted: 220 14% 97%;
-    --muted-foreground: 222 35% 34%;
+    --muted-foreground: 222 40% 28%;
     --accent: 142 76% 97%;
-    --accent-foreground: 222 72% 26%;
+    --accent-foreground: 222 78% 18%;
 
     /* Brand */
     --primary: 142 70% 49%;
@@ -773,7 +773,7 @@
   }
 
   .hero-section--premium .hero-headline--cinematic {
-    color: #12356b;
+    color: #0a2748;
     text-shadow: none;
   }
 
@@ -783,7 +783,7 @@
   }
 
   .hero-section--premium .hero-headline--cinematic .hero-headline-line:not(.hero-headline-shimmer) {
-    color: #12356b;
+    color: #0a2748;
   }
 
   .hero-section--premium .hero-headline--cinematic .hero-headline-line.hero-headline-shimmer {
@@ -820,7 +820,7 @@
 
   .hero-section--premium .hero-tagline-cinematic {
     @apply md:text-base;
-    color: #12356b;
+    color: #0a2748;
     text-shadow: none;
   }
 
@@ -1814,7 +1814,7 @@
   }
 
   .mc-logo--ink {
-    filter: brightness(0) saturate(100%) invert(14%) sepia(60%) saturate(2200%) hue-rotate(196deg) brightness(0.62);
+    filter: brightness(0) saturate(100%) invert(10%) sepia(45%) saturate(2400%) hue-rotate(196deg) brightness(0.48);
   }
 
   .dark .mc-logo-swap .mc-logo--for-light {
