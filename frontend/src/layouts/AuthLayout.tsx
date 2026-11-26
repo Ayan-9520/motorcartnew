@@ -1,17 +1,9 @@
 import { useEffect } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { ShieldCheck, Sparkles, TrendingUp, Zap } from "lucide-react";
-import { MotorcartLogo } from "@/components/brand/MotorcartLogo";
+import { Outlet, useLocation } from "react-router-dom";
 import { AuthSurface } from "@/components/auth/AuthSurface";
 import { AuthMinimalHeader } from "@/components/auth/AuthMinimalHeader";
 import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
-
-const TRUST_POINTS = [
-  { icon: ShieldCheck, text: "Bank-grade KYC" },
-  { icon: Zap, text: "Live in 24–48 hrs" },
-  { icon: TrendingUp, text: "CRM & finance OS" },
-];
 
 export function AuthLayout() {
   const { pathname } = useLocation();
@@ -31,57 +23,17 @@ export function AuthLayout() {
         <div className="auth-layout__bg pointer-events-none absolute inset-0" aria-hidden />
         <div className="auth-layout__stage relative z-[1] flex min-h-0 w-full max-w-[980px] flex-col overflow-hidden lg:min-h-[560px] lg:flex-row">
 
-        <aside className="auth-layout__brand relative hidden min-h-0 lg:flex lg:w-[44%]">
-          <div className="auth-layout__brand-glow pointer-events-none" aria-hidden />
+        <aside className="auth-layout__brand relative hidden min-h-0 lg:flex lg:w-[42%]">
           <div className="auth-layout__brand-center">
-          <div className="auth-layout__brand-inner">
-            <div className="auth-layout__brand-main">
-              <Link to="/" className="auth-layout__logo" aria-label="Motorcart">
-                <MotorcartLogo variant="icon" height={64} tone="auto" />
-              </Link>
-
-              <div className="auth-layout__hero">
-                <p className="auth-layout__pill">
-                  <Sparkles className="h-3 w-3" />
-                  Secure onboarding
-                </p>
-                <h2 className="auth-layout__headline">
-                  {signingIn ? "Welcome back" : "Start from this page"}
-                </h2>
-                <p className="auth-layout__tagline">
-                  {signingIn
-                    ? "Your showroom, DSA desk, or customer garage opens after sign in."
-                    : "Create the account here. Business logins open after Motorcart approves the profile."}
-                </p>
-              </div>
-
-              <ul className="auth-layout__trust">
-                {TRUST_POINTS.map(({ icon: Icon, text }) => (
-                  <li key={text} className="auth-layout__trust-item">
-                    <span className="auth-layout__trust-icon">
-                      <Icon className="h-3.5 w-3.5" />
-                    </span>
-                    {text}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="auth-layout__stats grid grid-cols-3 gap-2.5">
-              {[
-                { value: "Listings", label: "Vehicles" },
-                { value: "Verified", label: "Dealers" },
-                { value: "Finance", label: "Loan offers" },
-              ].map((s) => (
-                <div key={s.label} className="auth-layout__stat">
-                  <p className="text-sm font-bold text-foreground">{s.value}</p>
-                  <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
-                    {s.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+            <p className="auth-layout__mark">Motorcart</p>
+            <h2 className="auth-layout__headline">
+              {signingIn ? "Welcome back" : "Start from this page"}
+            </h2>
+            <p className="auth-layout__tagline">
+              {signingIn
+                ? "Your desk is ready. Continue from where you left the garage, showroom, or loan file."
+                : "Create the account here. Motorcart reviews a business profile, then the login is activated."}
+            </p>
           </div>
         </aside>
 

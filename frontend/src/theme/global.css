@@ -10087,10 +10087,11 @@
 }
 
 .auth-layout__brand {
-  @apply relative items-center justify-center overflow-hidden text-primary-foreground;
+  @apply relative items-center justify-center overflow-hidden text-white;
   background:
-    radial-gradient(80% 60% at 100% 0%, hsl(0 0% 100% / 0.16), transparent 55%),
-    hsl(var(--primary));
+    radial-gradient(90% 70% at 0% 100%, rgb(255 255 255 / 0.08), transparent 55%),
+    #0b3d22;
+  clip-path: polygon(0 0, 92% 0, 100% 100%, 0 100%);
 }
 
 .auth-layout__brand-glow {
@@ -10125,12 +10126,26 @@
   @apply inline-flex w-fit items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold text-primary-foreground;
 }
 
+.auth-layout__mark {
+  @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70;
+}
+
 .auth-layout__headline {
-  @apply max-w-[16rem] text-3xl font-bold leading-[1.1] tracking-tight text-primary-foreground;
+  @apply mt-4 max-w-[14rem] text-4xl font-semibold leading-[1.05] tracking-tight text-white;
 }
 
 .auth-layout__tagline {
-  @apply max-w-[16rem] text-sm leading-relaxed text-primary-foreground/85;
+  @apply mt-4 max-w-[15rem] text-sm leading-relaxed text-white/80;
+}
+
+.auth-layout__form .auth-surface {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-layout__form .auth-surface__accent {
+  display: none;
 }
 
 .auth-layout__trust {
