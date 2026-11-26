@@ -8,17 +8,17 @@
   :root {
     /* Light — WhatsApp fintech: #f0f2f5 bg, #ffffff cards, #25D366 green */
     --background: 216 20% 96%;
-    --foreground: 222 47% 11%;
+    --foreground: 217 72% 24%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 217 72% 24%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 217 72% 24%;
     --secondary: 0 0% 100%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary-foreground: 217 72% 24%;
     --muted: 220 14% 97%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 217 28% 38%;
     --accent: 142 76% 97%;
-    --accent-foreground: 222 47% 11%;
+    --accent-foreground: 217 72% 24%;
 
     /* Brand */
     --primary: 142 70% 49%;
@@ -773,7 +773,7 @@
   }
 
   .hero-section--premium .hero-headline--cinematic {
-    color: #390a5d;
+    color: #12315c;
     text-shadow: none;
   }
 
@@ -783,7 +783,7 @@
   }
 
   .hero-section--premium .hero-headline--cinematic .hero-headline-line:not(.hero-headline-shimmer) {
-    color: #390a5d;
+    color: #12315c;
   }
 
   .hero-section--premium .hero-headline--cinematic .hero-headline-line.hero-headline-shimmer {
@@ -820,7 +820,7 @@
 
   .hero-section--premium .hero-tagline-cinematic {
     @apply md:text-base;
-    color: #0b3d22;
+    color: #12315c;
     text-shadow: none;
   }
 
@@ -1811,6 +1811,10 @@
 
   .mc-logo-swap .mc-logo--for-dark {
     display: none;
+  }
+
+  .mc-logo--ink {
+    filter: brightness(0) saturate(100%) invert(14%) sepia(40%) saturate(2400%) hue-rotate(198deg) brightness(0.7);
   }
 
   .dark .mc-logo-swap .mc-logo--for-light {

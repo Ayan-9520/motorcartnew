@@ -75,7 +75,7 @@ export function MotorcartLogo({
     if (tone === "auto") {
       return (
         <span className={cn("mc-logo-swap inline-flex items-center", className)}>
-          <FullLogoImg src={MOTORCART_LOGO_WORDMARK} alt={alt} h={h} className="mc-logo--for-light" aspect={WORDMARK_ASPECT} />
+          <FullLogoImg src={MOTORCART_LOGO_WORDMARK} alt={alt} h={h} className="mc-logo--for-light mc-logo--ink" aspect={WORDMARK_ASPECT} />
           <FullLogoImg
             src={MOTORCART_LOGO_WORDMARK_DARK}
             alt={alt}
@@ -92,7 +92,7 @@ export function MotorcartLogo({
         src={tone === "dark" ? MOTORCART_LOGO_WORDMARK_DARK : MOTORCART_LOGO_WORDMARK}
         alt={alt}
         h={h}
-        className={className}
+        className={cn(className, tone !== "dark" && "mc-logo--ink")}
         aspect={WORDMARK_ASPECT}
       />
     );
