@@ -30,7 +30,6 @@ type MotorcartLogoProps = {
 
 const DEFAULT_HEIGHT = { full: 36, icon: 36, wordmark: 28 } as const;
 const FULL_ASPECT = 994 / 262;
-const WORDMARK_ASPECT = 812 / 152;
 const ICON_ASPECT = 175 / 192;
 
 function FullLogoImg({
@@ -72,29 +71,17 @@ export function MotorcartLogo({
   const h = height ?? DEFAULT_HEIGHT[variant];
 
   if (variant === "wordmark") {
-    if (tone === "auto") {
-      return (
-        <span className={cn("mc-logo-swap inline-flex items-center", className)}>
-          <FullLogoImg src={MOTORCART_LOGO_WORDMARK} alt={alt} h={h} className="mc-logo--for-light mc-logo--ink" aspect={WORDMARK_ASPECT} />
-          <FullLogoImg
-            src={MOTORCART_LOGO_WORDMARK_DARK}
-            alt={alt}
-            h={h}
-            className="mc-logo--for-dark"
-            aspect={WORDMARK_ASPECT}
-            decorative
-          />
-        </span>
-      );
-    }
+    const onDark = tone === "dark";
     return (
-      <FullLogoImg
-        src={tone === "dark" ? MOTORCART_LOGO_WORDMARK_DARK : MOTORCART_LOGO_WORDMARK}
-        alt={alt}
-        h={h}
-        className={cn(className, tone !== "dark" && "mc-logo--ink")}
-        aspect={WORDMARK_ASPECT}
-      />
+      <span
+        role="img"
+        aria-label={alt}
+        className={cn("mc-wordmark inline-flex items-baseline font-extrabold leading-none tracking-tight", className)}
+        style={{ fontSize: h * 0.78 }}
+      >
+        <span className={onDark ? "text-white" : "text-[#0a2748] dark:text-white"}>Motor</span>
+        <span className="text-primary">cart</span>
+      </span>
     );
   }
 
