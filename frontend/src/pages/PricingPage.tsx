@@ -193,7 +193,7 @@ export function PricingPage() {
                       plan.highlighted
                         ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
                         : "border-primary/25",
-                      "hover:border-primary hover:bg-primary hover:text-[#061433]",
+                      "hover:border-primary hover:bg-primary hover:text-[#0c3d91]",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -207,12 +207,12 @@ export function PricingPage() {
                         {plan.highlighted ? "Premium" : plan.priceMonthly === 0 ? "Free" : "Scale"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold text-foreground transition-colors group-hover:text-[#061433]">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
-                    <p className="text-xs text-muted-foreground group-hover:text-[#061433]/80">
+                    <p className="mt-2 text-2xl font-bold text-foreground transition-colors group-hover:text-[#0c3d91]">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className="text-xs text-muted-foreground group-hover:text-[#0c3d91]/80">
                       {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
                       {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-[#061433]/80">
+                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-[#0c3d91]/80">
                       {plan.maxListings === 9999 ? "Unlimited" : plan.maxListings} listings · {plan.maxTeamMembers} seats
                     </p>
                     <ul className="mt-3 flex-1 space-y-1.5 text-sm">
@@ -225,7 +225,7 @@ export function PricingPage() {
                     </ul>
                     <Button
                       variant="outline"
-                      className="mt-auto w-full rounded-full border-border bg-background text-[#061433] group-hover:border-background group-hover:bg-background group-hover:text-[#061433]"
+                      className="mt-auto w-full rounded-full border-border bg-background text-[#0c3d91] group-hover:border-background group-hover:bg-background group-hover:text-[#0c3d91]"
                       asChild
                     >
                       <Link to={plan.code === "enterprise" ? "/contact" : "/signup/business"}>
@@ -249,7 +249,7 @@ export function PricingPage() {
                       plan.highlighted
                         ? "border-primary shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.45)]"
                         : "border-primary/25",
-                      "hover:border-primary hover:bg-primary hover:text-[#061433]",
+                      "hover:border-primary hover:bg-primary hover:text-[#0c3d91]",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -263,12 +263,12 @@ export function PricingPage() {
                         {plan.highlighted ? "Premium" : plan.priceMonthly === 0 ? "Free" : "Agency"}
                       </span>
                     </div>
-                    <p className="mt-2 text-2xl font-bold text-foreground transition-colors group-hover:text-[#061433]">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
-                    <p className="text-xs text-muted-foreground group-hover:text-[#061433]/80">
+                    <p className="mt-2 text-2xl font-bold text-foreground transition-colors group-hover:text-[#0c3d91]">{formatCurrency(cycleCharge(plan.priceMonthly, cycle))}</p>
+                    <p className="text-xs text-muted-foreground group-hover:text-[#0c3d91]/80">
                       {plan.priceMonthly === 0 ? "Free" : `per ${cycle.per}`}
                       {cycle.off > 0 && plan.priceMonthly > 0 ? ` · was ${formatCurrency(plan.priceMonthly * cycle.months)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-[#061433]/80">
+                    <p className="mt-1 text-xs text-muted-foreground group-hover:text-[#0c3d91]/80">
                       {plan.applications} · {plan.seats}
                     </p>
                     <ul className="mt-3 flex-1 space-y-1.5 text-sm">
@@ -281,7 +281,7 @@ export function PricingPage() {
                     </ul>
                     <Button
                       variant="outline"
-                      className="mt-auto w-full rounded-full border-border bg-background text-[#061433] group-hover:border-background group-hover:bg-background group-hover:text-[#061433]"
+                      className="mt-auto w-full rounded-full border-border bg-background text-[#0c3d91] group-hover:border-background group-hover:bg-background group-hover:text-[#0c3d91]"
                       asChild
                     >
                       <Link to={plan.code === "agency" ? "/contact" : "/signup/business"}>
